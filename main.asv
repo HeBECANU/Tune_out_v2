@@ -46,8 +46,8 @@ tic
 %tdc_import_opts.dir='Y:\EXPERIMENT-DATA\Tune Out V2\20180826_testing_wm_log\';
 %tdc_import_opts.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output';
 %tdc_import_opts.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20180829_half_wp_353';
-tdc_import_opts.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\';
-%tdc_import_opts.dir='D:\Scratch\20180926_half_wp_angle_246\';
+tdc_import_opts.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20180926_half_wp_angle_246\';
+tdc_import_opts.dir='D:\Scratch\20180926_half_wp_angle_246\';
 %tdc_import_opts.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\';
 %tdc_import_opts.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output';
 tdc_import_opts.file_name='d';
@@ -88,13 +88,14 @@ histplot.dimesion=2; %Select coordinate to bin. 1=X, 2=Y.
 
 % END USER VAR-----------------------------------------------------------
 data=[]; %CLEAR THE DATA 
+anal_opts.velocity=const.g0*anal_opts.fall_time;
+
 
 %this first section  sets up the struct 'data' which will contain everything you could want incuding the txy data and
 %the information from the log
 addpath('Colormaps') 
 addpath('FileTime_29Jun2011') %used for high precision windows timestamps in import_data
 constants
-anal_opts.velocity=const.g0*anal_opts.fall_time;
 tdc_import_opts.shot_num=find_data_files(tdc_import_opts);
 [mcp_tdc_data,import_opts]=import_mcp_tdc_data(tdc_import_opts);
 data.mcp_tdc=mcp_tdc_data;
@@ -209,24 +210,24 @@ end
 
 %% use the analog input log to check if the probe beam pd voltage was ok and
 %that the laser was single mode
-anal_opts.ai_log.dir=tdc_import_opts.dir;
-anal_opts.ai_log.force_reimport=false ;
-anal_opts.ai_log.force_load_save=false;
-anal_opts.ai_log.log_name='log_analog_in_';
-anal_opts.ai_log.pd.set=2;
-anal_opts.ai_log.pd.diff_thresh=2;
-anal_opts.ai_log.pd.std_thresh=0.1;
-anal_opts.ai_log.pd.time_start=0.2;
-anal_opts.ai_log.pd.time_stop=2;
-anal_opts.ai_log.sfp.num_checks=10; %how many places to check that the laser is single mode
-anal_opts.ai_log.sfp.thresh_cmp_peak=20e-3; %theshold on the compressed signal to be considered a peak
-anal_opts.ai_log.sfp.peak_dist_min_pass=4.5;%minimum (min difference)between peaks for the laser to be considered single mode
-anal_opts.ai_log.sfp.plot_all=true;
-anal_opts.ai_log.sfp.plot_failed=true;
+anal_opts.ai_wm_log.dir=tdc_import_opts.dir;
+anal_opts.ai_wm_log.force_reimport=false ;
+anal_opts.ai_wm_log.force_load_save=false;
+anal_opts.ai_wm_log.log_name='log_analog_in_';
+anal_opts.ai_wm_log.pd.set=2;
+anal_opts.ai_wm_log.pd.diff_thresh=2;
+anal_opts.ai_wm_log.pd.std_thresh=0.1;
+anal_opts.ai_wm_log.pd.time_start=0.2;
+anal_opts.ai_wm_log.pd.time_stop=2;
+anal_opts.ai_wm_log.sfp.num_checks=10; %how many places to check that the laser is single mode
+anal_opts.ai_wm_log.sfp.thresh_cmp_peak=20e-3; %theshold on the compressed signal to be considered a peak
+anal_opts.ai_wm_log.sfp.peak_dist_min_pass=4.5;%minimum (min difference)between peaks for the laser to be considered single mode
+anal_opts.ai_wm_log.sfp.plot_all=false;
+anal_opts.ai_wm_log.sfp.plot_failed=true;
 
 %because im only passing the ai_log feild to aviod conflicts forcing a reimport i need to coppy these feilds
-anal_opts.ai_log.trig_dld=anal_opts.trig_dld;
-anal_opts.ai_log.trig_ai_in=anal_opts.trig_ai_in;
+anal_opts.ai_wm_log.trig_dld=anal_opts.trig_dld;
+anal_opts.ai_wm_log.trig_ai_in=anal_opts.trig_ai_in;
 [data,ai_log_out]=ai_log_import(anal_opts.ai_log,data);
 %copy the output across
 data.ai_log=ai_log_out.ai_log;
@@ -621,8 +622,6 @@ data.osc_fit.ok.did_fits=~cellfun(@(x) isequal(x,[]),data.osc_fit.model);
 
 %%
 %look for failed fits
-fprintf('mean fit error %f\n',...
-    mean(data.osc_fit.fit_rmse(data.osc_fit.ok.did_fits)))
 figure(1)
 clf
 subplot(2,1,1)
@@ -663,44 +662,38 @@ plot(tmp_probe_freq,...
    data.osc_fit.model_coefs((data.osc_fit.ok.rmse),1,1),'xk')
 xlabel('probe beam freq (GHz)')
 ylabel('Osc amp (mm)')
-title('Amp')
 subplot(3,3,4)
 plot(tmp_probe_freq,...
    data.osc_fit.model_coefs((data.osc_fit.ok.rmse),3,1),'xk')
 xlabel('probe beam freq (GHz)')
 ylabel('Phase (rad)')
-title('Phase')
 subplot(3,3,5)
 plot(tmp_probe_freq,...
    data.osc_fit.model_coefs((data.osc_fit.ok.rmse),4,1),'xk')
 xlabel('probe beam freq (GHz)')
-ylabel('offset')
-title('offset')
+ylabel('Phase (rad)')
 subplot(3,3,6)
 plot(tmp_probe_freq,...
    data.osc_fit.model_coefs((data.osc_fit.ok.rmse),5,1),'xk')
 xlabel('probe beam freq (GHz)')
-ylabel('xcpl')
-title('xcpl')
+ylabel('Phase (rad)')
 subplot(3,3,7)
 plot(tmp_probe_freq,...
    data.osc_fit.model_coefs((data.osc_fit.ok.rmse),6,1),'xk')
 xlabel('probe beam freq (GHz)')
-ylabel('zcpl')
-title('zcpl')
+ylabel('Phase (rad)')
 subplot(3,3,7)
 plot(tmp_probe_freq,...
-   data.osc_fit.model_coefs((data.osc_fit.ok.rmse),8,1),'xk')
+   data.osc_fit.model_coefs((data.osc_fit.ok.rmse),7,1),'xk')
 xlabel('probe beam freq (GHz)')
-ylabel('Grad mm/s')
-title('Grad')
+ylabel('Phase (rad)')
+
 %look for anharminicity with a osc amp/freq correlation
 subplot(3,3,9)
 plot(abs(data.osc_fit.model_coefs((data.osc_fit.ok.rmse),1,1)),...
     data.osc_fit.model_coefs((data.osc_fit.ok.rmse),2,1),'xk')
 xlabel('osc (mm)')
 ylabel('fit freq (Hz)')
-title('anharmonicity')
 
 
 
