@@ -4,3 +4,5 @@ Data analysis script for determining the tune out wavelength through changes in 
 ![An example TO](/nice_plots/to_fit.png)
 
 ![An example TO](/nice_plots/calibration_model.png)
+
+![An example TO](/nice_plots/logic.png)
