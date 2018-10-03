@@ -10,7 +10,11 @@ else
         struct(empty_mask)={nan};
         struct=cell2mat(struct);
     else
+        try
         values=unique(struct);
+        catch
+            warning('debug here')
+        end
         if numel(values)==2 %turn 'on' 'off' to logical
             values=unique(struct);
             if sum(strcmp(values,'on')+strcmp(values,'off'))==2
