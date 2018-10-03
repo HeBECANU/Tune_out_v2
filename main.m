@@ -78,7 +78,7 @@ tic
 %tdc_import_opts.dir='Y:\EXPERIMENT-DATA\Tune Out V2\20180826_testing_wm_log\';
 %tdc_import_opts.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output';
 %tdc_import_opts.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20180829_half_wp_353';
-tdc_import_opts.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181002_halfwp_236_stab3\';
+%tdc_import_opts.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181002_halfwp_236_stab3\';
 tdc_import_opts.dir='\\amplpc29\Users\TDC_user\\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181002_halfwp_236_stab3\';
 tdc_import_opts.file_name='d';
 tdc_import_opts.force_load_save=false;   %takes precidence over force_reimport
