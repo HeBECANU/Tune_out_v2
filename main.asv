@@ -15,16 +15,13 @@
 %       *checks that the wavelengths is stable during the probe intterogation
 %       *checks that the red wavelength is ~half the blue
 %       *checks that the double pd voltage is ok (now redundant beacuse of probe pd)
-%   * checks that the number of counts in the file is ok
-%   * combines all these checks into one master check
-%   * bins up each pulse of the AL
-%   * Fits the trap frequency
-%	* Investigate fit correlations
-%	* mask out only the (good)calibrations shots and make a model of how the (unpeturbed) trap freq changes in time
-%   * plot out (non calibration) (good) data and then fit the probe beam
+%   *checks that the number of counts in the file is ok
+%   *combines all these checks into one master check
+%   *bins up each
+%   * extracts the response at each set point by fitting  the aliased trap freq
+%   * Produces a plot of the measured response vs probe
 %       wavelength, identifying the tuneout wavelength and giving a
 %       stastistical uncertainty.
-
 %the data structure
 %   first level is instrument or anal method
 %   try and pass things between the modules of code only using the 'data' struct
@@ -53,7 +50,6 @@
 % MAT-files required: none
 %
 % Known BUGS/ Possible Improvements
-%	-make unique plot numbers
 %   -the fit error depends on wavelength indicating that the model does not
 %   have enough freedom
 %   -save analysis results
@@ -79,7 +75,6 @@ tic
 %tdc_import_opts.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output';
 %tdc_import_opts.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20180829_half_wp_353';
 tdc_import_opts.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181002_halfwp_236_stab3\';
-tdc_import_opts.dir='\\amplpc29\Users\TDC_user\\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181002_halfwp_236_stab3\';
 tdc_import_opts.file_name='d';
 tdc_import_opts.force_load_save=false;   %takes precidence over force_reimport
 tdc_import_opts.force_reimport=false;
@@ -393,7 +388,7 @@ end
 fprintf('...Done\n')
 
 
-%% CHECK ATOM NUMBER
+%%
 sfigure(1)
 %create a list of indicies (of the mcp_tdc) that have an ok number of counts
 %exclude the very low and then set the thresh based on the sd of the remaining
@@ -408,14 +403,13 @@ xlabel('time (h)')
 ylabel('total counts')
 title('num count run trend')
 
-%% COMBINE ALL CHECK LOGICS AND PLOT
+%%
 %Here we will do a plot of all the checks and then combine them into one
 %master 'ok'/check vector
-%here we keep this vector of ok logic the same size as the data.mcp_tdc to simplify use later
-
 %data.mcp_tdc.probe.ok.reg_pd
 %data.mcp_tdc.probe.ok.sfp
 %data.mcp_tdc.num_ok
+
 %data.mcp_tdc.probe.ok.freq; %frequency reading is stable
 %data.mcp_tdc.probe.ok.rvb;  %2r-b check
 %data.mcp_tdc.probe.ok.ecd_pd;  %ecd pd value
@@ -483,7 +477,7 @@ saveas(gcf,[anal_out.dir,plot_name,'.png'])
 saveas(gcf,[anal_out.dir,plot_name,'.fig'])
 
 %% BINNING UP THE ATOM LASER PULSES
-%now find the mean position of each pulse of the atom laser in each shot
+%now find the mean positon
 
 tic
 iimax=size(data.mcp_tdc.counts_txy,2);
@@ -549,12 +543,12 @@ toc
 
 
 
-%% FITTING THE TRAP FREQUENCY
+%% Fitting the Trap freq
 %using the binned data we fit the trap freq to each shot
 %loop over every shot in data.mcp_tdc but output nothing if
 %data.mcp_tdc.all_ok(ii)=false
 %for compactness could use max((1:numel(data.mcp_tdc.all_ok)).*data.mcp_tdc.all_ok');
-%find the last good shot, but this will fuck up the mask && mask operations
+%find the last good shot, but this fuck up the mask && mask operations
 %later
 iimax=size(data.mcp_tdc.counts_txy,2); 
 plots=false;
@@ -687,8 +681,8 @@ fprintf('...Done\n')
 data.osc_fit.ok.did_fits=~cellfun(@(x) isequal(x,[]),data.osc_fit.model);
         
 
-%% look for failed fits
-%look at the distribution of fit errors
+%%
+%look for failed fits
 fprintf('mean fit error %f\n',...
     mean(data.osc_fit.fit_rmse(data.osc_fit.ok.did_fits)))
 figure(1)
@@ -776,23 +770,24 @@ plot_name='fit_correlations';
 saveas(gcf,[anal_out.dir,plot_name,'.png'])
 saveas(gcf,[anal_out.dir,plot_name,'.fig'])
 
-% TO DO MERGE WITH ABOVE
-%% CHECK IF ATOM NUMBER DEPENDS ON PROBE BEAM
-%figure
-%clf
-%plot(data.mcp_tdc.probe.freq.act.mean(data.osc_fit.ok.rmse),data.mcp_tdc.num_counts(data.osc_fit.ok.rmse),'x')
 
 %% just plot with index
-%plot(data.osc_fit.model_coefs(data.osc_fit.ok.rmse,2,1)'...
-%    -mean(data.osc_fit.model_coefs(data.osc_fit.ok.rmse,2,1)))
+plot(data.osc_fit.model_coefs(data.osc_fit.ok.rmse,2,1)'...
+    -mean(data.osc_fit.model_coefs(data.osc_fit.ok.rmse,2,1)))
+
+
+%% CHECK IF ATOM NUMBER DEPENDS ON PROBE BEAM
+figure
+clf
+plot(data.mcp_tdc.probe.freq.act.mean(data.osc_fit.ok.rmse),data.mcp_tdc.num_counts(data.osc_fit.ok.rmse),'x')
 
 
 %% plot not calibrations
-%clf
-%temp_cal=data.mcp_tdc.probe.calibration';
-%temp_cal(isnan(temp_cal))=1;
-%mask=data.osc_fit.ok.rmse & ~temp_cal & ~isnan(data.mcp_tdc.probe.freq.act.mean');
-%plot(data.mcp_tdc.probe.freq.act.mean(mask),data.osc_fit.model_coefs(mask,2,1),'x')
+clf
+temp_cal=data.mcp_tdc.probe.calibration';
+temp_cal(isnan(temp_cal))=1;
+mask=data.osc_fit.ok.rmse & ~temp_cal & ~isnan(data.mcp_tdc.probe.freq.act.mean');
+plot(data.mcp_tdc.probe.freq.act.mean(mask),data.osc_fit.model_coefs(mask,2,1),'x')
 
 
 %% create a model of the underlying trap frequency from the calibrations
@@ -838,7 +833,7 @@ saveas(gcf,[anal_out.dir,plot_name,'.png'])
 saveas(gcf,[anal_out.dir,plot_name,'.fig'])
 
 
-%% PLOT THE TO DATA  
+%%
 figure(4)
 clf
 set(gcf,'color','w')
