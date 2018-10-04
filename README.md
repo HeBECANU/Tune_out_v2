@@ -54,16 +54,15 @@ Subfunctions: none
 MAT-files required: none
 
 Known BUGS/ Possible Improvements
-	-make unique plot numbers
-  -the fit error depends on wavelength indicating that the model does not
-  have enough freedom
-  -save analysis results
-	-make plots more compact
-  -harmonize the anal opts
-	-place more sections into functions
-	-clean up the fit section
-	-write a n depth function cashing wrapper with hash lookup
-		-alow partial updates
+  * make unique plot numbers
+  * the fit error depends on wavelength indicating that the model does not have enough freedom
+  * save analysis results
+	* make plots more compact
+  * harmonize the anal opts
+    * place more sections into functions
+	* clean up the fit section
+	* write a n depth function cashing wrapper with hash lookup
+      * alow partial updates
       
 
 Author: Bryce Henson
