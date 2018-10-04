@@ -33,6 +33,7 @@ the data structure
 TIMING 
 because there are so many moving peices a lot of the script requires matching up the times of the varrious inputs
 LABVIEW writes to the log
+'''
    | (~0.25s)
 DAC master trig ---------->		Digital output cards
 									|			|
@@ -45,7 +46,7 @@ DAC master trig ---------->		Digital output cards
 									|			file creation,file modified
 								DLD write
 
-
+'''
 Other m-files required: import_data,find_data_files,dld_raw_to_txy,masktxy,data_tcreate,
                         dld_read_5channels_reconst_multi_imp,constants
 Also See:
