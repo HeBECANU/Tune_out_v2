@@ -2,24 +2,24 @@ Determine the Tune out from a dataset
 using the measured change in trap frequency from the application of a probe beam.
 application of the tune out probe beam.
 The script:
-	* defines the user controled options
+  * defines the user controled options
   * Imports all the tdc data files 
-	* Imports labview log file
+    * Imports labview log file
   * Imports the wavemeter log file
   * Match upt the Labview data withthe tdc data
   * Imports the analog in log file , for each file the import:
-      * checks that the pd voltage is ok
-      * check that the laser is single mode using the scanning fabry perot signals
+    * checks that the pd voltage is ok
+    * check that the laser is single mode using the scanning fabry perot signals
   * Check that the wavemeter readings are ok for each shot
-      *checks that the wavelengths is stable during the probe intterogation
-      *checks that the red wavelength is ~half the blue
-      *checks that the double pd voltage is ok (now redundant beacuse of probe pd)
+    * checks that the wavelengths is stable during the probe intterogation
+    * checks that the red wavelength is ~half the blue
+    * checks that the double pd voltage is ok (now redundant beacuse of probe pd)
   * checks that the number of counts in the file is ok
   * combines all these checks into one master check
   * bins up each pulse of the AL
   * Fits the trap frequency
-	* Investigate fit correlations
-	* mask out only the (good)calibrations shots and make a model of how the (unpeturbed) trap freq changes in time
+    * Investigate fit correlations
+    * mask out only the (good)calibrations shots and make a model of how the (unpeturbed) trap freq changes in time
   * plot out (non calibration) (good) data and then fit the probe beam
       wavelength, identifying the tuneout wavelength and giving a
       stastistical uncertainty.
