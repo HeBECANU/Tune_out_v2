@@ -6,6 +6,7 @@ function h = sfigure(h)
 % Daniel Eaton, 2005
 %
 % See also figure
+%from https://au.mathworks.com/matlabcentral/fileexchange/8919-smart-silent-figure
 
 if nargin>=1 
 	if ishandle(h)
