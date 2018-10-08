@@ -844,8 +844,9 @@ clf
 set(gcf,'color','w')
 subplot(2,1,1)
 temp_cal=data.mcp_tdc.probe.calibration';
-temp_cal(isnan(temp_cal))=1;
-probe_dat_mask=data.osc_fit.ok.rmse & ~temp_cal & ~isnan(data.mcp_tdc.probe.freq.act.mean');
+temp_cal(isnan(temp_cal))=1;    
+%manual bootstrap rand(size(data.osc_fit.ok.rmse))>0.9
+probe_dat_mask=data.osc_fit.ok.rmse & ~temp_cal & ~isnan(data.mcp_tdc.probe.freq.act.mean') ;
 
 probe_freq= data.mcp_tdc.probe.freq.act.mean(probe_dat_mask)*1e6;
 corrected_delta=3*(1/anal_opts.atom_laser.pulsedt)+data.osc_fit.model_coefs(probe_dat_mask,2,1)-...

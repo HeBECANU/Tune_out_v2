@@ -1,0 +1,18 @@
+ok i went and did a qick manual process
+
+selecting 10% of the data
+fits of of the TO (in mhz)
+[362867463.14,362869124.09,362867014.24,362867656.92,362867309.59,362863025.61,362869201.65,362865901.99,362868125.63]
+gives standard deviation
+1.8708e+03
+using the finite population correction
+finite_pop_corr=sqrt((n_total-n_sample)/(n_total-1));
+=0.9510
+the population sd is 
+1.9671e3
+multiply by sqrt(0.1)
+622.0488 MHz
+
+cf.
+the fit estimate with all the data
+ 362867661.59±368.52Mhz
