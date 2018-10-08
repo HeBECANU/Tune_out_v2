@@ -844,8 +844,9 @@ clf
 set(gcf,'color','w')
 subplot(2,1,1)
 temp_cal=data.mcp_tdc.probe.calibration';
-temp_cal(isnan(temp_cal))=1;
-probe_dat_mask=data.osc_fit.ok.rmse & ~temp_cal & ~isnan(data.mcp_tdc.probe.freq.act.mean');
+temp_cal(isnan(temp_cal))=1;    
+%manual bootstrap rand(size(data.osc_fit.ok.rmse))>0.9
+probe_dat_mask=data.osc_fit.ok.rmse & ~temp_cal & ~isnan(data.mcp_tdc.probe.freq.act.mean') ;
 
 probe_freq= data.mcp_tdc.probe.freq.act.mean(probe_dat_mask)*1e6;
 corrected_delta=3*(1/anal_opts.atom_laser.pulsedt)+data.osc_fit.model_coefs(probe_dat_mask,2,1)-...
@@ -950,7 +951,7 @@ cdat_culled=cdat(is_outlier_idx);
 opts = statset('nlinfit');
 %opts.RobustWgtFun = 'welsch' ;
 opts.Tune = 1;
-beta0 = [1e-5,1e-2];git s
+beta0 = [1e-5,1e-2];
 mdl_culled = fitnlm(xdat_culled,ydat_culled,modelfun,beta0,'Options',opts);
 xsamp_culled=linspace(min(xdat_culled),max(xdat_culled),1e3)';
 [ysamp_culled,yci_culled]=predict(mdl_culled,xsamp_culled,'Alpha',0.2); %'Prediction','observation'
