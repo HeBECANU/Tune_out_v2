@@ -1,3 +1,6 @@
 [submodule "boostrap_error"]
 	path = boostrap_error
 	url = https://github.com/brycehenson/boostrap_error
+[submodule "bootstrap_error"]
+	path = bootstrap_error
+	url = https://github.com/brycehenson/bootstrap_error.git
