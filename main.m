@@ -79,7 +79,7 @@ tic
 %anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output';
 %anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20180829_half_wp_353';
 %anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181002_halfwp_236_stab3\';
-anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181002_halfwp_236_stab3\';
+anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181002_halfwp_236_stab4\';
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
 anal_opts.tdc_import.force_reimport=false;
@@ -477,11 +477,11 @@ title('ALL ok')
 ylim([-0.1,1.1])
 tmp_num_shots=numel(data.mcp_tdc.shot_num);
 tmp_num_ok_shots=sum(tmp_all_ok);
+data.mcp_tdc.all_ok=tmp_all_ok;
+
 fprintf('ok logic gives %u / %u shots for yeild %04.1f %%\n',...
     tmp_num_ok_shots,tmp_num_shots,1e2*tmp_num_ok_shots/tmp_num_shots)
-
 set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
-data.mcp_tdc.all_ok=tmp_all_ok;
 plot_name='check_logics';
 saveas(gcf,[anal_out.dir,plot_name,'.png'])
 saveas(gcf,[anal_out.dir,plot_name,'.fig'])
@@ -493,83 +493,21 @@ data.mcp_tdc.al_pulses=bin_al_pulses(anal_opts.atom_laser,data);
 %% FITTING THE TRAP FREQUENCY
 anal_opts.osc_fit.adaptive_freq=true; %estimate the starting trap freq 
 anal_opts.osc_fit.appr_osc_freq_guess=[52,46.7,40];
-anal_opts.osc_fit.plots=false;
+anal_opts.osc_fit.plot_fits=false;
+anal_opts.osc_fit.plot_err_history=true;
+anal_opts.osc_fit.plot_fit_corr=true;
+
 anal_opts.osc_fit.global=anal_opts.global;
 data.osc_fit=fit_trap_freq(anal_opts.osc_fit,data);
 
+%% undo the aliasing
+%this may need to change if the sampling freq changes
 
-%% Investigate Spurrious fit correlations
-sfigure(852);
-clf
-set(gcf,'color','w')
-%see if the fit error depends on the probe freq
-subplot(3,3,1)
-tmp_probe_freq=data.mcp_tdc.probe.freq.act.mean(data.osc_fit.ok.rmse);
-tmp_probe_freq=(tmp_probe_freq-nanmean(tmp_probe_freq))*1e-3;
-plot(tmp_probe_freq,...
-    data.osc_fit.fit_rmse(data.osc_fit.ok.rmse),'xk')
-xlabel('probe beam freq (GHz)')
-ylabel('fit error')
-title('Fit Error')
-%see if the damping changes
-subplot(3,3,2)
-plot(tmp_probe_freq,...
-   data.osc_fit.model_coefs((data.osc_fit.ok.rmse),1,1),'xk')
-xlabel('probe beam freq (GHz)')
-ylabel('Osc amp (mm)')
-title('Amp')
-subplot(3,3,3)
-plot(tmp_probe_freq,...
-   data.osc_fit.model_coefs((data.osc_fit.ok.rmse),3,1),'xk')
-xlabel('probe beam freq (GHz)')
-ylabel('Phase (rad)')
-title('Phase')
-subplot(3,3,4)
-plot(tmp_probe_freq,...
-   data.osc_fit.model_coefs((data.osc_fit.ok.rmse),4,1),'xk')
-xlabel('probe beam freq (GHz)')
-ylabel('offset')
-title('offset')
-subplot(3,3,5)
-plot(tmp_probe_freq,...
-   data.osc_fit.model_coefs((data.osc_fit.ok.rmse),5,1),'xk')
-xlabel('probe beam freq (GHz)')
-ylabel('ycpl')
-title('ycpl')
-subplot(3,3,6)
-plot(tmp_probe_freq,...
-   data.osc_fit.model_coefs((data.osc_fit.ok.rmse),6,1),'xk')
-xlabel('probe beam freq (GHz)')
-ylabel('zcpl')
-title('zcpl')
-%see if the amp changes
-subplot(3,3,7)
-plot(tmp_probe_freq,...
-   1./data.osc_fit.model_coefs((data.osc_fit.ok.rmse),7,1),'xk')
-xlabel('probe beam freq (GHz)')
-ylabel('Damping Time (s)')
-title('Damping')
-subplot(3,3,8)
-plot(tmp_probe_freq,...
-   data.osc_fit.model_coefs((data.osc_fit.ok.rmse),8,1),'xk')
-xlabel('probe beam freq (GHz)')
-ylabel('Grad mm/s')
-title('Grad')
-%look for anharminicity with a osc amp/freq correlation
-subplot(3,3,9)
-plot(abs(data.osc_fit.model_coefs((data.osc_fit.ok.rmse),1,1)),...
-    data.osc_fit.model_coefs((data.osc_fit.ok.rmse),2,1),'xk')
-xlabel('osc (mm)')
-ylabel('fit freq (Hz)')
-title('anharmonicity')
+data.osc_fit.trap_freq_recons=nan*data.osc_fit.ok.did_fits;
+mask=data.osc_fit.ok.did_fits;
+data.osc_fit.trap_freq_recons(mask)=3*(1/anal_opts.atom_laser.pulsedt)+data.osc_fit.model_coefs(mask,2,1);
 
-set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
-data.mcp_tdc.all_ok=tmp_all_ok;
-plot_name='fit_correlations';
-saveas(gcf,[anal_out.dir,plot_name,'.png'])
-saveas(gcf,[anal_out.dir,plot_name,'.fig'])
 
-% TO DO MERGE WITH ABOVE
 %% CHECK IF ATOM NUMBER DEPENDS ON PROBE BEAM
 %figure
 %clf
@@ -589,248 +527,62 @@ saveas(gcf,[anal_out.dir,plot_name,'.fig'])
 
 
 %% create a model of the underlying trap frequency from the calibrations
-addpath('nanconv')
-cal_smooth_time=200;
-figure(3)
-clf
-set(gcf,'color','w')
-temp_cal=data.mcp_tdc.probe.calibration';
-temp_cal(isnan(temp_cal))=0;
-cal_dat_mask=data.osc_fit.ok.rmse & temp_cal & ~isnan(data.mcp_tdc.probe.freq.act.mean');
-x_tmp=data.mcp_tdc.time_create_write(cal_dat_mask,1);
-time_start_cal=x_tmp(1);
-x_tmp=x_tmp-time_start_cal;
-y_tmp=3*(1/anal_opts.atom_laser.pulsedt)+data.osc_fit.model_coefs(cal_dat_mask,2,1);
-freq_drift_model=fit(x_tmp, y_tmp,'poly5');
-x_samp=linspace(min(x_tmp),max(x_tmp),1e3);
-hour_in_s=1;%60*60;
-plot(x_tmp/hour_in_s,y_tmp)
-hold on
-plot(x_samp/hour_in_s,freq_drift_model(x_samp))
-title('Trap Freq Calibration')
-xlabel('experiment time (h)')
-ylabel('no probe trap freq')
-xinterp=linspace(min(x_tmp),max(x_tmp),1e5);
-yinterp_raw=interp1(x_tmp,y_tmp,xinterp,'linear');
+anal_opts.cal_mdl.smooth_time=50;
+anal_opts.cal_mdl.plot=true;
+anal_opts.cal_mdl.global=anal_opts.global;
+data.osc_fit.cal_mdl=make_cal_model(anal_opts.cal_mdl,data);
 
-dx_interp=xinterp(2)-xinterp(1);
-kernel = gausswin(ceil(3*cal_smooth_time/(dx_interp)),3);
-kernel=kernel/sum(kernel);
-yinterp_smooth = nanconv(yinterp_raw,kernel,'edge','1d')';
-freq_drift_model=@(x) interp1(xinterp,yinterp_smooth,x-time_start_cal,'linear');
-plot(xinterp/hour_in_s,yinterp_raw,'g')
-plot(xinterp/hour_in_s,yinterp_smooth,'m')
-plot(x_samp/hour_in_s,freq_drift_model(x_samp+time_start_cal),'k')
-legend('data','polynomial model','interp data model','smooth data model','freq\_drift\_model' )
-hold off
-
-set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
-data.mcp_tdc.all_ok=tmp_all_ok;
-plot_name='calibration_model';
-saveas(gcf,[anal_out.dir,plot_name,'.png'])
-saveas(gcf,[anal_out.dir,plot_name,'.fig'])
-
-
-%% PLOT THE TO DATA  
-figure(4)
-clf
-set(gcf,'color','w')
-subplot(2,1,1)
-temp_cal=data.mcp_tdc.probe.calibration';
-temp_cal(isnan(temp_cal))=1;    
-%manual bootstrap rand(size(data.osc_fit.ok.rmse))>0.9
-probe_dat_mask=data.osc_fit.ok.rmse & ~temp_cal & ~isnan(data.mcp_tdc.probe.freq.act.mean') ;
-
-probe_freq= data.mcp_tdc.probe.freq.act.mean(probe_dat_mask)*1e6;
-corrected_delta=3*(1/anal_opts.atom_laser.pulsedt)+data.osc_fit.model_coefs(probe_dat_mask,2,1)-...
-    freq_drift_model(data.mcp_tdc.time_create_write(probe_dat_mask,1));
-cdat=viridis(1000);
-c_cord=linspace(0,1,size(cdat,1));
-shot_time=data.mcp_tdc.time_create_write(probe_dat_mask,1);
-shot_time=shot_time-min(shot_time);
-shot_time_scaled=shot_time/range(shot_time);
-cdat=[interp1(c_cord,cdat(:,1),shot_time_scaled),...
-    interp1(c_cord,cdat(:,2),shot_time_scaled),...
-    interp1(c_cord,cdat(:,3),shot_time_scaled)];
-
-scatter((probe_freq-nanmean(probe_freq))*1e-9,corrected_delta,30,cdat,'square','filled')
-colormap(viridis(1000))
-c =colorbar;
-c.Label.String = 'time (H)';
-caxis([0,range(shot_time)/(60*60)])
-xlabel('delta probe beam frequency (GHz)')
-ylabel('delta freq')
-subplot(2,1,2)
-square_diff= (3*(1/anal_opts.atom_laser.pulsedt)+...
-    data.osc_fit.model_coefs(probe_dat_mask,2,1)).^2-...
-    (freq_drift_model(data.mcp_tdc.time_create_write(probe_dat_mask,1))).^2;
-scatter((probe_freq-nanmean(probe_freq))*1e-9,square_diff,30,cdat,'square','filled')
-xlabel('delta probe beam frequency (GHz)')
-ylabel('square difference in freq')
-colormap(viridis(1000))
-c =colorbar;
-c.Label.String = 'time (H)';
-caxis([0,range(shot_time)/(60*60)])
-
-set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
-data.mcp_tdc.all_ok=tmp_all_ok;
-plot_name='tuneout_time_graph';
-saveas(gcf,[anal_out.dir,plot_name,'.png'])
-saveas(gcf,[anal_out.dir,plot_name,'.fig'])
-
-
-
-%%
-
-%%
-%now we do some fitting
+%% Fit the Tune Out
+anal_opts.fit_to.plot_inital=true;
+anal_opts.fit_to.bootstrap=true;
 %thresholds for CI
 %sd         CI
 %1          0.3174
 %2          0.05
 %3          2.699e-03
-ci_size_disp=0.3174;%one sd %confidence interval to display
-ci_size_cut_outliers=0.01; %confidence interval for cutting outliers
-
-fprintf('Calculating Fits')
-%select the data in some freq range and that has an ok number
-
-%set up the data input for the fit
-xdat=probe_freq(~isnan(probe_freq))';
-ydat=square_diff(~isnan(probe_freq))';
-cdat=cdat(~isnan(probe_freq));
-if exist('new_to_freq_val','var') %if the TO has been calculated before use that as the center
-    freq_offset=new_to_freq_val;
-else
-    freq_offset=nanmean(xdat); %otherwise use the center of the range
-end
-xdat=xdat-freq_offset; %fits work better when thery are scaled reasonably
-xdat=xdat*1e-9;
-
-modelfun = @(b,x) b(1)+ b(2).*x; %simple linear model
-opts = statset('nlinfit');
-%opts.RobustWgtFun = 'welsch' ; %a bit of robust fitting
-%opts.Tune = 1;
-beta0 = [1e-5,1e-2]; %intial guesses
-mdl_all = fitnlm(xdat,ydat,modelfun,beta0,'Options',opts);
-xsamp=linspace(min(xdat),max(xdat),1e3)'; %sample for the model curve
-[ysamp,yci]=predict(mdl_all,xsamp,'Prediction','observation','Alpha',ci_size_disp); %note the observation CI
-%now plot the data and the model together
-figure(6);
-set(gcf,'color','w')
-subplot(1,2,1)
-plot(xsamp,ysamp,'k-')
-hold on
-plot(xsamp,yci,'r-')
-scatter(xdat,ydat,30,cdat,'square','filled')
-c =colorbar;
-c.Label.String = 'time (H)';
-caxis([0,range(shot_time)/(60*60)])
-%plot(xdat,ydat,'bx')
-xlabel(sprintf('probe beam set freq - %.3f(GHz)',freq_offset*1e-9))
-ylabel('Response (Hz^2)')
-title('Good Data')
-first_plot_lims=[get(gca,'xlim');get(gca,'ylim')];
-%now make a new prediction with the model but with the CI to cut out outliers
-[~,yci_cull_lim]=predict(mdl_all,xdat','Prediction','observation','Alpha',ci_size_cut_outliers);
-is_outlier_idx=ydat>yci_cull_lim(:,1)' & ydat<yci_cull_lim(:,2)';
-%color the ones that will be removed
-plot(xdat(~is_outlier_idx),ydat(~is_outlier_idx),'r.','markersize',15)
-hold off
-xdat_culled=xdat(is_outlier_idx);
-ydat_culled=ydat(is_outlier_idx);
-cdat_culled=cdat(is_outlier_idx);
-
-opts = statset('nlinfit');
-%opts.RobustWgtFun = 'welsch' ;
-opts.Tune = 1;
-beta0 = [1e-5,1e-2];
-mdl_culled = fitnlm(xdat_culled,ydat_culled,modelfun,beta0,'Options',opts);
-xsamp_culled=linspace(min(xdat_culled),max(xdat_culled),1e3)';
-[ysamp_culled,yci_culled]=predict(mdl_culled,xsamp_culled,'Alpha',0.2); %'Prediction','observation'
-%now plot the remaining data along with the fit model and the model CI
+anal_opts.fit_to.ci_size_disp=0.3174;%one sd %confidence interval to display
+anal_opts.fit_to.global=anal_opts.global;
+anal_opts.fit_to.ci_size_cut_outliers=0.05; %confidence interval for cutting outliers
+anal_opts.fit_to.scale_x=1e-9;
+addpath('boostrap_error')
+to_res=fit_to(anal_opts.fit_to,data);
 
 
-subplot(1,2,2)
-plot(xsamp_culled,ysamp_culled,'k-')
-hold on
-plot(xsamp_culled,yci_culled,'r-')
-scatter(xdat_culled,ydat_culled,30,cdat_culled,'square','filled')
-colormap(viridis(1000))
-c =colorbar;
-c.Label.String = 'time (H)';
-caxis([0,range(shot_time)/(60*60)])
-hold off
-xlabel(sprintf('probe beam set freq - %.3f (GHz)',freq_offset*1e-9))
-ylabel('Response (Hz^2)')
-title('Fit Outliers Removed')
-set(gca,'xlim',first_plot_lims(1,:))
-set(gca,'ylim',first_plot_lims(2,:))
+to_fit_trimed_val=to_res.fit_trimmed.to_freq;
+to_fit_unc_boot=to_res.fit_trimmed.to_unc_boot;
+to_fit_unc_fit=to_res.fit_trimmed.to_unc_fit;
+to_fit_unc_unc_boot=to_res.fit_trimmed.boot.se_se_opp/anal_opts.fit_to.scale_x;
 
-
-set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
-data.mcp_tdc.all_ok=tmp_all_ok;
-plot_name='TO_fits';
-saveas(gcf,[anal_out.dir,plot_name,'.png'])
-saveas(gcf,[anal_out.dir,plot_name,'.fig'])
-
-
-
-%normalize by the CI at the TO
-figure(7);
-clf
-set(gcf,'color','w')
-cross_xval=-mdl_all.Coefficients.Estimate(1)/mdl_all.Coefficients.Estimate(2);
-[cross_yval,cross_yci]=predict(mdl_all,cross_xval,'Prediction','observation','Alpha',ci_size_disp);
-if abs(cross_yval)>1e-2, error('not crossing zero here') ,end
-cross_yci=diff(cross_yci)/2;
-plot(xsamp,ysamp/cross_yci,'k-')
-hold on
-plot(xsamp,yci/cross_yci,'r-')
-plot(xdat,ydat/cross_yci,'bx')
-hold off
-xlabel(sprintf('probe beam set freq - %.3f (GHz)',freq_offset*1e-9))
-ylabel('Response scaled to sample SD')
-title('Senistivity Graph ')
-
-set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
-data.mcp_tdc.all_ok=tmp_all_ok;
-plot_name='Sens_graph';
-saveas(gcf,[anal_out.dir,plot_name,'.png'])
-saveas(gcf,[anal_out.dir,plot_name,'.fig'])
-
-
+%% write out the results
 %inverse scaled gradient to give the single shot uncert
 single_shot_uncert=abs(1/(mdl_all.Coefficients.Estimate(2)/cross_yci));
-fprintf('\nfit results\n')
+fprintf('\n====TO fit results==========\n')
 fprintf('median damping time %.2f\n',median(1./data.osc_fit.model_coefs(data.osc_fit.ok.rmse,7,1)))
 %calculate some statistics and convert the model parameter into zero crossing and error therin
 old_to_wav=413.0938e-9;
-new_to_freq_val=-1e9*mdl_culled.Coefficients.Estimate(1)/mdl_culled.Coefficients.Estimate(2)+freq_offset;
-new_to_freq_unc=1e9*abs((mdl_culled.Coefficients.Estimate(1)/mdl_culled.Coefficients.Estimate(2)))*...
-    sqrt((mdl_culled.Coefficients.SE(1)/mdl_culled.Coefficients.Estimate(1))^2+...
-    (mdl_culled.Coefficients.SE(2)/mdl_culled.Coefficients.Estimate(2))^2);
-new_to_wav_val=const.c/(new_to_freq_val*2);
-new_to_wav_unc=new_to_freq_unc*const.c/((new_to_freq_val*2)^2);
-fprintf('run start time %.1f\n (posix)',...
+new_to_freq_unc=to_fit_unc_boot;
+to_wav_val=const.c/(to_fit_trimed_val*2);
+to_wav_unc=new_to_freq_unc*const.c/((to_fit_trimed_val*2)^2);
+fprintf('run start time               %.1f (posix)\n',...
     data.mcp_tdc.time_create_write(1,2)-anal_opts.trig_dld-anal_opts.dld_aquire)
-fprintf('run stop time  %.1f\n (posix)',...
+fprintf('run stop time                %.1f (posix)\n',...
     data.mcp_tdc.time_create_write(end,2)-anal_opts.trig_dld-anal_opts.dld_aquire)
-fprintf('duration  %.1f\n (s)',...
+fprintf('duration                     %.1f (s)\n',...
     data.mcp_tdc.time_create_write(end,2)-data.mcp_tdc.time_create_write(1,2))
-fprintf('TO freq        %.2f±%.2f MHz\n',new_to_freq_val*1e-6,new_to_freq_unc*1e-6)
-fprintf('TO wavelength  %.6f±%f nm \n',new_to_wav_val*1e9,new_to_wav_unc*1e9)
-fprintf('diff from TOV1 %e±%e nm \n',(new_to_wav_val-old_to_wav)*1e9,new_to_wav_unc*1e9)
+fprintf('TO freq                      %.1f±(%.0f±%.0f) MHz\n',...
+    to_fit_trimed_val*1e-6,new_to_freq_unc*1e-6,to_fit_unc_unc_boot*1e-6)
+fprintf('TO wavelength                %.6f±%f nm \n',to_wav_val*1e9,to_wav_unc*1e9)
+fprintf('diff from TOV1               %e±%e nm \n',(to_wav_val-old_to_wav)*1e9,to_wav_unc*1e9)
 fprintf('number of probe files        %u \n',sum(probe_dat_mask))
 fprintf('number of calibration files  %u \n',sum(cal_dat_mask))
 fprintf('total used                   %u \n',sum(probe_dat_mask)+sum(cal_dat_mask))
 fprintf('files with enough number     %u\n',sum(data.mcp_tdc.num_ok))
 
 fprintf('single shot uncert detuning @1SD %.1f MHz, %.2f fm\n',single_shot_uncert*1e3,...
-    1e9*single_shot_uncert*const.c/((new_to_freq_val*2)^2)*10^15)
+    1e9*single_shot_uncert*const.c/((to_fit_trimed_val*2)^2)*10^15)
 %predicted uncert using this /sqrt(n)
 fprintf('predicted stat. uncert %.1f MHz, %.2f fm\n',single_shot_uncert/sqrt(sum(data.mcp_tdc.num_ok))*1e3,...
-    1e9*single_shot_uncert/sqrt(sum(data.mcp_tdc.num_ok))*const.c/((new_to_freq_val*2)^2)*10^15)
+    1e9*single_shot_uncert/sqrt(sum(data.mcp_tdc.num_ok))*const.c/((to_fit_trimed_val*2)^2)*10^15)
 
 diary off
 
