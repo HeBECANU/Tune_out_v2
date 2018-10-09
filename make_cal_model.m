@@ -1,4 +1,4 @@
-function freq_drift_model=make_cal_model(anal_opts_cal,data)
+function out=make_cal_model(anal_opts_cal,data)
 
 addpath('nanconv')
 
@@ -22,8 +22,9 @@ kernel = gausswin(ceil(3*anal_opts_cal.smooth_time/(dx_interp)),3);
 kernel=kernel/sum(kernel);
 yinterp_smooth = nanconv(yinterp_raw,kernel,'edge','1d')';
 %create a model based on interpolating the smoothed interpolated data
-freq_drift_model=@(x) interp1(xinterp,yinterp_smooth,x-time_start_cal,'linear');
-
+out.freq_drift_model=@(x) interp1(xinterp,yinterp_smooth,x-time_start_cal,'linear');
+out.num_shots=sum(cal_dat_mask);
+out.cal_mask=cal_dat_mask;
 
 
 if anal_opts_cal.plot
@@ -35,7 +36,7 @@ if anal_opts_cal.plot
     plot(x_tmp/hour_in_s,y_tmp,'x','MarkerSize',20)
     hold on
     plot(xinterp/hour_in_s,yinterp_raw,'m')
-    plot(x_samp/hour_in_s,freq_drift_model(x_samp+time_start_cal),'k')
+    plot(x_samp/hour_in_s,out.freq_drift_model(x_samp+time_start_cal),'k')
     legend('data','interp data','calibration model' )
     hold off
     title('Trap Freq Calibration')

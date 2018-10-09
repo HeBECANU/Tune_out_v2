@@ -5,9 +5,13 @@ temp_cal(isnan(temp_cal))=1;
 %manual bootstrap rand(size(data.osc_fit.ok.rmse))>0.9
 probe_dat_mask=data.osc_fit.ok.rmse & ~temp_cal & ~isnan(data.mcp_tdc.probe.freq.act.mean') &...
     ~isnan(data.mcp_tdc.probe.freq.act.mean)' & ~isnan(data.osc_fit.trap_freq_recons);
+
+to_res.num_shots=sum(probe_dat_mask);
+to_res.fit_mask=probe_dat_mask;
+
 probe_freq= data.mcp_tdc.probe.freq.act.mean(probe_dat_mask')*1e6;
 trap_freq=data.osc_fit.trap_freq_recons(probe_dat_mask)';
-cal_trap_freq=data.osc_fit.cal_mdl(data.mcp_tdc.time_create_write(probe_dat_mask,1));
+cal_trap_freq=data.cal.freq_drift_model(data.mcp_tdc.time_create_write(probe_dat_mask,1));
 delta_trap_freq=trap_freq-cal_trap_freq;
 square_trap_freq= (trap_freq).^2-(cal_trap_freq).^2;
 %define the color for each shot on the plot
@@ -135,6 +139,9 @@ boot=bootstrap_se(@fit_lin_data,culed_xydat,...
 
 to_res.fit_trimmed.boot=boot;
 to_res.fit_trimmed.to_unc_boot=to_res.fit_trimmed.boot.se_opp/anal_opts_fit_to.scale_x;
+to_res.fit_trimmed.single_shot_uncert_boot=to_res.fit_trimmed.to_unc_boot*sqrt(numel(xdat_culled));
+
+
 
 xsamp_culled=linspace(min(xdat_culled),max(xdat_culled),1e3)';
 [ysamp_culled,yci_culled]=predict(mdl_culled,xsamp_culled,'Alpha',0.2); %'Prediction','observation'
@@ -162,20 +169,21 @@ plot_name='TO_fits';
 saveas(gcf,[anal_opts_fit_to.global.out_dir,plot_name,'.png'])
 saveas(gcf,[anal_opts_fit_to.global.out_dir,plot_name,'.fig'])
 
-
+%find the single shot confidence interval
+cross_xval=-mdl_culled.Coefficients.Estimate(1)/mdl_culled.Coefficients.Estimate(2);
+[cross_yval,cross_yci]=predict(mdl_culled,cross_xval,'Prediction','observation','Alpha',0.3174);
+if abs(cross_yval)>1e-2, error('not crossing zero here') ,end
+cross_yci=diff(cross_yci)/2;
+to_res.fit_trimmed.single_shot_uncert_fit=abs(cross_yci*(1/mdl_culled.Coefficients.Estimate(2)))/anal_opts_fit_to.scale_x;
 
 %normalize by the CI at the TO
 figure(7);
 clf
 set(gcf,'color','w')
-cross_xval=-mdl_all.Coefficients.Estimate(1)/mdl_all.Coefficients.Estimate(2);
-[cross_yval,cross_yci]=predict(mdl_all,cross_xval,'Prediction','observation','Alpha',ci_size_disp);
-if abs(cross_yval)>1e-2, error('not crossing zero here') ,end
-cross_yci=diff(cross_yci)/2;
-plot(xsamp,ysamp/cross_yci,'k-')
+plot(xsamp_culled,ysamp_culled/cross_yci,'k-')
 hold on
-plot(xsamp,yci/cross_yci,'r-')
-plot(xdat,ydat/cross_yci,'bx')
+plot(xsamp_culled,yci_culled/cross_yci,'r-')
+plot(xdat_culled,ydat_culled/cross_yci,'bx')
 hold off
 xlabel(sprintf('probe beam set freq - %.3f (GHz)',freq_offset*1e-9))
 ylabel('Response scaled to sample SD')

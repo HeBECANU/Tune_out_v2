@@ -79,7 +79,7 @@ tic
 %anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output';
 %anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20180829_half_wp_353';
 %anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181002_halfwp_236_stab3\';
-anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181002_halfwp_236_stab4\';
+anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181002_halfwp_236_stab3\';
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
 anal_opts.tdc_import.force_reimport=false;
@@ -95,7 +95,7 @@ anal_opts.max_runtime=inf;%cut off the data run after some number of hours
 anal_opts.atom_laser.pulsedt=8.000e-3;
 anal_opts.atom_laser.t0=0.41784; %center i ntime of the first pulse
 anal_opts.atom_laser.start_pulse=1; %atom laser pulse to start with
-anal_opts.atom_laser.pulses=200;
+anal_opts.atom_laser.pulses=100;
 anal_opts.atom_laser.appr_osc_freq_guess=[52,40,40];
 anal_opts.atom_laser.pulse_twindow=anal_opts.atom_laser.pulsedt*0.9;
 anal_opts.atom_laser.xylim=anal_opts.tdc_import.txylim(2:3,:); %set same lims for pulses as import
@@ -318,8 +318,8 @@ for ii=1:iimax
     %is this the best way to do it?
     [time_nearest_lv,idx_nearest_lv]=closest_value(data.labview.time,est_labview_start);
     abs_anal_opts.trig_dld_on_main_comp=data.labview.time(idx_nearest_lv)+anal_opts.trig_dld;
-    time_lower=abs_anal_opts.trig_dld_on_main_comp+anal_opts.atom_laser.t0-anal_opts.fall_time-0.5; %the probe turns on
-    time_upper=abs_anal_opts.trig_dld_on_main_comp+anal_opts.atom_laser.t0-anal_opts.fall_time+time_probe+0.5; %when the probe beam goes off
+    time_lower=abs_anal_opts.trig_dld_on_main_comp+anal_opts.atom_laser.t0-anal_opts.global.fall_time-0.5; %the probe turns on
+    time_upper=abs_anal_opts.trig_dld_on_main_comp+anal_opts.atom_laser.t0-anal_opts.global.fall_time+time_probe+0.5; %when the probe beam goes off
     
     %CHECK PD VALUE
     %check if there were some readings of the ecd output voltage withing time_padding seconds of this period
@@ -478,6 +478,8 @@ ylim([-0.1,1.1])
 tmp_num_shots=numel(data.mcp_tdc.shot_num);
 tmp_num_ok_shots=sum(tmp_all_ok);
 data.mcp_tdc.all_ok=tmp_all_ok;
+data.mcp_tdc.probe.ok.all=tmp_probe_ok;
+
 
 fprintf('ok logic gives %u / %u shots for yeild %04.1f %%\n',...
     tmp_num_ok_shots,tmp_num_shots,1e2*tmp_num_ok_shots/tmp_num_shots)
@@ -527,10 +529,12 @@ data.osc_fit.trap_freq_recons(mask)=3*(1/anal_opts.atom_laser.pulsedt)+data.osc_
 
 
 %% create a model of the underlying trap frequency from the calibrations
-anal_opts.cal_mdl.smooth_time=50;
+anal_opts.cal_mdl.smooth_time=30;
 anal_opts.cal_mdl.plot=true;
 anal_opts.cal_mdl.global=anal_opts.global;
-data.osc_fit.cal_mdl=make_cal_model(anal_opts.cal_mdl,data);
+data.cal=make_cal_model(anal_opts.cal_mdl,data);
+
+%data.osc_fit.cal.freq_drift_model
 
 %% Fit the Tune Out
 anal_opts.fit_to.plot_inital=true;
@@ -546,7 +550,7 @@ anal_opts.fit_to.ci_size_cut_outliers=0.05; %confidence interval for cutting out
 anal_opts.fit_to.scale_x=1e-9;
 addpath('boostrap_error')
 to_res=fit_to(anal_opts.fit_to,data);
-
+data.to_fit=to_res;
 
 to_fit_trimed_val=to_res.fit_trimmed.to_freq;
 to_fit_unc_boot=to_res.fit_trimmed.to_unc_boot;
@@ -555,7 +559,7 @@ to_fit_unc_unc_boot=to_res.fit_trimmed.boot.se_se_opp/anal_opts.fit_to.scale_x;
 
 %% write out the results
 %inverse scaled gradient to give the single shot uncert
-single_shot_uncert=abs(1/(mdl_all.Coefficients.Estimate(2)/cross_yci));
+single_shot_uncert=to_res.fit_trimmed.single_shot_uncert_boot;
 fprintf('\n====TO fit results==========\n')
 fprintf('median damping time %.2f\n',median(1./data.osc_fit.model_coefs(data.osc_fit.ok.rmse,7,1)))
 %calculate some statistics and convert the model parameter into zero crossing and error therin
@@ -573,16 +577,17 @@ fprintf('TO freq                      %.1f±(%.0f±%.0f) MHz\n',...
     to_fit_trimed_val*1e-6,new_to_freq_unc*1e-6,to_fit_unc_unc_boot*1e-6)
 fprintf('TO wavelength                %.6f±%f nm \n',to_wav_val*1e9,to_wav_unc*1e9)
 fprintf('diff from TOV1               %e±%e nm \n',(to_wav_val-old_to_wav)*1e9,to_wav_unc*1e9)
-fprintf('number of probe files        %u \n',sum(probe_dat_mask))
-fprintf('number of calibration files  %u \n',sum(cal_dat_mask))
-fprintf('total used                   %u \n',sum(probe_dat_mask)+sum(cal_dat_mask))
-fprintf('files with enough number     %u\n',sum(data.mcp_tdc.num_ok))
+%more logic needs to be included here
+fprintf('number of probe files        %u \n',to_res.num_shots)
+fprintf('number of calibration files  %u \n',data.cal.num_shots)
+fprintf('total used                   %u \n',to_res.num_shots+data.cal.num_shots)
+fprintf('files with enough number     %u\n',sum(data.mcp_tdc.num_ok'))
 
-fprintf('single shot uncert detuning @1SD %.1f MHz, %.2f fm\n',single_shot_uncert*1e3,...
-    1e9*single_shot_uncert*const.c/((to_fit_trimed_val*2)^2)*10^15)
+fprintf('single shot uncert detuning @1SD %.1f MHz, %.2f fm\n',single_shot_uncert*1e-6,...
+    single_shot_uncert*const.c/((to_fit_trimed_val*2)^2)*10^15)
 %predicted uncert using this /sqrt(n)
-fprintf('predicted stat. uncert %.1f MHz, %.2f fm\n',single_shot_uncert/sqrt(sum(data.mcp_tdc.num_ok))*1e3,...
-    1e9*single_shot_uncert/sqrt(sum(data.mcp_tdc.num_ok))*const.c/((to_fit_trimed_val*2)^2)*10^15)
+fprintf('predicted stat. uncert %.1f MHz, %.2f fm\n',single_shot_uncert/sqrt(sum(data.mcp_tdc.num_ok))*1e-6,...
+    single_shot_uncert/sqrt(sum(data.mcp_tdc.num_ok))*const.c/((to_fit_trimed_val*2)^2)*10^15)
 
 diary off
 
