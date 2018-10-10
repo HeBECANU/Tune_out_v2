@@ -20,10 +20,9 @@ osc_fit.model=cell(1,iimax);
 fprintf('Fitting oscillations in shots %04i:%04i',iimax,0)
 
  if anal_opts_osc_fit.plot_fits
-            sfigure(2);
+            sfigure(51);
             clf
             set(gcf,'color','w')
-            subplot(2,1,1)
  end
 
 for ii=1:iimax

@@ -1,5 +1,7 @@
 function shots=find_data_files(import_opts)
-
+%finds the the files that match the format (in name only) of a data file
+%could add an option to check the first few lines of the data file
+%Bryce Hensson
 dirq=dir(import_opts.dir);
 dir_names={dirq.name};
 dir_names={dir_names{3:end}};

@@ -58,6 +58,7 @@ function [mcp_tdc_data,import_opts]=import_mcp_tdc_data(import_opts)
 %------------- BEGIN CODE --------------
 
 %do some basic checks on input
+%mandatory
 if ~isfield(import_opts, 'dir') ,error('bad input:dir'), end
 if ~isfield(import_opts, 'file_name') ,error('bad input:file_name'), end
 if ~isfield(import_opts, 'force_reimport') ,error('bad input:force_reimport'), end
@@ -65,7 +66,6 @@ if ~isfield(import_opts, 'dld_xy_rot') ,error('bad input:dld_xy_rot'), end
 if ~isfield(import_opts, 'txylim') ,error('bad input:txylim'), end
 if ~isfield(import_opts, 'dld_xy_rot') ,error('bad input:dld_xy_rot'), end
 if ~isfield(import_opts, 'shot_num') ,error('bad input:dld_xy_rot'), end
-
 if ~isa(import_opts.dir,'char') ,error('bad input:dir'), end
 if ~isa(import_opts.file_name,'char') ,error('bad input:file_name'), end
 if ~isa(import_opts.force_reimport,'logical') ,error('bad input:force_reimport'), end
@@ -74,7 +74,9 @@ if ~isa(import_opts.txylim,'double') && size(import_opts.txylim)== [3,2]
     error('bad input:txylim'), end
 if ~isa(import_opts.shot_num,'double') ,error('bad input:dld_xy_rot'), end
 
-
+%optional
+if ~isfield(import_opts, 'mat_save') ,import_opts.mat_save=true; end
+if ~isfield(import_opts, 'mod_wait') ,import_opts.mod_wait=6; end
 
 %fix if there is not a trailing \ on the directory
 %NOT LINUX FRIENDLY!!!
@@ -105,49 +107,51 @@ if isfile('import_mcp_tdc_save.mat') && (import_opts.force_load_save || (~import
     end
 end
 
-
+time_now=posixtime(datetime('now'));
 if import_data
     fprintf('importing files %04i:%04i',size(import_opts.shot_num,2),0)
     for ii=1:size(import_opts.shot_num,2)
         if ~(exist([import_opts.dir,import_opts.file_name,num2str(import_opts.shot_num(ii)),'.txt'],'file')==2)
-                    data.txy{ii}=[];
                     fprintf('\n no_file %04i \n %04i\n',ii,ii)
+                    data.txy{ii}=[];
+                    mcp_tdc_data.shot_num(ii)=nan;
+                    mcp_tdc_data.num_counts(ii)=nan;
         else
-            %if the txy_forc does not exist or if import_opts.force_forc (re) make it
-            if ~(exist([import_opts.dir,import_opts.file_name,'_txy_forc',num2str(import_opts.shot_num(ii)),'.txt'],'file')==2)...
-                    || import_opts.force_forc
-                dld_raw_to_txy([import_opts.dir,import_opts.file_name],import_opts.shot_num(ii),import_opts.shot_num(ii));
-            end
-            txydata=txy_importer([import_opts.dir,import_opts.file_name],num2str(import_opts.shot_num(ii)));
-            txydata=masktxy(txydata,import_opts.txylim); %mask for counts in the window txylim     
-            alpha=-import_opts.dld_xy_rot;
-            mcp_tdc_data.counts_txy{ii}=txydata*[1 0 0;0 cos(alpha) -sin(alpha); 0 sin(alpha) cos(alpha)];
-            mcp_tdc_data.num_counts(ii)=size(txydata,1);
             mcp_tdc_data.time_create_write(ii,:)=data_tcreate([import_opts.dir,import_opts.file_name],num2str(import_opts.shot_num(ii)));
-            mcp_tdc_data.shot_num(ii)=import_opts.shot_num(ii);
+            if time_now<mcp_tdc_data.time_create_write(ii,:)+import_opts.mod_wait
+                fprintf(2,'\n modify time too recent will not process %04i \n %04i\n',import_opts.shot_num(ii),ii)
+                data.txy{ii}=[];
+                mcp_tdc_data.shot_num(ii)=nan;
+                mcp_tdc_data.num_counts(ii)=nan;
+            else
+                %if the txy_forc does not exist or if import_opts.force_forc (re) make it
+                if ~(exist([import_opts.dir,import_opts.file_name,'_txy_forc',num2str(import_opts.shot_num(ii)),'.txt'],'file')==2)...
+                        || import_opts.force_forc
+                    dld_raw_to_txy([import_opts.dir,import_opts.file_name],import_opts.shot_num(ii),import_opts.shot_num(ii));
+                end
+                txydata=txy_importer([import_opts.dir,import_opts.file_name],num2str(import_opts.shot_num(ii)));
+                txydata=masktxy(txydata,import_opts.txylim); %mask for counts in the window txylim     
+                alpha=-import_opts.dld_xy_rot;
+                mcp_tdc_data.counts_txy{ii}=txydata*[1 0 0;0 cos(alpha) -sin(alpha); 0 sin(alpha) cos(alpha)];
+                mcp_tdc_data.num_counts(ii)=size(txydata,1);
+                mcp_tdc_data.shot_num(ii)=import_opts.shot_num(ii);
+            end
         end %file exists condition
     fprintf('\b\b\b\b%04i',ii)
     end
     import_opts_old=import_opts;
-    fprintf('\b\b\b\b...Done\nSaving mat file...')
+    fprintf('\b\b\b\b...Done\n')
     
-
     %saving the data takes a while, some comparisons:
-        %compression on 66s , 1,741,941,211bytes
-        %'-nocompression' 72s , 2,078,423,812bytes
-    save('import_mcp_tdc_save.mat','mcp_tdc_data','import_opts_old','-v7.3');
-    fprintf('Done\n')
+    if import_opts.mat_save
+        fprintf('Saving mat file...')
+        save('import_mcp_tdc_save.mat','mcp_tdc_data','import_opts_old','-v7.3');
+        fprintf('Done\n')
+    end
+
 end
 end
 
-%%import_opts.dld_xy_rot=0.61;s
-%old rotation method
-%             sin_theta = sin(import_opts.dld_xy_rot);
-%             cos_theta = cos(import_opts.dld_xy_rot);
-%             three_channel_output_rot(:,1) = txydata(:,1);
-%             three_channel_output_rot(:,2) = txydata(:,2)*cos_theta...
-%                 - txydata(:,3)*sin_theta;
-%             three_channel_output_rot(:,3) = txydata(:,2)*sin_theta...
-%                 + txydata(:,3)*cos_theta;
+
 
 
