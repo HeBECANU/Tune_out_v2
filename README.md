@@ -1,7 +1,5 @@
 # Tune_out_v2_trap_freq
-Determine the Tune out from a dataset
-using the measured change in trap frequency from the application of a probe beam.
-application of the tune out probe beam.
+Determine the Tune out from a dataset using the measured change in trap frequency when the probe beam is applied.  
 The script:
   * defines the user controled options
   * Imports all the tdc data files 
@@ -47,27 +45,11 @@ DAC master trig ---------->		Digital output cards
 								DLD write
 
 ```
-Other m-files required: import_data,find_data_files,dld_raw_to_txy,masktxy,data_tcreate,
-                        dld_read_5channels_reconst_multi_imp,constants
-Also See:
-Subfunctions: none
-MAT-files required: none
 
-Known BUGS/ Possible Improvements
-  * make unique plot numbers
-  * the fit error depends on wavelength indicating that the model does not have enough freedom
-  * save analysis results
-	* make plots more compact
-  * harmonize the anal opts
-    * place more sections into functions
-	* clean up the fit section
-	* write a n depth function cashing wrapper with hash lookup
-      * alow partial updates
-      
-
-Author: Bryce Henson
-email: Bryce.Henson@live.com
-Last revision:2018-10-01
+## Install
+'''
+git clone --recursive https://github.com/brycehenson/Tune_out_v2_trap_freq.git
+'''
 
 
 ![An example TO](/nice_plots/to_fit.png)
