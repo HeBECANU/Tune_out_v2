@@ -20,7 +20,7 @@ function[out]=fft_tx(t,x,pad)
 if size(size(t),2)==2
     if size(t,1)~=1 && size(t,2)==1
         t=t';
-    elseif size(t,1)==1 && size(t,2)==1
+    elseif size(t,1)<=1 && size(t,2)<=1
         error('thats not a vector in t')
     end
 else

@@ -53,10 +53,10 @@
 % MAT-files required: none
 %
 % Known BUGS/ Possible Improvements
+%   - weight the final TO fit by the trap freq fit unc
 %	-make unique plot numbers
 %   -the fit error depends on wavelength indicating that the model does not
 %   have enough freedom
-%   -save analysis results
 %	-make plots more compact
 %   -harmonize the anal opts
 %	-place more sections into functions
@@ -67,7 +67,7 @@
 %
 % Author: Bryce Henson
 % email: Bryce.Henson@live.com
-% Last revision:2018-10-01
+% Last revision:2018-10-09
 
 
 %close all
@@ -136,6 +136,7 @@ diary([anal_out.dir,'anal.txt'])
 %sets up the struct 'data' which will contain everything you could want incuding the txy data and
 %the information from the logs
 addpath('Colormaps') 
+addpath('bootstrap_error')
 addpath('FileTime_29Jun2011') %used for high precision windows timestamps in import_data
 constants
 anal_opts.global.velocity=const.g0*anal_opts.global.fall_time;
@@ -548,7 +549,7 @@ anal_opts.fit_to.ci_size_disp=0.3174;%one sd %confidence interval to display
 anal_opts.fit_to.global=anal_opts.global;
 anal_opts.fit_to.ci_size_cut_outliers=0.05; %confidence interval for cutting outliers
 anal_opts.fit_to.scale_x=1e-9;
-addpath('boostrap_error')
+
 to_res=fit_to(anal_opts.fit_to,data);
 data.to_fit=to_res;
 
