@@ -4,3 +4,6 @@
 [submodule "bootstrap_error"]
 	path = bootstrap_error
 	url = https://github.com/brycehenson/bootstrap_error.git
+[submodule "lib/fast_sorted_mask"]
+	path = lib/fast_sorted_mask
+	url = https://github.com/brycehenson/fast_sorted_mask
