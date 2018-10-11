@@ -14,7 +14,7 @@ x_tmp=x_tmp-time_start_cal;
 %create a vector of the reconstructed calibration frequencies
 y_tmp=data.osc_fit.trap_freq_recons(cal_dat_mask)';
 %interpolate the input data
-xinterp=linspace(min(x_tmp),max(x_tmp),1e5);
+xinterp=linspace(min(x_tmp),max(x_tmp),size(x_tmp,1)*1e2);
 yinterp_raw=interp1(x_tmp,y_tmp,xinterp,'linear');
 dx_interp=xinterp(2)-xinterp(1);
 %smooth the interpolated data
@@ -29,7 +29,7 @@ out.cal_mask=cal_dat_mask;
 
 if anal_opts_cal.plot
     hour_in_s=60*60;
-    x_samp=linspace(min(x_tmp),max(x_tmp),1e3);
+    x_samp=linspace(min(x_tmp),max(x_tmp),size(x_tmp,1)*1e2);
     figure(61)
     clf
     set(gcf,'color','w')
