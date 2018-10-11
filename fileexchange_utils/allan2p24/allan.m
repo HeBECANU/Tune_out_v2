@@ -170,7 +170,7 @@ versionstr = 'allan v2.24';
 % defaults
 if nargin < 4, verbose=2; end
 if nargin < 3, name=''; end
-if nargin < 2 || isempty(tau), tau=2.^(-15:0.125:15); end %making this take more tau values
+if nargin < 2 || isempty(tau), tau=2.^(-10:10); end
 
 % plot "tau bins"? #TAUBIN
 TAUBIN = 0; % set 0 or 1 % WARNING: this has a significant impact on performance
@@ -545,7 +545,7 @@ if verbose >= 1 % show ADEV results
         % this is a hack to approximate the error bars
         hold on; plot([tau; tau],[sm+sme; sm-sme],'-k','LineWidth',max(plotlinewidth-1,2));
 
-        %grid on;
+        grid on;
         title(['Allan Deviation: ' name],'FontSize',FontSize+2,'FontName',FontName);
         %set(get(gca,'Title'),'Interpreter','none');
         xlabel('\tau [sec]','FontSize',FontSize,'FontName',FontName);
@@ -554,7 +554,7 @@ if verbose >= 1 % show ADEV results
         else
             ylabel('\sigma_y(\tau)','FontSize',FontSize,'FontName',FontName);
         end
-        set(gca,'FontSize',FontSize,'FontName',FontName,'XTick',10.^(-3:4));
+        set(gca,'FontSize',FontSize,'FontName',FontName);
         % expand the x axis a little bit so that the errors bars look nice
         adax = axis;
         axis([adax(1)*0.9 adax(2)*1.1 adax(3) adax(4)]);
@@ -569,7 +569,7 @@ if verbose >= 1 % show ADEV results
     end
 
 end % end plot ADEV data
-csvwrite('allanout.csv',[rot90(tau),rot90(sm),rot90(sme)])
+    
 retval = sm;
 errorb = sme;
 

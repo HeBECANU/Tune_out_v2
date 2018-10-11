@@ -135,10 +135,12 @@ diary([anal_out.dir,'anal.txt'])
 
 %sets up the struct 'data' which will contain everything you could want incuding the txy data and
 %the information from the logs
-addpath('Colormaps') 
-addpath('bootstrap_error')
-addpath('FileTime_29Jun2011') %used for high precision windows timestamps in import_data
-constants
+%add all subfolders
+folder = fileparts(which(mfilename)); 
+% Add that folder plus all subfolders to the path.
+addpath(genpath(folder));
+
+hebec_constants %call the constants function that makes some globals
 anal_opts.global.velocity=const.g0*anal_opts.global.fall_time;
 %% IMPORT TDC DATA to data.mcp_tdc
 anal_opts.tdc_import.shot_num=find_data_files(anal_opts.tdc_import);

@@ -1,11 +1,12 @@
-function [ zfilt ] = gaussfilt( t,z,sigma)
+function [ zfilt ] = gaussfilt(t,z,sigma)
 %Apply a Gaussian filter to a time series
 %   Inputs: t = independent variable, z = data at points t, and 
 %       sigma = standard deviation of Gaussian filter to be applied.
 %   Outputs: zfilt = filtered data.
 %
 %   written by James Conder. Aug 22, 2013
-%   convolution for uniformly spaced time time vector (faster) Sep 4, 2014
+%   Sep 04, 2014: Convolution for uniformly spaced time time vector (faster) 
+%   Mar 20, 2018: Damped edge effect of conv (hat tip to Aaron Close)
 
 n = length(z);  % number of data
 a = 1/(sqrt(2*pi)*sigma);   % height of Gaussian
@@ -26,6 +27,9 @@ if uniform
     i = filter < dt*a*1.e-6;
     filter(i) = [];
     zfilt = conv(z,filter,'same');
+    onesToFilt = ones(size(z));     % remove edge effect from conv 
+    onesFilt = conv(onesToFilt,filter,'same'); 
+    zfilt = zfilt./onesFilt; 
 else
     %%% get distances between points for proper weighting
     w = 0*t;

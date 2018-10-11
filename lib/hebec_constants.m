@@ -1,4 +1,5 @@
 %constants
+%should make this a class to prevent any accedental setting of the values from outside
 global const
 %fundemental
 const.c = 299792458; %speed of light (m/s)
