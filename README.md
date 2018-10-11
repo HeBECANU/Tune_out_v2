@@ -77,8 +77,8 @@ Last revision:2018-10-01
 ![An example TO](/nice_plots/logic.png)
 
 
-## Contributions
-This project would not have been possible without the many open source tools that it is based on. In no particular order:
+## Contributions  
+This project would not have been possible without the many open source tools that it is based on. In no particular order:  
 ***James Conder*** [gaussfilt](https://au.mathworks.com/matlabcentral/fileexchange/43182-gaussfilt-t-z-sigma)
 ***Ander Biguri*** [Perceptually uniform colormaps](https://au.mathworks.com/matlabcentral/fileexchange/51986-perceptually-uniform-colormaps)
 * ***Jan**** [FileTime](https://au.mathworks.com/matlabcentral/fileexchange/24671-filetime)
