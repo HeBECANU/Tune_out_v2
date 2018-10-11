@@ -79,7 +79,7 @@ tic
 %anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output';
 %anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20180829_half_wp_353';
 %anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181002_halfwp_236_stab3\';
-anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181002_halfwp_236_stab3\';
+anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181010_every_other_shot_cal\';
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
 anal_opts.tdc_import.force_reimport=false;
@@ -201,7 +201,7 @@ if match_times
     %try and match up the file with if it is a calibaration using the time
     %it is slightly overkill here to search each one, but just being extra
     %cautious/flexible
-    time_thresh=2; %how close for the times to be considered the same shot
+    time_thresh=4; %how close for the times to be considered the same shot
     %lets examine what the time difference does
     sfigure(45);
     set(gcf,'color','w')
@@ -529,7 +529,7 @@ data.osc_fit.trap_freq_recons(mask)=3*(1/anal_opts.atom_laser.pulsedt)+data.osc_
 
 
 %% create a model of the underlying trap frequency from the calibrations
-anal_opts.cal_mdl.smooth_time=30;
+anal_opts.cal_mdl.smooth_time=100;
 anal_opts.cal_mdl.plot=true;
 anal_opts.cal_mdl.global=anal_opts.global;
 data.cal=make_cal_model(anal_opts.cal_mdl,data);
@@ -586,8 +586,8 @@ fprintf('files with enough number     %u\n',sum(data.mcp_tdc.num_ok'))
 fprintf('single shot uncert detuning @1SD %.1f MHz, %.2f fm\n',single_shot_uncert*1e-6,...
     single_shot_uncert*const.c/((to_fit_trimed_val*2)^2)*10^15)
 %predicted uncert using this /sqrt(n)
-fprintf('predicted stat. uncert %.1f MHz, %.2f fm\n',single_shot_uncert/sqrt(sum(data.mcp_tdc.num_ok))*1e-6,...
-    single_shot_uncert/sqrt(sum(data.mcp_tdc.num_ok))*const.c/((to_fit_trimed_val*2)^2)*10^15)
+fprintf('predicted stat. uncert %.1f MHz, %.2f fm\n',single_shot_uncert/sqrt(sum(to_res.num_shots))*1e-6,...
+    single_shot_uncert/sqrt(sum(to_res.num_shots))*const.c/((to_fit_trimed_val*2)^2)*10^15)
 
 diary off
 
