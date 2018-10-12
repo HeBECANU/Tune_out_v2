@@ -109,7 +109,7 @@ end
 
 time_now=posixtime(datetime('now'));
 if import_data
-    fprintf('importing files %04i:%04i',size(import_opts.shot_num,2),0)
+    fprintf('importing mcp-tdc files %04i:%04i',size(import_opts.shot_num,2),0)
     for ii=1:size(import_opts.shot_num,2)
         if ~(exist([import_opts.dir,import_opts.file_name,num2str(import_opts.shot_num(ii)),'.txt'],'file')==2)
                     fprintf('\n no_file %04i \n %04i\n',ii,ii)

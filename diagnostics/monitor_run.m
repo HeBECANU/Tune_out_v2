@@ -49,12 +49,17 @@ anal_opts.osc_fit.dimesion=2; %Select coordinate to bin. 1=X, 2=Y.
 anal_opts.history.shots=200;
 
 % END USER VAR-----------------------------------------------------------
-addpath('Colormaps') 
-addpath('bootstrap_error')
-addpath('FileTime_29Jun2011') %used for high precision windows timestamps in import_data
+
+%add all subfolders
+folder = fileparts(which(mfilename));
+folder=strsplit(folder,filesep); %go up a directory
+folder=strjoin(folder(1:end-1),filesep);
+% Add that folder plus all subfolders to the path.
+addpath(genpath(folder));
+
+hebec_constants
 anal_opts.tdc_import.mat_save=false;
 anal_opts.global.velocity=const.g0*anal_opts.global.fall_time;
-constants
 
 if anal_opts.tdc_import.dir(end) ~= '\', dirpath = [dirpath '\']; end
 if (exist([anal_opts.tdc_import.dir,'out'], 'dir') == 0), mkdir([anal_opts.tdc_import.dir,'out']); end
@@ -63,6 +68,8 @@ anal_out.dir=sprintf('%sout\\monitor\\',...
     anal_opts.tdc_import.dir);
 if (exist(anal_out.dir, 'dir') == 0), mkdir(anal_out.dir); end
 anal_opts.global.out_dir=anal_out.dir;
+
+
 
 %%
 trap_freq_history=[];

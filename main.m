@@ -71,15 +71,16 @@
 
 
 %close all
-%clear all
+clear all
 tic
 %%
 % BEGIN USER VAR-------------------------------------------------
+anal_opts=[];
 %anal_opts.tdc_import.dir='Y:\EXPERIMENT-DATA\Tune Out V2\20180826_testing_wm_log\';
 %anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output';
 %anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20180829_half_wp_353';
 %anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181002_halfwp_236_stab3\';
-anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181010_every_other_shot_cal\';
+anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181010_every_other_shot_cal\';
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
 anal_opts.tdc_import.force_reimport=false;
@@ -122,7 +123,7 @@ anal_opts.osc_fit.dimesion=2; %Select coordinate to bin. 1=X, 2=Y.
 % END USER VAR-----------------------------------------------------------
 data=[]; %CLEAR THE DATA
 anal_out=[];
-%set upa an output dir %https://gist.github.com/ferryzhou/2269380
+%set up an output dir %https://gist.github.com/ferryzhou/2269380
 if anal_opts.tdc_import.dir(end) ~= '\', dirpath = [dirpath '\']; end
 if (exist([anal_opts.tdc_import.dir,'out'], 'dir') == 0), mkdir([anal_opts.tdc_import.dir,'out']); end
  
@@ -136,9 +137,9 @@ diary([anal_out.dir,'anal.txt'])
 %sets up the struct 'data' which will contain everything you could want incuding the txy data and
 %the information from the logs
 %add all subfolders
-folder = fileparts(which(mfilename)); 
+this_folder = fileparts(which(mfilename));
 % Add that folder plus all subfolders to the path.
-addpath(genpath(folder));
+addpath(genpath(this_folder));
 
 hebec_constants %call the constants function that makes some globals
 anal_opts.global.velocity=const.g0*anal_opts.global.fall_time;
@@ -151,7 +152,7 @@ data.mcp_tdc=mcp_tdc_data;
 %TO DO FUNCTIONALIZE
 %import the wavemeter log
 %adaptively to deal with the 2 different log files that are in the data
-clear('wm_log')
+lv_log=[];
 lv_log.dir = strcat(anal_opts.tdc_import.dir,'log_LabviewMatlab.txt');
 fid = fopen(lv_log.dir );
 lv_log.cell=textscan(fid,'%s','Delimiter','\n');
@@ -179,6 +180,7 @@ for ii=1:size(lv_log.cell,1)
         lv_log.iso_times{ii}=line_cells{2};
     end
 end
+data.labview=[];
 data.labview.setpoint=lv_log.setpoints*1e6; %convert to hz
 data.labview.time=lv_log.posix_times;
 data.labview.shot_num=lv_log.iter_nums;
@@ -188,7 +190,7 @@ data.labview.calibration=lv_log.probe_calibration;
 
 %% IMPORT WM LOG FILES
 wm_log_import_opts.dir=anal_opts.tdc_import.dir;
-wm_log_import_opts.force_reimport=false;
+wm_log_import_opts.force_reimport=true;
 wm_log_name='log_wm_';
 wm_logs=dir([wm_log_import_opts.dir,wm_log_name,'*.txt']);
 wm_log_import_opts.names={wm_logs.name};
@@ -211,9 +213,10 @@ if match_times
     clf
     imax=min([size(data.labview.time,2),size(data.mcp_tdc.time_create_write,1)]);
     %imax=5000;
-    plot(data.mcp_tdc.time_create_write(1:imax,1)'-data.labview.time(1:imax)...
-        -anal_opts.trig_dld)
-    mean_delay_labview_tdc=mean(data.labview.time(1:imax)-data.mcp_tdc.time_create_write(1:imax,1)');
+    time_diff=data.mcp_tdc.time_create_write(1:imax,2)'-anal_opts.dld_aquire-anal_opts.trig_dld-...
+        data.labview.time(1:imax);
+    mean_delay_labview_tdc=mean(time_diff);
+    plot(time_diff)
     xlabel('shot number')
     ylabel('time between labview and mcp tdc')
     %to do include ai_log
@@ -225,7 +228,7 @@ if match_times
         %predict the labview master trig time
         %use the write time to handle being unpacked from 7z
         est_labview_start=data.mcp_tdc.time_create_write(ii,2)...
-            -anal_opts.trig_dld-anal_opts.dld_aquire;
+            -anal_opts.trig_dld-anal_opts.dld_aquire-mean_delay_labview_tdc;
         [tval,nearest_idx]=closest_value(data.labview.time...
             ,est_labview_start);
         if abs(tval-est_labview_start)<time_thresh
@@ -243,7 +246,7 @@ end
 %% IMPORT THE ANALOG INPUT LOG
 %the code will check that the probe beam PD was ok and that the laser was single mode
 anal_opts.ai_log.dir=anal_opts.tdc_import.dir;
-anal_opts.ai_log.force_reimport=false ;
+anal_opts.ai_log.force_reimport=true ;
 anal_opts.ai_log.force_load_save=false;
 anal_opts.ai_log.log_name='log_analog_in_';
 anal_opts.ai_log.pd.set=2;
@@ -260,6 +263,7 @@ anal_opts.ai_log.plot.failed=true;
 
 %because im only passing the ai_log feild to aviod conflicts forcing a reimport i need to coppy these feilds
 anal_opts.ai_log.trig_dld=anal_opts.trig_dld;
+anal_opts.ai_log.dld_aquire=anal_opts.dld_aquire;
 anal_opts.ai_log.trig_ai_in=anal_opts.trig_ai_in;
 [data,ai_log_out]=ai_log_import(anal_opts.ai_log,data);
 %copy the output across
@@ -313,13 +317,21 @@ data.mcp_tdc.probe.ok.ecd_pd=false(iimax,1);  %ecd pd value
 sfigure(11);
 set(gcf,'color','w')
 
+imax=min([size(data.labview.time,2),size(data.mcp_tdc.time_create_write,1)]);
+time_diff=data.mcp_tdc.time_create_write(1:imax,2)'-anal_opts.dld_aquire-anal_opts.trig_dld-...
+        data.labview.time(1:imax);
+mean_delay_labview_tdc=mean(time_diff);
+
 for ii=1:iimax
     est_labview_start=data.mcp_tdc.time_create_write(ii,2)...
-            -anal_opts.trig_dld-anal_opts.dld_aquire;
+            -anal_opts.trig_dld-anal_opts.dld_aquire-mean_delay_labview_tdc;
+        
     %find the labview update that was nearest to the tdc_time minus the tdc_trig time
     %this should be the labview itteration that made this data 
     %is this the best way to do it?
     [time_nearest_lv,idx_nearest_lv]=closest_value(data.labview.time,est_labview_start);
+    time_diff=data.labview.time(idx_nearest_lv)-est_labview_start;
+    
     abs_anal_opts.trig_dld_on_main_comp=data.labview.time(idx_nearest_lv)+anal_opts.trig_dld;
     time_lower=abs_anal_opts.trig_dld_on_main_comp+anal_opts.atom_laser.t0-anal_opts.global.fall_time-0.5; %the probe turns on
     time_upper=abs_anal_opts.trig_dld_on_main_comp+anal_opts.atom_laser.t0-anal_opts.global.fall_time+time_probe+0.5; %when the probe beam goes off
@@ -393,15 +405,16 @@ for ii=1:iimax
         xlabel('Probe on time(s)')
         ylabel('2r-b Freq (MHz)')
         title('Blue red difference')
-        pause(1e-2)
+        pause(1e-6)
     end
-    if mod(ii,1e2)==0,fprintf('\b\b\b\b%04u',ii),end
+    if mod(ii,1e1)==0,fprintf('\b\b\b\b%04u',ii),end
 end
 fprintf('...Done\n')
 
 
 %% CHECK ATOM NUMBER
 sfigure(1)
+clf
 %create a list of indicies (of the mcp_tdc) that have an ok number of counts
 %exclude the very low and then set the thresh based on the sd of the remaining
 not_zero_files=data.mcp_tdc.num_counts>1e3; 
@@ -414,6 +427,7 @@ plot((data.mcp_tdc.time_create_write(:,2)-data.mcp_tdc.time_create_write(1,2))/(
 xlabel('time (h)')
 ylabel('total counts')
 title('num count run trend')
+%should plot the threshold
 
 %% COMBINE ALL CHECK LOGICS AND PLOT
 %Here we will do a plot of all the checks and then combine them into one
@@ -593,6 +607,12 @@ fprintf('predicted stat. uncert %.1f MHz, %.2f fm\n',single_shot_uncert/sqrt(sum
     single_shot_uncert/sqrt(sum(to_res.num_shots))*const.c/((to_fit_trimed_val*2)^2)*10^15)
 
 diary off
+
+
+%%
+fprintf('saving output...')
+save(fullfile(anal_out.dir,'data_anal_full.mat'),'data','to_res','anal_opts','-v7.3')
+fprintf('Done')
 
 %% try and find what the outliers were doing
 %given this mask ~color_idx find the shot nums and times 

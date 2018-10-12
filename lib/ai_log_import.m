@@ -72,6 +72,7 @@ if import_logs
     ai_log_out.mcp_tdc.probe.ok.sfp=false(shots_tdc,1);     %scanning FP check
     dld_files=numel(data.mcp_tdc.num_counts);
     
+     
     iimax=size(ai_log_out.ai_log.file_names,2); %the number of ai logs that I have identified
     %initalize outputs
     ai_log_out.mcp_tdc.probe.ok.reg_pd=false(dld_files,1);
@@ -98,11 +99,11 @@ if import_logs
         probe_reg_ok=false;
         %time of the start on the BEC comp
         %for this to work the clock sync need to be decent
-        time_start_bec_comp=time_posix_ai_log_create_write(1)-anal_opts.trig_ai_in-aquire_time;
+        time_start_bec_comp=time_posix_ai_log_create_write(2)-anal_opts.trig_ai_in-aquire_time;
         [time_nearest_tdc_start,idx_nearest_shot]=closest_value(time_start_tdc_comp,time_start_bec_comp);
         %should not process if not near a shot
         if abs(time_nearest_tdc_start-time_start_bec_comp)>time_match_valid
-             warning('nearest tdc file is too far away\n')
+             fprintf(2,'nearest tdc file is too far away')
         else
             ai_log_out.ai_log.shot_idx(ii)=idx_nearest_shot; %index in the mcp_tdc arrays of this shot
             ai_log_out.ai_log.shot_num(ii)=data.mcp_tdc.shot_num(idx_nearest_shot); %number of shot eg d54.txt
