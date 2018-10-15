@@ -121,6 +121,8 @@ anal_opts.osc_fit.tlim=[0.86,1.08];
 anal_opts.osc_fit.dimesion=2; %Select coordinate to bin. 1=X, 2=Y.
 
 % END USER VAR-----------------------------------------------------------
+%sets up the struct 'data' which will contain everything you could want incuding the txy data and
+%the information from the logs
 data=[]; %CLEAR THE DATA
 anal_out=[];
 %set up an output dir %https://gist.github.com/ferryzhou/2269380
@@ -134,9 +136,8 @@ anal_opts.global.out_dir=anal_out.dir;
  
 diary([anal_out.dir,'anal.txt'])
 
-%sets up the struct 'data' which will contain everything you could want incuding the txy data and
-%the information from the logs
-%add all subfolders
+
+%add all subfolders to the path
 this_folder = fileparts(which(mfilename));
 % Add that folder plus all subfolders to the path.
 addpath(genpath(this_folder));
