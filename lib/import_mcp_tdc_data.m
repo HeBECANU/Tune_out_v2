@@ -76,7 +76,7 @@ if ~isa(import_opts.shot_num,'double') ,error('bad input:dld_xy_rot'), end
 
 %optional
 if ~isfield(import_opts, 'mat_save') ,import_opts.mat_save=true; end
-if ~isfield(import_opts, 'mod_wait') ,import_opts.mod_wait=6; end
+if ~isfield(import_opts, 'mod_wait') ,import_opts.mod_wait=1; end
 
 %fix if there is not a trailing \ on the directory
 %NOT LINUX FRIENDLY!!!
@@ -118,8 +118,8 @@ if import_data
                     mcp_tdc_data.num_counts(ii)=nan;
         else
             mcp_tdc_data.time_create_write(ii,:)=data_tcreate([import_opts.dir,import_opts.file_name],num2str(import_opts.shot_num(ii)));
-            if time_now<mcp_tdc_data.time_create_write(ii,:)+import_opts.mod_wait
-                fprintf(2,'\n modify time too recent will not process %04i \n %04i\n',import_opts.shot_num(ii),ii)
+            if ~is_dld_done_writing(import_opts.dir,[import_opts.file_name,num2str(import_opts.shot_num(ii)),'.txt'],import_opts.mod_wait)
+                fprintf(2,'\n data file not done writing will not process %04i \n %04i\n',import_opts.shot_num(ii),ii)
                 data.txy{ii}=[];
                 mcp_tdc_data.shot_num(ii)=nan;
                 mcp_tdc_data.num_counts(ii)=nan;
