@@ -10,3 +10,6 @@
 [submodule "lib/bootstrap_error"]
 	path = lib/bootstrap_error
 	url = https://github.com/brycehenson/bootstrap_error.git
+[submodule "lib/matlab_function_cache"]
+	path = lib/matlab_function_cache
+	url = https://github.com/brycehenson/matlab_function_cache.git
