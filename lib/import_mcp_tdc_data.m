@@ -47,7 +47,7 @@ function [mcp_tdc_data,import_opts]=import_mcp_tdc_data(import_opts)
 %
 % Known BUGS/ Possible Improvements
 %    -more commenting
-%    -dir \ adding is not linux friendly
+%    -use full file instead of manual string cat for linux compatable file paths
 %    -check for inputs
 %    -multi layer cache & consider storing in import dir
 %
@@ -111,31 +111,28 @@ time_now=posixtime(datetime('now'));
 if import_data
     fprintf('importing mcp-tdc files %04i:%04i',size(import_opts.shot_num,2),0)
     for ii=1:size(import_opts.shot_num,2)
+        data.txy{ii}=[];
+        mcp_tdc_data.shot_num(ii)=nan;
+        mcp_tdc_data.num_counts(ii)=nan;
+        mcp_tdc_data.counts_txy{ii}={};
         if ~(exist([import_opts.dir,import_opts.file_name,num2str(import_opts.shot_num(ii)),'.txt'],'file')==2)
-                    fprintf('\n no_file %04i \n %04i\n',ii,ii)
-                    data.txy{ii}=[];
-                    mcp_tdc_data.shot_num(ii)=nan;
-                    mcp_tdc_data.num_counts(ii)=nan;
+            fprintf('\n no_file %04i \n %04i\n',ii,ii)
+        elseif ~is_dld_done_writing(import_opts.dir,[import_opts.file_name,num2str(import_opts.shot_num(ii)),'.txt'],import_opts.mod_wait)
+            fprintf(2,'\n data file not done writing will not process %04i \n %04i\n',import_opts.shot_num(ii),ii)
         else
             mcp_tdc_data.time_create_write(ii,:)=data_tcreate([import_opts.dir,import_opts.file_name],num2str(import_opts.shot_num(ii)));
-            if ~is_dld_done_writing(import_opts.dir,[import_opts.file_name,num2str(import_opts.shot_num(ii)),'.txt'],import_opts.mod_wait)
-                fprintf(2,'\n data file not done writing will not process %04i \n %04i\n',import_opts.shot_num(ii),ii)
-                data.txy{ii}=[];
-                mcp_tdc_data.shot_num(ii)=nan;
-                mcp_tdc_data.num_counts(ii)=nan;
-            else
-                %if the txy_forc does not exist or if import_opts.force_forc (re) make it
-                if ~(exist([import_opts.dir,import_opts.file_name,'_txy_forc',num2str(import_opts.shot_num(ii)),'.txt'],'file')==2)...
-                        || import_opts.force_forc
-                    dld_raw_to_txy([import_opts.dir,import_opts.file_name],import_opts.shot_num(ii),import_opts.shot_num(ii));
-                end
-                txydata=txy_importer([import_opts.dir,import_opts.file_name],num2str(import_opts.shot_num(ii)));
-                txydata=masktxy(txydata,import_opts.txylim); %mask for counts in the window txylim     
-                alpha=-import_opts.dld_xy_rot;
-                mcp_tdc_data.counts_txy{ii}=txydata*[1 0 0;0 cos(alpha) -sin(alpha); 0 sin(alpha) cos(alpha)];
-                mcp_tdc_data.num_counts(ii)=size(txydata,1);
-                mcp_tdc_data.shot_num(ii)=import_opts.shot_num(ii);
+            %if the txy_forc does not exist or if import_opts.force_forc (re) make it
+            if ~(exist([import_opts.dir,import_opts.file_name,'_txy_forc',num2str(import_opts.shot_num(ii)),'.txt'],'file')==2)...
+                    || import_opts.force_forc
+                dld_raw_to_txy([import_opts.dir,import_opts.file_name],import_opts.shot_num(ii),import_opts.shot_num(ii));
             end
+
+            txydata=txy_importer([import_opts.dir,import_opts.file_name],num2str(import_opts.shot_num(ii)));
+            txydata=masktxy(txydata,import_opts.txylim); %mask for counts in the window txylim     
+            alpha=-import_opts.dld_xy_rot;
+            mcp_tdc_data.counts_txy{ii}=txydata*[1 0 0;0 cos(alpha) -sin(alpha); 0 sin(alpha) cos(alpha)];
+            mcp_tdc_data.num_counts(ii)=size(txydata,1);
+            mcp_tdc_data.shot_num(ii)=import_opts.shot_num(ii);
         end %file exists condition
     fprintf('\b\b\b\b%04i',ii)
     end
