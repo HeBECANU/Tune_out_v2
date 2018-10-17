@@ -46,7 +46,7 @@ anal_opts.osc_fit.xlim=[-20,20]*1e-3;
 anal_opts.osc_fit.tlim=[0.86,1.08];
 anal_opts.osc_fit.dimesion=2; %Select coordinate to bin. 1=X, 2=Y.
 
-anal_opts.history.shots=200;
+anal_opts.history.shots=50;
 
 % END USER VAR-----------------------------------------------------------
 
@@ -110,6 +110,8 @@ else
     %data.mcp_tdc=mcp_tdc_data;
     %just to give me a logical vector
     batch_data.mcp_tdc.all_ok=batch_data.mcp_tdc.num_counts>1e4;
+    batch_data.mcp_tdc.all_ok(batch_data.mcp_tdc.all_ok)=...
+        cellfun(@(x) x(end,1),batch_data.mcp_tdc.counts_txy(batch_data.mcp_tdc.all_ok))>anal_opts.dld_aquire*0.8;
     if sum(batch_data.mcp_tdc.all_ok)==0
         fprintf('waiting for file to be writen')
         pause(0.1)

@@ -12,7 +12,7 @@
 % Last revision:2018-10-01
 % BEGIN USER VAR-------------------------------------------------
 anal_opts=[]
-anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181010_probe_off_trap_freq_drift\';
+anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181017_probe_off_trap_freq_drift\';
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
 anal_opts.tdc_import.force_reimport=false;
@@ -112,7 +112,7 @@ data.mcp_tdc.al_pulses=bin_al_pulses(anal_opts.atom_laser,data);
 %%
 anal_opts.osc_fit.adaptive_freq=true; %estimate the starting trap freq 
 anal_opts.osc_fit.appr_osc_freq_guess=[52,46.7,40];
-anal_opts.osc_fit.plot_fits=true;
+anal_opts.osc_fit.plot_fits=false;
 anal_opts.osc_fit.plot_err_history=true;
 anal_opts.osc_fit.plot_fit_corr=false;
 
@@ -146,7 +146,7 @@ mask=~isnan(allan_data.freq) & ~isnan(allan_data.time)';
 allan_data.freq=allan_data.freq(mask);
 allan_data.time=allan_data.time(mask);
 allan_data.time=allan_data.time-min(allan_data.time);
-tau_in=2.^(-10:0.05:14)
+tau_in=2.^(-10:0.05:14);
 %%
 
 [retval, s, errorb, tau]=allan(allan_data,tau_in)
@@ -170,7 +170,7 @@ fit_out=plot_allan_with_fits(retval, errorb, tau,windows,'Overlapping Allan Devi
 [retval, s, errorb, tau]=allan_modified(allan_data,2.^(-10:0.01:20))
 
 %%
-windows=[[106,639];[1000,1563];[1885,3092];[4040,inf]];
+windows=[[0,256];[1000,1563];[1885,3092];[4040,inf]];
 fit_out=plot_allan_with_fits(retval, errorb, tau,windows,'Modified Allan Deviation')
 
 
@@ -207,7 +207,7 @@ hold off
 title(dev_label,'FontSize',font_size*1.5,'FontName',font_type)
 xlabel('\tau (s)','FontSize',font_size,'FontName',font_type)
 ylabel('\sigma(\tau) (Hz)','FontSize',font_size,'FontName',font_type)
-legend(labels,'FontName',font_type,'FontSize',font_size*0.8,'location','southwest')
+legend(labels,'FontName',font_type,'FontSize',font_size*0.8,'location','northeast')
 
 
 
