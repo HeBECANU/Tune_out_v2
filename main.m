@@ -259,6 +259,8 @@ anal_opts.ai_log.sfp.thresh_cmp_peak=20e-3; %theshold on the compressed signal t
 anal_opts.ai_log.sfp.peak_dist_min_pass=4.5;%minimum (min difference)between peaks for the laser to be considered single mode
 anal_opts.ai_log.plot.all=false;
 anal_opts.ai_log.plot.failed=true;
+anal_opts.ai_log.time_match_valid=4; %how close the predicted start of the shot is to the actual
+anal_opts.ai_log.scan_time=14e-3;  %estimate of the sfp scan time,used to set the window and the smoothing
 
 
 %because im only passing the ai_log feild to aviod conflicts forcing a reimport i need to coppy these feilds
@@ -294,6 +296,9 @@ ecd_volt_thresh=0.5;
 red_sd_thresh=12;
 red_range_thresh=50;
 rvb_thresh=10;
+
+
+
 
 mean_shot_duration=mean(diff(data.labview.time(:)));
 data.mcp_tdc.probe_freq=[];

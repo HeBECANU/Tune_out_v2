@@ -42,11 +42,9 @@ function ai_log_out=ai_log_import_core(anal_opts,data)
 
 %------------- BEGIN USER VAR --------------
 %estimate of the sfp scan time,used to set the window and the smoothing
-scan_time=14e-3; 
 cmp_multiplier_disp=50; %multiplier to display the compressed data better
-time_match_valid=4; %how close the predicted start of the shot is to the actual
-window_time=scan_time*2.1;
-pzt_volt_smothing_time=scan_time/100;
+window_time=anal_opts.scan_time*2.1;
+pzt_volt_smothing_time=anal_opts.scan_time/100;
 %------------- END USER VAR --------------
 
 %------------- BEGIN CODE --------------
@@ -70,7 +68,8 @@ if import_logs
     
     %now find the shot that this corresponds to
     %time of start shot on TDC_comp
-    time_start_tdc_comp=data.mcp_tdc.time_create_write(:,1)-anal_opts.trig_dld;
+    %use write so files are portable
+    time_start_tdc_comp=data.mcp_tdc.time_create_write(:,2)-anal_opts.trig_dld-anal_opts.dld_aquire;
 
     %the number of shots in the mcp_tdc struct, note not ness the same as the number of ai_logs
     shots_tdc=size(data.mcp_tdc.shot_num,2);
@@ -109,7 +108,7 @@ if import_logs
         time_start_bec_comp=time_posix_ai_log_create_write(2)-anal_opts.trig_ai_in-aquire_time;
         [time_nearest_tdc_start,idx_nearest_shot]=closest_value(time_start_tdc_comp,time_start_bec_comp);
         %should not process if not near a shot
-        if abs(time_nearest_tdc_start-time_start_bec_comp)>time_match_valid
+        if abs(time_nearest_tdc_start-time_start_bec_comp)>anal_opts.time_match_valid
              fprintf(2,'\nnearest tdc file is too far away\n%04u',0)
         else
             ai_log_out.ai_log.shot_idx(ii)=idx_nearest_shot; %index in the mcp_tdc arrays of this shot
