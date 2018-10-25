@@ -5,7 +5,7 @@ cache_opts.verbose=3;
 %wm_log_import_opts=rmfield(wm_log_import_opts,'force_load_save');
 cache_opts.force_recalc=wm_log_import_opts.force_reimport;
 wm_log_import_opts=rmfield(wm_log_import_opts,'force_reimport');
-outputs=function_cache(wm_log_import_opts,@wm_log_import_core,{wm_log_import_opts});
+outputs=function_cache(cache_opts,@wm_log_import_core,{wm_log_import_opts});
 wm_log=outputs{1};
 end
 
