@@ -1,5 +1,5 @@
 function [mcp_tdc_data,import_opts]=import_mcp_tdc_data(import_opts)
-%import_data - imports data into a convineint strucure with mat file cache
+%import_data - imports mcp-dld-tdc data into a convineint strucure with mat file cache
 %designed to decrease time-to-results this function deals with the tedious importing of data
 %will load data from a cashed version if import_opts has not changed
 %the output is a well aranged structure with everything you could want
@@ -121,12 +121,24 @@ if import_data
             fprintf(2,'\n data file not done writing will not process %04i \n %04i\n',import_opts.shot_num(ii),ii)
         else
             mcp_tdc_data.time_create_write(ii,:)=data_tcreate([import_opts.dir,import_opts.file_name],num2str(import_opts.shot_num(ii)));
-            %if the txy_forc does not exist or if import_opts.force_forc (re) make it
-            if ~(exist([import_opts.dir,import_opts.file_name,'_txy_forc',num2str(import_opts.shot_num(ii)),'.txt'],'file')==2)...
-                    || import_opts.force_forc
+            %if the txy_forc does not exist, if import_opts.force_forc, or the forc file was earlier than the dld file (re) make it
+            convert_dld_to_txy=false;
+            if import_opts.force_forc
+                convert_dld_to_txy=true;
+            elseif ~(exist([import_opts.dir,import_opts.file_name,'_txy_forc',num2str(import_opts.shot_num(ii)),'.txt'],'file')==2)
+                convert_dld_to_txy=true;
+            else
+                %check that the _txy_forc file was created after the raw dld file
+                time_forc=data_tcreate([[import_opts.dir,import_opts.file_name,'_txy_forc'],num2str(import_opts.shot_num(ii)));
+                if time_forc(2)<mcp_tdc_data.time_create_write(ii,2)
+                    convert_dld_to_txy=true;
+                end
+            end
+            
+            if convert_dld_to_txy
                 dld_raw_to_txy([import_opts.dir,import_opts.file_name],import_opts.shot_num(ii),import_opts.shot_num(ii));
             end
-
+            %ineffecient to read back what whas just written
             txydata=txy_importer([import_opts.dir,import_opts.file_name],num2str(import_opts.shot_num(ii)));
             txydata=masktxy(txydata,import_opts.txylim); %mask for counts in the window txylim     
             alpha=-import_opts.dld_xy_rot;

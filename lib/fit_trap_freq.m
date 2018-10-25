@@ -131,7 +131,7 @@ for ii=1:iimax
             pause(1e-5)
         end% PLOTS
     end
-    fprintf('\b\b\b\b%04u',ii)
+    if mod(ii,10)==0, fprintf('\b\b\b\b%04u',ii), end
 end
 fprintf('...Done\n')
 %if the above did a fit then set the element in the logic vector to true
@@ -185,7 +185,7 @@ if anal_opts_osc_fit.plot_fit_corr
     set(gcf,'color','w')
     %see if the fit error depends on the probe freq
     subplot(3,3,1)
-    tmp_probe_freq=data.mcp_tdc.probe.freq.act.mean(osc_fit.ok.rmse);
+    tmp_probe_freq=data.wm_log.proc.probe.freq.act.mean(osc_fit.ok.rmse);
     tmp_probe_freq=(tmp_probe_freq-nanmean(tmp_probe_freq))*1e-3;
     plot(tmp_probe_freq,...
         osc_fit.fit_rmse(osc_fit.ok.rmse),'xk')

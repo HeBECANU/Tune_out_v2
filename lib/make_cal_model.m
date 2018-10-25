@@ -5,7 +5,7 @@ addpath('nanconv')
 %create a mask of shots that are calibrations and are good fits
 temp_cal=data.mcp_tdc.probe.calibration';
 temp_cal(isnan(temp_cal))=0;
-cal_dat_mask=data.osc_fit.ok.rmse & temp_cal & ~isnan(data.mcp_tdc.probe.freq.act.mean');
+cal_dat_mask=data.osc_fit.ok.rmse & temp_cal & ~isnan(data.wm_log.proc.probe.freq.act.mean');
 
 %create a time vector
 x_tmp=data.mcp_tdc.time_create_write(cal_dat_mask,1);

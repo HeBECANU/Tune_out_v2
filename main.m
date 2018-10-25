@@ -28,7 +28,7 @@
 %the data structure
 %   first level is instrument or anal method
 %   try and pass things between the modules of code only using the 'data' struct
-
+%   keep evertthing referenced to data.mcp_tdc eg. the probe beam power ok should corespond to 
 
 % TIMING 
 % because there are so many moving peices a lot of the script requires matching up the times of the varrious inputs
@@ -53,6 +53,7 @@
 % MAT-files required: none
 %
 % Known BUGS/ Possible Improvements
+%   - maybe process the analog logs into a output file for faster reading in??
 %   - weight the final TO fit by the trap freq fit unc
 %	-make unique plot numbers
 %   -the fit error depends on wavelength indicating that the model does not
@@ -111,7 +112,6 @@ anal_opts.trig_ai_in=20;
 
 anal_opts.wm_log.plot_all=true;
 anal_opts.wm_log.plot_failed=true;
-
 
 
 anal_opts.osc_fit.binsx=1000;
@@ -194,8 +194,7 @@ data.labview.calibration=lv_log.probe_calibration;
 %because the mcp-dld detector has no direct communication with the bec computer
 % the data.labview.shot_num does not nessesarily correspond to data.mcp_tdc.shot_num
 
-match_times=true;
-if match_times
+
     %try and match up the file with if it is a calibaration using the time
     %it is slightly overkill here to search each one, but just being extra
     %cautious/flexible
@@ -229,12 +228,6 @@ if match_times
             data.mcp_tdc.probe.calibration(ii)=data.labview.calibration(nearest_idx);
         end 
     end
-else
-    %just do it the boring way and hope that the tdc was set up right and
-    %there were no false trigers
-    %TO DO
-    
-end
 
 %% IMPORT THE ANALOG INPUT LOG
 %the code will check that the probe beam PD was ok and that the laser was single mode
@@ -251,7 +244,7 @@ anal_opts.ai_log.sfp.num_checks=10; %how many places to check that the laser is 
 anal_opts.ai_log.sfp.thresh_cmp_peak=20e-3; %theshold on the compressed signal to be considered a peak
 anal_opts.ai_log.sfp.peak_dist_min_pass=4.5;%minimum (min difference)between peaks for the laser to be considered single mode
 anal_opts.ai_log.plot.all=false;
-anal_opts.ai_log.plot.failed=true;
+anal_opts.ai_log.plot.failed=false;
 anal_opts.ai_log.time_match_valid=4; %how close the predicted start of the shot is to the actual
 anal_opts.ai_log.scan_time=14e-3;  %estimate of the sfp scan time,used to set the window and the smoothing
 
@@ -262,10 +255,7 @@ anal_opts.ai_log.dld_aquire=anal_opts.dld_aquire;
 anal_opts.ai_log.trig_ai_in=anal_opts.trig_ai_in;
 ai_log_out=ai_log_import(anal_opts.ai_log,data);
 %copy the output across
-data.ai_log=ai_log_out.ai_log;
-data.mcp_tdc.probe.ok.reg_pd=ai_log_out.mcp_tdc.probe.ok.reg_pd;
-data.mcp_tdc.probe.ok.sfp=ai_log_out.mcp_tdc.probe.ok.sfp;
-
+data.ai_log=ai_log_out;
 
 %save([datestr(datetime('now'),'yyyymmddTHHMMSS'),'.mat'],'-v7.3')
 
@@ -277,7 +267,7 @@ anal_opts.wm_log.force_reimport=false;
 wm_log_name='log_wm_';
 wm_logs=dir([anal_opts.wm_log.dir,wm_log_name,'*.txt']);
 anal_opts.wm_log.names={wm_logs.name};
-data.wm_log=wm_log_import(anal_opts.wm_log);
+data.wm_log.raw=wm_log_import(anal_opts.wm_log);
 
 
 %% CHECK THE WM INPUTS
@@ -297,12 +287,12 @@ anal_opts.wm_log.time_blue_padding=1; %check this many seconde each side of prob
 anal_opts.wm_log.time_probe=3;
 anal_opts.wm_log.ecd_volt_thresh=0.5;
 
-anal_opts.wm_log.red_sd_thresh=12; %allowable standard deviation in MHz
+anal_opts.wm_log.red_sd_thresh=50; %allowable standard deviation in MHz
 anal_opts.wm_log.red_range_thresh=50; %allowable range deviation in MHz
 anal_opts.wm_log.rvb_thresh=10; %allowable value of abs(2*red-blue)
 
-wm_log_processed=wm_log_process(anal_opts,data);
-
+data.wm_log.proc=wm_log_process(anal_opts,data);
+clear('sub_data')
 
 
 %% CHECK ATOM NUMBER
@@ -344,13 +334,15 @@ subplot(2,1,1)
 line_width=1.5;
 stairs(data.mcp_tdc.shot_num,data.mcp_tdc.num_ok-0.03,'LineWidth',line_width)
 hold on
-stairs(data.mcp_tdc.shot_num,data.mcp_tdc.probe.ok.reg_pd-0.01,'LineWidth',line_width)
-stairs(data.mcp_tdc.shot_num,data.mcp_tdc.probe.ok.sfp-0.02,'LineWidth',line_width)
-stairs(data.mcp_tdc.shot_num,data.mcp_tdc.probe.ok.freq+0.00,'LineWidth',line_width)
+
+
+stairs(data.mcp_tdc.shot_num,data.ai_log.ok.reg_pd-0.01,'LineWidth',line_width)
+stairs(data.mcp_tdc.shot_num,data.ai_log.ok.sfp-0.02,'LineWidth',line_width)
+stairs(data.mcp_tdc.shot_num,data.wm_log.proc.ok.freq+0.00,'LineWidth',line_width)
 %forms another check that the laser is single mode
-stairs(data.mcp_tdc.shot_num,data.mcp_tdc.probe.ok.rvb+0.01,'LineWidth',line_width)
+stairs(data.mcp_tdc.shot_num,data.wm_log.proc.ok.rvb+0.01,'LineWidth',line_width)
  %this is reduncant as it should be caught by the reg_pd measurement
-stairs(data.mcp_tdc.shot_num,data.mcp_tdc.probe.ok.ecd_pd+0.02,'LineWidth',line_width) 
+stairs(data.mcp_tdc.shot_num, data.wm_log.proc.ok.ecd_pd+0.02,'LineWidth',line_width) 
 tmp_cal=data.mcp_tdc.probe.calibration;
 tmp_cal(~isnan(tmp_cal))=~tmp_cal(~isnan(tmp_cal));
 stairs(data.mcp_tdc.shot_num,tmp_cal-0.02,'LineWidth',line_width) 
@@ -368,10 +360,10 @@ subplot(2,1,2)
 tmp_cal=data.mcp_tdc.probe.calibration;
 tmp_cal(isnan(tmp_cal))=false;
 %must have good atom number AND (good probe OR be calibration)
-tmp_probe_ok=(data.mcp_tdc.probe.ok.sfp &...
-    data.mcp_tdc.probe.ok.reg_pd &...
-    data.mcp_tdc.probe.ok.freq &....
-    data.mcp_tdc.probe.ok.rvb );
+tmp_probe_ok=(data.ai_log.ok.sfp &...
+    data.ai_log.ok.reg_pd &...
+    data.wm_log.proc.ok.freq &....
+    data.wm_log.proc.ok.rvb );
 tmp_all_ok=data.mcp_tdc.num_ok' &...
     (tmp_probe_ok| tmp_cal);
     %data.mcp_tdc.probe.ok.ecd_pd;
@@ -444,9 +436,29 @@ anal_opts.cal_mdl.plot=true;
 anal_opts.cal_mdl.global=anal_opts.global;
 data.cal=make_cal_model(anal_opts.cal_mdl,data);
 
-%data.osc_fit.cal.freq_drift_model
+
+%% segmented TO
+%look at the tune out when fit to short segments
+anal_opts.fit_to=[];
+anal_opts.fit_to.bootstrap=true;
+%thresholds for CI
+%sd         CI
+%1          0.3174
+%2          0.05
+%3          2.699e-03
+anal_opts.fit_to.ci_size_disp=0.3174;%one sd %confidence interval to display
+anal_opts.fit_to.global=anal_opts.global;
+anal_opts.fit_to.ci_size_cut_outliers=0.05; %confidence interval for cutting outliers
+anal_opts.fit_to.scale_x=1e-9;
+
+anal_opts.fit_to.seg_time=60*5;
+anal_opts.fit_to.seg_shift=0.1*anal_opts_fit_to.seg_time;
+segmentd_fit_to(anal_opts.fit_to,data)
+
+
 
 %% Fit the Tune Out
+anal_opts.fit_to=[];
 anal_opts.fit_to.plot_inital=true;
 anal_opts.fit_to.bootstrap=true;
 %thresholds for CI

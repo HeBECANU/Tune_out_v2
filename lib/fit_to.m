@@ -3,8 +3,8 @@ function to_res=fit_to(anal_opts_fit_to,data)
 temp_cal=data.mcp_tdc.probe.calibration';
 temp_cal(isnan(temp_cal))=1;    
 %manual bootstrap rand(size(data.osc_fit.ok.rmse))>0.9
-probe_dat_mask=data.osc_fit.ok.rmse & ~temp_cal & ~isnan(data.mcp_tdc.probe.freq.act.mean') &...
-    ~isnan(data.mcp_tdc.probe.freq.act.mean)' & ~isnan(data.osc_fit.trap_freq_recons);
+probe_dat_mask=data.osc_fit.ok.rmse & ~temp_cal &  ~isnan(data.wm_log.proc.probe.freq.act.mean)'...
+    & ~isnan(data.osc_fit.trap_freq_recons);
 
 to_res.num_shots=sum(probe_dat_mask);
 to_res.fit_mask=probe_dat_mask;

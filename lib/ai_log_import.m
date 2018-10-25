@@ -6,7 +6,13 @@ cache_opts.force_cache_load=anal_opts.force_load_save;
 anal_opts=rmfield(anal_opts,'force_load_save');
 cache_opts.force_recalc=anal_opts.force_reimport;
 anal_opts=rmfield(anal_opts,'force_reimport');
-outputs=function_cache(cache_opts,@ai_log_import_core,{anal_opts,data});
+
+%limit the scope but retain the structure
+data_sub=[];
+data_sub.mcp_tdc.shot_num=data.mcp_tdc.shot_num;
+data_sub.mcp_tdc.time_create_write=data.mcp_tdc.time_create_write;
+
+outputs=function_cache(cache_opts,@ai_log_import_core,{anal_opts,data_sub});
 ai_log_out=outputs{1};
 end
 
@@ -64,7 +70,7 @@ import_logs=true;
 
 if import_logs
     dir_read=dir([anal_opts.dir,anal_opts.log_name,'*.txt']);
-    ai_log_out.ai_log.file_names={dir_read.name};
+    ai_log_out.file_names={dir_read.name};
     
     %now find the shot that this corresponds to
     %time of start shot on TDC_comp
@@ -74,20 +80,20 @@ if import_logs
     %the number of shots in the mcp_tdc struct, note not ness the same as the number of ai_logs
     shots_tdc=size(data.mcp_tdc.shot_num,2);
     %GUILTY UNTILL PROVEN INOCENT !!!!!!!!!!!!!!!!!
-    ai_log_out.mcp_tdc.probe.ok.reg_pd=false(shots_tdc,1);  %pd regulaton
-    ai_log_out.mcp_tdc.probe.ok.sfp=false(shots_tdc,1);     %scanning FP check
-    dld_files=numel(data.mcp_tdc.num_counts);
+    ai_log_out.ok.reg_pd=false(shots_tdc,1);  %pd regulaton
+    ai_log_out.ok.sfp=false(shots_tdc,1);     %scanning FP check
+    dld_files=numel(data.mcp_tdc.shot_num);
     
      
-    iimax=size(ai_log_out.ai_log.file_names,2); %the number of ai logs that I have identified
+    iimax=size(ai_log_out.file_names,2); %the number of ai logs that I have identified
     %initalize outputs
-    ai_log_out.mcp_tdc.probe.ok.reg_pd=false(dld_files,1);
-    ai_log_out.mcp_tdc.probe.ok.sfp=false(dld_files,1);
+    ai_log_out.ok.reg_pd=false(dld_files,1);
+    ai_log_out.ok.sfp=false(dld_files,1);
     %loop over all the ai_logs
     fprintf('processing ai log for files %04u:%04u',iimax,0)
     for ii=1:iimax
         fprintf('\b\b\b\b%04i',ii)
-        fname=ai_log_out.ai_log.file_names{ii};
+        fname=ai_log_out.file_names{ii};
         time_iso_str=erase(erase(fname,'log_analog_in_'),'.txt');
         path=strcat(anal_opts.dir,fname);
         %bit of a hack to get data_tcreate to work which was set up to take a path+num format \d123.txt
@@ -111,28 +117,28 @@ if import_logs
         if abs(time_nearest_tdc_start-time_start_bec_comp)>anal_opts.time_match_valid
              fprintf(2,'\nnearest tdc file is too far away\n%04u',0)
         else
-            ai_log_out.ai_log.shot_idx(ii)=idx_nearest_shot; %index in the mcp_tdc arrays of this shot
-            ai_log_out.ai_log.shot_num(ii)=data.mcp_tdc.shot_num(idx_nearest_shot); %number of shot eg d54.txt
-            ai_log_out.ai_log.tdiff(ii)=time_nearest_tdc_start-time_start_bec_comp;
+            ai_log_out.shot_idx(ii)=idx_nearest_shot; %index in the mcp_tdc arrays of this shot
+            ai_log_out.shot_num(ii)=data.mcp_tdc.shot_num(idx_nearest_shot); %number of shot eg d54.txt
+            ai_log_out.tdiff(ii)=time_nearest_tdc_start-time_start_bec_comp;
             %output all the times mainly as a diagnostic
-            ai_log_out.ai_log.times.create_ai_log=time_posix_ai_log_create_write(1); 
-            ai_log_out.ai_log.times.fname_ai_log=time_posix_fname;
+            ai_log_out.times.create_ai_log=time_posix_ai_log_create_write(1); 
+            ai_log_out.times.fname_ai_log=time_posix_fname;
 
             sampl_start=max(1,ceil(anal_opts.pd.time_start*sr));
             sampl_stop=min(samples,ceil(anal_opts.pd.time_stop*sr));
             probe_pd_during_meas=ai_dat.Data(1,sampl_start:sampl_stop);
 
-            ai_log_out.ai_log.pd.mean(ii)=mean(probe_pd_during_meas);
-            ai_log_out.ai_log.pd.std(ii)=std(probe_pd_during_meas);
+            ai_log_out.pd.mean(ii)=mean(probe_pd_during_meas);
+            ai_log_out.pd.std(ii)=std(probe_pd_during_meas);
 
-            if abs(ai_log_out.ai_log.pd.mean(ii)-anal_opts.pd.set)>anal_opts.pd.diff_thresh
+            if abs(ai_log_out.pd.mean(ii)-anal_opts.pd.set)>anal_opts.pd.diff_thresh
                 fprintf('\nprobe beam pd value wrong!!!!!!!!!\n%04u',0)
-            elseif ai_log_out.ai_log.pd.std(ii)>anal_opts.pd.std_thresh
+            elseif ai_log_out.pd.std(ii)>anal_opts.pd.std_thresh
                 fprintf('\nprobe beam pd noisy!!!!!!!!!\n%04u',0)
             else
                 %save the result to the dld file that is closest
                 probe_reg_ok=true;
-                ai_log_out.mcp_tdc.probe.ok.reg_pd(ai_log_out.ai_log.shot_idx(ii))=true;
+                ai_log_out.ok.reg_pd(ai_log_out.shot_idx(ii))=true;
             end
 
             if anal_opts.plot.all || (anal_opts.plot.failed && ~probe_reg_ok)      
@@ -275,7 +281,7 @@ if import_logs
             end 
             end%end while loop over checking mode
             if sum(~single_mode_vec)==0
-                ai_log_out.mcp_tdc.probe.ok.sfp(ai_log_out.ai_log.shot_idx(ii))=true;
+                ai_log_out.ok.sfp(ai_log_out.shot_idx(ii))=true;
             end
         end%if pd test passed
 
