@@ -1,7 +1,19 @@
-function [data,ai_log_out]=ai_log_import(anal_opts,data)
+function ai_log_out=ai_log_import(anal_opts,data)
+%a simple wrapper for the below ai_log_import that uses the matlab function cache
+cache_opts=[];
+cache_opts.verbose=3;
+cache_opts.force_cache_load=anal_opts.force_load_save;
+anal_opts=rmfield(anal_opts,'force_load_save');
+cache_opts.force_recalc=anal_opts.force_reimport;
+anal_opts=rmfield(anal_opts,'force_reimport');
+outputs=function_cache(cache_opts,@ai_log_import_core,{anal_opts,data});
+ai_log_out=outputs{1};
+end
+
+function ai_log_out=ai_log_import_core(anal_opts,data)
 %ai_log_import - imports analog input log and checks if the probe beam pd signal is ok and that the laser is single
 %mode by measuring the distance (in pzt voltage) between the scanning FP pd peaks
-%results are placed into a convineint strucure with mat file cache
+%results are placed into a convenient strucure with mat file cache
 %will load data from a cashed version if anal_opts has not changed
 %the output is a well aranged structure to be added into the data structure
 %the data structure is not included in the save to prevent double saving of the data
@@ -28,34 +40,29 @@ function [data,ai_log_out]=ai_log_import(anal_opts,data)
 % email: Bryce.Henson[a circle]live.com  %YOU MUST INCLUDE '[matlab][ai_log_import]' in the subject line OR I WILL NOT REPLY
 % Last revision:2018-09-30
 
-%------------- BEGIN CODE --------------
-%begin user var
-%estimat of the sfp scan time,used to set the window and the smoothing
+%------------- BEGIN USER VAR --------------
+%estimate of the sfp scan time,used to set the window and the smoothing
 scan_time=14e-3; 
 cmp_multiplier_disp=50; %multiplier to display the compressed data better
-time_match_valid=4;
-%end user var
+time_match_valid=4; %how close the predicted start of the shot is to the actual
 window_time=scan_time*2.1;
 pzt_volt_smothing_time=scan_time/100;
+%------------- END USER VAR --------------
 
-
-
+%------------- BEGIN CODE --------------
 import_logs=true;
 %should improve this and save it in the data directory
-if  isfile('import_ai_log_save.mat') && (anal_opts.force_load_save ||  ~anal_opts.force_reimport )
-    load('import_ai_log_save.mat','anal_opts_old')
-    anal_opts_old.force_reimport=anal_opts.force_reimport; %prevents reimport after import_opts.force_reimport changed 1->0
-    if isequal(anal_opts_old,anal_opts) || anal_opts.force_load_save
-        import_logs=false; 
-        fprintf('anal_opts the same loading old data...')
-        load('import_ai_log_save.mat','ai_log_out','anal_opts_old')
-        fprintf('Done\n')
-
-    end
-end
-
-
-
+% if  isfile('import_ai_log_save.mat') && ( ||  ~ )
+%     load('import_ai_log_save.mat','anal_opts_old')
+%     anal_opts_old.force_reimport=anal_opts.force_reimport; %prevents reimport after import_opts.force_reimport changed 1->0
+%     if isequal(anal_opts_old,anal_opts) || anal_opts.force_load_save
+%         import_logs=false; 
+%         fprintf('anal_opts the same loading old data...')
+%         load('import_ai_log_save.mat','ai_log_out','anal_opts_old')
+%         fprintf('Done\n')
+% 
+%     end
+% end
 
 if import_logs
     dir_read=dir([anal_opts.dir,anal_opts.log_name,'*.txt']);
@@ -103,7 +110,7 @@ if import_logs
         [time_nearest_tdc_start,idx_nearest_shot]=closest_value(time_start_tdc_comp,time_start_bec_comp);
         %should not process if not near a shot
         if abs(time_nearest_tdc_start-time_start_bec_comp)>time_match_valid
-             fprintf(2,'nearest tdc file is too far away')
+             fprintf(2,'\nnearest tdc file is too far away\n%04u',0)
         else
             ai_log_out.ai_log.shot_idx(ii)=idx_nearest_shot; %index in the mcp_tdc arrays of this shot
             ai_log_out.ai_log.shot_num(ii)=data.mcp_tdc.shot_num(idx_nearest_shot); %number of shot eg d54.txt
@@ -275,8 +282,8 @@ if import_logs
 
     end %loop over files
     fprintf('\b\b\b\b...Done\nSaving Data...')
-    anal_opts_old=anal_opts;
-    save('import_ai_log_save.mat','ai_log_out','anal_opts_old','-v7.3') %,'-nocompression'
+    %anal_opts_old=anal_opts;
+    %save('import_ai_log_save.mat','ai_log_out','anal_opts_old','-v7.3') %,'-nocompression'
     fprintf('Done\n')
 end%import data
 end%function

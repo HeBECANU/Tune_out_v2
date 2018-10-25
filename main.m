@@ -80,7 +80,7 @@ anal_opts=[];
 %anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output';
 %anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20180829_half_wp_353';
 %anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181002_halfwp_236_stab3\';
-anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181010_every_other_shot_cal\';
+anal_opts.tdc_import.dir='D:\Scratch\20180926_half_wp_angle_246\';
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
 anal_opts.tdc_import.force_reimport=false;
@@ -136,7 +136,6 @@ anal_opts.global.out_dir=anal_out.dir;
  
 diary([anal_out.dir,'anal.txt'])
 
-
 %add all subfolders to the path
 this_folder = fileparts(which(mfilename));
 % Add that folder plus all subfolders to the path.
@@ -191,7 +190,7 @@ data.labview.calibration=lv_log.probe_calibration;
 
 %% IMPORT WM LOG FILES
 wm_log_import_opts.dir=anal_opts.tdc_import.dir;
-wm_log_import_opts.force_reimport=true;
+wm_log_import_opts.force_reimport=false;
 wm_log_name='log_wm_';
 wm_logs=dir([wm_log_import_opts.dir,wm_log_name,'*.txt']);
 wm_log_import_opts.names={wm_logs.name};
@@ -247,7 +246,7 @@ end
 %% IMPORT THE ANALOG INPUT LOG
 %the code will check that the probe beam PD was ok and that the laser was single mode
 anal_opts.ai_log.dir=anal_opts.tdc_import.dir;
-anal_opts.ai_log.force_reimport=true ;
+anal_opts.ai_log.force_reimport=false ;
 anal_opts.ai_log.force_load_save=false;
 anal_opts.ai_log.log_name='log_analog_in_';
 anal_opts.ai_log.pd.set=2;
@@ -266,7 +265,7 @@ anal_opts.ai_log.plot.failed=true;
 anal_opts.ai_log.trig_dld=anal_opts.trig_dld;
 anal_opts.ai_log.dld_aquire=anal_opts.dld_aquire;
 anal_opts.ai_log.trig_ai_in=anal_opts.trig_ai_in;
-[data,ai_log_out]=ai_log_import(anal_opts.ai_log,data);
+ai_log_out=ai_log_import(anal_opts.ai_log,data);
 %copy the output across
 data.ai_log=ai_log_out.ai_log;
 data.mcp_tdc.probe.ok.reg_pd=ai_log_out.mcp_tdc.probe.ok.reg_pd;
