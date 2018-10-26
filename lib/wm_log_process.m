@@ -5,7 +5,6 @@ cache_opts.verbose=3;
 %wm_log_import_opts=rmfield(wm_log_import_opts,'force_load_save');
 cache_opts.force_recalc=anal_opts.wm_log.force_reimport;
 anal_opts.wm_log=rmfield(anal_opts.wm_log,'force_reimport');
-
 %create a temp copy of data to limit the effect that changes have on the cache function
 %this is the limitation of the pass data structure approach, the scope can quickly become to large
 sub_data=[];

@@ -81,7 +81,7 @@ anal_opts=[];
 %anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output';
 %anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20180829_half_wp_353';
 %anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181002_halfwp_236_stab3\';
-anal_opts.tdc_import.dir='D:\Scratch\20180926_half_wp_angle_246\';
+anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181010_every_other_shot_cal\';
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
 anal_opts.tdc_import.force_reimport=false;
@@ -145,6 +145,7 @@ hebec_constants %call the constants function that makes some globals
 anal_opts.global.velocity=const.g0*anal_opts.global.fall_time;
 %% IMPORT TDC DATA to data.mcp_tdc
 anal_opts.tdc_import.shot_num=find_data_files(anal_opts.tdc_import);
+%anal_opts.tdc_import.shot_num= anal_opts.tdc_import.shot_num(1:10); %debuging
 [mcp_tdc_data,import_opts]=import_mcp_tdc_data(anal_opts.tdc_import);
 data.mcp_tdc=mcp_tdc_data;
 
