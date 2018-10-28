@@ -76,12 +76,13 @@ trap_freq_history=[];
 trap_freq_history.trap_freq_val=[];
 trap_freq_history.trap_freq_unc=[];
 trap_freq_history.shot_num=[];
+sfigure(1);
+set(gcf,'color','w')
+clf;
 
 %%
-loop_num=0;
-sfigure(1); 
-set(gcf,'color','w')
 
+loop_num=0;
 while true
 batch_data=[];
 batch_data.shot_num=[];

@@ -1,7 +1,7 @@
 function [mcp_tdc_data,import_opts]=import_mcp_tdc_data(import_opts)
 %import_mcp_tdc_data -a wrapper that allows the import_mcp_tdc_data_core to be cached
 cache_opts=[];
-cache_opts.verbose=3;
+cache_opts.verbose=0;
 cache_opts.force_cache_load=import_opts.force_load_save;
 import_opts=rmfield(import_opts,'force_load_save');
 cache_opts.force_recalc=import_opts.force_reimport;
