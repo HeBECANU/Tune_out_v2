@@ -167,7 +167,7 @@ set(gca,'ylim',first_plot_lims(2,:))
 set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
 plot_name='TO_fits';
 saveas(gcf,[anal_opts_fit_to.global.out_dir,plot_name,'.png'])
-saveas(gcf,[anal_opts_fit_to.global.out_dir,plot_name,'.fig'])
+% saveas(gcf,[anal_opts_fit_to.global.out_dir,plot_name,'.fig'])
 
 %find the single shot confidence interval
 cross_xval=-mdl_culled.Coefficients.Estimate(1)/mdl_culled.Coefficients.Estimate(2);
@@ -192,7 +192,7 @@ title('Senistivity Graph ')
 set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
 plot_name='Sens_graph';
 saveas(gcf,[anal_opts_fit_to.global.out_dir,plot_name,'.png'])
-saveas(gcf,[anal_opts_fit_to.global.out_dir,plot_name,'.fig'])
+% saveas(gcf,[anal_opts_fit_to.global.out_dir,plot_name,'.fig'])
 
 
 end

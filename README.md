@@ -57,11 +57,11 @@ git submodule foreach --recursive git pull origin master
 ```
 
 
-![An example TO](/nice_plots/to_fit.png)
+![An example TO](/figs/to_fit.png)
 
-![An example TO](/nice_plots/calibration_model.png)
+![An example TO](/figs/calibration_model.png)
 
-![An example TO](/nice_plots/logic.png)
+![An example TO](/figs/logic.png)
 
 
 ## Contributions  
