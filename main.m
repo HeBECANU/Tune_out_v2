@@ -81,7 +81,10 @@ anal_opts=[];
 %anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output';
 %anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20180829_half_wp_353';
 %anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181002_halfwp_236_stab3\';
-anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181010_every_other_shot_cal\';
+%anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181010_every_other_shot_cal\';
+anal_opts.tdc_import.dir='F:\2018_Tune_Out_V2\20181026_wp_out_stab\';
+anal_opts.tdc_import.dir='F:\2018_Tune_Out_V2\20181011_to_drift_2\';
+
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
 anal_opts.tdc_import.force_reimport=false;
@@ -233,11 +236,11 @@ data.labview.calibration=lv_log.probe_calibration;
 %% IMPORT THE ANALOG INPUT LOG
 %the code will check that the probe beam PD was ok and that the laser was single mode
 anal_opts.ai_log.dir=anal_opts.tdc_import.dir;
-anal_opts.ai_log.force_reimport=false ;
+anal_opts.ai_log.force_reimport=false;
 anal_opts.ai_log.force_load_save=false;
 anal_opts.ai_log.log_name='log_analog_in_';
 anal_opts.ai_log.pd.set=2;
-anal_opts.ai_log.pd.diff_thresh=2;
+anal_opts.ai_log.pd.diff_thresh=0.1;
 anal_opts.ai_log.pd.std_thresh=0.1;
 anal_opts.ai_log.pd.time_start=0.2;
 anal_opts.ai_log.pd.time_stop=2;
@@ -246,7 +249,7 @@ anal_opts.ai_log.sfp.thresh_cmp_peak=20e-3; %theshold on the compressed signal t
 anal_opts.ai_log.sfp.peak_dist_min_pass=4.5;%minimum (min difference)between peaks for the laser to be considered single mode
 anal_opts.ai_log.plot.all=false;
 anal_opts.ai_log.plot.failed=false;
-anal_opts.ai_log.time_match_valid=4; %how close the predicted start of the shot is to the actual
+anal_opts.ai_log.time_match_valid=5; %how close the predicted start of the shot is to the actual
 anal_opts.ai_log.scan_time=14e-3;  %estimate of the sfp scan time,used to set the window and the smoothing
 
 
@@ -264,7 +267,7 @@ data.ai_log=ai_log_out;
 %% IMPORT WM LOG FILES
 
 anal_opts.wm_log.dir=anal_opts.tdc_import.dir;
-anal_opts.wm_log.force_reimport=false;
+anal_opts.wm_log.force_reimport=true;
 wm_log_name='log_wm_';
 wm_logs=dir([anal_opts.wm_log.dir,wm_log_name,'*.txt']);
 anal_opts.wm_log.names={wm_logs.name};
@@ -441,7 +444,8 @@ data.cal=make_cal_model(anal_opts.cal_mdl,data);
 %% segmented TO
 %look at the tune out when fit to short segments
 anal_opts.fit_to=[];
-anal_opts.fit_to.bootstrap=true;
+anal_opts.fit_to.bootstrap=false;
+anal_opts.fit_to.plots=false;
 %thresholds for CI
 %sd         CI
 %1          0.3174
@@ -451,10 +455,11 @@ anal_opts.fit_to.ci_size_disp=0.3174;%one sd %confidence interval to display
 anal_opts.fit_to.global=anal_opts.global;
 anal_opts.fit_to.ci_size_cut_outliers=0.05; %confidence interval for cutting outliers
 anal_opts.fit_to.scale_x=1e-9;
+anal_opts.fit_to.min_pts=10;
 
-anal_opts.fit_to.seg_time=60*5;
-anal_opts.fit_to.seg_shift=0.1*anal_opts_fit_to.seg_time;
-segmentd_fit_to(anal_opts.fit_to,data)
+anal_opts.fit_to.seg_time=60*30;
+anal_opts.fit_to.seg_shift=0.1*anal_opts.fit_to.seg_time;
+to_seg_fits=segmentd_fit_to(anal_opts.fit_to,data);
 
 
 

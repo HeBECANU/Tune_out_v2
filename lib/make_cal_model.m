@@ -1,6 +1,5 @@
 function out=make_cal_model(anal_opts_cal,data)
 
-addpath('nanconv')
 
 %create a mask of shots that are calibrations and are good fits
 temp_cal=data.mcp_tdc.probe.calibration';

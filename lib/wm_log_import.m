@@ -5,6 +5,8 @@ cache_opts.verbose=3;
 %wm_log_import_opts=rmfield(wm_log_import_opts,'force_load_save');
 cache_opts.force_recalc=wm_log_import_opts.force_reimport;
 wm_log_import_opts=rmfield(wm_log_import_opts,'force_reimport');
+cache_opts.mock_working_dir=wm_log_import_opts.dir;
+cache_opts.path_directions={1,'dir'};
 outputs=function_cache(cache_opts,@wm_log_import_core,{wm_log_import_opts});
 wm_log=outputs{1};
 end
@@ -28,11 +30,11 @@ for ii=1:size(wm_log_import_opts.names,2)
     fid = fopen(path,'r');
     wm_log_file_cells=textscan(fid,'%s','Delimiter','\n');
     fclose(fid);
-    if ii~=1
-        clf
-        plot(wm_log.get_status.posix_time)
-        pause(1)
-    end
+    %if ii~=1
+    %    clf
+    %    plot(wm_log.get_status.posix_time)
+    %    pause(1)
+    %end
     fprintf('\nFile %03u importing %03uk lines:%03uk',ii,round(size(wm_log_file_cells{1},1)*1e-3),0)
     %now process these lines and place the entries into a feild of the wm_log struct depending on the operation performed
     for jj=1:size(wm_log_file_cells{1},1)
