@@ -14,9 +14,10 @@ warning('off','MATLAB:rankDeficientMatrix');
 osc_fit=[]; %clear the output struct
 %prealocate so that i can do the logics later
 osc_fit.dld_shot_idx=nan(1,iimax);
-osc_fit.model_coefs=nan(iimax,8,2);
+osc_fit.model_coefs=nan(iimax,9,2);
 osc_fit.fit_rmse=nan(1,iimax);
 osc_fit.model=cell(1,iimax);
+osc_fit.acc=cell(1,iimax);
 fprintf('Fitting oscillations in shots %04i:%04i',iimax,0)
 
  if anal_opts_osc_fit.plot_fits
@@ -65,10 +66,11 @@ for ii=1:iimax
         else
             fit_freq=anal_opts_osc_fit.appr_osc_freq_guess(anal_opts_osc_fit.dimesion);
         end
-        modelfun = @(b,x) exp(-x(:,1).*max(0,b(7))).*b(1).*sin(b(2)*x(:,1)*pi*2+b(3)*pi*2)+b(4)+b(8)*x(:,1)+b(5)*x(:,2)+b(6)*x(:,3);
-        beta0=[std(txyz_tmp(anal_opts_osc_fit.dimesion+1,:))*8, fit_freq, 0, 1,0,0,2,0.01];
-        cof_names={'amp','freq','phase','offset','ycpl','zcpl','damp','grad'};
-        opt = statset('TolFun',1e-10,'TolX',1e-10,'MaxIter',1e4,...
+        %im gonna mess with this
+        modelfun = @(b,x) (abs(fit_freq-b(2))<5.5).*(exp(-x(:,1).*max(0,b(7))).*b(1).*sin((b(2)-x(:,1).*b(9)).*x(:,1)*pi*2+b(3)*pi*2)+b(4)+b(8)*x(:,1)+b(5)*x(:,2)+b(6)*x(:,3));
+        beta0=[std(txyz_tmp(anal_opts_osc_fit.dimesion+1,:))*8, fit_freq, 0, 1,0,0,2,0.01,0.005];
+        cof_names={'amp','freq','phase','offset','ycpl','zcpl','damp','grad','freq_drift'};
+        opt = statset('TolFun',1e-14,'TolX',1e-14,'MaxIter',1e5,...
             'UseParallel',1);
         %select the aproapriate values to go in the response variable
         idx=1:4;
@@ -78,6 +80,20 @@ for ii=1:iimax
         weights(isnan(weights))=1e-20; %if nan then set to smallest value you can
         weights=weights/sum(weights);
         %predictor=[tvalues,xvalues,zvalues];
+        
+%         figure(444)
+%         hold on
+%         x=txyz_tmp(3,:)';
+%         dx=gradient(txyz_tmp(3,:)',0.0026);
+%         ddx=gradient(dx,0.0026);
+%         v=dx;
+%         a=ddx;
+%         %scatter(x,a,'filled')
+%         osc_fit.acc{ii}=[x,a,v];
+        
+        fitobject=fitnlm(predictor,txyz_tmp(anal_opts_osc_fit.dimesion+1,:)',modelfun,beta0,...
+            'Weights',weights,'options',opt,...
+            'CoefficientNames',cof_names);
         fitobject=fitnlm(predictor,txyz_tmp(anal_opts_osc_fit.dimesion+1,:)',modelfun,beta0,...
             'Weights',weights,'options',opt,...
             'CoefficientNames',cof_names);
@@ -146,7 +162,7 @@ fprintf('fit error: median %f mean %f std %f\n',...
    median_fit_rmse,mean_fit_rmse,std_fit_rmse)
 
 %label anything std_cut_fac*std away from the median as a bad fit
-std_cut_fac=4;
+std_cut_fac=2;
 mask=osc_fit.ok.did_fits;
 osc_fit.ok.rmse=mask & osc_fit.fit_rmse...
     < median_fit_rmse+std_cut_fac*std_fit_rmse;

@@ -12,24 +12,25 @@
 % Last revision:2018-10-01
 % BEGIN USER VAR-------------------------------------------------
 anal_opts=[]
-anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181017_probe_off_trap_freq_drift\';
+%anal_opts.tdc_import.dir='Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181017_probe_off_trap_freq_drift\';
+anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181102_raman_even_better_opt\';
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
 anal_opts.tdc_import.force_reimport=false;
 anal_opts.tdc_import.force_forc=false;
 anal_opts.tdc_import.dld_xy_rot=0.61;
 
-tmp_xlim=[-30e-3, 30e-3];     %tight XY lims to eliminate hot spot from destroying pulse widths
-tmp_ylim=[-30e-3, 30e-3];
+tmp_xlim=[-5e-3, 2e-3];  % %[-8e-3, 8e-3] %[-5e-3, 2e-3]    %tight XY lims to eliminate hot spot from destroying pulse widths
+tmp_ylim=[-7.5e-3, 10.6e-3]; %[-7.5e-3, 10.6e-3] %[-16e-3, 25e-3]
 tlim=[0,4];
 anal_opts.tdc_import.txylim=[tlim;tmp_xlim;tmp_ylim];
 
 
-anal_opts.atom_laser.pulsedt=8.000e-3;
-anal_opts.atom_laser.t0=0.41784; %center i ntime of the first pulse
+anal_opts.atom_laser.pulsedt=2.6e-3 ;%8.000e-3 for RF %2.6e-3 for raman
+anal_opts.atom_laser.t0=0.40515; %center i ntime of the first pulse %0.40515 %0.4178
 anal_opts.atom_laser.start_pulse=1; %atom laser pulse to start with
-anal_opts.atom_laser.pulses=100;
-anal_opts.atom_laser.appr_osc_freq_guess=[52,40,40];
+anal_opts.atom_laser.pulses=120;
+anal_opts.atom_laser.appr_osc_freq_guess=[50,40,40];
 anal_opts.atom_laser.pulse_twindow=anal_opts.atom_laser.pulsedt*0.9;
 anal_opts.atom_laser.xylim=anal_opts.tdc_import.txylim(2:3,:); %set same lims for pulses as import
 
@@ -37,17 +38,17 @@ anal_opts.global.fall_time=0.417;
 anal_opts.global.qe=0.09;
 
 anal_opts.trig_dld=20.3;
-anal_opts.dld_aquire=4;
+anal_opts.dld_aquire=4;%4
 anal_opts.trig_ai_in=20;
 
 
 anal_opts.osc_fit.binsx=1000;
-anal_opts.osc_fit.blur=1;
+anal_opts.osc_fit.blur=0;
 anal_opts.osc_fit.xlim=[-20,20]*1e-3;
 anal_opts.osc_fit.tlim=[0.86,1.08];
 anal_opts.osc_fit.dimesion=2; %Select coordinate to bin. 1=X, 2=Y.
 
-anal_opts.history.shots=200;
+anal_opts.history.shots=600;
 
 % END USER VAR-----------------------------------------------------------
 
@@ -81,6 +82,7 @@ set(gcf,'color','w')
 
 
 anal_opts.tdc_import.shot_num=find_data_files(anal_opts.tdc_import);
+%anal_opts.tdc_import.shot_num=47:65;
 
 %max_shot_num=max(anal_opts.tdc_import.shot_num);
 %anal_opts.tdc_import.shot_num=anal_opts.tdc_import.shot_num(...
@@ -106,36 +108,73 @@ title('num count run trend')
 
 
 %% Bin pulses
+fitted_freqs = {{},{}};
+fitted_freqs_unc = {{},{}};
+for jj = 1:2
+for n = 6.5
+    if jj == 1
+        anal_opts.atom_laser.start_pulse=1; %atom laser pulse to start with
+        anal_opts.atom_laser.pulses=10*n;
+    elseif jj == 2
+        anal_opts.atom_laser.start_pulse=10*n+1; %atom laser pulse to start with
+        anal_opts.atom_laser.pulses=155-10*n;
+    end
 
+anal_opts.atom_laser.plots=false;
 data.mcp_tdc.all_ok=data.mcp_tdc.num_ok;
 data.mcp_tdc.al_pulses=bin_al_pulses(anal_opts.atom_laser,data);
 %%
-anal_opts.osc_fit.adaptive_freq=true; %estimate the starting trap freq 
-anal_opts.osc_fit.appr_osc_freq_guess=[52,46.7,40];
+anal_opts.osc_fit.adaptive_freq=false; %estimate the starting trap freq 
+anal_opts.osc_fit.appr_osc_freq_guess=[52,37.8846,40]; %37.8846 %47.552
 anal_opts.osc_fit.plot_fits=false;
-anal_opts.osc_fit.plot_err_history=true;
-anal_opts.osc_fit.plot_fit_corr=false;
-
+anal_opts.osc_fit.plot_err_history=false;
+anal_opts.osc_fit.plot_fit_corr=false ;
 anal_opts.osc_fit.global=anal_opts.global;
 data.osc_fit=fit_trap_freq(anal_opts.osc_fit,data);
 
-data.osc_fit.trap_freq_recons=nan*data.osc_fit.ok.did_fits;
-mask=data.osc_fit.ok.did_fits;
-data.osc_fit.trap_freq_recons(mask)=3*(1/anal_opts.atom_laser.pulsedt)+data.osc_fit.model_coefs(mask,2,1);
+data.osc_fit.trap_freq_recons_pre=nan*data.osc_fit.ok.did_fits;
+data.osc_fit.trap_freq_recons=data.osc_fit.trap_freq_recons_pre;
+mask=data.osc_fit.ok.did_fits & data.osc_fit.ok.rmse;
+
+%%
+data.osc_fit.trap_freq_recons_pre(mask)=1*(1/anal_opts.atom_laser.pulsedt)+data.osc_fit.model_coefs(mask,2,1); %1 for raman
+freq_tol = 1.5;
+
+trap_freq_median = nanmedian(data.osc_fit.trap_freq_recons_pre(mask));
+mask = abs((data.osc_fit.trap_freq_recons_pre-trap_freq_median))<freq_tol & mask;
+
+%%
+data.osc_fit.trap_freq_recons(mask)=1*(1/anal_opts.atom_laser.pulsedt)+data.osc_fit.model_coefs(mask,2,1);
 data.osc_fit.trap_freq_unc=nan*mask;
 data.osc_fit.trap_freq_unc(mask)=data.osc_fit.model_coefs(mask,2,2)';
 
 %%
 
-sfigure(1);
+figure;
+% errorbar(data.osc_fit.dld_shot_num(mask),...
+%     data.osc_fit.trap_freq_recons(mask),data.osc_fit.trap_freq_unc(mask),...
+%     'kx-','MarkerSize',7,'CapSize',0,'LineWidth',1)
 errorbar(data.osc_fit.dld_shot_num,...
     data.osc_fit.trap_freq_recons,data.osc_fit.trap_freq_unc,...
     'kx-','MarkerSize',7,'CapSize',0,'LineWidth',1)
 xlabel('Shot Number')
 ylabel('Fit Trap Freq')
 pause(1e-6)
+fitted_freqs{jj}{round(n)} = data.osc_fit.trap_freq_recons;
+fitted_freqs_unc{jj}{round(n)} = data.osc_fit.trap_freq_unc;
+end
+end
 
-
+%%
+freqs = data.osc_fit.trap_freq_recons(mask);
+cosec_freq_dif = freqs(1:end-1).^2-freqs(2:end).^2;
+display(strcat(['Consecutive shot difference = ',num2str(mean(cosec_freq_dif)), char(177) ,num2str(std(cosec_freq_dif))]))
+figure(455)
+plot(cosec_freq_dif)
+ylabel('Consecutive freq dif')
+figure(457)
+histogram(cosec_freq_dif)
+%figure(456)
 %% allan
 
 
@@ -149,7 +188,7 @@ allan_data.time=allan_data.time-min(allan_data.time);
 tau_in=2.^(-10:0.05:14);
 %%
 
-[retval, s, errorb, tau]=allan(allan_data,tau_in)
+[retval, s, errorb, tau]=allan(allan_data,tau_in);
 
 %%
 windows=[];
@@ -159,7 +198,7 @@ fit_out=plot_allan_with_fits(retval, errorb, tau,windows,'Normal Allan Deviation
 
 
 %%
-[retval, s, errorb, tau]=allan_overlap(allan_data,2.^(-10:0.005:20))
+[retval, s, errorb, tau]=allan_overlap(allan_data,2.^(-10:0.005:20));
 %%
 windows=[[57,160];[249,528];[1000,1563];[2091,inf]];
 fit_out=plot_allan_with_fits(retval, errorb, tau,windows,'Overlapping Allan Deviation')
@@ -167,7 +206,7 @@ fit_out=plot_allan_with_fits(retval, errorb, tau,windows,'Overlapping Allan Devi
 
 
 %%
-[retval, s, errorb, tau]=allan_modified(allan_data,2.^(-10:0.01:20))
+[retval, s, errorb, tau]=allan_modified(allan_data,2.^(-10:0.01:20));
 
 %%
 windows=[[0,256];[1000,1563];[1885,3092];[4040,inf]];
