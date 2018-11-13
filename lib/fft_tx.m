@@ -59,7 +59,10 @@ elseif pad~=1
     x=[x,zeros(1,round(len_before_pad*(pad-1)))];
 end
 
+
 len = numel(x);             % Length of signal
+
+fs=fs*len/len_before_pad;
 %disp(num2str(L))
 %t = (0:L-1)*T;        % Time vector
 y = fft(x);
