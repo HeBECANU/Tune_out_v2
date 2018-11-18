@@ -116,7 +116,7 @@ end_pulse = 130;
 %fit_coefs = cell(1,3);
 data.fixed_vals = fit_coefs{3};
 
-n = 5.5; %number of ten pulses in the first section
+n = 6; %number of ten pulses in the first section
 for jj = 1:2
     if jj == 1
         anal_opts.atom_laser.start_pulse=1; %atom laser pulse to start with
@@ -126,7 +126,7 @@ for jj = 1:2
         anal_opts.atom_laser.pulses=end_pulse-10*n;
     elseif jj == 3
         anal_opts.atom_laser.start_pulse=1; %atom laser pulse to start with
-        anal_opts.atom_laser.pulses=end_pulse+15;
+        anal_opts.atom_laser.pulses=end_pulse;
     end
 
 %         anal_opts.atom_laser.start_pulse=1+bin_width*(jj-1); %atom laser pulse to start with
