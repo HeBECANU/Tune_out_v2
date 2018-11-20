@@ -157,7 +157,7 @@ ylabel('Fitted osc freq')
 % xlabel('Probe freq')
 % ylabel('Osc freq')
 
-subplot(2,2,3)
+subplot(2,2,4)
 et=errorbar(cal_trend(:,1),cal_trend(:,2),cal_trend(:,4),cal_trend(:,4),cal_trend(:,3),cal_trend(:,3),...
     '.','MarkerSize',20);
 et.Color = cm(20,:);
@@ -185,8 +185,19 @@ title('Fit freq difference')
 xlabel('Oscillation amplitude')
 ylabel('\omega_{test}-\omega_{cal} [Hz]')
 
+
+
 suptitle('Comparison of anharmonic & probe effects')
 
 
 
+figure()
+colormap(viridis(1000))
+X=abs(amps_meas_all);
+Y=freq_meas_all;
+colordat = (probe_meas_all-min(probe_meas_all))/(max(probe_meas_all)-min(probe_meas_all));
+scatter3(X,Y,colordat,15,colordat)
+xlabel('Fitted amplitude')
+ylabel('Fitted freq')
+zlabel('normalized Probe freq')
 
