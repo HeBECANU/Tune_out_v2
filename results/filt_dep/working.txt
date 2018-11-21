@@ -1,4 +1,4 @@
-
+﻿
 all 3 filters in
 \\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181120_waveplate_dep_3filt
 
@@ -36,3 +36,20 @@ files with enough number     3033
 shot uncert scaling @1SD 5248.3 MHz, 2987.30 fm /sqrt(shots)
 
 
+no filters in
+much better aligned
+currently running 2018-11-22 00:52
+
+====TO fit results==========
+median damping time 0.88
+run start time               1542824530.1 (posix)
+run stop time                1542847172.1 (posix)
+duration                     22641.9 (s)
+TO freq                      362867618.6±(60±1) MHz
+TO wavelength                413.087918±0.000034 nm 
+diff from TOV1               -5.882206e-03±3.411170e-05 nm 
+number of probe files        200 
+number of calibration files  411 
+total used                   611 
+files with enough number     844
+shot uncert scaling @1SD 1473.9 MHz, 838.96 fm /sqrt(shots)
