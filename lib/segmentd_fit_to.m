@@ -189,8 +189,8 @@ times=to_seg_fits.time.start-to_seg_fits.time.run_start;
 times=times/(60*60);
 plot(times,to_val-mean_freq,'k')
 hold on
-%plot(times,to_val-to_unc-mean_freq,'b')
-%plot(times,to_val+to_unc-mean_freq,'b')
+plot(times,to_val-to_unc-mean_freq,'b')
+plot(times,to_val+to_unc-mean_freq,'b')
 hold off
 xlabel('time (h)')
 ylabel('variation in TO fit (GHz)')
