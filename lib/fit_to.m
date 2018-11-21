@@ -15,7 +15,7 @@ cal_trap_freq=data.cal.freq_drift_model(data.mcp_tdc.time_create_write(probe_dat
 delta_trap_freq=trap_freq-cal_trap_freq;
 square_trap_freq= (trap_freq).^2-(cal_trap_freq).^2;
 %define the color for each shot on the plot
-cdat=viridis(1000);
+cdat=viridis(1e4);
 c_cord=linspace(0,1,size(cdat,1));
 shot_time=data.mcp_tdc.time_create_write(probe_dat_mask,1);
 shot_time=shot_time-min(shot_time);
