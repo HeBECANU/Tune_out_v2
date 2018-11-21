@@ -79,10 +79,6 @@ tic
 anal_opts=[];
 %anal_opts.tdc_import.dir='Y:\EXPERIMENT-DATA\Tune Out V2\20180826_testing_wm_log\';
 %anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output';
-%anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20180829_half_wp_353';
-%anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181002_halfwp_236_stab3\';
-%anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181010_every_other_shot_cal\';
-anal_opts.tdc_import.dir='F:\2018_Tune_Out_V2\20181026_wp_out_stab\';
 anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181120_waveplate_dep_3filt';
 
 anal_opts.tdc_import.file_name='d';
@@ -129,7 +125,7 @@ anal_opts.osc_fit.dimesion=2; %Select coordinate to bin. 1=X, 2=Y.
 data=[]; %CLEAR THE DATA
 anal_out=[];
 %set up an output dir %https://gist.github.com/ferryzhou/2269380
-if anal_opts.tdc_import.dir(end) ~= '\', dirpath = [dirpath '\']; end
+if anal_opts.tdc_import.dir(end) ~= filesep, anal_opts.tdc_import.dir = [anal_opts.tdc_import.dir filesep]; end
 if (exist([anal_opts.tdc_import.dir,'out'], 'dir') == 0), mkdir([anal_opts.tdc_import.dir,'out']); end
  
 anal_out.dir=sprintf('%sout\\%s\\',...
