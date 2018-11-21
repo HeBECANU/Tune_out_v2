@@ -79,7 +79,7 @@ if ~isfield(import_opts, 'file_name') ,import_opts.file_name='d'; end
 if ~isfield(import_opts, 'dld_xy_rot') ,import_opts.dld_xy_rot=0.61; end
 if ~isfield(import_opts, 'txylim') ,import_opts.txylim=[[0,10];[-30e-3, 30e-3];[-30e-3, 30e-3]]; end
 %if the shot numbers are not specified import everythin in the directory
-if ~isfield(import_opts.shot_num,'double') 
+if ~isfield(import_opts,'shot_num') 
     import_opts.shot_num=find_data_files(import_opts);
 end
 

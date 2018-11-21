@@ -119,8 +119,9 @@ else
     else
         batch_data.mcp_tdc.al_pulses=bin_al_pulses(anal_opts.atom_laser,batch_data);
         %%
-        anal_opts.osc_fit.adaptive_freq=false; %estimate the starting trap freq 
+        anal_opts.osc_fit.adaptive_freq=true; %estimate the starting trap freq 
         anal_opts.osc_fit.appr_osc_freq_guess=[52,44,40];
+        anal_opts.osc_fit.freq_fit_tolerance=5;
         if sum(batch_data.mcp_tdc.all_ok)>2
             anal_opts.osc_fit.plot_fits=false;
         else
