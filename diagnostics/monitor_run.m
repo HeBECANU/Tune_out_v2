@@ -49,7 +49,7 @@ anal_opts.osc_fit.dimesion=2; %Select coordinate to bin. 1=X, 2=Y.
 anal_opts.history.shots=50;
 
 % END USER VAR-----------------------------------------------------------
-
+fclose('all')
 %add all subfolders
 folder = fileparts(which(mfilename));
 folder=strsplit(folder,filesep); %go up a directory
@@ -114,7 +114,7 @@ else
     batch_data.mcp_tdc.all_ok(batch_data.mcp_tdc.all_ok)=...
         cellfun(@(x) x(end,1),batch_data.mcp_tdc.counts_txy(batch_data.mcp_tdc.all_ok))>anal_opts.dld_aquire*0.8;
     if sum(batch_data.mcp_tdc.all_ok)==0
-        fprintf('waiting for file to be writen')
+        fprintf('waiting for file to be writen\n')
         pause(0.1)
     else
         batch_data.mcp_tdc.al_pulses=bin_al_pulses(anal_opts.atom_laser,batch_data);
