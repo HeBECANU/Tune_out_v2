@@ -1,0 +1,16 @@
+
+all 3 filters in
+
+====TO fit results==========
+median damping time 0.94
+run start time               1542662628.7 (posix)
+run stop time                1542723292.4 (posix)
+duration                     60663.6 (s)
+TO freq                      362867189.6±(48±9) MHz
+TO wavelength                413.088406±0.000027 nm 
+diff from TOV1               -5.393844e-03±2.729100e-05 nm 
+number of probe files        1133 
+number of calibration files  1143 
+total used                   2276 
+files with enough number     2303
+shot uncert scaling @1SD 2277.3 MHz, 1296.23 fm /sqrt(shots)

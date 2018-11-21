@@ -1,20 +1,51 @@
-function[out]=fft_tx(t,x,pad)
-%a fft function that can handle unevenly spaced data
-%uses the spread in the sampling times to dynamicaly change the resampling
-%ratio
-%https://dsp.stackexchange.com/questions/7788/setup-frequency-array-properly
-%also can zero padd the data to decrease freq bin size
-%current normalization set so that amplitude is unchanged by padding, this will mean that the power is wrong
+function[out]=fft_tx(t,x,varargin)
+% fft_tx - general purpose fft
+% built to hande most use cases: uneven data, windowing, padding to increase the freq sampling. 
+% all built to keep the returned amplitudes correct, this will mean that the power is wrong.
+% https://dsp.stackexchange.com/questions/7788/setup-frequency-array-properly
+% uses the spread in the sampling times to dynamicaly change the resampling
+% ratio
 
+% Syntax:   freq_amp=fft_tx(times,val)
+%           freq_amp=fft_tx(times,val,'padding',10,'window','gauss','win_param',{5});
+%
+% Inputs:
+%   t          - vector, sample times (will deal with unmatched vector dimension)
+%   x          - vector, the signal   (will deal with unmatched vector dimension)
+%   Optional Name Value Pairs:
+%       'padding'        - float, value>=1, factor to padd the data by to increase the frequeny sampling (but not resolvability)
+%       'window'         - string, windowing function to apply to the data before processing.
+%                       ['none','hamming','gauss','blackman','hanning']
+%       win_param       - cell array, extra inputs after the length argument to the windowing function
+%                           - gauss ,win_param={3}, reciprocal of the standard deviation
+%                           - all others (besides none) 'symmetric'(recomended) or 'periodic'
 
-%inputs
-%   t       time vector [1,n]
-%   x       signal vector [1,n]
-%   padd    factor to pad by
+% Outputs:
+%    freq_amp - 2*L matrix
+%               - freq_amp(1,:) are the frequency bins
+%               - freq_amp(2,:) are the (complex) amplitudes
+%
+% Example: 
+%         times=linspace(0,1e3,1e6);
+%         testfun=@(t) 100*sin(2*pi*t*100+pi)+1*sin(2*pi*t*133+pi);
+%         val=testfun(times);
+%         out=fft_tx(times,val,'padding',10,'window','gauss','win_param',{5});
+%         figure(5)
+%         plot(out(1,:),abs(out(2,:)))
 
-%version 2
-%fixed that t,x had to be row and col vectors
-%supports zero padding data for increased freq resolution
+% Other m-files required: none
+% Also See: test_fft_tx
+% Subfunctions: none
+% MAT-files required: none
+%
+% Known BUGS/ Possible Improvements
+%    - chosable resampling stratagey
+%
+% Author: Bryce Henson
+% email: Bryce.Henson@live.com
+% Last revision:2018-11-21
+
+%------------- BEGIN CODE --------------
 
 %adaptively deal with the data if its in row or col fromat
 if size(size(t),2)==2
@@ -36,6 +67,16 @@ else
     error('you have tried to input the wrong shape in x')
 end  
 
+
+p = inputParser;
+addParameter(p,'window','none',@(x) sum(contains({'none','hamming','gauss','blackman','hanning'},x))==1);
+addParameter(p,'win_param',{},@(x) true);
+addParameter(p,'padding','',@(x) isfloat(x) && x>=1);
+parse(p,varargin{:});
+pad=p.Results.padding;
+window_fun=p.Results.window;
+window_param=p.Results.win_param;
+
 %first sort the data
 [t,i]=sort(t);
 x=x(i);
@@ -51,18 +92,36 @@ end
 dt = (t(2)-t(1));             % Sampling period
 %disp(num2str(dt))
 fs=1/dt;
-
 len_before_pad = numel(x);             % Length of signal
+
+%apply windowing function
+switch window_fun
+    case 'hamming'
+        win=hamming(len_before_pad,window_param{:})';
+    case 'gauss'
+        win=gausswin(len_before_pad,window_param{:})'; 
+    case 'blackman'
+        win=blackman(len_before_pad,window_param{:})'; 
+    case 'hanning'
+        win=hann(len_before_pad,window_param{:})'; 
+    case 'none'
+        %do nothing
+end
+if window_fun~='none'
+    win=win.*(len_before_pad/sum(win));
+    x=x.*win;
+end
+
+
+
 if pad<1
-    error('pad cant be less than zero')
+    error('pad cant be less than one')
 elseif pad~=1
     x=[x,zeros(1,round(len_before_pad*(pad-1)))];
 end
 
-
 len = numel(x);             % Length of signal
-
-fs=fs*len/len_before_pad;
+fs=fs;%*len_before_pad/len;
 %disp(num2str(L))
 %t = (0:L-1)*T;        % Time vector
 y = fft(x);

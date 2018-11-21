@@ -58,7 +58,7 @@ for ii=1:iimax
 
         %try to find the peak osc freq to start the fit there
         if anal_opts_osc_fit.adaptive_freq
-            out=fft_tx(txyz_tmp(1,:),txyz_tmp(anal_opts_osc_fit.dimesion+1,:),10);
+            out=fft_tx(txyz_tmp(1,:),txyz_tmp(anal_opts_osc_fit.dimesion+1,:),'padding',10);
             [~,nearest_idx]=max(abs(out(2,:)));
             fit_freq=out(1,nearest_idx);
             %fft_phase=angle(out(2,nearest_idx))+0.535;
@@ -138,6 +138,8 @@ fprintf('...Done\n')
 osc_fit.ok.did_fits=~cellfun(@(x) isequal(x,[]),osc_fit.model);
 
 %% look for failed fits
+
+%cut based on fit error
 %look at the distribution of fit errors
 mean_fit_rmse=nanmean(osc_fit.fit_rmse(osc_fit.ok.did_fits));
 median_fit_rmse=nanmedian(osc_fit.fit_rmse(osc_fit.ok.did_fits));
@@ -153,6 +155,15 @@ osc_fit.ok.rmse=mask & osc_fit.fit_rmse...
 %label the fits with trap freq more than 1hz awaay from the mean as bad
 %osc_fit.ok.rmse(osc_fit.ok.rmse)=abs(osc_fit.model_coefs(osc_fit.ok.rmse,2,1)'...
 %    -mean(osc_fit.model_coefs(osc_fit.ok.rmse,2,1)))<1;
+
+%cut based on measured freq
+median_fit_freq=nanmedian(osc_fit.model_coefs(osc_fit.ok.rmse,2,1));
+osc_fit.ok.freq= abs(osc_fit.model_coefs(:,2,1)'-...
+    median_fit_freq)<anal_opts_osc_fit.freq_fit_tolerance;
+
+
+osc_fit.ok.all=osc_fit.ok.freq & osc_fit.ok.rmse;
+
 
 if anal_opts_osc_fit.plot_err_history
     figure(52)
@@ -180,66 +191,67 @@ end
 
 
 if anal_opts_osc_fit.plot_fit_corr
+    mask=osc_fit.ok.all;
     sfigure(53);
     clf
     set(gcf,'color','w')
     %see if the fit error depends on the probe freq
     subplot(3,3,1)
-    tmp_probe_freq=data.wm_log.proc.probe.freq.act.mean(osc_fit.ok.rmse);
+    tmp_probe_freq=data.wm_log.proc.probe.freq.act.mean(mask);
     tmp_probe_freq=(tmp_probe_freq-nanmean(tmp_probe_freq))*1e-3;
     plot(tmp_probe_freq,...
-        osc_fit.fit_rmse(osc_fit.ok.rmse),'xk')
+        osc_fit.fit_rmse(osc_fit.ok.all),'xk')
     xlabel('probe beam freq (GHz)')
     ylabel('fit error')
     title('Fit Error')
     %see if the damping changes
     subplot(3,3,2)
     plot(tmp_probe_freq,...
-       osc_fit.model_coefs((osc_fit.ok.rmse),1,1),'xk')
+       osc_fit.model_coefs(mask,1,1),'xk')
     xlabel('probe beam freq (GHz)')
     ylabel('Osc amp (mm)')
     title('Amp')
     subplot(3,3,3)
     plot(tmp_probe_freq,...
-       osc_fit.model_coefs((osc_fit.ok.rmse),3,1),'xk')
+       osc_fit.model_coefs(mask,3,1),'xk')
     xlabel('probe beam freq (GHz)')
     ylabel('Phase (rad)')
     title('Phase')
     subplot(3,3,4)
     plot(tmp_probe_freq,...
-       osc_fit.model_coefs((osc_fit.ok.rmse),4,1),'xk')
+       osc_fit.model_coefs(mask,4,1),'xk')
     xlabel('probe beam freq (GHz)')
     ylabel('offset')
     title('offset')
     subplot(3,3,5)
     plot(tmp_probe_freq,...
-       osc_fit.model_coefs((osc_fit.ok.rmse),5,1),'xk')
+       osc_fit.model_coefs(mask,5,1),'xk')
     xlabel('probe beam freq (GHz)')
     ylabel('ycpl')
     title('ycpl')
     subplot(3,3,6)
     plot(tmp_probe_freq,...
-       osc_fit.model_coefs((osc_fit.ok.rmse),6,1),'xk')
+       osc_fit.model_coefs(mask,6,1),'xk')
     xlabel('probe beam freq (GHz)')
     ylabel('zcpl')
     title('zcpl')
     %see if the amp changes
     subplot(3,3,7)
     plot(tmp_probe_freq,...
-       1./osc_fit.model_coefs((osc_fit.ok.rmse),7,1),'xk')
+       1./osc_fit.model_coefs(mask,7,1),'xk')
     xlabel('probe beam freq (GHz)')
     ylabel('Damping Time (s)')
     title('Damping')
     subplot(3,3,8)
     plot(tmp_probe_freq,...
-       osc_fit.model_coefs((osc_fit.ok.rmse),8,1),'xk')
+       osc_fit.model_coefs(mask,8,1),'xk')
     xlabel('probe beam freq (GHz)')
     ylabel('Grad mm/s')
     title('Grad')
     %look for anharminicity with a osc amp/freq correlation
     subplot(3,3,9)
-    plot(abs(osc_fit.model_coefs((osc_fit.ok.rmse),1,1)),...
-        osc_fit.model_coefs((osc_fit.ok.rmse),2,1),'xk')
+    plot(abs(osc_fit.model_coefs(mask,1,1)),...
+        osc_fit.model_coefs(mask,2,1),'xk')
     xlabel('osc (mm)')
     ylabel('fit freq (Hz)')
     title('anharmonicity')

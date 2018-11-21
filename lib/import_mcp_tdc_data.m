@@ -56,9 +56,6 @@ function  [mcp_tdc_data,import_opts]=import_mcp_tdc_data_core(import_opts)
 %
 % Known BUGS/ Possible Improvements
 %    -more commenting
-%    -use full file instead of manual string cat for linux compatable file paths
-%    -check for inputs
-%    -multi layer cache & consider storing in import dir
 %
 % Author: Bryce Henson
 % email: Bryce.Henson@live.com
@@ -69,37 +66,46 @@ function  [mcp_tdc_data,import_opts]=import_mcp_tdc_data_core(import_opts)
 %do some basic checks on input
 %mandatory
 if ~isfield(import_opts, 'dir') ,error('bad input:dir'), end
-if ~isfield(import_opts, 'file_name') ,error('bad input:file_name'), end
-if ~isfield(import_opts, 'dld_xy_rot') ,error('bad input:dld_xy_rot'), end
-if ~isfield(import_opts, 'txylim') ,error('bad input:txylim'), end
-if ~isfield(import_opts, 'dld_xy_rot') ,error('bad input:dld_xy_rot'), end
-if ~isfield(import_opts, 'shot_num') ,error('bad input:dld_xy_rot'), end
 if ~isa(import_opts.dir,'char') ,error('bad input:dir'), end
-if ~isa(import_opts.file_name,'char') ,error('bad input:file_name'), end
-
-if ~isa(import_opts.dld_xy_rot,'double') ,error('bad input:dld_xy_rot'), end
-if ~isa(import_opts.txylim,'double') && size(import_opts.txylim)== [3,2]
-    error('bad input:txylim'), end
-if ~isa(import_opts.shot_num,'double') ,error('bad input:dld_xy_rot'), end
 
 %optional
 if ~isfield(import_opts, 'mat_save') ,import_opts.mat_save=true; end
 if ~isfield(import_opts, 'mod_wait') ,import_opts.mod_wait=1; end
+if ~isfield(import_opts, 'force_load_save') ,import_opts.force_load_save=false; end
+if ~isfield(import_opts, 'force_reimport') ,import_opts.force_reimport=false; end
+if ~isfield(import_opts, 'force_forc') ,import_opts.force_forc=false; end
+% these defaults should work for most cases
+if ~isfield(import_opts, 'file_name') ,import_opts.file_name='d'; end
+if ~isfield(import_opts, 'dld_xy_rot') ,import_opts.dld_xy_rot=0.61; end
+if ~isfield(import_opts, 'txylim') ,import_opts.txylim=[[0,10];[-30e-3, 30e-3];[-30e-3, 30e-3]]; end
+%if the shot numbers are not specified import everythin in the directory
+if ~isfield(import_opts.shot_num,'double') 
+    import_opts.shot_num=find_data_files(import_opts);
+end
+
+%check optionals
+if ~isa(import_opts.file_name,'char') ,error('bad input:file_name'), end
+if ~isa(import_opts.force_load_save,'logical') ,error('bad input:force_load_save'), end
+if ~isa(import_opts.force_reimport,'logical') ,error('bad input:force_reimport'), end
+if ~isa(import_opts.force_forc,'logical') ,error('bad input:force_forc'), end
+if ~isa(import_opts.dld_xy_rot,'double') ,error('bad input:dld_xy_rot'), end
+if ~isa(import_opts.file_name, 'char') ,error('bad input:file_name'), end
+if size(import_opts.txylim)~=[3,2], error('bad input:txylim size'), end
+if ~(isa(import_opts.shot_num,'int') || isa(import_opts.shot_num,'double')) ,error('bad input:shot_num'), end
+if numel(import_opts.shot_num)==0
+    error('bad input:shot_num')
+end
 
 %fix if there is not a trailing file seperator on the directory, use filesep for linux compatablility
 if import_opts.dir(end)~=filesep
     import_opts.dir=[import_opts.dir,filesep];
 end
 
-%sanity checks
-if numel(import_opts.shot_num)==0
-    error('nothing passed to import_opts.shot_num')
-end
-
 mcp_tdc_data=[];
-convert_dld_to_txy=import_opts.force_forc;
+
 fprintf('importing mcp-tdc files %04i:%04i',size(import_opts.shot_num,2),0)
 for ii=1:size(import_opts.shot_num,2)
+    convert_dld_to_txy=import_opts.force_forc;
     mcp_tdc_data.shot_num(ii)=nan;
     mcp_tdc_data.num_counts(ii)=nan;
     mcp_tdc_data.counts_txy{ii}={};
@@ -115,10 +121,11 @@ for ii=1:size(import_opts.shot_num,2)
              convert_dld_to_txy=true;
          elseif ~convert_dld_to_txy
             %check that the _txy_forc file was created after the raw dld file
-             time_forc=data_tcreate([import_opts.dir,import_opts.file_name,'_txy_forc'],num2str(import_opts.shot_num(ii)));
+            time_forc=data_tcreate([import_opts.dir,import_opts.file_name,'_txy_forc'],num2str(import_opts.shot_num(ii)));
             if time_forc(2) < mcp_tdc_data.time_create_write(ii,2)
-                 convert_dld_to_txy=true;
-             end
+            	convert_dld_to_txy=true;
+                
+            end
          else
          end
 

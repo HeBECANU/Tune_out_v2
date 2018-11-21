@@ -88,11 +88,11 @@ cache_opts=[];
 cache_opts.verbose=0;
 cache_opts.mock_working_dir=anal_opts.dir;
 cache_opts.path_directions={1,'dir'};
-cache_opts.clean_cache=false;
+cache_opts.clean_cache=true;
+cache_opts.force_recalc=true
 if isfield(anal_opts,'force_reimport')
     %cache_opts.force_recalc=true;
 end
-
 
 iimax=size(ai_log_out.file_names,2); %the number of ai logs that have been identified
 %initalize outputs
@@ -105,9 +105,10 @@ for ii=1:iimax
     args_single.fname=ai_log_out.file_names{ii};
     cout=function_cache(cache_opts,@ai_log_single,{args_single});
     ai_log_single_out=cout{1};
-    ai_log_out.ok.reg_pd(ai_log_single_out.shot_idx)=ai_log_single_out.reg_pd;
-    ai_log_out.ok.sfp(ai_log_single_out.shot_idx)=ai_log_single_out.single_mode;
-    
+    if ~isnan(ai_log_single_out.shot_idx)
+        ai_log_out.ok.reg_pd(ai_log_single_out.shot_idx)=ai_log_single_out.reg_pd;
+        ai_log_out.ok.sfp(ai_log_single_out.shot_idx)=ai_log_single_out.single_mode;
+    end
 end %loop over files
 fprintf('Done\n')
 
