@@ -28,7 +28,7 @@ anal_opts.atom_laser.pulsedt=8.000e-3;
 anal_opts.atom_laser.t0=0.41784; %center i ntime of the first pulse
 anal_opts.atom_laser.start_pulse=1; %atom laser pulse to start with
 anal_opts.atom_laser.pulses=100;
-anal_opts.atom_laser.appr_osc_freq_guess=[52,40,40];
+anal_opts.atom_laser.appr_osc_freq_guess=[52,48,40];
 anal_opts.atom_laser.pulse_twindow=anal_opts.atom_laser.pulsedt*0.9;
 anal_opts.atom_laser.xylim=anal_opts.tdc_import.txylim(2:3,:); %set same lims for pulses as import
 
@@ -119,8 +119,8 @@ else
     else
         batch_data.mcp_tdc.al_pulses=bin_al_pulses(anal_opts.atom_laser,batch_data);
         %%
-        anal_opts.osc_fit.adaptive_freq=true; %estimate the starting trap freq 
-        anal_opts.osc_fit.appr_osc_freq_guess=[52,46.7,40];
+        anal_opts.osc_fit.adaptive_freq=false; %estimate the starting trap freq 
+        anal_opts.osc_fit.appr_osc_freq_guess=[52,44,40];
         if sum(batch_data.mcp_tdc.all_ok)>2
             anal_opts.osc_fit.plot_fits=false;
         else
