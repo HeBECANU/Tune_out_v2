@@ -475,7 +475,7 @@ anal_opts.fit_to.global=anal_opts.global;
 anal_opts.fit_to.ci_size_cut_outliers=0.05; %confidence interval for cutting outliers
 anal_opts.fit_to.scale_x=1e-9;
 
-to_res.fit=fit_to(anal_opts.fit_to,data);
+to_res=fit_to(anal_opts.fit_to,data);
 data.to_fit=to_res;
 
 to_fit_trimed_val=to_res.fit_trimmed.to_freq;
@@ -485,9 +485,9 @@ to_fit_unc_unc_boot=to_res.fit_trimmed.boot.se_se_opp/anal_opts.fit_to.scale_x;
 
 %% write out the results
 %inverse scaled gradient to give the single shot uncert (with scaling factor to include calibration)
-tot_num_shots=to_res.fit.num_shots+data.cal.num_shots
+tot_num_shots=to_res.num_shots+data.cal.num_shots;
 single_shot_uncert=to_res.fit_trimmed.single_shot_uncert_boot...
-    *sqrt(tot_num_shots/to_res.fit.num_shots);
+    *sqrt(tot_num_shots/to_res.num_shots);
 fprintf('\n====TO fit results==========\n')
 fprintf('median damping time %.2f\n',median(1./data.osc_fit.model_coefs(data.osc_fit.ok.rmse,7,1)))
 %calculate some statistics and convert the model parameter into zero crossing and error therin
@@ -507,7 +507,7 @@ fprintf('TO freq                      %.1f±(%.0f±%.0f) MHz\n',...
 fprintf('TO wavelength                %.6f±%f nm \n',to_wav_val*1e9,to_wav_unc*1e9)
 fprintf('diff from TOV1               %e±%e nm \n',(to_wav_val-old_to_wav)*1e9,to_wav_unc*1e9)
 %more logic needs to be included here
-fprintf('number of probe files        %u \n',to_res.fit.num_shots)
+fprintf('number of probe files        %u \n',to_res.num_shots)
 fprintf('number of calibration files  %u \n',data.cal.num_shots)
 fprintf('total used                   %u \n',tot_num_shots)
 fprintf('files with enough number     %u\n',sum(data.mcp_tdc.num_ok'))
