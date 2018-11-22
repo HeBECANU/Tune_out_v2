@@ -22,6 +22,7 @@ if logic_file_done_writing
     offset = 30;                      %# Offset from the end of file (bytes)
     fseek(fid,-offset,'eof');        %# Seek to the file end, minus the offset
     new_char = fread(fid,1,'*char');  %# Read one character
+    last_char=''; %initalize to deal with empty file case
     while  numel(new_char)>0
         last_char = new_char;   %# Add the character to a string
         new_char = fread(fid,1,'*char');  %# Read one character
