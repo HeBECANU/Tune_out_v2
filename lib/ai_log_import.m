@@ -89,7 +89,7 @@ cache_opts.verbose=0;
 cache_opts.mock_working_dir=anal_opts.dir;
 cache_opts.path_directions={1,'dir'};
 cache_opts.clean_cache=true;
-cache_opts.force_recalc=true
+cache_opts.force_recalc=true;
 if isfield(anal_opts,'force_reimport')
     %cache_opts.force_recalc=true;
 end

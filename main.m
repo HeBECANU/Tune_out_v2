@@ -79,7 +79,12 @@ tic
 anal_opts=[];
 %anal_opts.tdc_import.dir='Y:\EXPERIMENT-DATA\Tune Out V2\20180826_testing_wm_log\';
 %anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output';
-anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181121_filt_dep_none';
+%anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181104_filters_dep_two\';
+%anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181102_filters_dep_two\';
+%anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181101_filters_dep_two';
+%anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181122_alignment_dep_34_5';
+anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181122_alignment_dep_38_9';
+%anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181122_filt_dep_none\';
 
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
@@ -232,7 +237,7 @@ data.labview.calibration=lv_log.probe_calibration;
 %% IMPORT THE ANALOG INPUT LOG
 %the code will check that the probe beam PD was ok and that the laser was single mode
 anal_opts.ai_log.dir=anal_opts.tdc_import.dir;
-anal_opts.ai_log.force_reimport=false;
+anal_opts.ai_log.force_reimport=true;
 anal_opts.ai_log.force_load_save=false;
 anal_opts.ai_log.log_name='log_analog_in_';
 anal_opts.ai_log.pd.set=5;
@@ -456,7 +461,7 @@ anal_opts.fit_to.scale_x=1e-9;
 anal_opts.fit_to.min_pts=10;
 
 anal_opts.fit_to.seg_time=60*30;
-anal_opts.fit_to.seg_shift=0.1*anal_opts.fit_to.seg_time;
+anal_opts.fit_to.seg_shift=1*anal_opts.fit_to.seg_time;
 to_seg_fits=segmentd_fit_to(anal_opts.fit_to,data);
 
 
@@ -489,6 +494,7 @@ tot_num_shots=to_res.num_shots+data.cal.num_shots;
 single_shot_uncert=to_res.fit_trimmed.single_shot_uncert_boot...
     *sqrt(tot_num_shots/to_res.num_shots);
 fprintf('\n====TO fit results==========\n')
+fprintf('dir =%s\n',anal_opts.tdc_import.dir)
 fprintf('median damping time %.2f\n',median(1./data.osc_fit.model_coefs(data.osc_fit.ok.rmse,7,1)))
 %calculate some statistics and convert the model parameter into zero crossing and error therin
 old_to_wav=413.0938e-9;
@@ -496,23 +502,22 @@ new_to_freq_unc=to_fit_unc_boot;
 %to_res.fit_trimmed.to_unc_fit
 to_wav_val=const.c/(to_fit_trimed_val*2);
 to_wav_unc=new_to_freq_unc*const.c/((to_fit_trimed_val*2)^2);
-fprintf('run start time               %.1f (posix)\n',...
+fprintf('run start time               =%.1f (posix)\n',...
     data.mcp_tdc.time_create_write(1,2)-anal_opts.trig_dld-anal_opts.dld_aquire)
-fprintf('run stop time                %.1f (posix)\n',...
+fprintf('run stop time                =%.1f (posix)\n',...
     data.mcp_tdc.time_create_write(end,2)-anal_opts.trig_dld-anal_opts.dld_aquire)
-fprintf('duration                     %.1f (s)\n',...
+fprintf('duration                     =%.1f (s)\n',...
     data.mcp_tdc.time_create_write(end,2)-data.mcp_tdc.time_create_write(1,2))
-fprintf('TO freq                      %.1f±(%.0f±%.0f) MHz\n',...
+fprintf('TO freq                      =%.1f±(%.0f±%.0f) MHz\n',...
     to_fit_trimed_val*1e-6,new_to_freq_unc*1e-6,to_fit_unc_unc_boot*1e-6)
-fprintf('TO wavelength                %.6f±%f nm \n',to_wav_val*1e9,to_wav_unc*1e9)
-fprintf('diff from TOV1               %e±%e nm \n',(to_wav_val-old_to_wav)*1e9,to_wav_unc*1e9)
+fprintf('TO wavelength                =%.6f±%f nm \n',to_wav_val*1e9,to_wav_unc*1e9)
+fprintf('diff from TOV1               =%e±%e nm \n',(to_wav_val-old_to_wav)*1e9,to_wav_unc*1e9)
 %more logic needs to be included here
-fprintf('number of probe files        %u \n',to_res.num_shots)
-fprintf('number of calibration files  %u \n',data.cal.num_shots)
-fprintf('total used                   %u \n',tot_num_shots)
-fprintf('files with enough number     %u\n',sum(data.mcp_tdc.num_ok'))
-
-fprintf('shot uncert scaling @1SD %.1f MHz, %.2f fm /sqrt(shots)\n',single_shot_uncert*1e-6,...
+fprintf('number of probe files        =%u \n',to_res.num_shots)
+fprintf('number of calibration files  =%u \n',data.cal.num_shots)
+fprintf('total used                   =%u \n',tot_num_shots)
+fprintf('files with enough number     =%u\n',sum(data.mcp_tdc.num_ok'))
+fprintf('shot uncert scaling @1SD     =%.1f MHz, %.2f fm /sqrt(shots)\n',single_shot_uncert*1e-6,...
     single_shot_uncert*const.c/((to_fit_trimed_val*2)^2)*10^15)
 %predicted uncert using this /sqrt(n), unless derived differently this is pointless
 %fprintf('predicted stat. uncert %.1f MHz, %.2f fm\n',single_shot_uncert/sqrt(tot_num_shots)*1e-6,...

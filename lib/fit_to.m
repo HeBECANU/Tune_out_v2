@@ -42,7 +42,7 @@ if anal_opts_fit_to.plot_inital
 
     scatter((probe_freq-nanmean(probe_freq))*1e-9,square_trap_freq,30,cdat,'square','filled')
     xlabel('delta probe beam frequency (GHz)')
-    ylabel('square difference in freq')
+    ylabel('square difference in freq (\omega_{Net}^2-\omega_{cal}^2)')
     colormap(viridis(1000))
     c =colorbar;
     c.Label.String = 'time (H)';
