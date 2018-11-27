@@ -13,21 +13,22 @@
 % BEGIN USER VAR-------------------------------------------------
 anal_opts=[]
 %anal_opts.tdc_import.dir='Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181017_probe_off_trap_freq_drift\';
-anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181102_raman_even_better_opt\';
+%anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181102_raman_even_better_opt\';
+anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181120_onoff_sigle_shot_proto\';
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
 anal_opts.tdc_import.force_reimport=false;
 anal_opts.tdc_import.force_forc=false;
 anal_opts.tdc_import.dld_xy_rot=0.61;
 
-tmp_xlim=[-5e-3, 2e-3];  % %[-8e-3, 8e-3] %[-5e-3, 2e-3]    %tight XY lims to eliminate hot spot from destroying pulse widths
-tmp_ylim=[-7.5e-3, 10.6e-3]; %[-7.5e-3, 10.6e-3] %[-16e-3, 25e-3]
+tmp_xlim=[-8e-3, 8e-3];  % %[-8e-3, 8e-3] %[-5e-3, 2e-3]    %tight XY lims to eliminate hot spot from destroying pulse widths
+tmp_ylim=[-16e-3, 25e-3]; %[-7.5e-3, 10.6e-3] %[-16e-3, 25e-3]
 tlim=[0,4];
 anal_opts.tdc_import.txylim=[tlim;tmp_xlim;tmp_ylim];
 
 
-anal_opts.atom_laser.pulsedt=2.6e-3 ;%8.000e-3 for RF %2.6e-3 for raman
-anal_opts.atom_laser.t0=0.40515; %center i ntime of the first pulse %0.40515 %0.4178
+anal_opts.atom_laser.pulsedt=8.0e-3 ;%8.000e-3 for RF %2.6e-3 for raman
+anal_opts.atom_laser.t0=0.4178; %center i ntime of the first pulse %0.40515 %0.4178
 anal_opts.atom_laser.start_pulse=1; %atom laser pulse to start with
 anal_opts.atom_laser.pulses=120;
 anal_opts.atom_laser.appr_osc_freq_guess=[50,40,40];
@@ -92,7 +93,7 @@ data.mcp_tdc=import_mcp_tdc_data(anal_opts.tdc_import);
 
 
 %% CHECK ATOM NUMBER
-sfigure(1)
+sfigure(12)
 %create a list of indicies (of the mcp_tdc) that have an ok number of counts
 %exclude the very low and then set the thresh based on the sd of the remaining
 not_zero_files=data.mcp_tdc.num_counts>1e3; 
@@ -110,48 +111,52 @@ title('num count run trend')
 %% Bin pulses
 
 bin_num = 2;
-end_pulse = 130;
-% bin_width = round(end_pulse/bin_num);
+end_pulse = 80;
+bin_width = round(end_pulse/bin_num);
 
-%fit_coefs = cell(1,3);
-data.fixed_vals = fit_coefs{3};
+%fit_coefs_full = cell(1,1);
+data.fixed_vals = fit_coefs_full{1}; % fit_coefs{3};
 
 n = 5.5; %number of ten pulses in the first section
-for jj = 1:2
-    if jj == 1
-        anal_opts.atom_laser.start_pulse=1; %atom laser pulse to start with
-        anal_opts.atom_laser.pulses=10*n;
-    elseif jj == 2
-        anal_opts.atom_laser.start_pulse=10*n+1; %atom laser pulse to start with
-        anal_opts.atom_laser.pulses=end_pulse-10*n;
-    elseif jj == 3
-        anal_opts.atom_laser.start_pulse=1; %atom laser pulse to start with
-        anal_opts.atom_laser.pulses=end_pulse+15;
-    end
-
+for jj = 1%1:bin_num
+%     if jj == 1
+%         anal_opts.atom_laser.start_pulse=1; %atom laser pulse to start with
+%         anal_opts.atom_laser.pulses=10*n;
+%     elseif jj == 2
+%         anal_opts.atom_laser.start_pulse=10*n+1; %atom laser pulse to start with
+%         anal_opts.atom_laser.pulses=end_pulse-10*n;
+%     elseif jj == 3
+%         anal_opts.atom_laser.start_pulse=1; %atom laser pulse to start with
+%         anal_opts.atom_laser.pulses=end_pulse+15;
+%     end
+% 
 %         anal_opts.atom_laser.start_pulse=1+bin_width*(jj-1); %atom laser pulse to start with
 %         anal_opts.atom_laser.pulses=bin_width;
+
+        anal_opts.atom_laser.start_pulse=41; %atom laser pulse to start with
+        anal_opts.atom_laser.pulses=65;
+
 
 anal_opts.atom_laser.plots=0;
 data.mcp_tdc.all_ok=data.mcp_tdc.num_ok;
 data.mcp_tdc.al_pulses=bin_al_pulses(anal_opts.atom_laser,data);
 %%
-anal_opts.osc_fit.adaptive_freq=0; %estimate the starting trap freq 
+anal_opts.osc_fit.adaptive_freq=1; %estimate the starting trap freq 
 anal_opts.osc_fit.appr_osc_freq_guess=[52,37.8846,40]; %37.8846 %47.552
-anal_opts.osc_fit.plot_fits=0;
-anal_opts.osc_fit.param_num=2; %current options are [7,4,3,2,1]
+anal_opts.osc_fit.plot_fits=1;
+anal_opts.osc_fit.param_num=2; %current options are [7,6,4,3,2,1]
 anal_opts.osc_fit.plot_err_history=false;
 anal_opts.osc_fit.plot_fit_corr=false ;
 anal_opts.osc_fit.global=anal_opts.global;
-data.osc_fit=fit_trap_freq(anal_opts.osc_fit,data);
+data.osc_fit=fit_trap_freq_in_shot(anal_opts.osc_fit,data);
 
 data.osc_fit.trap_freq_recons_pre=nan*data.osc_fit.ok.did_fits;
 data.osc_fit.trap_freq_recons=data.osc_fit.trap_freq_recons_pre;
 mask=data.osc_fit.ok.did_fits & data.osc_fit.ok.rmse;
 
 %%
-data.osc_fit.trap_freq_recons_pre(mask)=1*(1/anal_opts.atom_laser.pulsedt)+data.osc_fit.model_coefs(mask,2,1); %1 for raman
-freq_tol = 1.5;
+data.osc_fit.trap_freq_recons_pre(mask)=3*(1/anal_opts.atom_laser.pulsedt)+data.osc_fit.model_coefs(mask,2,1); %1 for raman
+freq_tol = 3.5;
 
 trap_freq_median = nanmedian(data.osc_fit.trap_freq_recons_pre(mask));
 mask = abs((data.osc_fit.trap_freq_recons_pre-trap_freq_median))<freq_tol & mask;
@@ -175,6 +180,7 @@ ylabel('Fit Trap Freq')
 pause(1e-6)
 
 fit_coefs{jj} = data.osc_fit.model_coefs;
+%fit_coefs_full{1} = data.osc_fit.model_coefs;
 end
 
 %%

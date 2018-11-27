@@ -16,9 +16,8 @@ warning('off','stats:nlinfit:ModelConstantWRTParam');
 warning('off','MATLAB:rankDeficientMatrix');
 osc_fit=[]; %clear the output struct
 %prealocate so that i can do the logics later
-param_num = anal_opts_osc_fit.param_num; %number of parameters to use in the model
 osc_fit.dld_shot_idx=nan(1,iimax);
-osc_fit.model_coefs=nan(iimax,param_num,2);
+osc_fit.model_coefs=nan(iimax,8,2);
 osc_fit.fit_rmse=nan(1,iimax);
 osc_fit.model=cell(1,iimax);
 osc_fit.acc=cell(1,iimax);
@@ -43,12 +42,6 @@ for ii=1:iimax
     if data.mcp_tdc.all_ok(ii)
         osc_fit.dld_shot_num(ii)=dld_shot_num;
         
-        if param_num > 5
-            fixed_vals = [];
-        else
-            fixed_vals = data.fixed_vals(ii,param_num+1:6,1);
-        end
-        
         %construct a more convinent temp variable txyz_tmp wich is the position in mm for use in the fit
         x_tmp=1e3*squeeze(data.mcp_tdc.al_pulses.pos_stat(ii,:,2));
         x_tmp=x_tmp-nanmean(x_tmp);
@@ -70,81 +63,6 @@ for ii=1:iimax
         xyzerr_tmp=xyzerr_tmp(:,mask);
         txyz_tmp=txyz_tmp(:,mask);
         
-        %try to find the peak osc freq to start the fit there
-        if anal_opts_osc_fit.adaptive_freq
-            out=fft_tx(txyz_tmp(1,:),txyz_tmp(anal_opts_osc_fit.dimesion+1,:),10);
-            [~,nearest_idx]=max(abs(out(2,:)));
-            fit_freq=out(1,nearest_idx);
-        else
-            fit_freq=anal_opts_osc_fit.appr_osc_freq_guess(anal_opts_osc_fit.dimesion);
-        end
-        
-        if param_num<6
-            fit_amp = data.fixed_vals(ii,1,1);
-            fit_freq = data.fixed_vals(ii,2,1);
-            fit_pahse = data.fixed_vals(ii,3,1);
-            fit_offset = data.fixed_vals(ii,4,1);
-        else
-            %estimates for all the different parameters
-            dt = txyz_tmp(1,2)-txyz_tmp(1,1);
-            t0 = txyz_tmp(1,1);
-            %intial position
-            x0 = txyz_tmp(anal_opts_osc_fit.dimesion+1,1);
-            %intial velocity
-            v0 = (txyz_tmp(anal_opts_osc_fit.dimesion+1,2)-x0)/dt;
-            %intial acc
-            a0 = ((txyz_tmp(anal_opts_osc_fit.dimesion+1,3)-txyz_tmp(anal_opts_osc_fit.dimesion+1,2))/dt-v0)/dt;
-            
-            fit_offset = nanmean(txyz_tmp(anal_opts_osc_fit.dimesion+1,1:11));%x0 + a0/(fit_freq)^2
-            fit_phase = 1/(2*pi)*(atan((x0-fit_offset)/v0)-fit_freq*t0);
-            
-            fit_amp = (x0-fit_offset)/sin(fit_freq*t0+fit_phase); %number of pulses in an oscillation
-            
-            fit_amp_later = std(txyz_tmp(anal_opts_osc_fit.dimesion+1,33:44)-fit_offset)*1;
-            fit_ramp = (nanmean(txyz_tmp(anal_opts_osc_fit.dimesion+1,33:44))-nanmean(txyz_tmp(anal_opts_osc_fit.dimesion+1,1:16)))/(txyz_tmp(1,38)-txyz_tmp(1,6));
-            fit_decay = log(fit_amp/fit_amp_later)/(txyz_tmp(1,38)-txyz_tmp(1,6));
-        end
-
-        %modelfun = @(b,x) (exp(-x(:,1).*b(5)).*b(1).*sin((b(7)+(b(2)-b(7)).*exp(-b(8).*x(:,1))).*x(:,1)*pi*2+b(3)*pi*2)+b(4)+b(6)*x(:,1));
-        modelfun = @(b,x) (exp(-x(:,1).*b(5)).*b(1).*sin(b(2).*x(:,1)*pi*2+b(3)*pi*2)+b(4)+b(6)*x(:,1));
-        %basic model
-%         modelfun = @(b,x) b(1).*sin(b(2).*x(:,1)*pi*2+b(3)*pi*2)+b(4);
-        if param_num == 7 %do a full fit
-            beta0=[3.6, fit_freq, fit_phase, fit_offset,0.5,fit_ramp,fit_freq-1.5];
-            lb = [3,fit_freq-5,0,-3,-1,-2,fit_freq-7.5]; %lower bounds
-            ub = [5,fit_freq+5,1,3,6,2,fit_freq+7.5]; %upper bounds
-        elseif param_num == 6 %do a full fit with constant freq
-            modelfun = @(b,x) (exp(-x(:,1).*b(5)).*b(1).*sin(b(2).*x(:,1)*pi*2+b(3)*pi*2)+b(4)+b(6)*x(:,1));
-            beta0=[3.6, fit_freq, fit_phase, fit_offset,0.5,fit_ramp];
-            lb = [3,fit_freq-5,0,-3,-1,-2]; %lower bounds
-            ub = [5,fit_freq+5,1,3,6,2]; %upper bounds
-        elseif param_num == 4 %just use the sine parameters
-            beta0=[fit_amp, fit_freq, fit_phase, fit_offset];
-            lb = [0,fit_freq-10,0.0,-4]; %lower bounds
-            ub = [9,fit_freq+2,1.0,4]; %upper bounds
-        elseif param_num == 3 %without offset
-            beta0=[fit_amp,fit_freq, fit_phase];
-            lb = [0,fit_freq-10,0.0]; %lower bounds
-            ub = [9,fit_freq+2,1.0]; %upper bounds
-        elseif param_num == 2 %just the most key parameters
-            beta0=[fit_amp,fit_freq];
-            lb = [fit_amp-0.3,fit_freq-5.5]; %lower bounds
-            ub = [fit_amp+0.3,fit_freq+5.5]; %upper bounds
-        elseif param_num == 1 %just freq fit
-            beta0=[fit_freq];
-            lb = [fit_freq-10]; %lower bounds
-            ub = [fit_freq+2]; %upper bounds
-        end
-            
-        %cof_names={'amp','freq','phase','offset','damp','grad'};
-        %
-        if param_num == 7
-            opt = optimset('MaxIter',1e5,...
-            'UseParallel',0,'TolFun',1e-13,'TolX',1e-15,'MaxFunEvals',0.5e3,'TypicalX',[1.0,2.0,2.0,2.0,2.0,2.0,2.0],'display','off'); %
-        else
-            opt = optimset('MaxIter',1e5,...
-            'UseParallel',0,'TolFun',1e-13,'TolX',1e-18,'MaxFunEvals',0.3e3,'display','off'); 
-        end
         %select the aproapriate values to go in the response variable
         idx=1:4;
         idx(anal_opts_osc_fit.dimesion+1)=[];
@@ -153,17 +71,58 @@ for ii=1:iimax
         weights(isnan(weights))=1e-20; %if nan then set to smallest value you can
         weights=weights/sum(weights);
         %predictor=[tvalues,xvalues,zvalues];
+
+        %try to find the peak osc freq to start the fit there
+        if anal_opts_osc_fit.adaptive_freq
+            out=fft_tx(txyz_tmp(1,:),txyz_tmp(anal_opts_osc_fit.dimesion+1,:),10);
+            [~,nearest_idx]=max(abs(out(2,:)));
+            fit_freq=out(1,nearest_idx);
+        else
+            fit_freq=anal_opts_osc_fit.appr_osc_freq_guess(anal_opts_osc_fit.dimesion);
+        end
+
+        fit_offset = -0.3;%x0 + a0/(fit_freq)^2
+        fit_phase = 0.4;
+        fit_amp = 3.6; %number of pulses in an oscillation
+        fit_decay = 2.0;
+        fit_ramp = 2.0;
         
+        target_val = txyz_tmp(anal_opts_osc_fit.dimesion+1,:)';
+        max_seed = 7;
+         
+        %first fit with all parameters
+        model_full = @(b,x) (exp(-x(:,1).*b(5)).*b(1).*sin(b(2).*x(:,1)*pi*2+b(3)*pi*2)+b(4)+b(6)*x(:,1));
+        beta0=[fit_amp, fit_freq, fit_phase, fit_offset,fit_decay,fit_ramp];
+        lb = [2,fit_freq-8,0.0,-5,-0.1,-12]; %lower bounds
+        ub = [8,fit_freq+8,1.0,5,8,12]; %upper bounds
+        [beta1,unc1,resnorm1] = multiple_seed_fit(model_full,predictor,weights,target_val,beta0,max_seed,ub,lb);
         
+        %second fit with changing freq
+        model_partial = @(b,x) (exp(-x(:,1).*beta1(5)).*b(1).*sin((b(4)+(b(2)-b(4)).*exp(-b(5).*x(:,1))).*x(:,1)*pi*2+b(3)*pi*2)+beta1(4)+beta1(6)*x(:,1));
+        beta0=[beta1(1:3), beta1(2),3];
+        lb = [beta1(1)-2,beta1(2)-4,beta1(3)-0.2,beta1(2)-6,-0.01]; %lower bounds
+        ub = [beta1(1)+2,beta1(2)+4,beta1(3)+0.2,beta1(2)+6,50]; %upper bounds
+        [beta2,unc2,resnorm2] = multiple_seed_fit(model_partial,predictor,weights,target_val,beta0,max_seed,ub,lb);
         
-        costfun = @(b) double(weights.*(modelfun([b(1:param_num),fixed_vals],predictor(:,1))-txyz_tmp(anal_opts_osc_fit.dimesion+1,:)'))./double(sum(weights));
-        [fitparam,resnorm,residual,exitflag,out_put,lm,J]=lsqnonlin(costfun,double(beta0),double(lb),double(ub),opt);
-        osc_fit.model{ii}={fitparam,resnorm,residual,exitflag,out_put};
-        ci = nlparci(fitparam,residual,'Jacobian',J); %estimates conffidence interval
-        fiterror = ci(:,2)'-ci(:,1)';
+        %third fit with only changing freq
+        model_freq = @(b,x) (exp(-x(:,1).*beta1(5)).*beta2(1).*sin((b(1)+(b(2)-b(1)).*exp(-b(3).*x(:,1))).*x(:,1)*pi*2+beta2(3)*pi*2)+beta1(4)+beta1(6)*x(:,1));
+        beta0=[beta2(4),beta2(2), beta2(5)];
+        lb = [beta2(4)-4,beta1(2)-4,beta2(5)-8]; %lower bounds
+        ub = [beta2(4)+4,beta1(2)+4,beta2(5)+8]; %upper bounds
+        [beta3,unc3,resnorm] = multiple_seed_fit(model_freq,predictor,weights,target_val,beta0,max_seed,ub,lb);
+        
+        model = @(b,x) (exp(-x(:,1).*b(5)).*b(1).*sin((b(7)+(b(2)-b(7)).*exp(-b(8).*x(:,1))).*x(:,1)*pi*2+b(3)*pi*2)+b(4)+b(6)*x(:,1));
+        fitparam = [beta2(1),beta3(2),beta2(3),beta1(4),beta1(5),beta1(6),beta3(1),beta3(3)];
+        fiterror = [unc2(1),unc3(2),unc2(3),unc1(4),unc1(5),unc1(6),unc3(1),unc3(3)];
+        
+        %osc_fit.model{ii}={fitparam,resnorm,residual,exitflag,out_put};
         osc_fit.model_coefs(ii,:,1)=fitparam;
         osc_fit.model_coefs(ii,:,2)=fiterror;
         osc_fit.fit_rmse(ii)=resnorm;
+        
+        
+        
+        
         if anal_opts_osc_fit.plot_fits
             tplotvalues=linspace(min(data.mcp_tdc.al_pulses.time),...
                 max(data.mcp_tdc.al_pulses.time),1e5)';
@@ -184,7 +143,7 @@ for ii=1:iimax
             legend('x','y','z')
 % 
             subplot(2,1,2)
-            prediction = modelfun([fitparam,fixed_vals],predictorplot(:,1));
+            prediction = model(fitparam,predictorplot(:,1));
             plot(predictorplot(:,1),prediction,'-','LineWidth',1.5,'Color',[0.5 0.5 0.5])
             ax = gca;
             set(ax, {'XColor', 'YColor'}, {'k', 'k'});

@@ -75,3 +75,20 @@ fit_param_vals = fit_coefs{1};
 plot(t_var,fit_param_vals(r,2,1).*exp(-t_var.*fit_param_vals(r,7,1)))
 
 %%
+figure
+freqs = ones(1,7);
+%r=111;
+for r = 50
+for jj = 1:7
+    temp = fit_coefs{jj};
+    freqs(r,jj) = temp(r,2,1);
+end
+hold on
+scatter(10.*(1:7),freqs(r,:))
+xlabel('Shot bin is centred on')
+ylabel('Fitted freq')
+end
+figure
+errorbar(10.*(1:7),nanmean(freqs),nanstd(freqs))
+xlabel('Shot bin is centred on')
+ylabel('Fitted freq')
