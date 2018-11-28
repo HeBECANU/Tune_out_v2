@@ -77,8 +77,9 @@ tic
 %%
 % BEGIN USER VAR-------------------------------------------------
 anal_opts=[];
-anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181127_3_filt_power_linearity\';
-anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181127_3_filt_power_linearity';
+%anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181127_3_filt_power_linearity\';
+anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181127_3_filt_power_linearity\';
+%anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181127_3_filt_power_linearity_attractive_misaligned\';
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
 anal_opts.tdc_import.force_reimport=false;
@@ -287,12 +288,18 @@ anal_opts.wm_log.time_blue_padding=1; %check this many seconde each side of prob
 anal_opts.wm_log.time_probe=3;
 anal_opts.wm_log.ecd_volt_thresh=0.5;
 
-anal_opts.wm_log.red_sd_thresh=50; %allowable standard deviation in MHz
+anal_opts.wm_log.red_sd_thresh=10; %allowable standard deviation in MHz
 anal_opts.wm_log.red_range_thresh=50; %allowable range deviation in MHz
 anal_opts.wm_log.rvb_thresh=10; %allowable value of abs(2*red-blue)
 
 data.wm_log.proc=wm_log_process(anal_opts,data);
 clear('sub_data')
+
+
+%% more strict wm for the linearity plot
+%mean wavelength has to be within 1mhz of the median
+data.wm_log.proc.ok.freq=data.wm_log.proc.ok.freq &...
+    (data.wm_log.proc.probe.freq.act.mean-nanmedian(data.wm_log.proc.probe.freq.act.mean))<1;
 
 
 %% CHECK ATOM NUMBER
@@ -438,18 +445,25 @@ anal_opts.cal_mdl.global=anal_opts.global;
 data.cal=make_cal_model(anal_opts.cal_mdl,data);
 
 
+%load('Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181127_3_filt_power_linearity\out\20181128T150814\data_anal_full.mat'
 
 %%
+load('.\results\linearity\20181128T165826\data_anal_full.mat')
+%%
+volts_daq_offset=0.074; %compensate for the daq voltage offset
+volts_to_mw=5/36.4;
+volt_threshold=0.1; %take data above this voltage setpt
 
 temp_cal=data.mcp_tdc.probe.calibration'; %because its used a lot make a temp var for calibration logic vector
 temp_cal(isnan(temp_cal))=1;    
 probe_dat_mask=data.osc_fit.ok.all & ~temp_cal &  ~isnan(data.wm_log.proc.probe.freq.act.mean)'...
-    & ~isnan(data.osc_fit.trap_freq_recons);
+    & ~isnan(data.osc_fit.trap_freq_recons) & data.labview.setpoint(data.mcp_tdc.shot_num)>volt_threshold ...
+    & data.ai_log.pd.std'<0.1;
 
 to_res.num_shots=sum(probe_dat_mask);
 to_res.fit_mask=probe_dat_mask;
-
-probe_power= data.labview.setpoint(probe_dat_mask);
+%data.labview.setpoint
+probe_power= (data.ai_log.pd.mean(probe_dat_mask)-volts_daq_offset)/volts_to_mw; 
 probe_freq= data.wm_log.proc.probe.freq.act.mean(probe_dat_mask')*1e6;
 trap_freq=data.osc_fit.trap_freq_recons(probe_dat_mask)';
 cal_trap_freq=data.cal.freq_drift_model(data.mcp_tdc.time_create_write(probe_dat_mask,1));
@@ -457,117 +471,133 @@ delta_trap_freq=trap_freq-cal_trap_freq;
 square_trap_freq= (trap_freq).^2-(cal_trap_freq).^2;
 
 
-%%
 
 ci_size_disp=0.3174;
-
-
-plot(probe_power,square_trap_freq,'x')
-xlabel('probe beam power')
+figure(63)
+set(gcf,'color','w')
+plt_data=plot(probe_power,square_trap_freq,'xk');
+xlabel('probe beam power (mw)')
 ylabel('Signal (\omega_{Net}^2-\omega_{cal}^2)')
 hold on
 %do a fit
 xdat=probe_power;
 ydat=square_trap_freq;
-modelfun = @(b,x) b(1)+ b(2).*x+b(3).*x.^2; %simple linear model %+b(4).*x.^3+b(5).*x.^4
+
+%quadratic fit
+modelfun = @(b,x)  b(1)+b(2).*x+b(3).*x.^2; %simple linear model %+b(4).*x.^3+b(5).*x.^4
 opts = statset('nlinfit');
 %opts.RobustWgtFun = 'welsch' ; %a bit of robust fitting
 %opts.Tune = 1;
-beta0 = [1e-5,1e-2,0]; %intial guesses
-fit_mdl = fitnlm(xdat,ydat,modelfun,beta0,'Options',opts,'ErrorModel','combined');
-xsamp=linspace(min(xdat),max(xdat),1e3)'; %sample for the model curve
-[ysamp,yci]=predict(fit_mdl,xsamp,'Prediction','observation','Alpha',ci_size_disp); %note the observation CI
-plot(xsamp,ysamp,'k-')
-plot(xsamp,yci,'r-')
+beta0 = [0,1e-2,0]; %intial guesses
+fit_mdl = fitnlm(xdat,ydat,modelfun,beta0,'Options',opts,'ErrorModel','combined')
+xsamp=linspace(min(xdat)-range(xdat)*5e-2,max(xdat)+range(xdat)*5e-2,1e3)'; %sample for the model curve
+[ysamp_quad,yci_quad]=predict(fit_mdl,xsamp,'Prediction','observation','Alpha',ci_size_disp); %note the observation CI
+plt_quad_val=plot(xsamp,ysamp_quad,'k-','color',[0.4940, 0.1840, 0.5560]	);
+plt_quad_ci=plot(xsamp,yci_quad,'r','color',[0.9290, 0.6940, 0.1250]	);
+
+%cublic fit 
+modelfun = @(b,x) b(1)+b(2).*x+b(3).*x.^2+b(4).*x.^3; %simple linear model %+b(4).*x.^3+b(5).*x.^4
+opts = statset('nlinfit');
+%opts.RobustWgtFun = 'welsch' ; %a bit of robust fitting
+%opts.Tune = 1;
+beta0 = [0,1e-2,0,0]; %intial guesses
+fit_mdl = fitnlm(xdat,ydat,modelfun,beta0,'Options',opts,'ErrorModel','combined')
+[ysamp_cubic,yci_cubic]=predict(fit_mdl,xsamp,'Prediction','observation','Alpha',ci_size_disp); %note the observation CI
+plt_cubic_val=plot(xsamp,ysamp_cubic,'-','color',[0, 0.4470, 0.7410]);
+plt_cubic_std=plot(xsamp,yci_cubic,'-','color',[0.8500, 0.3250, 0.0980]);
+
+
+%cublic fit 
+modelfun = @(b,x) b(1)+b(2).*x+b(3).*x.^2+b(4).*x.^3+b(5).*x.^4; %simple linear model %+b(4).*x.^3+b(5).*x.^4
+opts = statset('nlinfit');
+%opts.RobustWgtFun = 'welsch' ; %a bit of robust fitting
+%opts.Tune = 1;
+beta0 = [0,1e-2,0,0,0]; %intial guesses
+fit_mdl = fitnlm(xdat,ydat,modelfun,beta0,'Options',opts,'ErrorModel','combined')
+[ysamp_cubic,yci_cubic]=predict(fit_mdl,xsamp,'Prediction','observation','Alpha',ci_size_disp); %note the observation CI
+plt_cubic_val=plot(xsamp,ysamp_cubic,'-','color',[0, 0.4470, 0.7410]);
+plt_cubic_std=plot(xsamp,yci_cubic,'-','color',[0.8500, 0.3250, 0.0980]);
+
+
+legend([plt_data,plt_quad_val,plt_quad_ci(1),plt_cubic_val,plt_cubic_std(1)],...
+    {'data','quad fit','quad 1std','cubic fit','cubic 1std'});
+hold off
+xl=xlim;
+xlim([0,xl(2)])
+
+%% PRO PLOTS
+%make some journal quality plots
+font_name='cmr10';
+font_size_global=12;
+folt_size_label=15;
+power_tol=0.8;
+
+
+colors_main=[[233,87,0];[33,188,44];[0,165,166]];
+colors_main=colors_main./255;
+lch=colorspace('RGB->LCH',colors_main(:,:));
+lch(:,1)=lch(:,1)+20;
+colors_detail=colorspace('LCH->RGB',lch);
+%would prefer to use srgb_2_Jab here
+color_shaded=colorspace('RGB->LCH',colors_main(3,:));
+color_shaded(1)=125;
+color_shaded=colorspace('LCH->RGB',color_shaded);
+
+%powers=uniquetol(probe_power,power_tol);
+[~,powers]=kmeans(probe_power,50);
+powers=min(powers)+(0:53)*median(diff(sort(powers)));
+
+ydat_chunks=nan(numel(powers),2);
+for ii=1:numel(powers)
+    yvalues=ydat(abs(probe_power-powers(ii))<power_tol);
+    if numel(yvalues)>0
+        ydat_chunks(ii,1)=nanmean(yvalues);
+        ydat_chunks(ii,2)=nanstd(yvalues);
+    end
+end
+
+figure(64)
+clf
+set(gcf,'color','w')
+patch([xsamp', fliplr(xsamp')], [yci_quad(:,1)', fliplr(yci_quad(:,2)')], color_shaded);  %[1,1,1]*0.80
+hold on
+plt_data=errorbar(powers,ydat_chunks(:,1),ydat_chunks(:,2),'o','CapSize',0,'MarkerSize',5,'Color',colors_main(1,:),'MarkerFaceColor',colors_detail(1,:),'LineWidth',1.5);
+%plt_data=plot(probe_power,square_trap_freq,'xr'); %diagnostic
+plt_quad_val=plot(xsamp,ysamp_quad,'k-','color',colors_main(2,:),'LineWidth',1.5);
+plt_quad_ci=plot(xsamp,yci_quad,'r','color',colors_main(3,:),'LineWidth',1.5);
+set(gca,'FontSize',font_size_global,'FontName',font_name)
+xlabel('Probe Power (mW)','FontSize',folt_size_label)
+ylabel('Signal \omega_{Net.}^2-\omega_{Cal.}^2 (Hz^2)','FontSize',folt_size_label)
+%plt_cubic_val=plot(xsamp,ysamp_cubic,'-','color',[0, 0.4470, 0.7410]);
+%plt_cubic_std=plot(xsamp,yci_cubic,'-','color',[0.8500, 0.3250, 0.0980]);
+yticks([0:7]*400)
+
+x0=100;
+y0=100;
+width=400;
+height=300;
+set(gcf,'units','points','position',[x0,y0,width,height])
+
+xl=xlim;
+xlim([0,max(probe_power)+range(probe_power)*2e-2])
+yl=ylim;
+ylim([-50,yl(2)])
 hold off
 
+set(gca,'TickLength',[0.03 0.035])
+set(gca,'LineWidth',1.5)
 
-%% segmented TO
-%look at the tune out when fit to short segments
-% TO DO, would be better if this called the fit_to script multiple times
-anal_opts.fit_to=[];
-anal_opts.fit_to.bootstrap=false;
-anal_opts.fit_to.plots=false;
-%thresholds for CI
-%sd         CI
-%1          0.3174
-%2          0.05
-%3          2.699e-03
-anal_opts.fit_to.ci_size_disp=0.3174;%one sd %confidence interval to display
-anal_opts.fit_to.global=anal_opts.global;
-anal_opts.fit_to.ci_size_cut_outliers=0.05; %confidence interval for cutting outliers
-anal_opts.fit_to.scale_x=1e-9;
-anal_opts.fit_to.min_pts=10;
-
-anal_opts.fit_to.seg_time=60*30;
-anal_opts.fit_to.seg_shift=1*anal_opts.fit_to.seg_time;
-to_seg_fits=segmentd_fit_to(anal_opts.fit_to,data);
-
-
-
-%% Fit the Tune Out
-anal_opts.fit_to=[];
-anal_opts.fit_to.plot_inital=true;
-anal_opts.fit_to.bootstrap=true;
-%thresholds for CI
-%sd         CI
-%1          0.3174
-%2          0.05
-%3          2.699e-03
-anal_opts.fit_to.ci_size_disp=0.3174;%one sd %confidence interval to display
-anal_opts.fit_to.global=anal_opts.global;
-anal_opts.fit_to.ci_size_cut_outliers=0.05; %confidence interval for cutting outliers
-anal_opts.fit_to.scale_x=1e-9;
-
-to_res=fit_to(anal_opts.fit_to,data);
-data.to_fit=to_res;
-
-to_fit_trimed_val=to_res.fit_trimmed.to_freq;
-to_fit_unc_boot=to_res.fit_trimmed.to_unc_boot;
-to_fit_unc_fit=to_res.fit_trimmed.to_unc_fit;
-to_fit_unc_unc_boot=to_res.fit_trimmed.boot.se_se_opp/anal_opts.fit_to.scale_x;
 
 %% write out the results
 %inverse scaled gradient to give the single shot uncert (with scaling factor to include calibration)
-tot_num_shots=to_res.num_shots+data.cal.num_shots;
-single_shot_uncert=to_res.fit_trimmed.single_shot_uncert_boot...
-    *sqrt(tot_num_shots/to_res.num_shots);
-fprintf('\n====TO fit results==========\n')
-fprintf('dir =%s\n',anal_opts.tdc_import.dir)
-fprintf('median damping time %.2f\n',median(1./data.osc_fit.model_coefs(data.osc_fit.ok.rmse,7,1)))
-%calculate some statistics and convert the model parameter into zero crossing and error therin
-old_to_wav=413.0938e-9;
-new_to_freq_unc=to_fit_unc_boot;
-%to_res.fit_trimmed.to_unc_fit
-to_wav_val=const.c/(to_fit_trimed_val*2);
-to_wav_unc=new_to_freq_unc*const.c/((to_fit_trimed_val*2)^2);
-fprintf('run start time               =%.1f (posix)\n',...
-    data.mcp_tdc.time_create_write(1,2)-anal_opts.trig_dld-anal_opts.dld_aquire)
-fprintf('run stop time                =%.1f (posix)\n',...
-    data.mcp_tdc.time_create_write(end,2)-anal_opts.trig_dld-anal_opts.dld_aquire)
-fprintf('duration                     =%.1f (s)\n',...
-    data.mcp_tdc.time_create_write(end,2)-data.mcp_tdc.time_create_write(1,2))
-fprintf('TO freq                      =%.1f±(%.0f±%.0f) MHz\n',...
-    to_fit_trimed_val*1e-6,new_to_freq_unc*1e-6,to_fit_unc_unc_boot*1e-6)
-fprintf('TO wavelength                =%.6f±%f nm \n',to_wav_val*1e9,to_wav_unc*1e9)
-fprintf('diff from TOV1               =%e±%e nm \n',(to_wav_val-old_to_wav)*1e9,to_wav_unc*1e9)
-%more logic needs to be included here
-fprintf('number of probe files        =%u \n',to_res.num_shots)
-fprintf('number of calibration files  =%u \n',data.cal.num_shots)
-fprintf('total used                   =%u \n',tot_num_shots)
-fprintf('files with enough number     =%u\n',sum(data.mcp_tdc.num_ok'))
-fprintf('shot uncert scaling @1SD     =%.1f MHz, %.2f fm /sqrt(shots)\n',single_shot_uncert*1e-6,...
-    single_shot_uncert*const.c/((to_fit_trimed_val*2)^2)*10^15)
-%predicted uncert using this /sqrt(n), unless derived differently this is pointless
-%fprintf('predicted stat. uncert %.1f MHz, %.2f fm\n',single_shot_uncert/sqrt(tot_num_shots)*1e-6,...
-%    single_shot_uncert/sqrt(tot_num_shots)*const.c/((to_fit_trimed_val*2)^2)*10^15)
 
 diary off
 
 
 %%
 fprintf('saving output...')
-save(fullfile(anal_out.dir,'data_anal_full.mat'),'data','to_res','anal_opts','-v7.3')
+%no compression bc its very slowwww
+save(fullfile(anal_out.dir,'data_anal_full.mat'),'data','to_res','anal_opts','-nocompression','-v7.3')
 fprintf('Done')
 
 %% try and find what the outliers were doing
