@@ -1,5 +1,5 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%
-% Determine the Tune out from a dataset
+% Determine the linearity of the signal on the power of the probe beam as a way of measuring how linear the method is
 % using the measured change in trap frequency from the application of a probe beam.
 % application of the tune out probe beam.
 % The script:
@@ -77,14 +77,8 @@ tic
 %%
 % BEGIN USER VAR-------------------------------------------------
 anal_opts=[];
-%anal_opts.tdc_import.dir='Y:\EXPERIMENT-DATA\Tune Out V2\20180826_testing_wm_log\';
-%anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output';
-%anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181104_filters_dep_two\';
-%anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181102_filters_dep_two\';
-%anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181101_filters_dep_two';
-%anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181122_alignment_dep_34_5';
-anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181123_3_filt_align_dep_31um';
-%anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181122_filt_dep_none\';
+anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181127_3_filt_power_linearity\';
+
 
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
@@ -186,7 +180,7 @@ for ii=1:size(lv_log.cell,1)
     end
 end
 data.labview=[];
-data.labview.setpoint=lv_log.setpoints*1e6; %convert to hz
+data.labview.setpoint=lv_log.setpoints; %removed multiplier for linearity plot
 data.labview.time=lv_log.posix_times;
 data.labview.shot_num=lv_log.iter_nums;
 data.labview.calibration=lv_log.probe_calibration;
@@ -237,10 +231,13 @@ data.labview.calibration=lv_log.probe_calibration;
 %% IMPORT THE ANALOG INPUT LOG
 %the code will check that the probe beam PD was ok and that the laser was single mode
 anal_opts.ai_log.dir=anal_opts.tdc_import.dir;
-anal_opts.ai_log.force_reimport=true;
+
+anal_opts.ai_log.force_reimport=false;
 anal_opts.ai_log.force_load_save=false;
 anal_opts.ai_log.log_name='log_analog_in_';
-anal_opts.ai_log.pd.set=5;
+anal_opts.ai_log.aquire_time=4;
+anal_opts.ai_log.pd.set=data.labview.setpoint(data.mcp_tdc.labview_shot_num(~isnan(data.mcp_tdc.labview_shot_num)));
+anal_opts.ai_log.pd.set(isnan(anal_opts.ai_log.pd.set))=0;
 anal_opts.ai_log.pd.diff_thresh=0.1;
 anal_opts.ai_log.pd.std_thresh=0.1;
 anal_opts.ai_log.pd.time_start=0.2;
@@ -252,7 +249,6 @@ anal_opts.ai_log.plot.all=false;
 anal_opts.ai_log.plot.failed=false;
 anal_opts.ai_log.time_match_valid=5; %how close the predicted start of the shot is to the actual
 anal_opts.ai_log.scan_time=14e-3;  %estimate of the sfp scan time,used to set the window and the smoothing
-
 
 %because im only passing the ai_log feild to aviod conflicts forcing a reimport i need to coppy these feilds
 anal_opts.ai_log.trig_dld=anal_opts.trig_dld;
