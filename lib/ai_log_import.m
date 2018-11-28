@@ -95,14 +95,13 @@ ai_log_out.ok.sfp=false(shots_tdc,1);     %scanning FP check
 dld_files=numel(data.mcp_tdc.shot_num);
 
 %set up for the ai_log_single 
-args_single.time_start_tdc_comp=time_start_tdc_comp;
 args_single.log_name=anal_opts.log_name;
 args_single.dir=anal_opts.dir;
 args_single.trig_ai_in=anal_opts.trig_ai_in;
-args_single.mdp_shot_num=data.mcp_tdc.shot_num ;
-args_single.pd=anal_opts.pd;
 args_single.plot=anal_opts.plot;
 args_single.sfp=anal_opts.sfp;
+args_single.pd.time_start=anal_opts.pd.time_start;
+args_single.pd.time_stop=anal_opts.pd.time_stop;
 
 cache_opts=[];
 cache_opts.verbose=0;
@@ -158,21 +157,21 @@ for ii=1:iimax
         ai_log_out.times.fname_ai_log(idx_nearest_shot)=time_posix_fname;
         ai_log_out.fname{idx_nearest_shot}=fname;
         
-        if numel(anal_opts)==1
+        if numel(anal_opts.pd.set)==1
             set_pt_single=anal_opts.pd.set;
         else
-            if idx_nearest_shot<=numel(anal_opts)
+            if idx_nearest_shot<=numel(anal_opts.pd.set)
                 set_pt_single=anal_opts.pd.set(idx_nearest_shot);
             else
                 error('set index has been exceeded')
             end
         end
-        if abs(ai_log_single_out.pd.mean-set_pt_single)>args_single.pd.diff_thresh
+        if abs(ai_log_single_out.pd.mean-set_pt_single)>anal_opts.pd.diff_thresh
             fprintf('\nprobe beam pd value wrong!!!!!!!!!\n%04i',0)
-            fprintf('avg val %.2f set value %.2f \n04u%',ai_log_single_out.pd.mean,args_single.pd.set,0)
-        elseif ai_log_single_out.pd.std>args_single.pd.std_thresh
+            fprintf('avg val %.2f set value %.2f \n04u%',ai_log_single_out.pd.mean,anal_opts.pd.set,0)
+        elseif ai_log_single_out.pd.std>anal_opts.pd.std_thresh
             fprintf('\nprobe beam pd noisy!!!!!!!!!\n%04u',0)
-            fprintf('std %.2f thresh value %.2f \n04u%',ai_log_single_out.pd.std,args_single.pd.std_thresh,0)
+            fprintf('std %.2f thresh value %.2f \n04u%',ai_log_single_out.pd.std,anal_opts.pd.std_thresh,0)
         else
             ai_log_out.ok.reg_pd(idx_nearest_shot)=true;
         end

@@ -78,8 +78,7 @@ tic
 % BEGIN USER VAR-------------------------------------------------
 anal_opts=[];
 anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181127_3_filt_power_linearity\';
-
-
+anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181127_3_filt_power_linearity';
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
 anal_opts.tdc_import.force_reimport=false;
@@ -236,7 +235,7 @@ anal_opts.ai_log.force_reimport=false;
 anal_opts.ai_log.force_load_save=false;
 anal_opts.ai_log.log_name='log_analog_in_';
 anal_opts.ai_log.aquire_time=4;
-anal_opts.ai_log.pd.set=data.labview.setpoint(data.mcp_tdc.labview_shot_num(~isnan(data.mcp_tdc.labview_shot_num)));
+anal_opts.ai_log.pd.set=data.labview.setpoint;
 anal_opts.ai_log.pd.set(isnan(anal_opts.ai_log.pd.set))=0;
 anal_opts.ai_log.pd.diff_thresh=0.1;
 anal_opts.ai_log.pd.std_thresh=0.1;
@@ -437,6 +436,50 @@ anal_opts.cal_mdl.smooth_time=100;
 anal_opts.cal_mdl.plot=true;
 anal_opts.cal_mdl.global=anal_opts.global;
 data.cal=make_cal_model(anal_opts.cal_mdl,data);
+
+
+
+%%
+
+temp_cal=data.mcp_tdc.probe.calibration'; %because its used a lot make a temp var for calibration logic vector
+temp_cal(isnan(temp_cal))=1;    
+probe_dat_mask=data.osc_fit.ok.all & ~temp_cal &  ~isnan(data.wm_log.proc.probe.freq.act.mean)'...
+    & ~isnan(data.osc_fit.trap_freq_recons);
+
+to_res.num_shots=sum(probe_dat_mask);
+to_res.fit_mask=probe_dat_mask;
+
+probe_power= data.labview.setpoint(probe_dat_mask);
+probe_freq= data.wm_log.proc.probe.freq.act.mean(probe_dat_mask')*1e6;
+trap_freq=data.osc_fit.trap_freq_recons(probe_dat_mask)';
+cal_trap_freq=data.cal.freq_drift_model(data.mcp_tdc.time_create_write(probe_dat_mask,1));
+delta_trap_freq=trap_freq-cal_trap_freq;
+square_trap_freq= (trap_freq).^2-(cal_trap_freq).^2;
+
+
+%%
+
+ci_size_disp=0.3174;
+
+
+plot(probe_power,square_trap_freq,'x')
+xlabel('probe beam power')
+ylabel('Signal (\omega_{Net}^2-\omega_{cal}^2)')
+hold on
+%do a fit
+xdat=probe_power;
+ydat=square_trap_freq;
+modelfun = @(b,x) b(1)+ b(2).*x+b(3).*x.^2; %simple linear model %+b(4).*x.^3+b(5).*x.^4
+opts = statset('nlinfit');
+%opts.RobustWgtFun = 'welsch' ; %a bit of robust fitting
+%opts.Tune = 1;
+beta0 = [1e-5,1e-2,0]; %intial guesses
+fit_mdl = fitnlm(xdat,ydat,modelfun,beta0,'Options',opts,'ErrorModel','combined');
+xsamp=linspace(min(xdat),max(xdat),1e3)'; %sample for the model curve
+[ysamp,yci]=predict(fit_mdl,xsamp,'Prediction','observation','Alpha',ci_size_disp); %note the observation CI
+plot(xsamp,ysamp,'k-')
+plot(xsamp,yci,'r-')
+hold off
 
 
 %% segmented TO
