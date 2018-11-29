@@ -82,8 +82,8 @@ anal_opts=[];
 %anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20180829_half_wp_353';
 %anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181002_halfwp_236_stab3\';
 %anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181010_every_other_shot_cal\';
-anal_opts.tdc_import.dir='F:\2018_Tune_Out_V2\20181026_wp_out_stab\';
-anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181102_filters_dep_two\';
+% anal_opts.tdc_import.dir='F:\2018_Tune_Out_V2\20181026_wp_out_stab\';
+anal_opts.tdc_import.dir='/home/jacob/Projects/Tuneout/dat/20180814_pulsed_AL_method_tuneout_scan/';
 
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
@@ -129,7 +129,10 @@ anal_opts.osc_fit.dimesion=2; %Select coordinate to bin. 1=X, 2=Y.
 data=[]; %CLEAR THE DATA
 anal_out=[];
 %set up an output dir %https://gist.github.com/ferryzhou/2269380
-if anal_opts.tdc_import.dir(end) ~= '\', dirpath = [dirpath '\']; end
+% %WINDOWS
+% if anal_opts.tdc_import.dir(end) ~= '\' dirpath = [dirpath '\']; end
+% LINUX
+if anal_opts.tdc_import.dir(end) ~= '/' dirpath = [dirpath '/']; end
 if (exist([anal_opts.tdc_import.dir,'out'], 'dir') == 0), mkdir([anal_opts.tdc_import.dir,'out']); end
  
 anal_out.dir=sprintf('%sout\\%s\\',...
@@ -501,10 +504,10 @@ fprintf('run stop time                %.1f (posix)\n',...
     data.mcp_tdc.time_create_write(end,2)-anal_opts.trig_dld-anal_opts.dld_aquire)
 fprintf('duration                     %.1f (s)\n',...
     data.mcp_tdc.time_create_write(end,2)-data.mcp_tdc.time_create_write(1,2))
-fprintf('TO freq                      %.1f±(%.0f±%.0f) MHz\n',...
+fprintf('TO freq                      %.1fï¿½(%.0fï¿½%.0f) MHz\n',...
     to_fit_trimed_val*1e-6,new_to_freq_unc*1e-6,to_fit_unc_unc_boot*1e-6)
-fprintf('TO wavelength                %.6f±%f nm \n',to_wav_val*1e9,to_wav_unc*1e9)
-fprintf('diff from TOV1               %e±%e nm \n',(to_wav_val-old_to_wav)*1e9,to_wav_unc*1e9)
+fprintf('TO wavelength                %.6fï¿½%f nm \n',to_wav_val*1e9,to_wav_unc*1e9)
+fprintf('diff from TOV1               %eï¿½%e nm \n',(to_wav_val-old_to_wav)*1e9,to_wav_unc*1e9)
 %more logic needs to be included here
 fprintf('number of probe files        %u \n',to_res.num_shots)
 fprintf('number of calibration files  %u \n',data.cal.num_shots)
