@@ -71,7 +71,7 @@ fprintf('Calculating Fits\n')
 %set up the data input for the fit
 xdat=probe_freq(~isnan(probe_freq))';
 ydat=square_trap_freq(~isnan(probe_freq))';
-cdat=cdat(~isnan(probe_freq));
+cdat=cdat(~isnan(probe_freq),:);
 if exist('new_to_freq_val','var') %if the TO has been calculated before use that as the center
     freq_offset=new_to_freq_val;
 else
@@ -104,6 +104,7 @@ for ii=1:2 %iterate over linear and quadratic fits
     hold on
     plot(xsamp,yci,'r-')
     scatter(xdat,ydat,30,cdat,'square','filled')
+    colormap(viridis(1000))
     c =colorbar;
     c.Label.String = 'time (H)';
     caxis([0,range(shot_time)/(60*60)])
@@ -118,7 +119,7 @@ for ii=1:2 %iterate over linear and quadratic fits
 
     xdat_culled=xdat(is_outlier_idx);
     ydat_culled=ydat(is_outlier_idx);
-    cdat_culled=cdat(is_outlier_idx);
+    cdat_culled=cdat(is_outlier_idx,:);
 
     culed_xydat=num2cell([xdat_culled;ydat_culled],1);
 
@@ -164,7 +165,15 @@ for ii=1:2 %iterate over linear and quadratic fits
     xsamp_culled=linspace(min(xdat_culled),max(xdat_culled),1e3)';
     [ysamp_culled,yci_culled]=predict(mdl_culled,xsamp_culled,'Alpha',0.2); %'Prediction','observation'
     %now plot the remaining data along with the fit model and the model CI
+    if ii==1
+        plot_name='TO_fits_lin';
+        plot_title='Tune-out fit (Linear)';
+    else
+        plot_name='TO_fits_quad';
+        plot_title='Tune-out fit (Quadratic)';
+    end
     sfigure(661+ii);
+    title(plot_title)
     subplot(1,2,2)
     plot(xsamp_culled,ysamp_culled,'k-')
     hold on
@@ -182,7 +191,6 @@ for ii=1:2 %iterate over linear and quadratic fits
     set(gca,'ylim',first_plot_lims(2,:))
     
     set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
-    plot_name='TO_fits';
     saveas(gcf,[anal_opts_fit_to.global.out_dir,plot_name,'.png'])
     saveas(gcf,[anal_opts_fit_to.global.out_dir,plot_name,'.fig'])
 
@@ -207,9 +215,15 @@ for ii=1:2 %iterate over linear and quadratic fits
     hold off
     xlabel(sprintf('probe beam set freq - %.3f (GHz)',freq_offset*1e-9))
     ylabel('Response scaled to sample SD')
-    title('Senistivity Graph ')
+    if ii==1
+        title_str='Senistivity Graph (Linear)';
+        plot_name='Sens_graph_lin';
+    else
+        title_str='Senistivity Graph (Quadratic)';
+        plot_name='Sens_graph_quad';
+    end
+    title(title_str)
     set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
-    plot_name='Sens_graph';
     saveas(gcf,[anal_opts_fit_to.global.out_dir,plot_name,'.png'])
     saveas(gcf,[anal_opts_fit_to.global.out_dir,plot_name,'.fig'])
 end
