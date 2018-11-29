@@ -7,7 +7,7 @@ al_pulses.pulsedt=anal_opt_al.pulsedt;
 al_pulses.window=nan(anal_opt_al.pulses,3,2); %initalize
 al_pulses.num_counts=nan(iimax,anal_opt_al.pulses);
   
-plots=anal_opt_al.plots;
+plots=false;
 fprintf('binning pulses in files %04u:%04u',size(data.mcp_tdc.counts_txy,2),0)
 first_good_shot=true;
 for shot=1:iimax
@@ -55,9 +55,8 @@ for shot=1:iimax
         end%is data.mcp_tdc.all_ok
         if mod(shot,10)==0,fprintf('\b\b\b\b%04u',shot),end    
 %to set the pulse t0 right it can be handy to uncomment the next line
-
+%fprintf('\nmean time %3.5f            \n ',mean(al_pulses.pos_stat(shot,:,1)-al_pulses.time(:)'))
 end%shots
-fprintf('\nmean time %3.5f            \n ',mean(al_pulses.pos_stat(shot,:,1)-al_pulses.time(:)'))
 fprintf('...Done\n') 
 toc
 

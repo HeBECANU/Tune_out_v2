@@ -390,24 +390,24 @@ data.mcp_tdc.probe.ok.all=tmp_probe_ok;
 
 fprintf('ok logic gives %u / %u shots for yeild %04.1f %%\n',...
     tmp_num_ok_shots,tmp_num_shots,1e2*tmp_num_ok_shots/tmp_num_shots)
-set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
-plot_name='check_logics';
-saveas(gcf,[anal_out.dir,plot_name,'.png'])
-saveas(gcf,[anal_out.dir,plot_name,'.fig'])
+% set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
+% plot_name='check_logics';
+% saveas(gcf,[anal_out.dir,plot_name,'.png'])
+% saveas(gcf,[anal_out.dir,plot_name,'.fig'])
 
 %% BINNING UP THE ATOM LASER PULSES
 %now find the mean position of each pulse of the atom laser in each shot
 data.mcp_tdc.al_pulses=bin_al_pulses(anal_opts.atom_laser,data);
 
 %% FITTING THE TRAP FREQUENCY
-anal_opts.osc_fit.adaptive_freq=true; %estimate the starting trap freq 
+anal_opts.osc_fit.adaptive_freq=false; %estimate the starting trap freq 
 anal_opts.osc_fit.appr_osc_freq_guess=[52,46.7,40];
 anal_opts.osc_fit.plot_fits=false;
 anal_opts.osc_fit.plot_err_history=false;
 anal_opts.osc_fit.plot_fit_corr=false;
 
 anal_opts.osc_fit.global=anal_opts.global;
-data.osc_fit=fit_trap_freq(anal_opts.osc_fit,data);
+data.osc_fit=fit_trap_freq_legacy(anal_opts.osc_fit,data);
 
 %% undo the aliasing
 %this may need to change if the sampling freq changes
