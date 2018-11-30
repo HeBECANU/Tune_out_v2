@@ -1,0 +1,43 @@
+misaligned
+'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181127_3_filt_power_linearity_attractive_misaligned\';
+
+
+Nonlinear regression model:
+    y ~ b1 + b2*x + b3*x^2
+
+Estimated Coefficients:
+          Estimate      SE       tStat      pValue  
+          ________    ______    _______    _________
+
+    b1     2.0224      8.954    0.22587       0.8217
+    b2     99.774     9.0837     10.984    1.018e-19
+    b3    -2.7522     1.5198     -1.811      0.07271
+
+
+Number of observations: 120, Error degrees of freedom: 117
+Root Mean Squared Error: 1.01
+R-Squared: 0.889,  Adjusted R-Squared 0.887
+F-statistic vs. constant model: 470, p-value = 1.22e-56
+
+fit_mdl = 
+
+
+Nonlinear regression model:
+    y ~ b1 + b2*x + b3*x^2 + b4*x^3
+
+Estimated Coefficients:
+          Estimate      SE        tStat        pValue  
+          ________    _______    ________    __________
+
+    b1      4.7086     11.203     0.42029       0.67505
+    b2      92.906     19.608      4.7382    6.1661e-06
+    b3     0.14673     7.5899    0.019332       0.98461
+    b4    -0.30241    0.78057    -0.38742       0.69916
+
+
+Number of observations: 120, Error degrees of freedom: 116
+Root Mean Squared Error: 1.02
+R-Squared: 0.888,  Adjusted R-Squared 0.885
+F-statistic vs. constant model: 307, p-value = 5.37e-55
+
+

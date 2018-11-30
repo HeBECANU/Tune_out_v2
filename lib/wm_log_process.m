@@ -22,6 +22,8 @@ function wm_log_processed=wm_log_process_core(anal_opts,data)
 
 wm_log_processed=[];
 fprintf('finding mean wavelengths for files %04u:%04u',size(data.mcp_tdc.time_create_write(:,1),1),0)
+data.wm_log.raw.feedback.posix_time = sort(data.wm_log.raw.feedback.posix_time);
+data.wm_log.raw.read_all_adc.posix_time = sort(data.wm_log.raw.read_all_adc.posix_time);
 if ~issorted(data.wm_log.raw.feedback.posix_time) || ~issorted(data.wm_log.raw.read_all_adc.posix_time)
     error('binary search wont work, keep it ordered plz')
 end

@@ -1,5 +1,10 @@
 %SIMULATE measuring atom number and outcoupling fraction by fitting
 %compare fitting in semi log and fitting the exponential form directly
+%it seems that fitting the exponential form directly is better!
+%to do
+% - use covariance to propagate to the error in the inital number
+%   - looks really hard...
+
 sim_det_num=zeros(300,1);
 sim_rem_num=sim_det_num;
 pulse_num=(1:size(sim_det_num,1))-1;
