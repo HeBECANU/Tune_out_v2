@@ -507,7 +507,7 @@ anal_opts.fit_to.ci_size_cut_outliers=0.05; %confidence interval for cutting out
 anal_opts.fit_to.scale_x=1e-9;
 
 to_res=fit_to_nonlin(anal_opts.fit_to,data);
-data.to_fit_nonlin=to_res_nonlin;
+data.to_fit_nonlin=to_res;
 
 to_fit_trimed_val=to_res.fit_trimmed.to_freq;
 to_fit_unc_boot=to_res.fit_trimmed.to_unc_boot;
@@ -533,17 +533,17 @@ to_wav_val_quad=const.c/(to_fit_trimed_val{2}*2);
 to_wav_unc_quad=new_to_freq_unc{2}*const.c/((to_fit_trimed_val{2}*2)^2);
 fprintf('run start time               %.1f (posix)\n',...
     data.mcp_tdc.time_create_write(1,2)-anal_opts.trig_dld-anal_opts.dld_aquire)
-fprintf('run stop time                =%.1f (posix)\n',...
+fprintf('run stop time                %.1f (posix)\n',...
     data.mcp_tdc.time_create_write(end,2)-anal_opts.trig_dld-anal_opts.dld_aquire)
-fprintf('duration                     =%.1f (s)\n',...
+fprintf('duration                     %.1f (s)\n',...
     data.mcp_tdc.time_create_write(end,2)-data.mcp_tdc.time_create_write(1,2))
-fprintf('TO freq (Linear)                     %.1f±(%.0f±%.0f) MHz\n',...
+fprintf('TO freq (Linear)             %.1f±(%.0f±%.0f) MHz\n',...
     to_fit_trimed_val{1}*1e-6,new_to_freq_unc{1}*1e-6,to_fit_unc_unc_boot_lin*1e-6)
-fprintf('TO wavelength (Linear)               %.6f±%f nm \n',to_wav_val_lin*1e9,to_wav_unc_lin*1e9)
-fprintf('TO freq (Quadratic)                     %.1f±(%.0f±%.0f) MHz\n',...
+fprintf('TO wavelength (Linear)       %.6f±%f nm \n',to_wav_val_lin*1e9,to_wav_unc_lin*1e9)
+fprintf('TO freq (Quadratic)          %.1f±(%.0f±%.0f) MHz\n',...
     to_fit_trimed_val{2}*1e-6,new_to_freq_unc{2}*1e-6,to_fit_unc_unc_boot_quad*1e-6)
-fprintf('TO wavelength (Quadratic)               %.6f±%f nm \n',to_wav_val_quad*1e9,to_wav_unc_quad*1e9)
-fprintf('diff between Lin and Quad               %e±%e nm \n',(to_wav_val_lin-to_wav_val_quad)*1e9,sqrt(to_wav_unc_lin^2+to_wav_unc_quad^2)*1e9)
+fprintf('TO wavelength (Quadratic)    %.6f±%f nm \n',to_wav_val_quad*1e9,to_wav_unc_quad*1e9)
+fprintf('diff between Lin and Quad    %e±%e nm \n',(to_wav_val_lin-to_wav_val_quad)*1e9,sqrt(to_wav_unc_lin^2+to_wav_unc_quad^2)*1e9)
 fprintf('diff from TOV1               %e±%e nm \n',(to_wav_val_lin-old_to_wav)*1e9,to_wav_unc_lin*1e9)
 %more logic needs to be included here
 fprintf('number of probe files        %u \n',to_res.num_shots)
