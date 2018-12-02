@@ -82,9 +82,8 @@ anal_opts=[];
 %anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181104_filters_dep_two\';
 %anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181102_filters_dep_two\';
 %anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181101_filters_dep_two';
-%anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181122_alignment_dep_34_5';
-anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181123_3_filt_align_dep_31um';
-%anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181122_filt_dep_none\';
+%anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181123_3_filt_align_dep_31um\';
+anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181202_filt_skew_pos110ghz\'
 
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
@@ -111,6 +110,7 @@ anal_opts.global.qe=0.09;
 
 anal_opts.trig_dld=20.3;
 anal_opts.dld_aquire=4;
+anal_opts.aquire_time=4;
 anal_opts.trig_ai_in=20;
 
 
@@ -228,6 +228,7 @@ data.labview.calibration=lv_log.probe_calibration;
             -anal_opts.trig_dld-anal_opts.dld_aquire-mean_delay_labview_tdc;
         [tval,nearest_idx]=closest_value(data.labview.time...
             ,est_labview_start);
+        nearest_idx
         if abs(tval-est_labview_start)<time_thresh
             data.mcp_tdc.labview_shot_num(ii)=data.labview.shot_num(nearest_idx);
             data.mcp_tdc.probe.calibration(ii)=data.labview.calibration(nearest_idx);
@@ -237,10 +238,12 @@ data.labview.calibration=lv_log.probe_calibration;
 %% IMPORT THE ANALOG INPUT LOG
 %the code will check that the probe beam PD was ok and that the laser was single mode
 anal_opts.ai_log.dir=anal_opts.tdc_import.dir;
-anal_opts.ai_log.force_reimport=true;
+anal_opts.ai_log.force_reimport=false;
 anal_opts.ai_log.force_load_save=false;
 anal_opts.ai_log.log_name='log_analog_in_';
-anal_opts.ai_log.pd.set=5;
+anal_opts.ai_log.pd.set=~data.mcp_tdc.probe.calibration*5;
+anal_opts.ai_log.pd.set(isnan(anal_opts.ai_log.pd.set))=0;
+anal_opts.ai_log.aquire_time=4;
 anal_opts.ai_log.pd.diff_thresh=0.1;
 anal_opts.ai_log.pd.std_thresh=0.1;
 anal_opts.ai_log.pd.time_start=0.2;
@@ -257,6 +260,7 @@ anal_opts.ai_log.scan_time=14e-3;  %estimate of the sfp scan time,used to set th
 %because im only passing the ai_log feild to aviod conflicts forcing a reimport i need to coppy these feilds
 anal_opts.ai_log.trig_dld=anal_opts.trig_dld;
 anal_opts.ai_log.dld_aquire=anal_opts.dld_aquire;
+anal_opts.ai_log.aquire_time=anal_opts.dld_aquire;
 anal_opts.ai_log.trig_ai_in=anal_opts.trig_ai_in;
 ai_log_out=ai_log_import(anal_opts.ai_log,data);
 %copy the output across
@@ -528,7 +532,8 @@ diary off
 
 %%
 fprintf('saving output...')
-save(fullfile(anal_out.dir,'data_anal_full.mat'),'data','to_res','anal_opts','-v7.3')
+%no compression bc its very slowwww
+%save(fullfile(anal_out.dir,'data_anal_full.mat'),'data','to_res','anal_opts','-nocompression','-v7.3')
 fprintf('Done')
 
 %% try and find what the outliers were doing
