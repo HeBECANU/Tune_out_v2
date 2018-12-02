@@ -240,8 +240,11 @@ anal_opts.ai_log.dir=anal_opts.tdc_import.dir;
 anal_opts.ai_log.force_reimport=false;
 anal_opts.ai_log.force_load_save=false;
 anal_opts.ai_log.log_name='log_analog_in_';
-anal_opts.ai_log.pd.set=~data.mcp_tdc.probe.calibration*5;
-anal_opts.ai_log.pd.set(isnan(anal_opts.ai_log.pd.set))=0;
+anal_opts.ai_log.pd.set=data.mcp_tdc.probe.calibration;
+%nan compatable logical inverse
+anal_opts.ai_log.pd.set(~isnan(anal_opts.ai_log.pd.set))=~anal_opts.ai_log.pd.set(~isnan(anal_opts.ai_log.pd.set))
+anal_opts.ai_log.pd.set=anal_opts.ai_log.pd.set*3;
+%anal_opts.ai_log.pd.set(isnan(anal_opts.ai_log.pd.set))=0;
 anal_opts.ai_log.aquire_time=4;
 anal_opts.ai_log.pd.diff_thresh=0.1;
 anal_opts.ai_log.pd.std_thresh=0.1;

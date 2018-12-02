@@ -167,10 +167,10 @@ for ii=1:iimax
             end
         end
         if abs(ai_log_single_out.pd.mean-set_pt_single)>anal_opts.pd.diff_thresh
-            fprintf('\nprobe beam pd value wrong!!!!!!!!!\n%04i',0)
-            fprintf('avg val %.2f set value %.2f \n04u%',ai_log_single_out.pd.mean,anal_opts.pd.set,0)
+            fprintf('\nprobe beam pd value wrong!!!!!!!!!\n')
+            fprintf('avg val %.2f set value %.2f \n04u%',ai_log_single_out.pd.mean,set_pt_single,0)
         elseif ai_log_single_out.pd.std>anal_opts.pd.std_thresh
-            fprintf('\nprobe beam pd noisy!!!!!!!!!\n%04u',0)
+            fprintf('\nprobe beam pd noisy!!!!!!!!!\n')
             fprintf('std %.2f thresh value %.2f \n04u%',ai_log_single_out.pd.std,anal_opts.pd.std_thresh,0)
         else
             ai_log_out.ok.reg_pd(idx_nearest_shot)=true;
