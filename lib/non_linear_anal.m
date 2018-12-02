@@ -79,15 +79,11 @@ tic
 anal_opts=[];
 %anal_opts.tdc_import.dir='Y:\EXPERIMENT-DATA\Tune Out V2\20180826_testing_wm_log\';
 %anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output';
-%anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181104_filters_dep_two\';
-%anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181102_filters_dep_two\';
-%anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181101_filters_dep_two';
-%anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181123_3_filt_align_dep_31um\';
-<<<<<<< HEAD
-anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181202_filt_skew_pos110ghz\'
-=======
-anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181126_3_filt_align_dep_39_um_v2\'
->>>>>>> 6e10f34ce0f710bc20faf8b326dc6289a80d560d
+%anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20180829_half_wp_353';
+%anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181002_halfwp_236_stab3\';
+%anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181010_every_other_shot_cal\';
+%anal_opts.tdc_import.dir='F:\2018_Tune_Out_V2\20181026_wp_out_stab\';
+anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181124_3_filt_align_dep_34_um\';
 
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
@@ -108,13 +104,13 @@ anal_opts.atom_laser.pulses=100;
 anal_opts.atom_laser.appr_osc_freq_guess=[52,40,40];
 anal_opts.atom_laser.pulse_twindow=anal_opts.atom_laser.pulsedt*0.9;
 anal_opts.atom_laser.xylim=anal_opts.tdc_import.txylim(2:3,:); %set same lims for pulses as import
+anal_opts.atom_laser.plots=false;
 
 anal_opts.global.fall_time=0.417;
 anal_opts.global.qe=0.09;
 
 anal_opts.trig_dld=20.3;
 anal_opts.dld_aquire=4;
-anal_opts.aquire_time=4;
 anal_opts.trig_ai_in=20;
 
 
@@ -134,7 +130,7 @@ anal_opts.osc_fit.dimesion=2; %Select coordinate to bin. 1=X, 2=Y.
 data=[]; %CLEAR THE DATA
 anal_out=[];
 %set up an output dir %https://gist.github.com/ferryzhou/2269380
-if anal_opts.tdc_import.dir(end) ~= filesep, anal_opts.tdc_import.dir = [anal_opts.tdc_import.dir filesep]; end
+if anal_opts.tdc_import.dir(end) ~= '\', dirpath = [dirpath '\']; end
 if (exist([anal_opts.tdc_import.dir,'out'], 'dir') == 0), mkdir([anal_opts.tdc_import.dir,'out']); end
  
 anal_out.dir=sprintf('%sout\\%s\\',...
@@ -232,7 +228,6 @@ data.labview.calibration=lv_log.probe_calibration;
             -anal_opts.trig_dld-anal_opts.dld_aquire-mean_delay_labview_tdc;
         [tval,nearest_idx]=closest_value(data.labview.time...
             ,est_labview_start);
-        nearest_idx
         if abs(tval-est_labview_start)<time_thresh
             data.mcp_tdc.labview_shot_num(ii)=data.labview.shot_num(nearest_idx);
             data.mcp_tdc.probe.calibration(ii)=data.labview.calibration(nearest_idx);
@@ -245,9 +240,7 @@ anal_opts.ai_log.dir=anal_opts.tdc_import.dir;
 anal_opts.ai_log.force_reimport=false;
 anal_opts.ai_log.force_load_save=false;
 anal_opts.ai_log.log_name='log_analog_in_';
-anal_opts.ai_log.pd.set=~data.mcp_tdc.probe.calibration*5;
-anal_opts.ai_log.pd.set(isnan(anal_opts.ai_log.pd.set))=0;
-anal_opts.ai_log.aquire_time=4;
+anal_opts.ai_log.pd.set=5;
 anal_opts.ai_log.pd.diff_thresh=0.1;
 anal_opts.ai_log.pd.std_thresh=0.1;
 anal_opts.ai_log.pd.time_start=0.2;
@@ -264,7 +257,6 @@ anal_opts.ai_log.scan_time=14e-3;  %estimate of the sfp scan time,used to set th
 %because im only passing the ai_log feild to aviod conflicts forcing a reimport i need to coppy these feilds
 anal_opts.ai_log.trig_dld=anal_opts.trig_dld;
 anal_opts.ai_log.dld_aquire=anal_opts.dld_aquire;
-anal_opts.ai_log.aquire_time=anal_opts.dld_aquire;
 anal_opts.ai_log.trig_ai_in=anal_opts.trig_ai_in;
 ai_log_out=ai_log_import(anal_opts.ai_log,data);
 %copy the output across
@@ -276,7 +268,7 @@ data.ai_log=ai_log_out;
 %% IMPORT WM LOG FILES
 
 anal_opts.wm_log.dir=anal_opts.tdc_import.dir;
-anal_opts.wm_log.force_reimport=false;
+anal_opts.wm_log.force_reimport=true;
 wm_log_name='log_wm_';
 wm_logs=dir([anal_opts.wm_log.dir,wm_log_name,'*.txt']);
 anal_opts.wm_log.names={wm_logs.name};
@@ -408,41 +400,21 @@ fprintf('ok logic gives %u / %u shots for yeild %04.1f %%\n',...
 data.mcp_tdc.al_pulses=bin_al_pulses(anal_opts.atom_laser,data);
 
 %% FITTING THE TRAP FREQUENCY
-anal_opts.osc_fit.adaptive_freq=true; %estimate the starting trap freq 
-anal_opts.osc_fit.appr_osc_freq_guess=[52,47.9,40];
-anal_opts.osc_fit.freq_fit_tolerance=2; %hz arround the median to cut away
+anal_opts.osc_fit.adaptive_freq=false; %estimate the starting trap freq 
+anal_opts.osc_fit.appr_osc_freq_guess=[52,46.7,40];
 anal_opts.osc_fit.plot_fits=false;
-anal_opts.osc_fit.plot_err_history=true;
-anal_opts.osc_fit.plot_fit_corr=true;
+anal_opts.osc_fit.plot_err_history=false;
+anal_opts.osc_fit.plot_fit_corr=false;
 
 anal_opts.osc_fit.global=anal_opts.global;
-data.osc_fit=fit_trap_freq(anal_opts.osc_fit,data);
+data.osc_fit=fit_trap_freq_legacy(anal_opts.osc_fit,data);
 
 %% undo the aliasing
 %this may need to change if the sampling freq changes
 
 data.osc_fit.trap_freq_recons=nan*data.osc_fit.ok.did_fits;
-mask=data.osc_fit.ok.all;
+mask=data.osc_fit.ok.did_fits;
 data.osc_fit.trap_freq_recons(mask)=3*(1/anal_opts.atom_laser.pulsedt)+data.osc_fit.model_coefs(mask,2,1);
-
-
-%% CHECK IF ATOM NUMBER DEPENDS ON PROBE BEAM
-%figure
-%clf
-%plot(data.mcp_tdc.probe.freq.act.mean(data.osc_fit.ok.rmse),data.mcp_tdc.num_counts(data.osc_fit.ok.rmse),'x')
-
-%% just plot with index
-%plot(data.osc_fit.model_coefs(data.osc_fit.ok.rmse,2,1)'...
-%    -mean(data.osc_fit.model_coefs(data.osc_fit.ok.rmse,2,1)))
-
-
-%% plot not calibrations
-%clf
-%temp_cal=data.mcp_tdc.probe.calibration';
-%temp_cal(isnan(temp_cal))=1;
-%mask=data.osc_fit.ok.rmse & ~temp_cal & ~isnan(data.mcp_tdc.probe.freq.act.mean');
-%plot(data.mcp_tdc.probe.freq.act.mean(mask),data.osc_fit.model_coefs(mask,2,1),'x')
-
 
 %% create a model of the underlying trap frequency from the calibrations
 anal_opts.cal_mdl.smooth_time=100;
@@ -450,53 +422,7 @@ anal_opts.cal_mdl.plot=true;
 anal_opts.cal_mdl.global=anal_opts.global;
 data.cal=make_cal_model(anal_opts.cal_mdl,data);
 
-
-%% segmented TO
-%look at the tune out when fit to short segments
-% TO DO, would be better if this called the fit_to script multiple times
-anal_opts.fit_to=[];
-anal_opts.fit_to.bootstrap=false;
-anal_opts.fit_to.plots=false;
-%thresholds for CI
-%sd         CI
-%1          0.3174
-%2          0.05
-%3          2.699e-03
-anal_opts.fit_to.ci_size_disp=0.3174;%one sd %confidence interval to display
-anal_opts.fit_to.global=anal_opts.global;
-anal_opts.fit_to.ci_size_cut_outliers=0.05; %confidence interval for cutting outliers
-anal_opts.fit_to.scale_x=1e-9;
-anal_opts.fit_to.min_pts=10;
-
-anal_opts.fit_to.seg_time=60*30;
-anal_opts.fit_to.seg_shift=1*anal_opts.fit_to.seg_time;
-to_seg_fits=segmentd_fit_to(anal_opts.fit_to,data);
-
-
-
 %% Fit the Tune Out
-% anal_opts.fit_to=[];
-% anal_opts.fit_to.plot_inital=true;
-% anal_opts.fit_to.bootstrap=true;
-% %thresholds for CI
-% %sd         CI
-% %1          0.3174
-% %2          0.05
-% %3          2.699e-03
-% anal_opts.fit_to.ci_size_disp=0.3174;%one sd %confidence interval to display
-% anal_opts.fit_to.global=anal_opts.global;
-% anal_opts.fit_to.ci_size_cut_outliers=0.05; %confidence interval for cutting outliers
-% anal_opts.fit_to.scale_x=1e-9;
-% 
-% to_res=fit_to(anal_opts.fit_to,data);
-% data.to_fit=to_res;
-% 
-% to_fit_trimed_val=to_res.fit_trimmed.to_freq;
-% to_fit_unc_boot=to_res.fit_trimmed.to_unc_boot;
-% to_fit_unc_fit=to_res.fit_trimmed.to_unc_fit;
-% to_fit_unc_unc_boot=to_res.fit_trimmed.boot.se_se_opp/anal_opts.fit_to.scale_x;
-
-%% Analyse the effect of nonlinear terms on Tune out
 anal_opts.fit_to=[];
 anal_opts.fit_to.plot_inital=true;
 anal_opts.fit_to.bootstrap=true;
@@ -510,74 +436,52 @@ anal_opts.fit_to.global=anal_opts.global;
 anal_opts.fit_to.ci_size_cut_outliers=0.05; %confidence interval for cutting outliers
 anal_opts.fit_to.scale_x=1e-9;
 
-to_res=fit_to_nonlin(anal_opts.fit_to,data);
-data.to_fit_nonlin=to_res;
+to_res=fit_signal_nonlin(anal_opts.fit_to,data);
+data.to_fit=to_res;
 
 to_fit_trimed_val=to_res.fit_trimmed.to_freq;
 to_fit_unc_boot=to_res.fit_trimmed.to_unc_boot;
 to_fit_unc_fit=to_res.fit_trimmed.to_unc_fit;
-to_fit_unc_unc_boot_lin=to_res.fit_trimmed.boot{1}.se_se_opp/anal_opts.fit_to.scale_x;
-to_fit_unc_unc_boot_quad=to_res.fit_trimmed.boot{2}.se_se_opp/anal_opts.fit_to.scale_x;
+to_fit_unc_unc_boot=to_res.fit_trimmed.boot.se_se_opp/anal_opts.fit_to.scale_x;
 
 %% write out the results
-%inverse scaled gradient to give the single shot uncert (with scaling factor to include calibration)
-tot_num_shots=to_res.num_shots+data.cal.num_shots;
-single_shot_uncert=to_res.fit_trimmed.single_shot_uncert_boot{1}...
-    *sqrt(tot_num_shots/to_res.num_shots);
+%inverse scaled gradient to give the single shot uncert
+single_shot_uncert=to_res.fit_trimmed.single_shot_uncert_boot;
 fprintf('\n====TO fit results==========\n')
-fprintf('dir =%s\n',anal_opts.tdc_import.dir)
 fprintf('median damping time %.2f\n',median(1./data.osc_fit.model_coefs(data.osc_fit.ok.rmse,7,1)))
 %calculate some statistics and convert the model parameter into zero crossing and error therin
 old_to_wav=413.0938e-9;
 new_to_freq_unc=to_fit_unc_boot;
-%to_res.fit_trimmed.to_unc_fit
-to_wav_val_lin=const.c/(to_fit_trimed_val{1}*2);
-to_wav_unc_lin=new_to_freq_unc{1}*const.c/((to_fit_trimed_val{1}*2)^2);
-to_wav_val_quad=const.c/(to_fit_trimed_val{2}*2);
-to_wav_unc_quad=new_to_freq_unc{2}*const.c/((to_fit_trimed_val{2}*2)^2);
+to_wav_val=const.c/(to_fit_trimed_val*2);
+to_wav_unc=new_to_freq_unc*const.c/((to_fit_trimed_val*2)^2);
 fprintf('run start time               %.1f (posix)\n',...
     data.mcp_tdc.time_create_write(1,2)-anal_opts.trig_dld-anal_opts.dld_aquire)
 fprintf('run stop time                %.1f (posix)\n',...
     data.mcp_tdc.time_create_write(end,2)-anal_opts.trig_dld-anal_opts.dld_aquire)
 fprintf('duration                     %.1f (s)\n',...
     data.mcp_tdc.time_create_write(end,2)-data.mcp_tdc.time_create_write(1,2))
-fprintf('TO freq (Linear)             %.1f±(%.0f±%.0f) MHz\n',...
-    to_fit_trimed_val{1}*1e-6,new_to_freq_unc{1}*1e-6,to_fit_unc_unc_boot_lin*1e-6)
-fprintf('TO wavelength (Linear)       %.6f±%f nm \n',to_wav_val_lin*1e9,to_wav_unc_lin*1e9)
-fprintf('TO freq (Quadratic)          %.1f±(%.0f±%.0f) MHz\n',...
-    to_fit_trimed_val{2}*1e-6,new_to_freq_unc{2}*1e-6,to_fit_unc_unc_boot_quad*1e-6)
-fprintf('TO wavelength (Quadratic)    %.6f±%f nm \n',to_wav_val_quad*1e9,to_wav_unc_quad*1e9)
-fprintf('diff between Lin and Quad    %e±%e nm \n',(to_wav_val_lin-to_wav_val_quad)*1e9,sqrt(to_wav_unc_lin^2+to_wav_unc_quad^2)*1e9)
-fprintf('diff from TOV1               %e±%e nm \n',(to_wav_val_lin-old_to_wav)*1e9,to_wav_unc_lin*1e9)
+fprintf('TO freq                      %.1f±(%.0f±%.0f) MHz\n',...
+    to_fit_trimed_val*1e-6,new_to_freq_unc*1e-6,to_fit_unc_unc_boot*1e-6)
+fprintf('TO wavelength                %.6f±%f nm \n',to_wav_val*1e9,to_wav_unc*1e9)
+fprintf('diff from TOV1               %e±%e nm \n',(to_wav_val-old_to_wav)*1e9,to_wav_unc*1e9)
 %more logic needs to be included here
 fprintf('number of probe files        %u \n',to_res.num_shots)
 fprintf('number of calibration files  %u \n',data.cal.num_shots)
-fprintf('total used                   %u \n',tot_num_shots)
+fprintf('total used                   %u \n',to_res.num_shots+data.cal.num_shots)
 fprintf('files with enough number     %u\n',sum(data.mcp_tdc.num_ok'))
-fprintf('shot uncert scaling @1SD %.1f MHz, %.2f fm /sqrt(shots)\n',single_shot_uncert*1e-6,...
-    single_shot_uncert*const.c/((to_fit_trimed_val{1}*2)^2)*10^15)
-%predicted uncert using this /sqrt(n), unless derived differently this is pointless
-%fprintf('predicted stat. uncert %.1f MHz, %.2f fm\n',single_shot_uncert/sqrt(tot_num_shots)*1e-6,...
-%    single_shot_uncert/sqrt(tot_num_shots)*const.c/((to_fit_trimed_val*2)^2)*10^15)
+
+fprintf('single shot uncert detuning @1SD %.1f MHz, %.2f fm\n',single_shot_uncert*1e-6,...
+    single_shot_uncert*const.c/((to_fit_trimed_val*2)^2)*10^15)
+%predicted uncert using this /sqrt(n)
+fprintf('predicted stat. uncert %.1f MHz, %.2f fm\n',single_shot_uncert/sqrt(sum(to_res.num_shots))*1e-6,...
+    single_shot_uncert/sqrt(sum(to_res.num_shots))*const.c/((to_fit_trimed_val*2)^2)*10^15)
 
 diary off
 
 
 %%
 fprintf('saving output...')
-%no compression bc its very slowwww
-%save(fullfile(anal_out.dir,'data_anal_full.mat'),'data','to_res','anal_opts','-nocompression','-v7.3')
+save(fullfile(anal_out.dir,'data_anal_full.mat'),'data','to_res','anal_opts','-v7.3')
 fprintf('Done')
-
-%% try and find what the outliers were doing
-%given this mask ~color_idx find the shot nums and times 
-%~isnan(probe_freq)
-
-
-%% damping results
-%plot out what the distibution over damping times is
-% figure(7);
-% set(gcf,'color','w')
-% histogram(1./data.osc_fit.model_coefs(data.osc_fit.ok.rmse,7,1),linspace(0,3,1e2))
 
 toc
