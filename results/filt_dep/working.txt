@@ -91,3 +91,67 @@ total used                   =2569
 files with enough number     =2790
 shot uncert scaling @1SD     =1301.6 MHz, 740.86 fm /sqrt(shots)
 
+
+
+
+
+last filt pos110ghz
+first 10h data
+====TO fit results==========
+dir =Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181202_filt_skew_pos110ghz\
+median damping time 0.71
+run start time               1543671918.2 (posix)
+run stop time                1543757284.3 (posix)
+duration                     85366.0 (s)
+TO freq (Linear)             362867607.3±(53±5) MHz
+TO wavelength (Linear)       413.087931±0.000030 nm 
+TO freq (Quadratic)          362867689.7±(103±19) MHz
+TO wavelength (Quadratic)    413.087837±0.000059 nm 
+diff between Lin and Quad    9.384192e-05±6.597986e-05 nm 
+diff from TOV1               -5.869309e-03±3.011010e-05 nm 
+number of probe files        590 
+number of calibration files  687 
+total used                   1277 
+files with enough number     1377
+shot uncert scaling @1SD 1883.9 MHz, 1072.33 fm /sqrt(shots)
+saving output...DoneElapsed time is 98.166140 seconds.
+
+
+====TO fit results==========
+dir =Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181201_filt_skew_neg111ghz\
+median damping time 0.69
+run start time               1543603985.7 (posix)
+run stop time                1543670709.7 (posix)
+duration                     66723.9 (s)
+TO freq (Linear)             362867569.3±(44±2) MHz
+TO wavelength (Linear)       413.087974±0.000025 nm 
+TO freq (Quadratic)          362867661.4±(66±7) MHz
+TO wavelength (Quadratic)    413.087869±0.000037 nm 
+diff between Lin and Quad    1.048235e-04±4.511526e-05 nm 
+diff from TOV1               -5.826068e-03±2.519733e-05 nm 
+number of probe files        640 
+number of calibration files  686 
+total used                   1326 
+files with enough number     1376
+shot uncert scaling @1SD 1608.2 MHz, 915.39 fm /sqrt(shots)
+saving output...DoneElapsed time is 82.655800 seconds.
+
+
+====TO fit results==========
+dir =Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181202_filt_skew_pos50ghz\
+median damping time 0.75
+run start time               1543763274.5 (posix)
+run stop time                1543827545.4 (posix)
+duration                     64270.9 (s)
+TO freq (Linear)             362868080.6±(63±18) MHz
+TO wavelength (Linear)       413.087392±0.000036 nm 
+TO freq (Quadratic)          362868068.9±(94±18) MHz
+TO wavelength (Quadratic)    413.087405±0.000054 nm 
+diff between Lin and Quad    -1.340733e-05±6.452191e-05 nm 
+diff from TOV1               -6.408189e-03±3.598068e-05 nm 
+number of probe files        645 
+number of calibration files  686 
+total used                   1331 
+files with enough number     1378
+shot uncert scaling @1SD 2288.2 MHz, 1302.46 fm /sqrt(shots)
+saving output...DoneElapsed time is 91.291799 seconds.
