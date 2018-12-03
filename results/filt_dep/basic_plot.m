@@ -15,7 +15,7 @@ saveas(gcf,'.\results\filt_dep\plot.png')
 %last filter skew
 %[cen filter,measured To,unc]
 filt_dep=[[362767621*2,362867689.7*2,89];[362977621*2,362867689.7*2,103];[362917621*2,362867443.9*2,51]];
-to_value=362867621;
+to_value=362867621*2;
 figure(3)
 errorbar((filt_dep(:,1)-to_value)*1e-3,filt_dep(:,2)-to_value,filt_dep(:,3),'xk')
 xlabel(sprintf('Filter Center (GHZ) - %.1f (MHz)',to_value))
