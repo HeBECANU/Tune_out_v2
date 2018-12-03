@@ -83,7 +83,7 @@ anal_opts=[];
 %anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181102_filters_dep_two\';
 %anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181101_filters_dep_two';
 %anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181123_3_filt_align_dep_31um\';
-anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181202_filt_skew_pos110ghz\'
+anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181202_filt_skew_pos50ghz\'
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
 anal_opts.tdc_import.force_reimport=false;
@@ -95,7 +95,7 @@ tmp_ylim=[-30e-3, 30e-3];
 tlim=[0,4];
 anal_opts.tdc_import.txylim=[tlim;tmp_xlim;tmp_ylim];
 
-anal_opts.max_runtime=inf;%cut off the data run after some number of hours
+anal_opts.max_runtime=10;%cut off the data run after some number of hours
 anal_opts.atom_laser.pulsedt=8.000e-3;
 anal_opts.atom_laser.t0=0.41784; %center i ntime of the first pulse
 anal_opts.atom_laser.start_pulse=1; %atom laser pulse to start with

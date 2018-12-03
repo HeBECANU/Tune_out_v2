@@ -91,3 +91,27 @@ total used                   =2569
 files with enough number     =2790
 shot uncert scaling @1SD     =1301.6 MHz, 740.86 fm /sqrt(shots)
 
+
+
+
+
+last filt pos110ghz
+first 10h data
+====TO fit results==========
+dir =Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181202_filt_skew_pos110ghz\
+median damping time 0.71
+run start time               1543671918.2 (posix)
+run stop time                1543757284.3 (posix)
+duration                     85366.0 (s)
+TO freq (Linear)             362867607.3±(53±5) MHz
+TO wavelength (Linear)       413.087931±0.000030 nm 
+TO freq (Quadratic)          362867689.7±(103±19) MHz
+TO wavelength (Quadratic)    413.087837±0.000059 nm 
+diff between Lin and Quad    9.384192e-05±6.597986e-05 nm 
+diff from TOV1               -5.869309e-03±3.011010e-05 nm 
+number of probe files        590 
+number of calibration files  687 
+total used                   1277 
+files with enough number     1377
+shot uncert scaling @1SD 1883.9 MHz, 1072.33 fm /sqrt(shots)
+saving output...DoneElapsed time is 98.166140 seconds.
