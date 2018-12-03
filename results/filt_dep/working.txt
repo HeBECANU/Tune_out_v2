@@ -91,6 +91,7 @@ total used                   =2569
 files with enough number     =2790
 shot uncert scaling @1SD     =1301.6 MHz, 740.86 fm /sqrt(shots)
 
+<<<<<<< HEAD
 
 
 
@@ -139,9 +140,7 @@ saving output...DoneElapsed time is 212.203250 seconds.
 
 
 
-=======
->>>>>>> bd607c661ef2ca36da9d4fea0268fd86af959ad1
-last filt pos110ghz
+
 first 10h data
 ====TO fit results==========
 dir =Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181202_filt_skew_pos110ghz\
@@ -160,7 +159,6 @@ number of calibration files  687
 total used                   1277 
 files with enough number     1377
 shot uncert scaling @1SD 1883.9 MHz, 1072.33 fm /sqrt(shots)
-<<<<<<< HEAD
 saving output...DoneElapsed time is 98.166140 seconds.
 
 
@@ -183,6 +181,4 @@ total used                   262
 files with enough number     290
 shot uncert scaling @1SD 594.4 MHz, 338.34 fm /sqrt(shots)
 saving output...DoneElapsed time is 140.156084 seconds.
-=======
-saving output...DoneElapsed time is 98.166140 seconds.
->>>>>>> bd607c661ef2ca36da9d4fea0268fd86af959ad1
+
