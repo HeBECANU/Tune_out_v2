@@ -83,7 +83,7 @@ anal_opts=[];
 %anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181102_filters_dep_two\';
 %anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181101_filters_dep_two';
 %anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181123_3_filt_align_dep_31um\';
-anal_opts.tdc_import.dir='D:\20181124_3_filt_align_dep_41_um\'
+anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181204_baseline_1\';
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
 anal_opts.tdc_import.force_reimport=false;
@@ -151,7 +151,6 @@ anal_opts.tdc_import.shot_num=find_data_files(anal_opts.tdc_import);
 %anal_opts.tdc_import.shot_num= anal_opts.tdc_import.shot_num(1:10); %debuging
 [mcp_tdc_data,import_opts]=import_mcp_tdc_data(anal_opts.tdc_import);
 data.mcp_tdc=mcp_tdc_data;
-
 %% IMPORT LV LOG to data.labview
 %TO DO FUNCTIONALIZE
 %import the wavemeter log
@@ -230,7 +229,7 @@ data.labview.calibration=lv_log.probe_calibration;
         nearest_idx
         if abs(tval-est_labview_start)<time_thresh
             data.mcp_tdc.labview_shot_num(ii)=data.labview.shot_num(nearest_idx);
-            data.mcp_tdc.probe.calibration(ii)=data.labview.calibration(nearest_idx);
+            data.mcp_tdc.probe.calibration(ii)=~data.labview.calibration(nearest_idx);%cal mask out of phase?!
         end 
     end
 
@@ -468,8 +467,8 @@ anal_opts.fit_to.min_pts=10;
 
 anal_opts.fit_to.seg_time=60*30;
 anal_opts.fit_to.seg_shift=1*anal_opts.fit_to.seg_time;
-to_seg_fits=segmentd_fit_to(anal_opts.fit_to,data);
-
+% to_seg_fits=segmentd_fit_to(anal_opts.fit_to,data);
+to_seg_fits=scan_segmented_fit_to(anal_opts.fit_to,data);
 
 
 %% Fit the Tune Out
