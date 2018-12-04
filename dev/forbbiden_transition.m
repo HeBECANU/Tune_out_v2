@@ -2,6 +2,10 @@
 c = 299792458; %m/s
 e_charge = 1.60217662e-19; %C
 h = 6.62607004e-34; %J/s
+m_e = 9.10938356*1e-31; %kg
+eps_0 = 8.854187817*1e-12;
+ const = 2*pi*e_charge^2/(eps_0*m_e*c^3)
+ gl/gu*const*(c/(wv))^2*fik
 %% Load in energy level data
 He_data=csv2struct('he_levels.csv');
 eV_2_3S1= 19.81961468; %eV
@@ -38,14 +42,15 @@ for ii=2:numel(He_data.Level_eV)
 
 end
 %% Table creation
-wv_min = 408*1e-9;
-wv_max = 430*1e-9;
-He_spectrum_full_tbl = table(He_spectrum.wavelength.*1e9,'RowNames',He_spectrum.transition);
+wv_min = 400*1e-9;
+wv_max = 450*1e-9;
+He_spectrum.freq = c./(He_spectrum.wavelength);
+He_spectrum_full_tbl = table(He_spectrum.wavelength.*1e9,c./(He_spectrum.wavelength).*1e-6,'RowNames',He_spectrum.transition);
 indx_bounds = and((He_spectrum.wavelength>wv_min), (He_spectrum.wavelength<wv_max));
 wavelengths_trunc = He_spectrum.wavelength(indx_bounds);
 transitions_trunc = He_spectrum.transition(indx_bounds);
-He_spectrum_bounded_tbl = table(transitions_trunc',wavelengths_trunc.*1e9);
-He_spectrum_bounded_tbl.Properties.VariableNames = {'Transition','Wavelength'};
-He_spectrum_bounded_tbl = sortrows(He_spectrum_bounded_tbl,{'Transition','Wavelength'})
-%% Sort data
-fprintf('\n %.9f nm \n',forbidden_transition_wavelength*1e9)
+freq_trunc = He_spectrum.freq(indx_bounds);
+format longg
+He_spectrum_bounded_tbl = table(transitions_trunc',wavelengths_trunc.*1e9,freq_trunc.*1e-6);
+He_spectrum_bounded_tbl.Properties.VariableNames = {'Transition','Wavelength','Frequency'};
+He_spectrum_bounded_tbl = sortrows(He_spectrum_bounded_tbl,{'Wavelength','Transition'})

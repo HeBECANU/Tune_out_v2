@@ -230,7 +230,7 @@ end
 %% See how the intercept error changes with order of fit (compare TO values)
 %scatter(1:4,cell2mat(to_res.fit_all.to_freq)) %to with all the data
 temp_to=cell2mat(to_res.fit_trimmed.to_freq);
-figure
+sfigure(1234)
 errorbar(1:2,temp_to./1e6-mean(temp_to)*1e-6,cell2mat(to_res.fit_trimmed.to_unc_boot)./1e6) %with culled data
 set(gcf,'color','w')
 xlabel('Order of fit')
@@ -250,7 +250,7 @@ opts = statset('nlinfit');
 %opts.RobustWgtFun = 'welsch' ; %a bit of robust fitting
 %opts.Tune = 1;
 beta0 = [1e-5,1e-2.*ones(1,n)]; %intial guesses
-fit_mdl = fitnlm(xdat,ydat,modelfun,beta0,'Options',opts);
+fit_mdl = fitnlm(xdat,ydat,modelfun,beta0,'Options',opts,'ErrorModel','combined');
 
 %fzero(@(x) predict(fit_mdl,x),0)
 mdl_zeros = roots(fliplr(fit_mdl.Coefficients.Estimate(:)'));

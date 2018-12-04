@@ -71,6 +71,15 @@
 % Last revision:2018-10-09
 
 
+
+% JR To do:
+%   Break fit into segments over single scans
+%       Progress: scan_segmented_fit_to breaks (well behaved) runs into single scans.
+%       Next: Fit each scan individually. Should be pretty straightforward.
+%       Also: Need to deal with error cases. Cross that bridge later...
+%   Analyze number trend vs cal freq fit trend
+%   Wrap main up so can iterate over folders
+
 %close all
 clear all
 tic
@@ -83,7 +92,8 @@ anal_opts=[];
 %anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181102_filters_dep_two\';
 %anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181101_filters_dep_two';
 %anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181123_3_filt_align_dep_31um\';
-anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181202_filt_skew_pos110ghz\'
+%anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181203_filt_skew_pos50ghz_atom_number_drop\'
+anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181204_baseline_1\'
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
 anal_opts.tdc_import.force_reimport=false;
@@ -95,7 +105,7 @@ tmp_ylim=[-30e-3, 30e-3];
 tlim=[0,4];
 anal_opts.tdc_import.txylim=[tlim;tmp_xlim;tmp_ylim];
 
-anal_opts.max_runtime=inf;%cut off the data run after some number of hours
+anal_opts.max_runtime=10;%cut off the data run after some number of hours
 anal_opts.atom_laser.pulsedt=8.000e-3;
 anal_opts.atom_laser.t0=0.41784; %center i ntime of the first pulse
 anal_opts.atom_laser.start_pulse=1; %atom laser pulse to start with
@@ -104,6 +114,8 @@ anal_opts.atom_laser.appr_osc_freq_guess=[52,40,40];
 anal_opts.atom_laser.pulse_twindow=anal_opts.atom_laser.pulsedt*0.9;
 anal_opts.atom_laser.xylim=anal_opts.tdc_import.txylim(2:3,:); %set same lims for pulses as import
 
+
+
 anal_opts.global.fall_time=0.417;
 anal_opts.global.qe=0.09;
 
@@ -111,7 +123,8 @@ anal_opts.trig_dld=20.3;
 anal_opts.dld_aquire=4;
 anal_opts.aquire_time=4;
 anal_opts.trig_ai_in=20;
-
+anal_opts.aom_freq=0;%190*1e6;%Hz %set to zero for comparison with previous data runs
+anal_opts.probe_set_pt=8.0;
 
 anal_opts.wm_log.plot_all=true;
 anal_opts.wm_log.plot_failed=true;
@@ -197,42 +210,42 @@ data.labview.calibration=lv_log.probe_calibration;
 %% Match Labview data
 %because the mcp-dld detector has no direct communication with the bec computer
 % the data.labview.shot_num does not nessesarily correspond to data.mcp_tdc.shot_num
+data.mcp_tdc.labview_shot_num=[];
+ata.mcp_tdc.probe.calibration=[]
 
-
-    %try and match up the file with if it is a calibaration using the time
-    %it is slightly overkill here to search each one, but just being extra
-    %cautious/flexible
-    time_thresh=4; %how close for the times to be considered the same shot
-    %lets examine what the time difference does
-    sfigure(45);
-    set(gcf,'color','w')
-    clf
-    imax=min([size(data.labview.time,2),size(data.mcp_tdc.time_create_write,1)]);
-    %imax=5000;
-    time_diff=data.mcp_tdc.time_create_write(1:imax,2)'-anal_opts.dld_aquire-anal_opts.trig_dld-...
-        data.labview.time(1:imax);
-    mean_delay_labview_tdc=mean(time_diff);
-    plot(time_diff)
-    xlabel('shot number')
-    ylabel('time between labview and mcp tdc')
-    %to do include ai_log
-    iimax=size(data.mcp_tdc.time_create_write(:,1),1);
-    data.mcp_tdc.probe.calibration=nan(iimax,1);
-    data.mcp_tdc.labview_shot_num=nan(iimax,1);
-    %loop over all the tdc_files 
-    for ii=1:iimax
-        %predict the labview master trig time
-        %use the write time to handle being unpacked from 7z
-        est_labview_start=data.mcp_tdc.time_create_write(ii,2)...
-            -anal_opts.trig_dld-anal_opts.dld_aquire-mean_delay_labview_tdc;
-        [tval,nearest_idx]=closest_value(data.labview.time...
-            ,est_labview_start);
-        nearest_idx
-        if abs(tval-est_labview_start)<time_thresh
-            data.mcp_tdc.labview_shot_num(ii)=data.labview.shot_num(nearest_idx);
-            data.mcp_tdc.probe.calibration(ii)=data.labview.calibration(nearest_idx);
-        end 
-    end
+%try and match up the file with if it is a calibaration using the time
+%it is slightly overkill here to search each one, but just being extra
+%cautious/flexible
+time_thresh=4; %how close for the times to be considered the same shot
+%lets examine what the time difference does
+sfigure(45);
+set(gcf,'color','w')
+clf
+imax=min([size(data.labview.time,2),size(data.mcp_tdc.time_create_write,1)]);
+%imax=5000;
+time_diff=data.mcp_tdc.time_create_write(1:imax,2)'-anal_opts.dld_aquire-anal_opts.trig_dld-...
+    data.labview.time(1:imax);
+mean_delay_labview_tdc=median(time_diff);
+plot(time_diff)
+xlabel('shot number')
+ylabel('time between labview and mcp tdc')
+%to do include ai_log
+iimax=size(data.mcp_tdc.time_create_write(:,1),1);
+data.mcp_tdc.probe.calibration=nan(iimax,1);
+data.mcp_tdc.labview_shot_num=nan(iimax,1);
+%loop over all the tdc_files 
+for ii=1:iimax
+    %predict the labview master trig time
+    %use the write time to handle being unpacked from 7z
+    est_labview_start=data.mcp_tdc.time_create_write(ii,2)...
+        -anal_opts.trig_dld-anal_opts.dld_aquire-mean_delay_labview_tdc;
+    [tval,nearest_idx]=closest_value(data.labview.time...
+        ,est_labview_start);
+    if abs(tval-est_labview_start)<time_thresh
+        data.mcp_tdc.labview_shot_num(ii)=data.labview.shot_num(nearest_idx);
+        data.mcp_tdc.probe.calibration(ii)=data.labview.calibration(nearest_idx);
+    end 
+end
 
 %% IMPORT THE ANALOG INPUT LOG
 %the code will check that the probe beam PD was ok and that the laser was single mode
@@ -242,8 +255,8 @@ anal_opts.ai_log.force_load_save=false;
 anal_opts.ai_log.log_name='log_analog_in_';
 anal_opts.ai_log.pd.set=data.mcp_tdc.probe.calibration;
 %nan compatable logical inverse
-anal_opts.ai_log.pd.set(~isnan(anal_opts.ai_log.pd.set))=~anal_opts.ai_log.pd.set(~isnan(anal_opts.ai_log.pd.set))
-anal_opts.ai_log.pd.set=anal_opts.ai_log.pd.set*3;
+anal_opts.ai_log.pd.set(~isnan(anal_opts.ai_log.pd.set))=~anal_opts.ai_log.pd.set(~isnan(anal_opts.ai_log.pd.set));
+anal_opts.ai_log.pd.set=anal_opts.ai_log.pd.set*anal_opts.probe_set_pt;
 %anal_opts.ai_log.pd.set(isnan(anal_opts.ai_log.pd.set))=0;
 anal_opts.ai_log.aquire_time=4;
 anal_opts.ai_log.pd.diff_thresh=0.1;
@@ -457,7 +470,7 @@ anal_opts.fit_to.bootstrap=false;
 anal_opts.fit_to.plots=false;
 %thresholds for CI
 %sd         CI
-%1          0.3174
+%1          1.3174
 %2          0.05
 %3          2.699e-03
 anal_opts.fit_to.ci_size_disp=0.3174;%one sd %confidence interval to display
@@ -468,8 +481,8 @@ anal_opts.fit_to.min_pts=10;
 
 anal_opts.fit_to.seg_time=60*30;
 anal_opts.fit_to.seg_shift=1*anal_opts.fit_to.seg_time;
-to_seg_fits=segmentd_fit_to(anal_opts.fit_to,data);
-
+% to_seg_fits=segmentd_fit_to(anal_opts.fit_to,data);
+to_seg_fits=scan_segmented_fit_to(anal_opts.fit_to,data);
 
 
 %% Fit the Tune Out
@@ -520,7 +533,7 @@ to_fit_unc_unc_boot_quad=to_res.fit_trimmed.boot{2}.se_se_opp/anal_opts.fit_to.s
 %% write out the results
 %inverse scaled gradient to give the single shot uncert (with scaling factor to include calibration)
 tot_num_shots=to_res.num_shots+data.cal.num_shots;
-single_shot_uncert=to_res.fit_trimmed.single_shot_uncert_boot{1}...
+single_shot_uncert=2*to_res.fit_trimmed.single_shot_uncert_boot{1}...
     *sqrt(tot_num_shots/to_res.num_shots);
 fprintf('\n====TO fit results==========\n')
 fprintf('dir =%s\n',anal_opts.tdc_import.dir)
@@ -530,8 +543,12 @@ old_to_wav=413.0938e-9;
 new_to_freq_unc=to_fit_unc_boot;
 %to_res.fit_trimmed.to_unc_fit
 to_wav_val_lin=const.c/(to_fit_trimed_val{1}*2);
-to_wav_unc_lin=new_to_freq_unc{1}*const.c/((to_fit_trimed_val{1}*2)^2);
+to_freq_val_lin=to_fit_trimed_val{1}*2+anal_opts.aom_freq;
+to_freq_unc_lin=new_to_freq_unc{1}*2;
+to_wav_unc_lin=2*new_to_freq_unc{1}*const.c/((to_fit_trimed_val{1}*2)^2);
 to_wav_val_quad=const.c/(to_fit_trimed_val{2}*2);
+to_freq_val_quad=to_fit_trimed_val{2}*2+anal_opts.aom_freq;
+to_freq_unc_quad=new_to_freq_unc{2}*2;
 to_wav_unc_quad=new_to_freq_unc{2}*const.c/((to_fit_trimed_val{2}*2)^2);
 fprintf('run start time               %.1f (posix)\n',...
     data.mcp_tdc.time_create_write(1,2)-anal_opts.trig_dld-anal_opts.dld_aquire)
@@ -540,10 +557,10 @@ fprintf('run stop time                %.1f (posix)\n',...
 fprintf('duration                     %.1f (s)\n',...
     data.mcp_tdc.time_create_write(end,2)-data.mcp_tdc.time_create_write(1,2))
 fprintf('TO freq (Linear)             %.1f±(%.0f±%.0f) MHz\n',...
-    to_fit_trimed_val{1}*1e-6,new_to_freq_unc{1}*1e-6,to_fit_unc_unc_boot_lin*1e-6)
+    to_freq_val_lin*1e-6,to_freq_unc_lin*1e-6,to_fit_unc_unc_boot_lin*1e-6*2)
 fprintf('TO wavelength (Linear)       %.6f±%f nm \n',to_wav_val_lin*1e9,to_wav_unc_lin*1e9)
 fprintf('TO freq (Quadratic)          %.1f±(%.0f±%.0f) MHz\n',...
-    to_fit_trimed_val{2}*1e-6,new_to_freq_unc{2}*1e-6,to_fit_unc_unc_boot_quad*1e-6)
+    to_freq_val_quad*1e-6,to_freq_unc_quad*1e-6,to_fit_unc_unc_boot_quad*1e-6*2)
 fprintf('TO wavelength (Quadratic)    %.6f±%f nm \n',to_wav_val_quad*1e9,to_wav_unc_quad*1e9)
 fprintf('diff between Lin and Quad    %e±%e nm \n',(to_wav_val_lin-to_wav_val_quad)*1e9,sqrt(to_wav_unc_lin^2+to_wav_unc_quad^2)*1e9)
 fprintf('diff from TOV1               %e±%e nm \n',(to_wav_val_lin-old_to_wav)*1e9,to_wav_unc_lin*1e9)
