@@ -92,6 +92,7 @@ anal_opts=[];
 %anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181102_filters_dep_two\';
 %anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181101_filters_dep_two';
 %anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181123_3_filt_align_dep_31um\';
+
 %anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181203_filt_skew_pos50ghz_atom_number_drop\'
 anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181204_baseline_1\'
 anal_opts.tdc_import.file_name='d';
@@ -164,7 +165,6 @@ anal_opts.tdc_import.shot_num=find_data_files(anal_opts.tdc_import);
 %anal_opts.tdc_import.shot_num= anal_opts.tdc_import.shot_num(1:10); %debuging
 [mcp_tdc_data,import_opts]=import_mcp_tdc_data(anal_opts.tdc_import);
 data.mcp_tdc=mcp_tdc_data;
-
 %% IMPORT LV LOG to data.labview
 %TO DO FUNCTIONALIZE
 %import the wavemeter log
@@ -210,8 +210,9 @@ data.labview.calibration=lv_log.probe_calibration;
 %% Match Labview data
 %because the mcp-dld detector has no direct communication with the bec computer
 % the data.labview.shot_num does not nessesarily correspond to data.mcp_tdc.shot_num
+
 data.mcp_tdc.labview_shot_num=[];
-ata.mcp_tdc.probe.calibration=[]
+data.mcp_tdc.probe.calibration=[]
 
 %try and match up the file with if it is a calibaration using the time
 %it is slightly overkill here to search each one, but just being extra
