@@ -11,9 +11,12 @@ to_res.fit_mask=probe_dat_mask;
 
 probe_freq= data.wm_log.proc.probe.freq.act.mean(probe_dat_mask')*1e6;
 trap_freq=data.osc_fit.trap_freq_recons(probe_dat_mask)';
+trap_freq_unc=data.osc_fit.trap_freq_recons_unc(probe_dat_mask)';
 cal_trap_freq=data.cal.freq_drift_model(data.mcp_tdc.time_create_write(probe_dat_mask,1));
+cal_trap_freq_unc=data.cal.unc;
 delta_trap_freq=trap_freq-cal_trap_freq;
 square_trap_freq= (trap_freq).^2-(cal_trap_freq).^2;
+square_trap_freq_unc=sqrt(2).*sqrt((trap_freq_unc.*trap_freq).^2+(cal_trap_freq_unc.*cal_trap_freq).^2);
 %define the color for each shot on the plot
 cdat=viridis(1e4);
 c_cord=linspace(0,1,size(cdat,1));
@@ -71,21 +74,24 @@ fprintf('Calculating Fits\n')
 %set up the data input for the fit
 xdat=probe_freq(~isnan(probe_freq))';
 ydat=square_trap_freq(~isnan(probe_freq))';
+wdat=1./square_trap_freq_unc(~isnan(probe_freq))';
+wdat(isnan(wdat))=1e-20; %if nan then set to smallest value you can
+wdat=wdat./sum(wdat);
 cdat=cdat(~isnan(probe_freq),:);
 if exist('new_to_freq_val','var') %if the TO has been calculated before use that as the center
     freq_offset=new_to_freq_val;
 else
     freq_offset=nanmean(xdat); %otherwise use the center of the range
 end
-
+%freq_offset=362868.029*1e9; manual set for the freq_offset;
 to_res.freq_offset=freq_offset;
 xdat=xdat-freq_offset; %fits work better when thery are scaled reasonably
 xdat=xdat*anal_opts_fit_to.scale_x;
-xydat=num2cell([xdat;ydat],1);
+xywdat=num2cell([xdat;ydat;wdat],1);
 
 for ii=1:2 %iterate over linear and quadratic fits
 
-    [to_freq,mdl_all]=fit_poly_data(xydat,ii);
+    [to_freq,mdl_all]=fit_poly_data(xywdat,ii);
     to_res.fit_all.model{ii}=mdl_all;
 
     to_res.fit_all.to_freq{ii}=to_freq/anal_opts_fit_to.scale_x+freq_offset;
@@ -119,11 +125,12 @@ for ii=1:2 %iterate over linear and quadratic fits
 
     xdat_culled=xdat(is_outlier_idx);
     ydat_culled=ydat(is_outlier_idx);
+    wdat_culled=wdat(is_outlier_idx);
     cdat_culled=cdat(is_outlier_idx,:);
 
-    culed_xydat=num2cell([xdat_culled;ydat_culled],1);
+    culed_xywdat=num2cell([xdat_culled;ydat_culled;wdat_culled],1);
 
-    [to_freq,mdl_culled]=fit_poly_data(culed_xydat,ii);
+    [to_freq,mdl_culled]=fit_poly_data(culed_xywdat,ii);
 
     to_res.fit_trimmed.to_freq{ii}=to_freq/anal_opts_fit_to.scale_x+freq_offset;
     to_res.fit_trimmed.model{ii}=mdl_culled;
@@ -147,9 +154,28 @@ for ii=1:2 %iterate over linear and quadratic fits
             (mdl_coef.SE(2)/mdl_coef.Estimate(2))^2 ...
             - 2*covm(2,1)/(mdl_coef.Estimate(1)*mdl_coef.Estimate(2))...
             )/anal_opts_fit_to.scale_x;
+    else %propogation for quadratic intercept
+        det = sqrt(mdl_coef.Estimate(2)^2-4*mdl_coef.Estimate(1)*mdl_coef.Estimate(3));
+        c = mdl_coef.Estimate(1);
+        b = mdl_coef.Estimate(2);
+        a= mdl_coef.Estimate(3);
+        unc_a_c_2 = (mdl_coef.SE(1)^2+(2*c*a+b*(det-b))^2/(4*a^4)*mdl_coef.SE(3)^2)*1/det^2;
+        unc_b_2 = (b/det-1)^2*1/(4*a^2)*mdl_coef.SE(2)^2;
+        to_res.fit_trimmed.to_unc_fit_no_cov{ii}=sqrt(...
+            unc_a_c_2+...
+            unc_b_2 )/anal_opts_fit_to.scale_x;
+
+        %calculate the error propagation with the covariance included
+        %generaly makes a tiny change ~1e-3
+        unc_ab = (-b^3+3*a*b*c+det*(b^2-a*c))*covm(3,2);
+        unc_ac = (a*b^2-2*a^2*c-a*b*det)*covm(3,1);
+        unc_bc = (-a^2*b+a^2*det)*covm(2,1);
+        to_res.fit_trimmed.to_unc_fit{ii}=sqrt(to_res.fit_trimmed.to_unc_fit_no_cov{ii}^2+...
+        1/(a^3*det^2)*(unc_ab+unc_ac+unc_bc)...
+            /anal_opts_fit_to.scale_x^2);
     end
     poly_mdl = @(in) fit_poly_data(in,ii); 
-    boot=bootstrap_se(poly_mdl,culed_xydat,...
+    boot=bootstrap_se(poly_mdl,culed_xywdat,...
         'plots',true,...
         'replace',true,...
         'samp_frac_lims',[0.05,1],...%[0.005,0.9]
@@ -230,7 +256,7 @@ end
 %% See how the intercept error changes with order of fit (compare TO values)
 %scatter(1:4,cell2mat(to_res.fit_all.to_freq)) %to with all the data
 temp_to=cell2mat(to_res.fit_trimmed.to_freq);
-sfigure(1234)
+sfigure(1234);
 errorbar(1:2,temp_to./1e6-mean(temp_to)*1e-6,cell2mat(to_res.fit_trimmed.to_unc_boot)./1e6) %with culled data
 set(gcf,'color','w')
 xlabel('Order of fit')
@@ -238,19 +264,43 @@ ylabel('Tune-out value (MHz)')
 ylabel(sprintf('Tune-out value - %.3f (MHz)',mean(temp_to)*1e-6))
 title('Sensitivity to fit Order')
 xlim([0 3])
+%% Have a look at the residuals
+res = ydat_culled-predict(mdl_culled,xdat_culled','Alpha',0.2)';
+num_bin = 10;
+x_range = max(xdat_culled)-min(xdat_culled);
+bin_size = x_range/num_bin;
+c_data = viridis(num_bin);
+sfigure(487);
+clf
+% for jj=0:2:(num_bin-1)
+%     hold on
+%     bin_centre = bin_size*0.5+jj*bin_size+min(xdat_culled);
+%     x_mask = (abs(xdat_culled-bin_centre)<(bin_size*0.5));
+%     histogram(res(x_mask),20,'FaceColor',c_data(jj+1,:),'FaceAlpha',0.3)
+%     xlabel('Residuals in Signal')
+%     ylabel('Count')
+% end
+scatter(xdat_culled,res)
+ylabel('Residuals in Signal')
+xlabel('Set point-')
+sfigure(476);
+histogram(res)
+xlabel('Residuals in Signal')
+ylabel('Count')
 end
 
 function [to_freq,fit_mdl]=fit_poly_data(in,n)
 inmat=cell2mat(in);
 xdat=inmat(1,:);
 ydat=inmat(2,:);
+wdat=inmat(3,:);
 
 modelfun = @(b,x) (repmat(x(:,1),1,n+1).^(0:n))*(b(1:(n+1))'); %simple linear model
 opts = statset('nlinfit');
 %opts.RobustWgtFun = 'welsch' ; %a bit of robust fitting
 %opts.Tune = 1;
 beta0 = [1e-5,1e-2.*ones(1,n)]; %intial guesses
-fit_mdl = fitnlm(xdat,ydat,modelfun,beta0,'Options',opts,'ErrorModel','combined');
+fit_mdl = fitnlm(xdat,ydat,modelfun,beta0,'Options',opts,'ErrorModel','combined'); %constant, 'Weight',wdat add for weighted fits, haven't got them quite working yet
 
 %fzero(@(x) predict(fit_mdl,x),0)
 mdl_zeros = roots(fliplr(fit_mdl.Coefficients.Estimate(:)'));

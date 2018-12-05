@@ -62,7 +62,7 @@
 %   -harmonize the anal opts
 %	-place more sections into functions
 %	-clean up the fit section
-%	-write a n depth function cashing wrapper with hash lookup
+%	-write a in depth function cashing wrapper with hash lookup
 %		-alow partial updates
 %       
 %
@@ -93,8 +93,8 @@ anal_opts=[];
 %anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181101_filters_dep_two';
 %anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181123_3_filt_align_dep_31um\';
 
-%anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181203_filt_skew_pos50ghz_atom_number_drop\'
-anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181204_baseline_1\'
+%anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181205_baseline_nuller_on_always\'
+anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181202_filt_skew_pos110ghz\'
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
 anal_opts.tdc_import.force_reimport=false;
@@ -434,9 +434,10 @@ data.osc_fit=fit_trap_freq(anal_opts.osc_fit,data);
 %this may need to change if the sampling freq changes
 
 data.osc_fit.trap_freq_recons=nan*data.osc_fit.ok.did_fits;
+data.osc_fit.trap_freq_recons_unc=data.osc_fit.trap_freq_recons;
 mask=data.osc_fit.ok.all;
 data.osc_fit.trap_freq_recons(mask)=3*(1/anal_opts.atom_laser.pulsedt)+data.osc_fit.model_coefs(mask,2,1);
-
+data.osc_fit.trap_freq_recons_unc(mask)=data.osc_fit.model_coefs(mask,2,2);
 
 %% CHECK IF ATOM NUMBER DEPENDS ON PROBE BEAM
 %figure
@@ -510,7 +511,7 @@ to_seg_fits=scan_segmented_fit_to(anal_opts.fit_to,data);
 
 %% Analyse the effect of nonlinear terms on Tune out
 anal_opts.fit_to=[];
-anal_opts.fit_to.plot_inital=true;
+anal_opts.fit_to.plot_inital=false;
 anal_opts.fit_to.bootstrap=true;
 %thresholds for CI
 %sd         CI

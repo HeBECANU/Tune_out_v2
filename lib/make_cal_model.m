@@ -24,6 +24,7 @@ yinterp_smooth = nanconv(yinterp_raw,kernel,'edge','1d')';
 out.freq_drift_model=@(x) interp1(xinterp,yinterp_smooth,x-time_start_cal,'linear');
 out.num_shots=sum(cal_dat_mask);
 out.cal_mask=cal_dat_mask;
+out.unc=mean(abs(out.freq_drift_model(x_tmp+time_start_cal)-y_tmp));
 
 
 if anal_opts_cal.plot
