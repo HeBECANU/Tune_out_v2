@@ -95,7 +95,7 @@ tmp_ylim=[-30e-3, 30e-3];
 tlim=[0,4];
 anal_opts.tdc_import.txylim=[tlim;tmp_xlim;tmp_ylim];
 
-anal_opts.max_runtime=10;%cut off the data run after some number of hours
+anal_opts.max_runtime=inf;%cut off the data run after some number of hours
 anal_opts.atom_laser.pulsedt=8.000e-3;
 anal_opts.atom_laser.t0=0.41784; %center i ntime of the first pulse
 anal_opts.atom_laser.start_pulse=1; %atom laser pulse to start with
