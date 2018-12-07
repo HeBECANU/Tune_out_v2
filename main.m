@@ -73,12 +73,8 @@
 
 
 % JR To do:
-%   Break fit into segments over single scans
-%       Progress: scan_segmented_fit_to breaks (well behaved) runs into single scans.
-%       Next: Fit each scan individually. Should be pretty straightforward.
-%       Also: Need to deal with error cases. Cross that bridge later...
-%   Analyze number trend vs cal freq fit trend
-%   Wrap main up so can iterate over folders
+%   Wrapper function for TO scan analysis over many dirs
+%   scrolling average over scan range with smaller time steps (cheat for higher res scanwise anal)
 
 %close all
 clear all
@@ -86,14 +82,8 @@ tic
 %%
 % BEGIN USER VAR-------------------------------------------------
 anal_opts=[];
-%anal_opts.tdc_import.dir='Y:\EXPERIMENT-DATA\Tune Out V2\20180826_testing_wm_log\';
-%anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output';
-%anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181104_filters_dep_two\';
-%anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181102_filters_dep_two\';
-%anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181101_filters_dep_two';
-%anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181123_3_filt_align_dep_31um\';
 
-%anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181205_baseline_nuller_on_always\'
+% anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181205_baseline_nuller_on_always\'
 anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181202_filt_skew_pos110ghz\'
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
@@ -125,7 +115,7 @@ anal_opts.dld_aquire=4;
 anal_opts.aquire_time=4;
 anal_opts.trig_ai_in=20;
 anal_opts.aom_freq=0;%190*1e6;%Hz %set to zero for comparison with previous data runs
-anal_opts.probe_set_pt=8.0;
+anal_opts.probe_set_pt=3.0;
 
 anal_opts.wm_log.plot_all=true;
 anal_opts.wm_log.plot_failed=true;
@@ -212,7 +202,7 @@ data.labview.calibration=lv_log.probe_calibration;
 % the data.labview.shot_num does not nessesarily correspond to data.mcp_tdc.shot_num
 
 data.mcp_tdc.labview_shot_num=[];
-data.mcp_tdc.probe.calibration=[]
+data.mcp_tdc.probe.calibration=[];
 
 %try and match up the file with if it is a calibaration using the time
 %it is slightly overkill here to search each one, but just being extra
@@ -248,6 +238,8 @@ for ii=1:iimax
     end 
 end
 
+
+
 %% IMPORT THE ANALOG INPUT LOG
 %the code will check that the probe beam PD was ok and that the laser was single mode
 anal_opts.ai_log.dir=anal_opts.tdc_import.dir;
@@ -281,6 +273,8 @@ anal_opts.ai_log.trig_ai_in=anal_opts.trig_ai_in;
 ai_log_out=ai_log_import(anal_opts.ai_log,data);
 %copy the output across
 data.ai_log=ai_log_out;
+
+% % Trying to automate setpoint correction
 
 %save([datestr(datetime('now'),'yyyymmddTHHMMSS'),'.mat'],'-v7.3')
 
@@ -381,6 +375,7 @@ xl=xlim;
 xlim([1,xl(2)])
 legend('number','pd reg','single mode & pd','freq stable','RvB','ecd pd(ignored)','NOT(calibration)')
 yticks([0 1])
+
 subplot(2,1,2)
 tmp_cal=data.mcp_tdc.probe.calibration;
 tmp_cal(isnan(tmp_cal))=false;
@@ -392,9 +387,9 @@ tmp_probe_ok=(data.ai_log.ok.sfp &...
 tmp_all_ok=data.mcp_tdc.num_ok' &...
     (tmp_probe_ok| tmp_cal);
     %data.mcp_tdc.probe.ok.ecd_pd;
-stairs(data.mcp_tdc.shot_num,tmp_all_ok,'LineWidth',line_width)
-hold on
 stairs(data.mcp_tdc.shot_num,tmp_probe_ok+0.01,'LineWidth',line_width)
+hold on
+stairs(data.mcp_tdc.shot_num,tmp_all_ok,'LineWidth',line_width)
 hold off
 legend('all','probe')
 ylabel('Good?')
@@ -469,7 +464,7 @@ data.cal=make_cal_model(anal_opts.cal_mdl,data);
 % TO DO, would be better if this called the fit_to script multiple times
 anal_opts.fit_to=[];
 anal_opts.fit_to.bootstrap=false;
-anal_opts.fit_to.plots=false;
+anal_opts.fit_to.plots=true;
 %thresholds for CI
 %sd         CI
 %1          1.3174

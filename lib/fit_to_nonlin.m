@@ -266,27 +266,53 @@ title('Sensitivity to fit Order')
 xlim([0 3])
 %% Have a look at the residuals
 res = ydat_culled-predict(mdl_culled,xdat_culled','Alpha',0.2)';
-num_bin = 10;
+num_bin = 20;
 x_range = max(xdat_culled)-min(xdat_culled);
 bin_size = x_range/num_bin;
 c_data = viridis(num_bin);
+x_res_grouped = ones(1,num_bin);
+y_res_grouped = cell(1,num_bin);
+ydat_chunks=nan(numel(num_bin),2);
 sfigure(487);
 clf
-% for jj=0:2:(num_bin-1)
+for jj=0:(num_bin-1)
 %     hold on
-%     bin_centre = bin_size*0.5+jj*bin_size+min(xdat_culled);
-%     x_mask = (abs(xdat_culled-bin_centre)<(bin_size*0.5));
-%     histogram(res(x_mask),20,'FaceColor',c_data(jj+1,:),'FaceAlpha',0.3)
-%     xlabel('Residuals in Signal')
-%     ylabel('Count')
-% end
-scatter(xdat_culled,res)
+    bin_centre = bin_size*0.5+jj*bin_size+min(xdat_culled);
+    x_res_grouped(jj+1) = bin_centre;
+    x_mask = (abs(xdat_culled-bin_centre)<(bin_size*0.5));
+    y_res_grouped{:,jj+1} = res(x_mask)';
+    ydat_chunks(jj+1,1)=nanmean(ydat_culled(x_mask));
+    ydat_chunks(jj+1,2)=nanstd(ydat_culled(x_mask));
+end
+violin(y_res_grouped,'x',x_res_grouped,'facecolor',c_data,'edgecolor','none','bw',10,'mc','k','medc','r-.');
 ylabel('Residuals in Signal')
-xlabel('Set point-')
+xlabel(sprintf('Tune-out value - %.3f (MHz)',freq_offset*1e-6))
+set(gcf,'color','w')
 sfigure(476);
-histogram(res)
+histogram(res,'FaceAlpha',0.45)
 xlabel('Residuals in Signal')
 ylabel('Count')
+set(gcf,'color','w')
+%Finally plot a nice version of the quad fit
+sfigure(82);
+clf
+plot_title='Tune-out fit (Quadratic)';
+font_name='cmr10';
+font_size_global=14;
+[ysamp_culled,yci_culled]=predict(mdl_culled,xsamp_culled,'Prediction','observation','Alpha',ci_size_disp); %'Prediction','observation'
+title(plot_title)
+plot(xsamp_culled,ysamp_culled,'k-','LineWidth',1.5)
+hold on
+plot(xsamp_culled,yci_culled,'r-','LineWidth',1.5)
+errorbar(x_res_grouped,ydat_chunks(:,1),ydat_chunks(:,2),'o','CapSize',0,'MarkerSize',5,'LineWidth',1.5,'Color',c_data(7,:),'MarkerFaceColor',c_data(7,:));
+xlabel(sprintf('probe beam set freq - %.3f (GHz)',freq_offset*1e-9))
+ylabel('Response (Hz^2)')
+title('Fit Outliers Removed')
+set(gca,'xlim',[min(x_res_grouped),max(x_res_grouped)])
+set(gca,'ylim',first_plot_lims(2,:))
+set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
+set(gcf,'color','w')
+set(gca,'FontSize',font_size_global,'FontName',font_name)
 end
 
 function [to_freq,fit_mdl]=fit_poly_data(in,n)
