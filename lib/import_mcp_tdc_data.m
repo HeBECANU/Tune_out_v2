@@ -65,8 +65,8 @@ function  [mcp_tdc_data,import_opts]=import_mcp_tdc_data_core(import_opts)
 
 %do some basic checks on input
 %mandatory
-if ~isfield(import_opts, 'dir') ,error('bad input:dir'), end
-if ~isa(import_opts.dir,'char') ,error('bad input:dir'), end
+if ~isfield(import_opts, 'dir') ,error('Bad Input:dir'), end
+if ~isa(import_opts.dir,'char') ,error('Bad Input:dir'), end
 
 %optional
 if ~isfield(import_opts, 'mat_save') ,import_opts.mat_save=true; end
@@ -84,16 +84,16 @@ if ~isfield(import_opts,'shot_num')
 end
 
 %check optionals
-if ~isa(import_opts.file_name,'char') ,error('bad input:file_name'), end
-if ~isa(import_opts.force_load_save,'logical') ,error('bad input:force_load_save'), end
-if ~isa(import_opts.force_reimport,'logical') ,error('bad input:force_reimport'), end
-if ~isa(import_opts.force_forc,'logical') ,error('bad input:force_forc'), end
-if ~isa(import_opts.dld_xy_rot,'double') ,error('bad input:dld_xy_rot'), end
-if ~isa(import_opts.file_name, 'char') ,error('bad input:file_name'), end
-if size(import_opts.txylim)~=[3,2], error('bad input:txylim size'), end
-if ~(isa(import_opts.shot_num,'int') || isa(import_opts.shot_num,'double')) ,error('bad input:shot_num'), end
+if ~isa(import_opts.file_name,'char') ,error('Bad Input:file_name'), end
+if ~isa(import_opts.force_load_save,'logical') ,error('Bad Input:force_load_save'), end
+if ~isa(import_opts.force_reimport,'logical') ,error('Bad Input:force_reimport'), end
+if ~isa(import_opts.force_forc,'logical') ,error('Bad Input:force_forc'), end
+if ~isa(import_opts.dld_xy_rot,'double') ,error('Bad Input:dld_xy_rot'), end
+if ~isa(import_opts.file_name, 'char') ,error('Bad Input:file_name'), end
+if size(import_opts.txylim)~=[3,2], error('Bad Input:txylim size'), end
+if ~(isa(import_opts.shot_num,'int') || isa(import_opts.shot_num,'double')) ,error('Bad Input:shot_num'), end
 if numel(import_opts.shot_num)==0
-    error('bad input:shot_num')
+    error('Bad Input:no shots to be imported')
 end
 
 %fix if there is not a trailing file seperator on the directory, use filesep for linux compatablility
@@ -167,8 +167,8 @@ end
 % end
 
 
-%if ~isa(import_opts.force_reimport,'logical') ,error('bad input:force_reimport'), end
-%if ~isfield(import_opts, 'force_reimport') ,error('bad input:force_reimport'), end
+%if ~isa(import_opts.force_reimport,'logical') ,error('Bad Input:force_reimport'), end
+%if ~isfield(import_opts, 'force_reimport') ,error('Bad Input:force_reimport'), end
 %     %saving the data takes a while, some comparisons:
 %     if import_opts.mat_save
 %         fprintf('Saving mat file...')

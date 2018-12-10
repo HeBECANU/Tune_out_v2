@@ -24,12 +24,16 @@ yinterp_smooth = nanconv(yinterp_raw,kernel,'edge','1d')';
 out.freq_drift_model=@(x) interp1(xinterp,yinterp_smooth,x-time_start_cal,'linear');
 out.num_shots=sum(cal_dat_mask);
 out.cal_mask=cal_dat_mask;
+out.unc=mean(abs(out.freq_drift_model(x_tmp+time_start_cal)-y_tmp));
 
 
 if anal_opts_cal.plot
+    
     hour_in_s=60*60;
     x_samp=linspace(min(x_tmp),max(x_tmp),size(x_tmp,1)*1e2);
     figure(61)
+    
+    subplot(2,1,1)
     clf
     set(gcf,'color','w')
     plot(x_tmp/hour_in_s,y_tmp,'x','MarkerSize',20)
@@ -43,8 +47,15 @@ if anal_opts_cal.plot
     ylabel('no probe trap freq')
     set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
     plot_name='calibration_model';
+    
+    subplot(2,1,2)
+    num_t =data.mcp_tdc.time_create_write(cal_dat_mask,2)-data.mcp_tdc.time_create_write(1,2);
+    plot(num_t/(60*60),data.mcp_tdc.num_counts(cal_dat_mask))
     saveas(gcf,[anal_opts_cal.global.out_dir,plot_name,'.png'])
     saveas(gcf,[anal_opts_cal.global.out_dir,plot_name,'.fig'])
+    title('Hit count trend')
+    xlabel('Time (h)')
+    ylabel('counts')
 end
 
 end

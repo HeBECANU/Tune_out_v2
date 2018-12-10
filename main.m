@@ -227,7 +227,6 @@ data.labview.calibration=lv_log.probe_calibration;
             -anal_opts.trig_dld-anal_opts.dld_aquire-mean_delay_labview_tdc;
         [tval,nearest_idx]=closest_value(data.labview.time...
             ,est_labview_start);
-        nearest_idx
         if abs(tval-est_labview_start)<time_thresh
             data.mcp_tdc.labview_shot_num(ii)=data.labview.shot_num(nearest_idx);
             data.mcp_tdc.probe.calibration(ii)=data.labview.calibration(nearest_idx);
@@ -409,7 +408,7 @@ data.mcp_tdc.al_pulses=bin_al_pulses(anal_opts.atom_laser,data);
 anal_opts.osc_fit.adaptive_freq=true; %estimate the starting trap freq 
 anal_opts.osc_fit.appr_osc_freq_guess=[52,47.9,40];
 anal_opts.osc_fit.freq_fit_tolerance=2; %hz arround the median to cut away
-anal_opts.osc_fit.plot_fits=true;
+anal_opts.osc_fit.plot_fits=false;
 anal_opts.osc_fit.plot_err_history=true;
 anal_opts.osc_fit.plot_fit_corr=true;
 
@@ -422,7 +421,7 @@ data.osc_fit=fit_trap_freq(anal_opts.osc_fit,data);
 data.osc_fit.trap_freq_recons=nan*data.osc_fit.ok.did_fits;
 mask=data.osc_fit.ok.all;
 data.osc_fit.trap_freq_recons(mask)=3*(1/anal_opts.atom_laser.pulsedt)+data.osc_fit.model_coefs(mask,2,1);
-
+data.osc_fit.trap_freq_recons_unc(mask)=data.osc_fit.model_coefs(mask,2,2);
 
 %% CHECK IF ATOM NUMBER DEPENDS ON PROBE BEAM
 %figure
