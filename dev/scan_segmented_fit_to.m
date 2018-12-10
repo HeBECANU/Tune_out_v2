@@ -1,9 +1,14 @@
 function to_seg_fits=scan_segmented_fit_to(anal_opts_fit_to,data)
-to_seg_fits=[];
+%this function plots the tune out value for every scan of wavelength(~40 shots) across a data run to try to diagnose the
+%drifts that we have observed.
+
 % Settings
-ci_size_disp=0.3174;%one sd %confidence interval to display
+ci_size_disp=1-erf(1/sqrt(2));%one sd %confidence interval to display
 ci_size_cut_outliers=0.1; %confidence interval for cutting outliers
 cdat=viridis(1000);
+
+%initalize
+to_seg_fits=[];
 %Import parameters & init
 setpts_all=data.wm_log.proc.probe.freq.set;
 temp_cal=data.mcp_tdc.probe.calibration';
@@ -13,13 +18,7 @@ probe_freq= data.wm_log.proc.probe.freq.act.mean*1e6; %convert to hertz
 probe_freq_all= data.wm_log.proc.probe.freq.act.mean*1e6; %convert to hertz
 shot_time_abs=data.mcp_tdc.time_create_write(:,2);
 shot_time=shot_time_abs-min(shot_time_abs);
-<<<<<<< HEAD
 
-
-
-
-=======
->>>>>>> 3ef538a7a011b2dc14aa45d1d07b10a64f06c902
 % trap_freq=data.osc_fit.trap_freq_recons';
 % cal_trap_freq=data.cal.freq_drift_model(data.mcp_tdc.time_create_write(:,1));
 % square_trap_freq= (trap_freq).^2-(cal_trap_freq).^2;
@@ -42,7 +41,8 @@ to_seg_fits.scan_edges = to_seg_fits.scan_edges(to_seg_fits.scan_edges<last_good
 run_time_start=min(shot_time_abs);
 num_shots = length(data.mcp_tdc.shot_num);
 shot_idx_all = 1:num_shots;
-to_idxs = to_seg_fits.scan_edges+round(0.5*gradient(to_seg_fits.scan_edges));
+%shot index of the middle of the run
+to_idxs = to_seg_fits.scan_edges+round(0.5*gradient(to_seg_fits.scan_edges)); 
 to_times = data.mcp_tdc.time_create_write(to_idxs,2)-run_time_start;
 
 % Mask lists
@@ -318,12 +318,9 @@ fprintf('Plotting\n',iimax,0)
     ylabel('Autocorrelation')
    
     subplot(4,4,[10])
-<<<<<<< HEAD
-    plot(lags_trim*mean(diff(to_time)),acf_trim,'ro')
-=======
-%     autocorr(to_val_trim)
+%   autocorr(to_val_trim)
     plot(lags*mean(diff(to_time)),acf_trim,'ro')
->>>>>>> 3ef538a7a011b2dc14aa45d1d07b10a64f06c902
+
     hold on
     plot([min(lags*mean(diff(to_time))),max(lags*mean(diff(to_time)))],[0,0],'k');
     title('Trim TO autocorrelation')
