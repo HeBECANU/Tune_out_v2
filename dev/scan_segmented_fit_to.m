@@ -2,9 +2,12 @@ function to_seg_fits=scan_segmented_fit_to(anal_opts_fit_to,data)
 %this function plots the tune out value for every scan of wavelength(~40 shots) across a data run to try to diagnose the
 %drifts that we have observed.
 
+% limitations
+% wont work if do bi directional scaning
+% does not use last segment
+
 %impovements
 % make time as time during probe not start shot
-% wont work if do bi directional scaning
 
 % Settings
 ci_size_disp=1-erf(1/sqrt(2));%one sd %confidence interval to display
