@@ -2,6 +2,10 @@ function to_seg_fits=scan_segmented_fit_to(anal_opts_fit_to,data)
 %this function plots the tune out value for every scan of wavelength(~40 shots) across a data run to try to diagnose the
 %drifts that we have observed.
 
+%impovements
+% make time as time during probe not start shot
+% wont work if do bi directional scaning
+
 % Settings
 ci_size_disp=1-erf(1/sqrt(2));%one sd %confidence interval to display
 ci_size_cut_outliers=0.1; %confidence interval for cutting outliers
@@ -13,6 +17,7 @@ to_seg_fits=[];
 setpts_all=data.wm_log.proc.probe.freq.set;
 temp_cal=data.mcp_tdc.probe.calibration';
 anal_opts_fit_to.bootstrap = false;
+%Bryce:com:why is only delta called???
 delta_trap_freq_all = data.osc_fit.trap_freq_recons' - data.cal.freq_drift_model(data.mcp_tdc.time_create_write(:,1));
 probe_freq= data.wm_log.proc.probe.freq.act.mean*1e6; %convert to hertz
 probe_freq_all= data.wm_log.proc.probe.freq.act.mean*1e6; %convert to hertz
@@ -25,28 +30,43 @@ shot_time=shot_time_abs-min(shot_time_abs);
 
 % Compute useful objects & masks
 
-diffs = diff(setpts_all);
+set_pt_diffs = diff(setpts_all);
 temp_cal(isnan(temp_cal))=1;    
-edge_mask = diffs < -1e3;
+%find the majority gradient
+temp_tol_diff=1; %1hz difference
+step_up_mask=set_pt_diffs>temp_tol_diff;
+step_down_mask=set_pt_diffs<-temp_tol_diff;
+no_step_mask=set_pt_diffs==0;
+sweep_down_or_up=sum(step_down_mask)<sum(step_up_mask);
+%now use whatever is in the minority as the edge mask
+if sweep_down_or_up
+    edge_mask = step_down_mask;
+else
+    edge_mask = step_up_mask;
+end
+%this approach will only capture full scans of the TO
 [to_seg_fits.scan_edges,~] = find(edge_mask);
+to_seg_fits.scan_edges=[1,to_seg_fits.scan_edges'];
 
-
+%apply some slightly over the top ckecks
 delta_mask = ~isnan(delta_trap_freq_all);
-probe_dat_mask = data.osc_fit.ok.rmse & ~isnan(data.wm_log.proc.probe.freq.act.mean)'...
+probe_dat_mask = data.osc_fit.ok.rmse & data.mcp_tdc.all_ok'...
 & ~isnan(data.osc_fit.trap_freq_recons) & delta_mask' & ~temp_cal;
-probe_dat_mask = data.osc_fit.ok.rmse & ~isnan(data.wm_log.proc.probe.freq.act.mean)'...
-& ~isnan(data.osc_fit.trap_freq_recons) & delta_mask' & ~temp_cal;
+%exclude edges if they are past the last good shor 
 last_good_shot = find(probe_dat_mask==1,1,'last');
 to_seg_fits.scan_edges = to_seg_fits.scan_edges(to_seg_fits.scan_edges<last_good_shot);
 run_time_start=min(shot_time_abs);
 num_shots = length(data.mcp_tdc.shot_num);
-shot_idx_all = 1:num_shots;
-%shot index of the middle of the run
-to_idxs = to_seg_fits.scan_edges+round(0.5*gradient(to_seg_fits.scan_edges)); 
-to_times = data.mcp_tdc.time_create_write(to_idxs,2)-run_time_start;
+%shot_idx_all = 1:num_shots;
+
+%get the mean time of the segment by averaging the edge times
+time_seg_edges=data.mcp_tdc.time_create_write(to_seg_fits.scan_edges);
+to_times = (time_seg_edges(2:end)+time_seg_edges(1:end-1))/2; 
+%alt. could use the time at the start of the seg...
+
 
 % Mask lists
-probe_freq= probe_freq(probe_dat_mask'); %convert to hertz
+probe_freq= probe_freq(probe_dat_mask');
 trap_freq=data.osc_fit.trap_freq_recons(:);
 cal_trap_freq=data.cal.freq_drift_model(data.mcp_tdc.time_create_write(:,1));
 square_trap_freq= (trap_freq).^2-(cal_trap_freq).^2;
@@ -54,13 +74,13 @@ freq_offset=mean(probe_freq);
 
 
 if isempty(to_seg_fits.scan_edges)
-    warning('No full scan completed')
+    error('No full scan completed')
     iimax = 0;
 elseif length(to_seg_fits.scan_edges) ==1 
     warning('Only one full scan completed')
     iimax = 2;
 else
-    iimax = length(to_seg_fits.scan_edges); %Avoids partial scans at the end
+    iimax = length(to_seg_fits.scan_edges)-1; %Avoids partial scans at the end
 end
 
 % Init
@@ -88,18 +108,14 @@ to_seg_fits.atom_num = zeros(iimax,2);
 fprintf('fitting tune out in segments %04u:%04u',iimax,0)
 for ii=1:iimax 
     fprintf('\b\b\b\b%04u',ii)
-    if ii == iimax
-        seg_end = num_shots;
-        seg_start = to_seg_fits.scan_edges(iimax-1)+1;
-    else
-        seg_end = to_seg_fits.scan_edges(ii);
-        if ii==1
-            seg_start = 1;
-        else
-            seg_start = to_seg_fits.scan_edges(ii-1)+1;
-        end
-    end
-    
+    seg_start= to_seg_fits.scan_edges(ii)+1;
+    seg_end = to_seg_fits.scan_edges(ii+1);
+    %this will miss partial scans at the end
+    %if ii == iimax
+    %    seg_end = num_shots;
+    %    seg_start = to_seg_fits.scan_edges(iimax-1)+1;
+    %else
+  
     % Select out data for scanwise fits
     seg_mask_temp = [zeros(seg_start-1,1);ones(seg_end-seg_start+1,1);zeros(num_shots-seg_end,1)]'==1;
     seg_mask = seg_mask_temp&probe_dat_mask;

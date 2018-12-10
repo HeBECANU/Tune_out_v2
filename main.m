@@ -208,17 +208,21 @@ data.mcp_tdc.probe.calibration=[];
 %cautious/flexible
 time_thresh=4; %how close for the times to be considered the same shot
 %lets examine what the time difference does
-sfigure(45);
-set(gcf,'color','w')
-clf
+
 imax=min([size(data.labview.time,2),size(data.mcp_tdc.time_create_write,1)]);
 %imax=5000;
 time_diff=data.mcp_tdc.time_create_write(1:imax,2)'-anal_opts.dld_aquire-anal_opts.trig_dld-...
     data.labview.time(1:imax);
 mean_delay_labview_tdc=median(time_diff);
+
+sfigure(1);
+clf
+set(gcf,'color','w')
+subplot(2,1,1)
 plot(time_diff)
 xlabel('shot number')
 ylabel('time between labview and mcp tdc')
+title('raw time diff')
 %to do include ai_log
 iimax=size(data.mcp_tdc.time_create_write(:,1),1);
 data.mcp_tdc.probe.calibration=nan(iimax,1);
@@ -312,8 +316,7 @@ clear('sub_data')
 
 
 %% CHECK ATOM NUMBER
-sfigure(1)
-clf
+subplot(2,1,2)
 %create a list of indicies (of the mcp_tdc) that have an ok number of counts
 %exclude the very low and then set the thresh based on the sd of the remaining
 not_zero_files=data.mcp_tdc.num_counts>1e3; 
