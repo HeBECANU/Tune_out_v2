@@ -19,3 +19,6 @@
 [submodule "fileexchange_utils/Violinplot-Matlab"]
 	path = fileexchange_utils/Violinplot-Matlab
 	url = https://github.com/bastibe/Violinplot-Matlab.git
+[submodule "bin/CIECAM02"]
+	path = bin/CIECAM02
+	url = https://github.com/DrosteEffect/CIECAM02.git
