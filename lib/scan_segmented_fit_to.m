@@ -4,6 +4,7 @@ function to_seg_fits=segmentd_fit_to(anal_opts_fit_to,data)
 temp_cal=data.mcp_tdc.probe.calibration';
 temp_cal(isnan(temp_cal))=1;    
 %manual bootstrap rand(size(data.osc_fit.ok.rmse))>0.9
+% Removed Not below as calibration indicator is out of phase
 probe_dat_mask=data.osc_fit.ok.rmse & ~temp_cal &  ~isnan(data.wm_log.proc.probe.freq.act.mean)'...
     & ~isnan(data.osc_fit.trap_freq_recons);
 to_seg_fits=[];
@@ -13,6 +14,7 @@ to_seg_fits.fit_mask=probe_dat_mask;
 probe_freq= data.wm_log.proc.probe.freq.act.mean(probe_dat_mask')*1e6; %convert to hertz
 trap_freq=data.osc_fit.trap_freq_recons(probe_dat_mask)';
 cal_trap_freq=data.cal.freq_drift_model(data.mcp_tdc.time_create_write(probe_dat_mask,1));
+delta_trap_freq=trap_freq-cal_trap_freq;
 square_trap_freq= (trap_freq).^2-(cal_trap_freq).^2;
 %define the color for each shot on the plot
 cdat_all=viridis(1000);

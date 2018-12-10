@@ -13,10 +13,13 @@ probe_freq= data.wm_log.proc.probe.freq.act.mean*1e6; %convert to hertz
 probe_freq_all= data.wm_log.proc.probe.freq.act.mean*1e6; %convert to hertz
 shot_time_abs=data.mcp_tdc.time_create_write(:,2);
 shot_time=shot_time_abs-min(shot_time_abs);
+<<<<<<< HEAD
 
 
 
 
+=======
+>>>>>>> 3ef538a7a011b2dc14aa45d1d07b10a64f06c902
 % trap_freq=data.osc_fit.trap_freq_recons';
 % cal_trap_freq=data.cal.freq_drift_model(data.mcp_tdc.time_create_write(:,1));
 % square_trap_freq= (trap_freq).^2-(cal_trap_freq).^2;
@@ -315,7 +318,12 @@ fprintf('Plotting\n',iimax,0)
     ylabel('Autocorrelation')
    
     subplot(4,4,[10])
+<<<<<<< HEAD
     plot(lags_trim*mean(diff(to_time)),acf_trim,'ro')
+=======
+%     autocorr(to_val_trim)
+    plot(lags*mean(diff(to_time)),acf_trim,'ro')
+>>>>>>> 3ef538a7a011b2dc14aa45d1d07b10a64f06c902
     hold on
     plot([min(lags*mean(diff(to_time))),max(lags*mean(diff(to_time)))],[0,0],'k');
     title('Trim TO autocorrelation')
