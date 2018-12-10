@@ -285,7 +285,7 @@ for jj=0:(num_bin-1)
     ydat_chunks(jj+1,1)=nanmean(ydat_culled(x_mask));
     ydat_chunks(jj+1,2)=nanstd(ydat_culled(x_mask));
 end
-%violin(y_res_grouped,'x',x_res_grouped,'facecolor',c_data,'edgecolor','none','bw',10,'mc','k','medc','r-.');
+violin(y_res_grouped,'x',x_res_grouped,'facecolor',c_data,'edgecolor','none','bw',10,'mc','k','medc','r-.');
 ylabel('Residuals in Signal')
 xlabel(sprintf('Tune-out value - %.3f (MHz)',freq_offset*1e-6))
 set(gcf,'color','w')
@@ -294,6 +294,7 @@ histogram(res,'FaceAlpha',0.45)
 xlabel('Residuals in Signal')
 ylabel('Count')
 set(gcf,'color','w')
+
 
 %Finally plot a nice version of the quad fit
 %set up the colors to use

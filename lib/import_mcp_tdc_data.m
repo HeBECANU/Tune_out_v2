@@ -7,7 +7,7 @@ import_opts=rmfield(import_opts,'force_load_save');
 cache_opts.force_recalc=import_opts.force_reimport;
 import_opts=rmfield(import_opts,'force_reimport');
 outputs=function_cache(cache_opts,@import_mcp_tdc_data_core,{import_opts});
-[mcp_tdc_data,import_opts]=outputs{1:2};
+mcp_tdc_data=outputs{1};
 end
 
 function  [mcp_tdc_data,import_opts]=import_mcp_tdc_data_core(import_opts)
