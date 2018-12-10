@@ -20,18 +20,21 @@ shot_time=shot_time_abs-min(shot_time_abs);
 % Compute useful objects & masks
 
 diffs = diff(setpts_all);
-temp_cal(isnan(temp_cal))=1;    
+temp_cal(isnan(temp_cal))=1;   
+% if anal_opts_fit_to.cal_parity==1
+%     fprintf('Switching parity...')
+%     temp_cal = ~temp_cal;
+% end
 edge_mask = diffs < -1e3;
-[to_seg_fits.scan_edges,~] = find(edge_mask);
+[to_seg_fits.scan_edges_init,~] = find(edge_mask);
 
 
 delta_mask = ~isnan(delta_trap_freq_all);
 probe_dat_mask = data.osc_fit.ok.rmse & ~isnan(data.wm_log.proc.probe.freq.act.mean)'...
 & ~isnan(data.osc_fit.trap_freq_recons) & delta_mask' & ~temp_cal;
-probe_dat_mask = data.osc_fit.ok.rmse & ~isnan(data.wm_log.proc.probe.freq.act.mean)'...
-& ~isnan(data.osc_fit.trap_freq_recons) & delta_mask' & ~temp_cal;
 last_good_shot = find(probe_dat_mask==1,1,'last');
-to_seg_fits.scan_edges = to_seg_fits.scan_edges(to_seg_fits.scan_edges<last_good_shot);
+
+to_seg_fits.scan_edges = to_seg_fits.scan_edges_init(to_seg_fits.scan_edges_init<last_good_shot);
 run_time_start=min(shot_time_abs);
 num_shots = length(data.mcp_tdc.shot_num);
 shot_idx_all = 1:num_shots;
@@ -213,6 +216,8 @@ for ii=1:iimax
         to_seg_fits.atom_num(ii,:) = [nanmean(data.mcp_tdc.num_counts(seg_mask)),nanstd(data.mcp_tdc.num_counts(seg_mask))];
     end
 
+%     fprintf('=== Results of segment scan ===')
+    
 end
 subplot(1,2,1)
 hold off
@@ -223,139 +228,171 @@ hold off
 %% Plot
 % Could refactor so entire thing is in a loop over ii - needs a few things stored in to_seg_fits
 fprintf('Plotting\n',iimax,0)
-    for ii=1:iimax %Plots segmented data
-
-        seg_mask_temp = [zeros(to_seg_fits.seg_edges(ii,1)-1,1);ones(to_seg_fits.seg_edges(ii,2)-to_seg_fits.seg_edges(ii,1)+1,1);...
-                zeros(num_shots-to_seg_fits.seg_edges(ii,2),1)]'==1;
-        seg_mask = seg_mask_temp&probe_dat_mask;
-
+    if iimax ==0
+        error('No segments found!')
+    else
         sfigure(602);
-        if mod(ii,2) == 0
-            marker='x';
-        else
-            marker ='o';
+        clf
+        sfigure(603);
+        clf
+        for ii=1:iimax %Plots segmented data
+
+            seg_mask_temp = [zeros(to_seg_fits.seg_edges(ii,1)-1,1);ones(to_seg_fits.seg_edges(ii,2)-to_seg_fits.seg_edges(ii,1)+1,1);...
+                    zeros(num_shots-to_seg_fits.seg_edges(ii,2),1)]'==1;
+            seg_mask = seg_mask_temp&probe_dat_mask;
+
+
+            if mod(ii,2) == 0
+                marker='x';
+            else
+                marker ='o';
+            end
+
+            if sum(seg_mask)>0
+    %             subplot(3,4,[1 2])
+    %             pl= plot(shot_idx_all(seg_mask_temp),setpts_all(seg_mask_temp),marker);
+    %             title('Setpoints by segment')
+    %             pl.Color=cdat(ceil(800*ii/iimax),:);
+    %             hold on
+                sfigure(603);
+                subplot(2,1,1)
+                pl=plot(shot_time(seg_mask)/3600,to_seg_fits.set_sel{ii},marker);
+                pl.Color=cdat(ceil(800*ii/iimax),:);
+                hold on
+                title('Setpts of good shots')
+                xlabel('Time (h)')
+
+                subplot(2,1,2)
+                pl=plot(shot_time(seg_mask)/3600,to_seg_fits.delta_sig{ii},marker);
+                pl.Color=cdat(ceil(800*ii/iimax),:);
+                hold on
+                title('Signal of good shots')
+                xlabel('Time (h)')
+            end
         end
 
-        if sum(seg_mask)>0
-%             subplot(4,4,[1 2])
-%             pl= plot(shot_idx_all(seg_mask_temp),setpts_all(seg_mask_temp),marker);
-%             title('Setpoints by segment')
-%             pl.Color=cdat(ceil(800*ii/iimax),:);
-%             hold on
-            
-            subplot(4,4,[1 2])
-            pl=plot(shot_time(seg_mask),to_seg_fits.set_sel{ii},marker);
-            pl.Color=cdat(ceil(800*ii/iimax),:);
-            hold on
-            title('Setpts of good shots')
-            xlabel('Time (h)')
+        % Plot everything that was stored
+    
+        to_val = to_seg_fits.fit_all.freq.val;
+        to_val_ref = nanmean(to_val);
+        val_mask = abs(to_val-to_val_ref)<anal_opts_fit_to.TO_cutoff/anal_opts_fit_to.to_val_scale;
+        to_unc = to_seg_fits.fit_all.freq.unc;
+        unc_mask = abs(to_unc) < anal_opts_fit_to.unc_cutoff/anal_opts_fit_to.to_val_scale;
+        to_plt_mask = val_mask & unc_mask;
+        
+        to_time = to_seg_fits.to_time;
+        to_val = to_seg_fits.fit_all.freq.val*anal_opts_fit_to.to_val_scale;
+        to_val_trim = to_seg_fits.fit_trimmed.freq.val*anal_opts_fit_to.to_val_scale;
+        to_unc = to_seg_fits.fit_all.freq.unc*anal_opts_fit_to.to_val_scale;
+        to_unc_trim = to_seg_fits.fit_trimmed.freq.unc*anal_opts_fit_to.to_val_scale;
+        to_val_ref = nanmean(to_val);
+        to_val_ref_trim = to_val_trim(1);
 
-            subplot(4,4,[3 4])
-            pl=plot(shot_time(seg_mask),to_seg_fits.delta_sig{ii},marker);
-            pl.Color=cdat(ceil(800*ii/iimax),:);
-            hold on
-            title('Signal of good shots')
-            xlabel('Time (h)')
-        end
+
+        slopes = cellfun(@(x) x.Coefficients.Estimate(2),to_seg_fits.fit_all.model);
+        slopes_err = cellfun(@(x) x.Coefficients.SE(2),to_seg_fits.fit_all.model);
+        num_val = to_seg_fits.atom_num(:,1);
+        num_unc = to_seg_fits.atom_num(:,2);
+        
+        num_trend = data.mcp_tdc.num_counts(1:last_good_shot);
+        num_trend = num_trend(num_trend>0);
+        num_norm = normalize(num_trend);
+        shot_time_good = shot_time(1:last_good_shot);
+        shot_time_good = shot_time_good(num_trend>0)/3600;
+
+        to_diffs = abs(diff(to_val));
+        to_diffs_trim = abs(diff(to_val_trim));
+
+        [acf,lags,bound] = autocorr(to_val);
+        [acf_trim,lags_trim,bound_trim] = autocorr(to_val_trim);
+        
+        [nacf, nlags, ~] = autocorr(num_norm);
+        
+        sfigure(602);
+        
+        subplot(3,3,1)
+        set(gcf,'color','w')
+        to_time_drift = to_time(to_plt_mask);
+        plot(to_time_drift,to_val(to_plt_mask)-to_val_ref_trim,'k')
+        hold on
+        plot(to_time_drift,to_val(to_plt_mask)-to_unc(to_plt_mask)-to_val_ref_trim,'b.-')
+        plot(to_time_drift,to_val(to_plt_mask)+to_unc(to_plt_mask)-to_val_ref_trim,'b.-')
+        xlabel('time (h)')
+        ylabel(sprintf('Fitted TO - %f GHz',to_val_ref_trim))
+        title('TO drift')
+        
+        subplot(3,3,2)
+        plot(to_time,to_val_trim-to_val_ref_trim,'k')
+        hold on
+        plot(to_time,to_val_trim-to_unc_trim-to_val_ref_trim,'b.-')
+        plot(to_time,to_val_trim+to_unc_trim-to_val_ref_trim,'b.-')
+        xlabel('time (h)')
+        ylabel(sprintf('Trimmed Fitted TO - %f GHz',to_val_ref_trim))
+        title('Trimmed TO drift')
+
+        subplot(3,3,3)
+        histogram(to_val-to_val_ref_trim,10)
+        hold on
+        histogram(to_val_trim-to_val_ref_trim,10)
+        legend('Full', 'Trim')
+        title(sprintf('Fitted TO - %f GHz',to_val_ref_trim))
+        
+        
+        subplot(3,3,4)
+        plot(lags*mean(diff(to_time)),acf,'k')
+        hold on
+        plot(lags*mean(diff(to_time)),acf,'ro')
+        plot([min(lags*mean(diff(to_time))),max(lags*mean(diff(to_time)))],[0,0],'k-.');
+        title('TO autocorrelation')
+        xlabel('Time (h)')
+        ylabel('Autocorrelation')
+
+        subplot(3,3,5)
+    %     autocorr(to_val_trim)
+        plot(lags*mean(diff(to_time)),acf_trim,'k')
+        hold on
+        plot(lags*mean(diff(to_time)),acf_trim,'ro')
+        plot([min(lags*mean(diff(to_time))),max(lags*mean(diff(to_time)))],[0,0],'k-.');
+        title('Trim TO autocorrelation')
+        xlabel('Time (h)')
+        ylabel('Autocorrelation')
+        
+        subplot(3,3,6) 
+        plot(shot_time_good,num_norm)
+%         plot(nlags,nacf)
+        hold on
+%         plot([min(nlags),max(nlags)],[0,0],'k');
+%         xlabel('Time (h)')
+        ylabel('Num counts')
+        title('Normalized Number')
+
+        subplot(3,3,7)
+        errorbar(to_time,slopes,slopes_err)
+        title('Fit gradient')
+        xlabel('time (h)')
+        ylabel('Gradient')
+
+        subplot(3,3,[8])
+        num_TO = normalize(num_val).*normalize(to_val);
+        num_TO_mean = nanmean(num_TO);
+        histogram(num_TO,8,'Normalization','pdf')
+        hold on
+        plot([num_TO_mean,num_TO_mean],[0,max(histcounts(num_TO,8,'Normalization','pdf'))],'r')
+        ylabel('P(X)')
+        title('Num counts * TO (normalized)')
+
+        subplot(3,3,[9])
+        slope_TO = normalize(slopes).*normalize(to_val);
+        slope_TO_mean = nanmean(slope_TO);
+        histogram(slope_TO,8,'Normalization','pdf')
+        hold on
+        plot([slope_TO_mean,slope_TO_mean],[0,max(histcounts(slope_TO,8,'Normalization','pdf'))],'r')
+        ylabel('P(X)')
+        title('fit slope * TO (normalized)')
+        
+%         suptitle('Single scan TO statistics')
+        suptitle(sprintf('Single scan statistics, %s', 'filt\_dep\_3filt'))
     end
-    
-    % Plot everything that was stored
-    
-    to_time = to_seg_fits.to_time;
-    to_val_scale = 1e-9;
-    to_val = to_seg_fits.fit_all.freq.val*to_val_scale;
-    to_val_trim = to_seg_fits.fit_trimmed.freq.val*to_val_scale;
-    to_unc = to_seg_fits.fit_all.freq.unc*to_val_scale;
-    to_unc_trim = to_seg_fits.fit_trimmed.freq.unc*to_val_scale;
-    to_val_ref = to_val(1);
-    to_val_ref_trim = to_val_trim(1);
-
-    
-    slopes = cellfun(@(x) x.Coefficients.Estimate(2),to_seg_fits.fit_all.model);
-    slopes_err = cellfun(@(x) x.Coefficients.SE(2),to_seg_fits.fit_all.model);
-    num_val = to_seg_fits.atom_num(:,1);
-    num_unc = to_seg_fits.atom_num(:,2);
-    
-    to_diffs = abs(diff(to_val));
-    to_diffs_trim = abs(diff(to_val_trim));
-    
-    [acf,lags,bound] = autocorr(to_val);
-    [acf_trim,lags_trim,bound_trim] = autocorr(to_val_trim);
-    
-    subplot(4,4,[5 6])
-    set(gcf,'color','w')
-    plot(to_time,to_val-to_val_ref,'k')
-    hold on
-    plot(to_time,to_val-to_unc-to_val_ref,'b.-')
-    plot(to_time,to_val+to_unc-to_val_ref,'b.-')
-    xlabel('time (h)')
-    ylabel('variation in TO fit (GHz)')
-    title('TO drift')
-
-    subplot(4,4,[7 8])
-    plot(to_time,to_val_trim-to_val_ref_trim,'k')
-    hold on
-    plot(to_time,to_val_trim-to_unc_trim-to_val_ref_trim,'b.-')
-    plot(to_time,to_val_trim+to_unc_trim-to_val_ref_trim,'b.-')
-    xlabel('time (h)')
-    ylabel('variation in TO fit (GHz)')
-    title('Trimmed TO drift')
-    
-    
-    subplot(4,4,[9])
-    plot(lags*mean(diff(to_time)),acf,'ro')
-    hold on
-    plot([min(lags*mean(diff(to_time))),max(lags*mean(diff(to_time)))],[0,0],'k');
-    title('TO autocorrelation')
-    xlabel('Time (h)')
-    ylabel('Autocorrelation')
-   
-    subplot(4,4,[10])
-%     autocorr(to_val_trim)
-    plot(lags*mean(diff(to_time)),acf_trim,'ro')
-    hold on
-    plot([min(lags*mean(diff(to_time))),max(lags*mean(diff(to_time)))],[0,0],'k');
-    title('Trim TO autocorrelation')
-    xlabel('Time (h)')
-    ylabel('Autocorrelation')
-    
-    subplot(4,4,[11 12])
-    plot(shot_time(1:last_good_shot),data.mcp_tdc.num_counts(1:last_good_shot))
-    xlabel('Time (h)')
-    ylabel('Num counts')
-    title('Number trend')
-
-    
-    subplot(4,4,[13])
-    histogram(to_diffs,10)
-    title('\delta TO')
-    xlabel('TO(t+1)-TO(t)')
-    ylabel('counts')
-    
-    subplot(4,4,[14])
-    errorbar(to_time,slopes,slopes_err)
-    title('Fit gradient')
-    xlabel('time (h)')
-    ylabel('Gradient (a.u.)')
-
-    subplot(4,4,[15])
-    num_TO = normalize(num_val).*normalize(to_val);
-    num_TO_mean = nanmean(num_TO);
-    histogram(num_TO,8,'Normalization','pdf')
-    hold on
-    plot([num_TO_mean,num_TO_mean],[0,max(histcounts(num_TO,8,'Normalization','pdf'))],'r')
-    ylabel('P(X)')
-    title('Num counts * TO (normalized)')
-    
-    subplot(4,4,[16])
-    slope_TO = normalize(slopes).*normalize(to_val);
-    slope_TO_mean = nanmean(slope_TO);
-    histogram(slope_TO,8,'Normalization','pdf')
-    hold on
-    plot([slope_TO_mean,slope_TO_mean],[0,max(histcounts(slope_TO,8,'Normalization','pdf'))],'r')
-    ylabel('P(X)')
-    title('fit slope * TO (normalized)')
-    
 
 end
 

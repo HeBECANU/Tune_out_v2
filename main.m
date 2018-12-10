@@ -75,7 +75,9 @@
 % JR To do:
 %   Wrapper function for TO scan analysis over many dirs
 %   scrolling average over scan range with smaller time steps (cheat for higher res scanwise anal)
-
+%   Fix the outlier removal in trimmed TO drift
+%   Cal model autocorrelation
+%   Cal model & TO correlation
 %close all
 clear all
 tic
@@ -83,8 +85,15 @@ tic
 % BEGIN USER VAR-------------------------------------------------
 anal_opts=[];
 
-% anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181205_baseline_nuller_on_always\'
-anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181202_filt_skew_pos110ghz\'
+dir_idx = 5;
+% WORKS for 2, 4?
+init_loop_config % Creates a struct called init_loop_config
+
+anal_opts.tdc_import.dir = loop_config.dir{dir_idx};
+anal_opts.probe_set_pt=loop_config.set_pt(dir_idx);
+
+% anal_opts.tdc_import.dir = 'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181201_filt_skew_neg111ghz\';
+
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
 anal_opts.tdc_import.force_reimport=false;
@@ -115,7 +124,7 @@ anal_opts.dld_aquire=4;
 anal_opts.aquire_time=4;
 anal_opts.trig_ai_in=20;
 anal_opts.aom_freq=0;%190*1e6;%Hz %set to zero for comparison with previous data runs
-anal_opts.probe_set_pt=3.0;
+% anal_opts.probe_set_pt=3.0;
 
 anal_opts.wm_log.plot_all=true;
 anal_opts.wm_log.plot_failed=true;
@@ -419,8 +428,8 @@ anal_opts.osc_fit.adaptive_freq=true; %estimate the starting trap freq
 anal_opts.osc_fit.appr_osc_freq_guess=[52,47.9,40];
 anal_opts.osc_fit.freq_fit_tolerance=2; %hz arround the median to cut away
 anal_opts.osc_fit.plot_fits=false;
-anal_opts.osc_fit.plot_err_history=true;
-anal_opts.osc_fit.plot_fit_corr=true;
+anal_opts.osc_fit.plot_err_history=false;
+anal_opts.osc_fit.plot_fit_corr=false;
 
 anal_opts.osc_fit.global=anal_opts.global;
 data.osc_fit=fit_trap_freq(anal_opts.osc_fit,data);
@@ -463,6 +472,8 @@ data.cal=make_cal_model(anal_opts.cal_mdl,data);
 %look at the tune out when fit to short segments
 % TO DO, would be better if this called the fit_to script multiple times
 anal_opts.fit_to=[];
+
+
 anal_opts.fit_to.bootstrap=false;
 anal_opts.fit_to.plots=true;
 %thresholds for CI
@@ -475,39 +486,41 @@ anal_opts.fit_to.global=anal_opts.global;
 anal_opts.fit_to.ci_size_cut_outliers=0.05; %confidence interval for cutting outliers
 anal_opts.fit_to.scale_x=1e-9;
 anal_opts.fit_to.min_pts=10;
-
+anal_opts.fit_to.TO_cutoff=50; %Ignore TO vals more than this distance from the mean
+anal_opts.fit_to.unc_cutoff = 70;
+anal_opts.fit_to.to_val_scale = 1e-9;
 anal_opts.fit_to.seg_time=60*30;
 anal_opts.fit_to.seg_shift=1*anal_opts.fit_to.seg_time;
-% to_seg_fits=segmentd_fit_to(anal_opts.fit_to,data);
+anal_opts.fit_to.cal_parity = loop_config.cal_parity(dir_idx);
 to_seg_fits=scan_segmented_fit_to(anal_opts.fit_to,data);
-
+% to_seg_fits=segmentd_fit_to(anal_opts.fit_to,data);
+data.to_seg_fits = to_seg_fits;
 
 %% Fit the Tune Out
-% anal_opts.fit_to=[];
-% anal_opts.fit_to.plot_inital=true;
-% anal_opts.fit_to.bootstrap=true;
-% %thresholds for CI
-% %sd         CI
-% %1          0.3174
-% %2          0.05
-% %3          2.699e-03
-% anal_opts.fit_to.ci_size_disp=0.3174;%one sd %confidence interval to display
-% anal_opts.fit_to.global=anal_opts.global;
-% anal_opts.fit_to.ci_size_cut_outliers=0.05; %confidence interval for cutting outliers
-% anal_opts.fit_to.scale_x=1e-9;
-% 
-% to_res=fit_to(anal_opts.fit_to,data);
-% data.to_fit=to_res;
-% 
-% to_fit_trimed_val=to_res.fit_trimmed.to_freq;
-% to_fit_unc_boot=to_res.fit_trimmed.to_unc_boot;
-% to_fit_unc_fit=to_res.fit_trimmed.to_unc_fit;
-% to_fit_unc_unc_boot=to_res.fit_trimmed.boot.se_se_opp/anal_opts.fit_to.scale_x;
+% % anal_opts.fit_to.plot_inital=true;
+% % anal_opts.fit_to.bootstrap=true;
+% % %thresholds for CI
+% % %sd         CI
+% % %1          0.3174
+% % %2          0.05
+% % %3          2.699e-03
+% % anal_opts.fit_to.ci_size_disp=0.3174;%one sd %confidence interval to display
+% % anal_opts.fit_to.global=anal_opts.global;
+% % anal_opts.fit_to.ci_size_cut_outliers=0.05; %confidence interval for cutting outliers
+% % anal_opts.fit_to.scale_x=1e-9;
+% % 
+% % to_res=fit_to(anal_opts.fit_to,data);
+% % data.to_fit=to_res;
+% % 
+% % to_fit_trimed_val=to_res.fit_trimmed.to_freq;
+% % to_fit_unc_boot=to_res.fit_trimmed.to_unc_boot;
+% % to_fit_unc_fit=to_res.fit_trimmed.to_unc_fit;
+% % to_fit_unc_unc_boot=to_res.fit_trimmed.boot.se_se_opp/anal_opts.fit_to.scale_x;
 
 %% Analyse the effect of nonlinear terms on Tune out
-anal_opts.fit_to=[];
+% anal_opts.fit_to=[];
 anal_opts.fit_to.plot_inital=false;
-anal_opts.fit_to.bootstrap=true;
+anal_opts.fit_to.bootstrap=false;
 %thresholds for CI
 %sd         CI
 %1          0.3174
@@ -530,8 +543,8 @@ to_fit_unc_unc_boot_quad=to_res.fit_trimmed.boot{2}.se_se_opp/anal_opts.fit_to.s
 %% write out the results
 %inverse scaled gradient to give the single shot uncert (with scaling factor to include calibration)
 tot_num_shots=to_res.num_shots+data.cal.num_shots;
-single_shot_uncert=2*to_res.fit_trimmed.single_shot_uncert_boot{1}...
-    *sqrt(tot_num_shots/to_res.num_shots);
+boot_uncert = to_res.fit_trimmed.single_shot_uncert_boot{1};
+single_shot_uncert=2*boot_uncert*sqrt(tot_num_shots/to_res.num_shots);
 fprintf('\n====TO fit results==========\n')
 fprintf('dir =%s\n',anal_opts.tdc_import.dir)
 fprintf('median damping time %.2f\n',median(1./data.osc_fit.model_coefs(data.osc_fit.ok.rmse,7,1)))
@@ -576,9 +589,9 @@ diary off
 
 
 %%
-fprintf('saving output...')
-%no compression bc its very slowwww
-%save(fullfile(anal_out.dir,'data_anal_full.mat'),'data','to_res','anal_opts','-nocompression','-v7.3')
+% fprintf('saving output...')
+% %no compression bc its very slowwww
+% save(fullfile(anal_out.dir,'data_anal_full.mat'),'data','to_res','anal_opts','-nocompression','-v7.3')
 fprintf('Done')
 
 %% try and find what the outliers were doing
