@@ -11,7 +11,7 @@ tic
 % BEGIN USER VAR-------------------------------------------------
 anal_opts=[];
 %anal_opts.tdc_import.dir='Y:\EXPERIMENT-DATA\Tune Out V2\20180826_testing_wm_log\';
-anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\setting_up_1083_mag_align\20181210_nuller_+7.0_qt_out_1083_on';
+anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\setting_up_1083_mag_align\20181210_nuller_-7.0_qt_nan_1083_off';
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
 anal_opts.tdc_import.force_reimport=false;
@@ -111,7 +111,11 @@ atom_num_pre=cellfun(@(x) x(16),data.num_fit.pre_probe.fit_predict);
 atom_num_post=cellfun(@(x) x(52),data.num_fit.post_probe.fit_predict);
 frac_rem_vec_lin=atom_num_post./atom_num_pre;
 frac_rem_vec_log=log(atom_num_post./atom_num_pre);
-attn_mean=mean(frac_rem_vec_log);
-attn_std=std(frac_rem_vec_log)/numel(frac_rem_vec_log);
-fprintf('log frac atoms after/before probe %.3f±%.3f \n',attn_mean,attn_std)
+attn_log_mean=mean(frac_rem_vec_log);
+attn_log_std=std(frac_rem_vec_log)/numel(frac_rem_vec_log);
+attn_lin_mean=mean(frac_rem_vec_lin);
+attn_lin_std=std(frac_rem_vec_lin)/numel(frac_rem_vec_lin);
+fprintf('frac atoms after/before probe %.4f±%.4f \n',attn_lin_mean,attn_lin_std)
+fprintf('log frac atoms after/before probe %.4f±%.4f \n',attn_log_mean,attn_log_std)
+
 
