@@ -426,7 +426,8 @@ data.mcp_tdc.al_pulses=bin_al_pulses(anal_opts.atom_laser,data);
 %not of that much benifit TBH
 anal_opts.atom_num_fit=[];
 anal_opts.atom_num_fit.pulses=[1,20]; %min,max index of pulses
-anal_opts.atom_num_fit.plot_each_shot=false;
+anal_opts.atom_num_fit.plot.each_shot=false;
+anal_opts.atom_num_fit.plot.history=false;
 data.num_fit=fit_atom_number(anal_opts.atom_num_fit,data);
 
 %% FITTING THE TRAP FREQUENCY
