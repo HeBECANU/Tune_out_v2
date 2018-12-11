@@ -83,7 +83,7 @@ tic
 % BEGIN USER VAR-------------------------------------------------
 anal_opts=[];
 %anal_opts.tdc_import.dir='Y:\EXPERIMENT-DATA\Tune Out V2\20180826_testing_wm_log\';
-anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181203_filt_skew_pos50ghz\';
+anal_opts.tdc_import.dir='D:\20181126_3_filt_align_dep_39_um_v2\';
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
 anal_opts.tdc_import.force_reimport=false;
@@ -114,7 +114,7 @@ anal_opts.dld_aquire=4;
 anal_opts.aquire_time=4;
 anal_opts.trig_ai_in=20;
 anal_opts.aom_freq=0;%190*1e6;%Hz %set to zero for comparison with previous data runs
-anal_opts.probe_set_pt=3.0;
+anal_opts.probe_set_pt=5.0;
 
 anal_opts.wm_log.plot_all=true;
 anal_opts.wm_log.plot_failed=true;
