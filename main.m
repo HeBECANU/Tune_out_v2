@@ -428,6 +428,8 @@ anal_opts.atom_num_fit=[];
 anal_opts.atom_num_fit.pulses=[1,20]; %min,max index of pulses
 anal_opts.atom_num_fit.plot.each_shot=false;
 anal_opts.atom_num_fit.plot.history=false;
+anal_opts.atom_num_fit.qe=anal_opts.global.qe;
+
 data.num_fit=fit_atom_number(anal_opts.atom_num_fit,data);
 
 %% FITTING THE TRAP FREQUENCY

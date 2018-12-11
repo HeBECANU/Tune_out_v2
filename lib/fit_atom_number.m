@@ -3,12 +3,12 @@ function out=make_cal_model(anal_opts_afit,data)
 %to the number in the pulsed atom laser 
 
 atom_fit_mdl = @(b,x) b(1)*b(2)*((1-b(2)).^(x(:,1)-1));
-
-exp_qe=0.09;
+exp_qe=anal_opts_afit.qe;
 
 
 iimax=size(data.mcp_tdc.counts_txy,2); 
 fit_out_frac_ntot=nan(iimax,2,2); %value and uncert
+fit_predict=cell(iimax,1);
 fprintf('Fitting atom number in shots %04i:%04i',iimax,0)
 pulse_num=anal_opts_afit.pulses(1):anal_opts_afit.pulses(2);
 for ii=1:iimax
@@ -20,7 +20,9 @@ for ii=1:iimax
         fit_out_frac_ntot(ii,:,:)=[[pulse_fit.Coefficients.Estimate(2),pulse_fit.Coefficients.SE(2)];...
                                     [pulse_fit.Coefficients.Estimate(1)/exp_qe,...
                                      pulse_fit.Coefficients.SE(1)/exp_qe]];
-
+        %pass a function that can be used to get the atom number at any pulse number
+        fit_predict{ii}=@(x) predict(pulse_fit,x,'Prediction','observation','Alpha',1-erf(1/sqrt(2)))...
+            ./pulse_fit.Coefficients.Estimate(2);
         if anal_opts_afit.plot.each_shot
             fprintf('fit number in shot %u\n',ii)
             xplot=linspace(min(pulse_num),max(pulse_num),1e3)';
@@ -44,6 +46,7 @@ end
 fprintf('...Done\n')
 
 out.fit_out_frac_ntot=fit_out_frac_ntot;
+out.fit_predict=fit_predict;
 %%
 if anal_opts_afit.plot.history
     figure(341)
