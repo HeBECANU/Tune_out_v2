@@ -58,11 +58,11 @@ git submodule foreach --recursive git pull origin master
 ```
 
 
-![An example TO](/nice_plots/to_fit.png)
+![An example TO](/figs/to_fit.png)
 
-![An example TO](/nice_plots/calibration_model.png)
+![An example TO](/figs/calibration_model.png)
 
-![An example TO](/nice_plots/logic.png)
+![An example TO](/figs/logic.png)
 
 
 ## Contributions  
@@ -73,5 +73,6 @@ This project would not have been possible without the many open source tools tha
 * ***Jan*** [FileTime](https://au.mathworks.com/matlabcentral/fileexchange/24671-filetime)
 * ***Benjamin Kraus*** [nanconv](https://au.mathworks.com/matlabcentral/fileexchange/41961-nanconv)
 * ***M. A. Hopcroft**** [allan](https://au.mathworks.com/matlabcentral/fileexchange/13246-allan)
-* ***Daniel Eaton***    [sfigure](https://au.mathworks.com/matlabcentral/fileexchange/8919-smart-silent-figure)
-* ***Denis Gilbert***    [M-file Header Template](https://au.mathworks.com/matlabcentral/fileexchange/4908-m-file-header-template)
+* ***Daniel Eaton***  [sfigure](https://au.mathworks.com/matlabcentral/fileexchange/8919-smart-silent-figure)
+* ***Denis Gilbert***  [M-file Header Template](https://au.mathworks.com/matlabcentral/fileexchange/4908-m-file-header-template)
+* ***DrosteEffect***  [CIECAM02](https://github.com/DrosteEffect/CIECAM02)

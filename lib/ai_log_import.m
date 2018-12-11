@@ -1,7 +1,7 @@
 function ai_log_out=ai_log_import(anal_opts,data)
 %a simple wrapper for the below ai_log_import that uses the matlab function cache
 cache_opts=[];
-cache_opts.verbose=3;
+cache_opts.verbose=0;
 cache_opts.force_cache_load=anal_opts.force_load_save;
 anal_opts=rmfield(anal_opts,'force_load_save');
 cache_opts.force_recalc=anal_opts.force_reimport;
@@ -167,10 +167,10 @@ for ii=1:iimax
             end
         end
         if abs(ai_log_single_out.pd.mean-set_pt_single)>anal_opts.pd.diff_thresh
-            fprintf('\nprobe beam pd value wrong!!!!!!!!!\n%04i',0)
-            fprintf('avg val %.2f set value %.2f \n04u%',ai_log_single_out.pd.mean,anal_opts.pd.set,0)
+            fprintf('\nprobe beam pd value wrong!!!!!!!!!\n')
+            fprintf('avg val %.2f set value %.2f \n04u%',ai_log_single_out.pd.mean,set_pt_single,0)
         elseif ai_log_single_out.pd.std>anal_opts.pd.std_thresh
-            fprintf('\nprobe beam pd noisy!!!!!!!!!\n%04u',0)
+            fprintf('\nprobe beam pd noisy!!!!!!!!!\n')
             fprintf('std %.2f thresh value %.2f \n04u%',ai_log_single_out.pd.std,anal_opts.pd.std_thresh,0)
         else
             ai_log_out.ok.reg_pd(idx_nearest_shot)=true;

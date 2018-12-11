@@ -107,7 +107,7 @@ switch window_fun
     case 'none'
         %do nothing
 end
-if window_fun~='none'
+if ~isequal(window_fun,'none')
     win=win.*(len_before_pad/sum(win));
     x=x.*win;
 end

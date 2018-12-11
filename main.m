@@ -62,7 +62,7 @@
 %   -harmonize the anal opts
 %	-place more sections into functions
 %	-clean up the fit section
-%	-write a n depth function cashing wrapper with hash lookup
+%	-write a in depth function cashing wrapper with hash lookup
 %		-alow partial updates
 %       
 %
@@ -71,6 +71,11 @@
 % Last revision:2018-10-09
 
 
+
+% JR To do:
+%   Wrapper function for TO scan analysis over many dirs
+%   scrolling average over scan range with smaller time steps (cheat for higher res scanwise anal)
+
 %close all
 clear all
 tic
@@ -78,12 +83,7 @@ tic
 % BEGIN USER VAR-------------------------------------------------
 anal_opts=[];
 %anal_opts.tdc_import.dir='Y:\EXPERIMENT-DATA\Tune Out V2\20180826_testing_wm_log\';
-%anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output';
-%anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181104_filters_dep_two\';
-%anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181102_filters_dep_two\';
-%anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181101_filters_dep_two';
-%anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181123_3_filt_align_dep_31um\';
-anal_opts.tdc_import.dir='D:\20181124_3_filt_align_dep_34_um\'
+anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181203_filt_skew_pos50ghz\';
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
 anal_opts.tdc_import.force_reimport=false;
@@ -95,7 +95,7 @@ tmp_ylim=[-30e-3, 30e-3];
 tlim=[0,4];
 anal_opts.tdc_import.txylim=[tlim;tmp_xlim;tmp_ylim];
 
-anal_opts.max_runtime=inf;%cut off the data run after some number of hours
+anal_opts.max_runtime=10;%cut off the data run after some number of hours
 anal_opts.atom_laser.pulsedt=8.000e-3;
 anal_opts.atom_laser.t0=0.41784; %center i ntime of the first pulse
 anal_opts.atom_laser.start_pulse=1; %atom laser pulse to start with
@@ -104,6 +104,8 @@ anal_opts.atom_laser.appr_osc_freq_guess=[52,40,40];
 anal_opts.atom_laser.pulse_twindow=anal_opts.atom_laser.pulsedt*0.9;
 anal_opts.atom_laser.xylim=anal_opts.tdc_import.txylim(2:3,:); %set same lims for pulses as import
 
+
+
 anal_opts.global.fall_time=0.417;
 anal_opts.global.qe=0.09;
 
@@ -111,7 +113,8 @@ anal_opts.trig_dld=20.3;
 anal_opts.dld_aquire=4;
 anal_opts.aquire_time=4;
 anal_opts.trig_ai_in=20;
-
+anal_opts.aom_freq=0;%190*1e6;%Hz %set to zero for comparison with previous data runs
+anal_opts.probe_set_pt=3.0;
 
 anal_opts.wm_log.plot_all=true;
 anal_opts.wm_log.plot_failed=true;
@@ -151,7 +154,6 @@ anal_opts.tdc_import.shot_num=find_data_files(anal_opts.tdc_import);
 %anal_opts.tdc_import.shot_num= anal_opts.tdc_import.shot_num(1:10); %debuging
 [mcp_tdc_data,import_opts]=import_mcp_tdc_data(anal_opts.tdc_import);
 data.mcp_tdc=mcp_tdc_data;
-
 %% IMPORT LV LOG to data.labview
 %TO DO FUNCTIONALIZE
 %import the wavemeter log
@@ -192,58 +194,84 @@ data.labview.calibration=lv_log.probe_calibration;
 %can check that the times look ok
 % plot(data.mcp_tdc.write_time-data.probe.time)
 
+%% CHECK ATOM NUMBER
+%total number of detected counts
+sfigure(1);
+clf
+set(gcf,'color','w')
+subplot(4,1,1)
+%create a list of indicies (of the mcp_tdc) that have an ok number of counts
+%exclude the very low and then set the thresh based on the sd of the remaining
+not_zero_files=data.mcp_tdc.num_counts>1e3; 
+num_thresh=mean(data.mcp_tdc.num_counts(not_zero_files))-4*std(data.mcp_tdc.num_counts(not_zero_files));
+data.mcp_tdc.num_ok=data.mcp_tdc.num_counts>num_thresh & ...
+    (data.mcp_tdc.time_create_write(:,1)'-data.mcp_tdc.time_create_write(1,1))<(anal_opts.max_runtime*60*60);
+fprintf('shots number ok %u out of %u \n',sum(data.mcp_tdc.num_ok),numel(data.mcp_tdc.num_ok))
 
+plot((data.mcp_tdc.time_create_write(:,2)-data.mcp_tdc.time_create_write(1,2))/(60*60),data.mcp_tdc.num_counts)
+xlabel('time (h)')
+ylabel('total counts')
+title('num count run trend')
+%should plot the threshold
 
 %% Match Labview data
 %because the mcp-dld detector has no direct communication with the bec computer
 % the data.labview.shot_num does not nessesarily correspond to data.mcp_tdc.shot_num
+%try and match up the file with if it is a calibaration using the time
+%it is slightly overkill here to search each one, but just being extra
+%cautious/flexible
+time_thresh=4; %how close for the times to be considered the same shot
+%lets examine what the time difference does
 
+data.mcp_tdc.labview_shot_num=[];
+data.mcp_tdc.probe.calibration=[];
 
-    %try and match up the file with if it is a calibaration using the time
-    %it is slightly overkill here to search each one, but just being extra
-    %cautious/flexible
-    time_thresh=4; %how close for the times to be considered the same shot
-    %lets examine what the time difference does
-    sfigure(45);
-    set(gcf,'color','w')
-    clf
-    imax=min([size(data.labview.time,2),size(data.mcp_tdc.time_create_write,1)]);
-    %imax=5000;
-    time_diff=data.mcp_tdc.time_create_write(1:imax,2)'-anal_opts.dld_aquire-anal_opts.trig_dld-...
-        data.labview.time(1:imax);
-    mean_delay_labview_tdc=mean(time_diff);
-    plot(time_diff)
-    xlabel('shot number')
-    ylabel('time between labview and mcp tdc')
-    %to do include ai_log
-    iimax=size(data.mcp_tdc.time_create_write(:,1),1);
-    data.mcp_tdc.probe.calibration=nan(iimax,1);
-    data.mcp_tdc.labview_shot_num=nan(iimax,1);
-    %loop over all the tdc_files 
-    for ii=1:iimax
-        %predict the labview master trig time
-        %use the write time to handle being unpacked from 7z
-        est_labview_start=data.mcp_tdc.time_create_write(ii,2)...
-            -anal_opts.trig_dld-anal_opts.dld_aquire-mean_delay_labview_tdc;
-        [tval,nearest_idx]=closest_value(data.labview.time...
-            ,est_labview_start);
-        nearest_idx
-        if abs(tval-est_labview_start)<time_thresh
-            data.mcp_tdc.labview_shot_num(ii)=data.labview.shot_num(nearest_idx);
-            data.mcp_tdc.probe.calibration(ii)=data.labview.calibration(nearest_idx);
-        end 
-    end
+imax=min([size(data.labview.time,2),size(data.mcp_tdc.time_create_write,1)]);
+%imax=5000;
+time_diff=data.mcp_tdc.time_create_write(1:imax,2)'-anal_opts.dld_aquire-anal_opts.trig_dld-...
+    data.labview.time(1:imax);
+mean_delay_labview_tdc=median(time_diff);
+
+sfigure(1);
+set(gcf,'color','w')
+subplot(4,1,2)
+plot(data.mcp_tdc.shot_num,time_diff)
+xlabel('shot number')
+ylabel('time between labview and mcp tdc')
+title('raw time diff')
+%to do include ai_log
+iimax=size(data.mcp_tdc.time_create_write(:,1),1);
+data.mcp_tdc.probe.calibration=nan(iimax,1);
+data.mcp_tdc.labview_shot_num=nan(iimax,1);
+%loop over all the tdc_files 
+for ii=1:iimax
+    %predict the labview master trig time
+    %use the write time to handle being unpacked from 7z
+    est_labview_start=data.mcp_tdc.time_create_write(ii,2)...
+        -anal_opts.trig_dld-anal_opts.dld_aquire-mean_delay_labview_tdc;
+    [tval,nearest_idx]=closest_value(data.labview.time...
+        ,est_labview_start);
+    if abs(tval-est_labview_start)<time_thresh
+        data.mcp_tdc.labview_shot_num(ii)=data.labview.shot_num(nearest_idx);
+        data.mcp_tdc.probe.calibration(ii)=data.labview.calibration(nearest_idx);
+    end 
+end
+
 
 %% IMPORT THE ANALOG INPUT LOG
-%the code will check that the probe beam PD was ok and that the laser was single mode
+%load in the analog input files to check if the laser is single mode & that the potodiode value is close to the set
+%point
+% a two teired cache system is used one level for importing all 
+
 anal_opts.ai_log.dir=anal_opts.tdc_import.dir;
-anal_opts.ai_log.force_reimport=true;
+anal_opts.ai_log.force_reimport=false;
 anal_opts.ai_log.force_load_save=false;
 anal_opts.ai_log.log_name='log_analog_in_';
-anal_opts.ai_log.pd.set=5;
-
-anal_opts.ai_log.pd.set
-anal_opts.ai_log.pd.set(isnan(anal_opts.ai_log.pd.set))=0;
+anal_opts.ai_log.pd.set=data.mcp_tdc.probe.calibration;
+%nan compatable logical inverse
+anal_opts.ai_log.pd.set(~isnan(anal_opts.ai_log.pd.set))=~anal_opts.ai_log.pd.set(~isnan(anal_opts.ai_log.pd.set));
+anal_opts.ai_log.pd.set=anal_opts.ai_log.pd.set*anal_opts.probe_set_pt;
+%anal_opts.ai_log.pd.set(isnan(anal_opts.ai_log.pd.set))=0;
 anal_opts.ai_log.aquire_time=4;
 
 anal_opts.ai_log.pd.diff_thresh=0.1;
@@ -268,6 +296,8 @@ ai_log_out=ai_log_import(anal_opts.ai_log,data);
 %copy the output across
 data.ai_log=ai_log_out;
 
+% % Trying to automate setpoint correction
+
 %save([datestr(datetime('now'),'yyyymmddTHHMMSS'),'.mat'],'-v7.3')
 
 
@@ -290,7 +320,7 @@ data.wm_log.raw=wm_log_import(anal_opts.wm_log);
 %to this end find the closest labview update time and go back one then fowards
 
 anal_opts.wm_log.plot_all=false;
-anal_opts.wm_log.plot_failed=true;
+anal_opts.wm_log.plot_failed=false;
 anal_opts.wm_log.force_reimport=false;
 
 anal_opts.wm_log.time_pd_padding=4; %check this many s each side of probe
@@ -306,22 +336,7 @@ data.wm_log.proc=wm_log_process(anal_opts,data);
 clear('sub_data')
 
 
-%% CHECK ATOM NUMBER
-sfigure(1)
-clf
-%create a list of indicies (of the mcp_tdc) that have an ok number of counts
-%exclude the very low and then set the thresh based on the sd of the remaining
-not_zero_files=data.mcp_tdc.num_counts>1e3; 
-num_thresh=mean(data.mcp_tdc.num_counts(not_zero_files))-4*std(data.mcp_tdc.num_counts(not_zero_files));
-data.mcp_tdc.num_ok=data.mcp_tdc.num_counts>num_thresh & ...
-    (data.mcp_tdc.time_create_write(:,1)'-data.mcp_tdc.time_create_write(1,1))<(anal_opts.max_runtime*60*60);
-fprintf('shots number ok %u out of %u \n',sum(data.mcp_tdc.num_ok),numel(data.mcp_tdc.num_ok))
 
-plot((data.mcp_tdc.time_create_write(:,2)-data.mcp_tdc.time_create_write(1,2))/(60*60),data.mcp_tdc.num_counts)
-xlabel('time (h)')
-ylabel('total counts')
-title('num count run trend')
-%should plot the threshold
 
 %% COMBINE ALL CHECK LOGICS AND PLOT
 %Here we will do a plot of all the checks and then combine them into one
@@ -336,10 +351,9 @@ title('num count run trend')
 %data.mcp_tdc.probe.ok.ecd_pd;  %ecd pd value
   
 
-figure(12);
-clf
+sfigure(1);
 set(gcf,'color','w')
-subplot(2,1,1)
+subplot(4,1,3)
 %plot all the logics, dither it a bit to make it easier to figure out
 %culprits
 line_width=1.5;
@@ -367,7 +381,8 @@ xl=xlim;
 xlim([1,xl(2)])
 legend('number','pd reg','single mode & pd','freq stable','RvB','ecd pd(ignored)','NOT(calibration)')
 yticks([0 1])
-subplot(2,1,2)
+
+subplot(4,1,4)
 tmp_cal=data.mcp_tdc.probe.calibration;
 tmp_cal(isnan(tmp_cal))=false;
 %must have good atom number AND (good probe OR be calibration)
@@ -378,9 +393,9 @@ tmp_probe_ok=(data.ai_log.ok.sfp &...
 tmp_all_ok=data.mcp_tdc.num_ok' &...
     (tmp_probe_ok| tmp_cal);
     %data.mcp_tdc.probe.ok.ecd_pd;
-stairs(data.mcp_tdc.shot_num,tmp_all_ok,'LineWidth',line_width)
-hold on
 stairs(data.mcp_tdc.shot_num,tmp_probe_ok+0.01,'LineWidth',line_width)
+hold on
+stairs(data.mcp_tdc.shot_num,tmp_all_ok,'LineWidth',line_width)
 hold off
 legend('all','probe')
 ylabel('Good?')
@@ -396,10 +411,10 @@ data.mcp_tdc.probe.ok.all=tmp_probe_ok;
 
 fprintf('ok logic gives %u / %u shots for yeild %04.1f %%\n',...
     tmp_num_ok_shots,tmp_num_shots,1e2*tmp_num_ok_shots/tmp_num_shots)
-set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
-plot_name='check_logics';
-saveas(gcf,[anal_out.dir,plot_name,'.png'])
-saveas(gcf,[anal_out.dir,plot_name,'.fig'])
+% set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
+% plot_name='check_logics';
+% saveas(gcf,[anal_out.dir,plot_name,'.png'])
+% saveas(gcf,[anal_out.dir,plot_name,'.fig'])
 
 %% BINNING UP THE ATOM LASER PULSES
 %now find the mean position of each pulse of the atom laser in each shot
@@ -420,9 +435,10 @@ data.osc_fit=fit_trap_freq(anal_opts.osc_fit,data);
 %this may need to change if the sampling freq changes
 
 data.osc_fit.trap_freq_recons=nan*data.osc_fit.ok.did_fits;
+data.osc_fit.trap_freq_recons_unc=data.osc_fit.trap_freq_recons;
 mask=data.osc_fit.ok.all;
 data.osc_fit.trap_freq_recons(mask)=3*(1/anal_opts.atom_laser.pulsedt)+data.osc_fit.model_coefs(mask,2,1);
-
+data.osc_fit.trap_freq_recons_unc(mask)=data.osc_fit.model_coefs(mask,2,2);
 
 %% CHECK IF ATOM NUMBER DEPENDS ON PROBE BEAM
 %figure
@@ -448,16 +464,19 @@ anal_opts.cal_mdl.plot=true;
 anal_opts.cal_mdl.global=anal_opts.global;
 data.cal=make_cal_model(anal_opts.cal_mdl,data);
 
+%this function should also be modified to calculated the difference between the cal and probe data (with unc) 
+% so its only done once
+
 
 %% segmented TO
 %look at the tune out when fit to short segments
 % TO DO, would be better if this called the fit_to script multiple times
 anal_opts.fit_to=[];
 anal_opts.fit_to.bootstrap=false;
-anal_opts.fit_to.plots=false;
+anal_opts.fit_to.plots=true;
 %thresholds for CI
 %sd         CI
-%1          0.3174
+%1          1.3174
 %2          0.05
 %3          2.699e-03
 anal_opts.fit_to.ci_size_disp=0.3174;%one sd %confidence interval to display
@@ -468,13 +487,36 @@ anal_opts.fit_to.min_pts=10;
 
 anal_opts.fit_to.seg_time=60*30;
 anal_opts.fit_to.seg_shift=1*anal_opts.fit_to.seg_time;
-to_seg_fits=segmentd_fit_to(anal_opts.fit_to,data);
-
+% to_seg_fits=segmentd_fit_to(anal_opts.fit_to,data);
+%curently broken
+to_seg_fits=scan_segmented_fit_to(anal_opts.fit_to,data);
 
 
 %% Fit the Tune Out
+% anal_opts.fit_to=[];
+% anal_opts.fit_to.plot_inital=true;
+% anal_opts.fit_to.bootstrap=true;
+% %thresholds for CI
+% %sd         CI
+% %1          0.3174
+% %2          0.05
+% %3          2.699e-03
+% anal_opts.fit_to.ci_size_disp=0.3174;%one sd %confidence interval to display
+% anal_opts.fit_to.global=anal_opts.global;
+% anal_opts.fit_to.ci_size_cut_outliers=0.05; %confidence interval for cutting outliers
+% anal_opts.fit_to.scale_x=1e-9;
+% 
+% to_res=fit_to(anal_opts.fit_to,data);
+% data.to_fit=to_res;
+% 
+% to_fit_trimed_val=to_res.fit_trimmed.to_freq;
+% to_fit_unc_boot=to_res.fit_trimmed.to_unc_boot;
+% to_fit_unc_fit=to_res.fit_trimmed.to_unc_fit;
+% to_fit_unc_unc_boot=to_res.fit_trimmed.boot.se_se_opp/anal_opts.fit_to.scale_x;
+
+%% Analyse the effect of nonlinear terms on Tune out
 anal_opts.fit_to=[];
-anal_opts.fit_to.plot_inital=true;
+anal_opts.fit_to.plot_inital=false;
 anal_opts.fit_to.bootstrap=true;
 %thresholds for CI
 %sd         CI
@@ -486,18 +528,19 @@ anal_opts.fit_to.global=anal_opts.global;
 anal_opts.fit_to.ci_size_cut_outliers=0.05; %confidence interval for cutting outliers
 anal_opts.fit_to.scale_x=1e-9;
 
-to_res=fit_to(anal_opts.fit_to,data);
-data.to_fit=to_res;
+to_res=fit_to_nonlin(anal_opts.fit_to,data);
+data.to_fit_nonlin=to_res;
 
 to_fit_trimed_val=to_res.fit_trimmed.to_freq;
 to_fit_unc_boot=to_res.fit_trimmed.to_unc_boot;
 to_fit_unc_fit=to_res.fit_trimmed.to_unc_fit;
-to_fit_unc_unc_boot=to_res.fit_trimmed.boot.se_se_opp/anal_opts.fit_to.scale_x;
+to_fit_unc_unc_boot_lin=to_res.fit_trimmed.boot{1}.se_se_opp/anal_opts.fit_to.scale_x;
+to_fit_unc_unc_boot_quad=to_res.fit_trimmed.boot{2}.se_se_opp/anal_opts.fit_to.scale_x;
 
 %% write out the results
 %inverse scaled gradient to give the single shot uncert (with scaling factor to include calibration)
 tot_num_shots=to_res.num_shots+data.cal.num_shots;
-single_shot_uncert=to_res.fit_trimmed.single_shot_uncert_boot...
+single_shot_uncert=2*to_res.fit_trimmed.single_shot_uncert_boot{1}...
     *sqrt(tot_num_shots/to_res.num_shots);
 fprintf('\n====TO fit results==========\n')
 fprintf('dir =%s\n',anal_opts.tdc_import.dir)
@@ -506,25 +549,35 @@ fprintf('median damping time %.2f\n',median(1./data.osc_fit.model_coefs(data.osc
 old_to_wav=413.0938e-9;
 new_to_freq_unc=to_fit_unc_boot;
 %to_res.fit_trimmed.to_unc_fit
-to_wav_val=const.c/(to_fit_trimed_val*2);
-to_wav_unc=new_to_freq_unc*const.c/((to_fit_trimed_val*2)^2);
-fprintf('run start time               =%.1f (posix)\n',...
+to_wav_val_lin=const.c/(to_fit_trimed_val{1}*2);
+to_freq_val_lin=to_fit_trimed_val{1}*2+anal_opts.aom_freq;
+to_freq_unc_lin=new_to_freq_unc{1}*2;
+to_wav_unc_lin=2*new_to_freq_unc{1}*const.c/((to_fit_trimed_val{1}*2)^2);
+to_wav_val_quad=const.c/(to_fit_trimed_val{2}*2);
+to_freq_val_quad=to_fit_trimed_val{2}*2+anal_opts.aom_freq;
+to_freq_unc_quad=new_to_freq_unc{2}*2;
+to_wav_unc_quad=new_to_freq_unc{2}*const.c/((to_fit_trimed_val{2}*2)^2);
+fprintf('run start time               %.1f (posix)\n',...
     data.mcp_tdc.time_create_write(1,2)-anal_opts.trig_dld-anal_opts.dld_aquire)
-fprintf('run stop time                =%.1f (posix)\n',...
+fprintf('run stop time                %.1f (posix)\n',...
     data.mcp_tdc.time_create_write(end,2)-anal_opts.trig_dld-anal_opts.dld_aquire)
-fprintf('duration                     =%.1f (s)\n',...
+fprintf('duration                     %.1f (s)\n',...
     data.mcp_tdc.time_create_write(end,2)-data.mcp_tdc.time_create_write(1,2))
-fprintf('TO freq                      =%.1f±(%.0f±%.0f) MHz\n',...
-    to_fit_trimed_val*1e-6,new_to_freq_unc*1e-6,to_fit_unc_unc_boot*1e-6)
-fprintf('TO wavelength                =%.6f±%f nm \n',to_wav_val*1e9,to_wav_unc*1e9)
-fprintf('diff from TOV1               =%e±%e nm \n',(to_wav_val-old_to_wav)*1e9,to_wav_unc*1e9)
+fprintf('TO freq (Linear)             %.1f±(%.0f±%.0f) MHz\n',...
+    to_freq_val_lin*1e-6,to_freq_unc_lin*1e-6,to_fit_unc_unc_boot_lin*1e-6*2)
+fprintf('TO wavelength (Linear)       %.6f±%f nm \n',to_wav_val_lin*1e9,to_wav_unc_lin*1e9)
+fprintf('TO freq (Quadratic)          %.1f±(%.0f±%.0f) MHz\n',...
+    to_freq_val_quad*1e-6,to_freq_unc_quad*1e-6,to_fit_unc_unc_boot_quad*1e-6*2)
+fprintf('TO wavelength (Quadratic)    %.6f±%f nm \n',to_wav_val_quad*1e9,to_wav_unc_quad*1e9)
+fprintf('diff between Lin and Quad    %e±%e nm \n',(to_wav_val_lin-to_wav_val_quad)*1e9,sqrt(to_wav_unc_lin^2+to_wav_unc_quad^2)*1e9)
+fprintf('diff from TOV1               %e±%e nm \n',(to_wav_val_lin-old_to_wav)*1e9,to_wav_unc_lin*1e9)
 %more logic needs to be included here
-fprintf('number of probe files        =%u \n',to_res.num_shots)
-fprintf('number of calibration files  =%u \n',data.cal.num_shots)
-fprintf('total used                   =%u \n',tot_num_shots)
-fprintf('files with enough number     =%u\n',sum(data.mcp_tdc.num_ok'))
-fprintf('shot uncert scaling @1SD     =%.1f MHz, %.2f fm /sqrt(shots)\n',single_shot_uncert*1e-6,...
-    single_shot_uncert*const.c/((to_fit_trimed_val*2)^2)*10^15)
+fprintf('number of probe files        %u \n',to_res.num_shots)
+fprintf('number of calibration files  %u \n',data.cal.num_shots)
+fprintf('total used                   %u \n',tot_num_shots)
+fprintf('files with enough number     %u\n',sum(data.mcp_tdc.num_ok'))
+fprintf('shot uncert scaling @1SD %.1f MHz, %.2f fm /sqrt(shots)\n',single_shot_uncert*1e-6,...
+    single_shot_uncert*const.c/((to_fit_trimed_val{1}*2)^2)*10^15)
 %predicted uncert using this /sqrt(n), unless derived differently this is pointless
 %fprintf('predicted stat. uncert %.1f MHz, %.2f fm\n',single_shot_uncert/sqrt(tot_num_shots)*1e-6,...
 %    single_shot_uncert/sqrt(tot_num_shots)*const.c/((to_fit_trimed_val*2)^2)*10^15)
@@ -535,7 +588,7 @@ diary off
 %%
 fprintf('saving output...')
 %no compression bc its very slowwww
-save(fullfile(anal_out.dir,'data_anal_full.mat'),'data','to_res','anal_opts','-nocompression','-v7.3')
+%save(fullfile(anal_out.dir,'data_anal_full.mat'),'data','to_res','anal_opts','-nocompression','-v7.3')
 fprintf('Done')
 
 %% try and find what the outliers were doing

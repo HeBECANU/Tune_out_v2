@@ -1,6 +1,6 @@
 function wm_log=wm_log_import(wm_log_import_opts)
 cache_opts=[];
-cache_opts.verbose=3;
+cache_opts.verbose=0;
 %cache_opts.force_cache_load=wm_log_import_opts.force_load_save;
 %wm_log_import_opts=rmfield(wm_log_import_opts,'force_load_save');
 cache_opts.force_recalc=wm_log_import_opts.force_reimport;
@@ -100,11 +100,10 @@ for ii=1:size(wm_log_import_opts.names,2)
         end
     end
 end
-fprintf('\nCleaning up output structure\n')
+fprintf('\nCleaning up output structure...')
 wm_log=clean_log_structure(wm_log,[]); %itteratively defined cleaner
-
-fprintf('done wm import\n')
-
+fprintf('Done\n')
+fprintf('Done wm import\n')
 
 end
 

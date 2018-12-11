@@ -1,6 +1,6 @@
 function al_pulses=bin_al_pulses(anal_opt_al,data)
 
-tic
+%tic
 iimax=size(data.mcp_tdc.counts_txy,2);
 al_pulses=[];
 al_pulses.pulsedt=anal_opt_al.pulsedt;
@@ -57,7 +57,8 @@ for shot=1:iimax
 %to set the pulse t0 right it can be handy to uncomment the next line
 %fprintf('\nmean time %3.5f            \n ',mean(al_pulses.pos_stat(shot,:,1)-al_pulses.time(:)'))
 end%shots
+%toc
 fprintf('...Done\n') 
-toc
+
 
 end

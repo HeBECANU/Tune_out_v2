@@ -13,3 +13,12 @@
 [submodule "lib/matlab_function_cache"]
 	path = lib/matlab_function_cache
 	url = https://github.com/brycehenson/matlab_function_cache.git
+[submodule "lib/CIECAM02"]
+	path = lib/CIECAM02
+	url = https://github.com/brycehenson/CIECAM02.git
+[submodule "fileexchange_utils/Violinplot-Matlab"]
+	path = fileexchange_utils/Violinplot-Matlab
+	url = https://github.com/bastibe/Violinplot-Matlab.git
+[submodule "bin/CIECAM02"]
+	path = bin/CIECAM02
+	url = https://github.com/DrosteEffect/CIECAM02.git
