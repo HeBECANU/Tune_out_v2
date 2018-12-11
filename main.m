@@ -420,6 +420,15 @@ fprintf('ok logic gives %u / %u shots for yeild %04.1f %%\n',...
 %now find the mean position of each pulse of the atom laser in each shot
 data.mcp_tdc.al_pulses=bin_al_pulses(anal_opts.atom_laser,data);
 
+
+%% FITTING THE ATOM NUMBER
+%use the inital few atom laser pulses in order to determine the atom number
+%not of that much benifit TBH
+anal_opts.atom_num_fit=[];
+anal_opts.atom_num_fit.pulses=[1,20]; %min,max index of pulses
+anal_opts.atom_num_fit.plot_each_shot=false;
+data.num_fit=fit_atom_number(anal_opts.atom_num_fit,data);
+
 %% FITTING THE TRAP FREQUENCY
 anal_opts.osc_fit.adaptive_freq=true; %estimate the starting trap freq 
 anal_opts.osc_fit.appr_osc_freq_guess=[52,47.9,40];

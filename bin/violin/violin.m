@@ -48,11 +48,14 @@
 %__________________________________________________________________________
 %{
 % Example1 (default):
+
 disp('this example uses the statistical toolbox')
 Y=[rand(1000,1),gamrnd(1,2,1000,1),normrnd(10,2,1000,1),gamrnd(10,0.1,1000,1)];
 [h,L,MX,MED]=violin(Y);
 ylabel('\Delta [yesno^{-2}]','FontSize',14)
+
 %Example2 (specify facecolor, edgecolor, xlabel):
+
 disp('this example uses the statistical toolbox')
 Y=[rand(1000,1),gamrnd(1,2,1000,1),normrnd(10,2,1000,1),gamrnd(10,0.1,1000,1)];
 violin(Y,'xlabel',{'a','b','c','d'},'facecolor',[1 1 0;0 1 0;.3 .3 .3;0 0.3 0.1],'edgecolor','b',...
@@ -60,15 +63,20 @@ violin(Y,'xlabel',{'a','b','c','d'},'facecolor',[1 1 0;0 1 0;.3 .3 .3;0 0.3 0.1]
 'mc','k',...
 'medc','r--')
 ylabel('\Delta [yesno^{-2}]','FontSize',14)
+
 %Example3 (specify x axis location):
+
 disp('this example uses the statistical toolbox')
 Y=[rand(1000,1),gamrnd(1,2,1000,1),normrnd(10,2,1000,1),gamrnd(10,0.1,1000,1)];
 violin(Y,'x',[-1 .7 3.4 8.8],'facecolor',[1 1 0;0 1 0;.3 .3 .3;0 0.3 0.1],'edgecolor','none',...
 'bw',0.3,'mc','k','medc','r-.')
 axis([-2 10 -0.5 20])
 ylabel('\Delta [yesno^{-2}]','FontSize',14)
+
 %Example4 (Give data as cells with different n):
+
 disp('this example uses the statistical toolbox')
+
 Y{:,1}=rand(10,1);
 Y{:,2}=rand(1000,1);
 violin(Y,'facecolor',[1 1 0;0 1 0;.3 .3 .3;0 0.3 0.1],'edgecolor','none','bw',0.1,'mc','k','medc','r-.')
@@ -76,6 +84,7 @@ ylabel('\Delta [yesno^{-2}]','FontSize',14)
 %}
 %%
 function[h,L,MX,MED,bw]=violin(Y,varargin)
+
 %defaults:
 %_____________________
 xL=[];
@@ -90,10 +99,12 @@ plotmean=1;
 plotmedian=1;
 x = [];
 %_____________________
+
 %convert single columns to cells:
 if iscell(Y)==0
     Y = num2cell(Y,1);
 end
+
 %get additional input parameters (varargin)
 if isempty(find(strcmp(varargin,'xlabel')))==0
     xL = varargin{find(strcmp(varargin,'xlabel'))+1};
@@ -143,6 +154,7 @@ end
 if size(fc,1)==1
     fc=repmat(fc,size(Y,2),1);
 end
+
 %% Calculate the kernel density
 i=1;
 for i=1:size(Y,2)
@@ -180,6 +192,7 @@ else
         error('please provide either x or xlabel. not both.')
     end
 end
+
 %% Plot the violins
 i=1;
 for i=i:size(Y,2)
@@ -213,6 +226,7 @@ for i=i:size(Y,2)
         end
     end
 end
+
 %% Add legend if requested
 if plotlegend==1 & plotmean==1 | plotlegend==1 & plotmedian==1
     
@@ -228,12 +242,14 @@ if plotlegend==1 & plotmean==1 | plotlegend==1 & plotmedian==1
 else
     L=[];
 end
+
 %% Set axis
 if setX == 0
     axis([0.5 size(Y,2)+0.5, min(U(:)) max(U(:))]);
 elseif setX == 1
     axis([min(x)-0.05*range(x) max(x)+0.05*range(x), min(U(:)) max(U(:))]);
 end
+
 %% Set x-labels
 xL2={''};
 i=1;
@@ -242,6 +258,7 @@ for i=1:size(xL,2)
 end
 set(gca,'TickLength',[0 0],'FontSize',12)
 box on
+
 if isempty(xL)==0
     set(gca,'XtickLabel',xL2)
 end
