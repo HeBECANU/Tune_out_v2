@@ -83,7 +83,7 @@ tic
 % BEGIN USER VAR-------------------------------------------------
 anal_opts=[];
 %anal_opts.tdc_import.dir='Y:\EXPERIMENT-DATA\Tune Out V2\20180826_testing_wm_log\';
-anal_opts.tdc_import.dir='D:\20181126_3_filt_align_dep_39_um_v2\';
+anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181203_filt_skew_pos50ghz\';
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
 anal_opts.tdc_import.force_reimport=false;
@@ -114,7 +114,7 @@ anal_opts.dld_aquire=4;
 anal_opts.aquire_time=4;
 anal_opts.trig_ai_in=20;
 anal_opts.aom_freq=0;%190*1e6;%Hz %set to zero for comparison with previous data runs
-anal_opts.probe_set_pt=5.0;
+anal_opts.probe_set_pt=3.0;
 
 anal_opts.wm_log.plot_all=true;
 anal_opts.wm_log.plot_failed=true;
@@ -194,20 +194,37 @@ data.labview.calibration=lv_log.probe_calibration;
 %can check that the times look ok
 % plot(data.mcp_tdc.write_time-data.probe.time)
 
+%% CHECK ATOM NUMBER
+%total number of detected counts
+sfigure(1);
+clf
+set(gcf,'color','w')
+subplot(4,1,1)
+%create a list of indicies (of the mcp_tdc) that have an ok number of counts
+%exclude the very low and then set the thresh based on the sd of the remaining
+not_zero_files=data.mcp_tdc.num_counts>1e3; 
+num_thresh=mean(data.mcp_tdc.num_counts(not_zero_files))-4*std(data.mcp_tdc.num_counts(not_zero_files));
+data.mcp_tdc.num_ok=data.mcp_tdc.num_counts>num_thresh & ...
+    (data.mcp_tdc.time_create_write(:,1)'-data.mcp_tdc.time_create_write(1,1))<(anal_opts.max_runtime*60*60);
+fprintf('shots number ok %u out of %u \n',sum(data.mcp_tdc.num_ok),numel(data.mcp_tdc.num_ok))
 
+plot((data.mcp_tdc.time_create_write(:,2)-data.mcp_tdc.time_create_write(1,2))/(60*60),data.mcp_tdc.num_counts)
+xlabel('time (h)')
+ylabel('total counts')
+title('num count run trend')
+%should plot the threshold
 
 %% Match Labview data
 %because the mcp-dld detector has no direct communication with the bec computer
 % the data.labview.shot_num does not nessesarily correspond to data.mcp_tdc.shot_num
-
-data.mcp_tdc.labview_shot_num=[];
-data.mcp_tdc.probe.calibration=[];
-
 %try and match up the file with if it is a calibaration using the time
 %it is slightly overkill here to search each one, but just being extra
 %cautious/flexible
 time_thresh=4; %how close for the times to be considered the same shot
 %lets examine what the time difference does
+
+data.mcp_tdc.labview_shot_num=[];
+data.mcp_tdc.probe.calibration=[];
 
 imax=min([size(data.labview.time,2),size(data.mcp_tdc.time_create_write,1)]);
 %imax=5000;
@@ -216,10 +233,9 @@ time_diff=data.mcp_tdc.time_create_write(1:imax,2)'-anal_opts.dld_aquire-anal_op
 mean_delay_labview_tdc=median(time_diff);
 
 sfigure(1);
-clf
 set(gcf,'color','w')
-subplot(2,1,1)
-plot(time_diff)
+subplot(4,1,2)
+plot(data.mcp_tdc.shot_num,time_diff)
 xlabel('shot number')
 ylabel('time between labview and mcp tdc')
 title('raw time diff')
@@ -241,8 +257,14 @@ for ii=1:iimax
     end 
 end
 
+
+
+
 %% IMPORT THE ANALOG INPUT LOG
-%the code will check that the probe beam PD was ok and that the laser was single mode
+%load in the analog input files to check if the laser is single mode & that the potodiode value is close to the set
+%point
+% a two teired cache system is used one level for importing all 
+
 anal_opts.ai_log.dir=anal_opts.tdc_import.dir;
 anal_opts.ai_log.force_reimport=false;
 anal_opts.ai_log.force_load_save=false;
@@ -299,7 +321,7 @@ data.wm_log.raw=wm_log_import(anal_opts.wm_log);
 %to this end find the closest labview update time and go back one then fowards
 
 anal_opts.wm_log.plot_all=false;
-anal_opts.wm_log.plot_failed=true;
+anal_opts.wm_log.plot_failed=false;
 anal_opts.wm_log.force_reimport=false;
 
 anal_opts.wm_log.time_pd_padding=4; %check this many s each side of probe
@@ -315,21 +337,7 @@ data.wm_log.proc=wm_log_process(anal_opts,data);
 clear('sub_data')
 
 
-%% CHECK ATOM NUMBER
-subplot(2,1,2)
-%create a list of indicies (of the mcp_tdc) that have an ok number of counts
-%exclude the very low and then set the thresh based on the sd of the remaining
-not_zero_files=data.mcp_tdc.num_counts>1e3; 
-num_thresh=mean(data.mcp_tdc.num_counts(not_zero_files))-4*std(data.mcp_tdc.num_counts(not_zero_files));
-data.mcp_tdc.num_ok=data.mcp_tdc.num_counts>num_thresh & ...
-    (data.mcp_tdc.time_create_write(:,1)'-data.mcp_tdc.time_create_write(1,1))<(anal_opts.max_runtime*60*60);
-fprintf('shots number ok %u out of %u \n',sum(data.mcp_tdc.num_ok),numel(data.mcp_tdc.num_ok))
 
-plot((data.mcp_tdc.time_create_write(:,2)-data.mcp_tdc.time_create_write(1,2))/(60*60),data.mcp_tdc.num_counts)
-xlabel('time (h)')
-ylabel('total counts')
-title('num count run trend')
-%should plot the threshold
 
 %% COMBINE ALL CHECK LOGICS AND PLOT
 %Here we will do a plot of all the checks and then combine them into one
@@ -344,10 +352,9 @@ title('num count run trend')
 %data.mcp_tdc.probe.ok.ecd_pd;  %ecd pd value
   
 
-figure(12);
-clf
+sfigure(1);
 set(gcf,'color','w')
-subplot(2,1,1)
+subplot(4,1,3)
 %plot all the logics, dither it a bit to make it easier to figure out
 %culprits
 line_width=1.5;
@@ -376,7 +383,7 @@ xlim([1,xl(2)])
 legend('number','pd reg','single mode & pd','freq stable','RvB','ecd pd(ignored)','NOT(calibration)')
 yticks([0 1])
 
-subplot(2,1,2)
+subplot(4,1,4)
 tmp_cal=data.mcp_tdc.probe.calibration;
 tmp_cal(isnan(tmp_cal))=false;
 %must have good atom number AND (good probe OR be calibration)
@@ -457,6 +464,9 @@ anal_opts.cal_mdl.smooth_time=100;
 anal_opts.cal_mdl.plot=true;
 anal_opts.cal_mdl.global=anal_opts.global;
 data.cal=make_cal_model(anal_opts.cal_mdl,data);
+
+%this function should also be modified to calculated the difference between the cal and probe data (with unc) 
+% so its only done once
 
 
 %% segmented TO

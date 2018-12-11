@@ -1,7 +1,7 @@
 function ai_log_out=ai_log_import(anal_opts,data)
 %a simple wrapper for the below ai_log_import that uses the matlab function cache
 cache_opts=[];
-cache_opts.verbose=3;
+cache_opts.verbose=0;
 cache_opts.force_cache_load=anal_opts.force_load_save;
 anal_opts=rmfield(anal_opts,'force_load_save');
 cache_opts.force_recalc=anal_opts.force_reimport;
