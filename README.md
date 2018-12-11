@@ -76,3 +76,4 @@ This project would not have been possible without the many open source tools tha
 * ***Daniel Eaton***  [sfigure](https://au.mathworks.com/matlabcentral/fileexchange/8919-smart-silent-figure)
 * ***Denis Gilbert***  [M-file Header Template](https://au.mathworks.com/matlabcentral/fileexchange/4908-m-file-header-template)
 * ***DrosteEffect***  [CIECAM02](https://github.com/DrosteEffect/CIECAM02)
+* ***Holger Hoffmann*** [violin](https://au.mathworks.com/matlabcentral/fileexchange/45134-violin-plot)

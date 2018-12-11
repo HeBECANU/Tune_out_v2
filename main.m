@@ -258,8 +258,6 @@ for ii=1:iimax
 end
 
 
-
-
 %% IMPORT THE ANALOG INPUT LOG
 %load in the analog input files to check if the laser is single mode & that the potodiode value is close to the set
 %point
@@ -275,6 +273,7 @@ anal_opts.ai_log.pd.set(~isnan(anal_opts.ai_log.pd.set))=~anal_opts.ai_log.pd.se
 anal_opts.ai_log.pd.set=anal_opts.ai_log.pd.set*anal_opts.probe_set_pt;
 %anal_opts.ai_log.pd.set(isnan(anal_opts.ai_log.pd.set))=0;
 anal_opts.ai_log.aquire_time=4;
+
 anal_opts.ai_log.pd.diff_thresh=0.1;
 anal_opts.ai_log.pd.std_thresh=0.1;
 anal_opts.ai_log.pd.time_start=0.2;
@@ -420,6 +419,16 @@ fprintf('ok logic gives %u / %u shots for yeild %04.1f %%\n',...
 %% BINNING UP THE ATOM LASER PULSES
 %now find the mean position of each pulse of the atom laser in each shot
 data.mcp_tdc.al_pulses=bin_al_pulses(anal_opts.atom_laser,data);
+
+
+%% FITTING THE ATOM NUMBER
+%use the inital few atom laser pulses in order to determine the atom number
+%not of that much benifit TBH
+anal_opts.atom_num_fit=[];
+anal_opts.atom_num_fit.pulses=[1,20]; %min,max index of pulses
+anal_opts.atom_num_fit.plot.each_shot=false;
+anal_opts.atom_num_fit.plot.history=false;
+data.num_fit=fit_atom_number(anal_opts.atom_num_fit,data);
 
 %% FITTING THE TRAP FREQUENCY
 anal_opts.osc_fit.adaptive_freq=true; %estimate the starting trap freq 
