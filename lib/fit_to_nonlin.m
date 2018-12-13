@@ -274,8 +274,6 @@ c_data = viridis(num_bin);
 x_res_grouped = ones(1,num_bin);
 y_res_grouped = cell(1,num_bin);
 ydat_chunks=nan(numel(num_bin),2);
-sfigure(487);
-clf
 for jj=0:(num_bin-1)
 %     hold on
     bin_centre = bin_size*0.5+jj*bin_size+min(xdat_culled);
@@ -285,18 +283,18 @@ for jj=0:(num_bin-1)
     ydat_chunks(jj+1,1)=nanmean(ydat_culled(x_mask));
     ydat_chunks(jj+1,2)=nanstd(ydat_culled(x_mask));
 end
-%% Violin plot, BROKEN
-%kierian whenere does this violin come from??
-% 
-% violin(y_res_grouped,'x',x_res_grouped,'facecolor',c_data,'edgecolor','none','bw',10,'mc','k','medc','r-.');
-% ylabel('Residuals in Signal')
-% xlabel(sprintf('Tune-out value - %.3f (MHz)',freq_offset*1e-6))
-% set(gcf,'color','w')
-% sfigure(476);
-% histogram(res,'FaceAlpha',0.45)
-% xlabel('Residuals in Signal')
-% ylabel('Count')
-% set(gcf,'color','w')
+%% Violin plot
+sfigure(487);
+clf
+violin(y_res_grouped,'x',x_res_grouped,'facecolor',c_data,'edgecolor','none','bw',10,'mc','k','medc','r-.');
+ylabel('Residuals in Signal')
+xlabel(sprintf('Tune-out value - %.3f (MHz)',freq_offset*1e-6))
+set(gcf,'color','w')
+sfigure(476);
+histogram(res,'FaceAlpha',0.45)
+xlabel('Residuals in Signal')
+ylabel('Count')
+set(gcf,'color','w')
 
 
 %Finally plot a nice version of the quad fit

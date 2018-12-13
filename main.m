@@ -82,8 +82,20 @@ tic
 %%
 % BEGIN USER VAR-------------------------------------------------
 anal_opts=[];
-%anal_opts.tdc_import.dir='Y:\EXPERIMENT-DATA\Tune Out V2\20180826_testing_wm_log\';
-anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181203_filt_skew_pos50ghz\';
+%setup directories you wish to loop over
+loop_config.dir = {'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181203_filt_skew_pos50ghz\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181202_filt_skew_pos110ghz\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_36.8um\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181122_alignment_dep_34_5\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181011_to_drift_2\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181120_filt_dep_3filt\'};
+loop_config.set_pt = [3.0, 3.0, 5.0, 5.0, 2.0, 5.0];
+selected_dirs = 1:numel(loop_config.dir); %which files to loop over (currently all)
+
+for dir_idx = selected_dirs
+try    
+anal_opts.tdc_import.dir = loop_config.dir{dir_idx};
+anal_opts.probe_set_pt=loop_config.set_pt(dir_idx);
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
 anal_opts.tdc_import.force_reimport=false;
@@ -114,10 +126,9 @@ anal_opts.dld_aquire=4;
 anal_opts.aquire_time=4;
 anal_opts.trig_ai_in=20;
 anal_opts.aom_freq=0;%190*1e6;%Hz %set to zero for comparison with previous data runs
-anal_opts.probe_set_pt=3.0;
 
-anal_opts.wm_log.plot_all=true;
-anal_opts.wm_log.plot_failed=true;
+anal_opts.wm_log.plot_all=false;
+anal_opts.wm_log.plot_failed=false;
 
 
 anal_opts.osc_fit.binsx=1000;
@@ -615,3 +626,31 @@ fprintf('Done')
 % histogram(1./data.osc_fit.model_coefs(data.osc_fit.ok.rmse,7,1),linspace(0,3,1e2))
 
 toc
+
+%Archive the analysed data
+
+clear drift_data main_data
+
+drift_data.to_val{:,1}=to_seg_fits.fit_trimmed.freq.val.*2;
+drift_data.to_val{:,2}=to_seg_fits.fit_trimmed.freq.unc.*2;
+drift_data.to_time=to_seg_fits.to_time;
+drift_data.atom_num=to_seg_fits.atom_num(:,1);
+for kk=1:numel(to_seg_fits.fit_trimmed.model)
+    drift_data.grad{kk,1}=to_seg_fits.fit_trimmed.model{kk,1}.Coefficients{2,1};
+    drift_data.grad{kk,2}=to_seg_fits.fit_trimmed.model{kk,1}.Coefficients{2,2};
+end
+drift_data.model=to_seg_fits.fit_trimmed.model;
+
+main_data.set_pt = anal_opts.probe_set_pt;
+main_data.lin_fit{1} = to_freq_val_lin;
+main_data.lin_fit{2} = to_freq_unc_lin;
+main_data.quad_fit{1} = to_freq_val_quad;
+main_data.quad_fit{2} = to_freq_unc_quad;
+main_data.shots = tot_num_shots;
+save([anal_opts.global.out_dir,'main_data.mat'],'main_data')
+save([anal_opts.global.out_dir,'drift_data.mat'],'drift_data')
+
+catch
+fprintf('Well that one (%s) didnt work \n',anal_opts.tdc_import.dir)
+end
+end
