@@ -53,7 +53,7 @@ git clone --recursive https://github.com/brycehenson/Tune_out_v2_trap_freq.git
 ```
 then to update 
 ```
-git submodule update --recursive
+git submodule update --recursive --init
 git submodule foreach --recursive git pull origin master
 ```
 
