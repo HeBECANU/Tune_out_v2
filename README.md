@@ -1,5 +1,5 @@
 # Tune_out_v2_trap_freq
-**Bryce M. Henson, Jacob A. Ross, Kieran F. Thomas,**  
+**Bryce M. Henson, [Jacob A. Ross](https://github.com/GroundhogState), [Kieran F. Thomas](https://github.com/KF-Thomas)**  
 Determine the Tune out from a dataset using the measured change in trap frequency when the probe beam is applied.  
 The script:
   * defines the user controled options
