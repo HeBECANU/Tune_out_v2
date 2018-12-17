@@ -7,6 +7,6 @@
 [submodule "bin/CIECAM02"]
 	path = bin/CIECAM02
 	url = https://github.com/DrosteEffect/CIECAM02.git
-[submodule "lib/Simple_BEC_Analysis"]
-	path = lib/Simple_BEC_Analysis
-	url = https://github.com/brycehenson/Simple_BEC_Analysis.git
+[submodule "lib/Core_BEC_Analysis"]
+	path = lib/Core_BEC_Analysis
+	url = https://github.com/brycehenson/Core_BEC_Analysis.git
