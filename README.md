@@ -49,7 +49,7 @@ DAC master trig ---------->		Digital output cards
 
 ## Install
 ``` 
-git clone --recursive https://github.com/brycehenson/Tune_out_v2_trap_freq.git
+git clone --recursive https://github.com/brycehenson/Tune_out_v2.git
 ```
 then to update 
 ```
