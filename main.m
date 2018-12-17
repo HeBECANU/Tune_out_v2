@@ -83,13 +83,22 @@ tic
 % BEGIN USER VAR-------------------------------------------------
 anal_opts=[];
 %setup directories you wish to loop over
-loop_config.dir = {'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181203_filt_skew_pos50ghz\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181202_filt_skew_pos110ghz\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_36.8um\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181122_alignment_dep_34_5\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181011_to_drift_2\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181120_filt_dep_3filt\'};
-loop_config.set_pt = [3.0, 3.0, 5.0, 5.0, 2.0, 5.0];
+% loop_config.dir = {'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181202_filt_skew_neg50ghz\',
+%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181126_3_filt_align_dep_39_um_v2\',
+%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_44.9_um\',
+%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181011_to_drift_1\',
+%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181027_wp_out_stab3\',
+%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181026_wp_out_stab\',
+%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181026_wp_out_stab2\'};
+% loop_config.set_pt = [3.0, 5.0, 5.0, 2.0, 5.0, 5.0, 5.0];
+loop_config.dir = {'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181126_3_filt_align_dep_39_um_v2\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181011_to_drift_1\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181027_wp_out_stab3\'};
+    %Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_31um\out\20181203T203502
+    %Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181203_filt_skew_pos50ghz_bad_setpt\
+    %Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181124_3_filt_align_dep_34_um\
+    %Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181122_filt_dep_none
+loop_config.set_pt = [ 5.0, 2.0, 5.0];
 selected_dirs = 1:numel(loop_config.dir); %which files to loop over (currently all)
 
 for dir_idx = selected_dirs
@@ -627,7 +636,7 @@ fprintf('Done')
 
 toc
 
-%Archive the analysed data
+%% Archive the analysed data
 
 clear drift_data main_data
 
