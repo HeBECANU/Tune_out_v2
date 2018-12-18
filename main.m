@@ -78,31 +78,35 @@
 
 %close all
 clear all
-tic
 %%
 % BEGIN USER VAR-------------------------------------------------
-anal_opts=[];
 %setup directories you wish to loop over
-% loop_config.dir = {'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181202_filt_skew_neg50ghz\',
-%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181126_3_filt_align_dep_39_um_v2\',
-%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_44.9_um\',
-%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181011_to_drift_1\',
-%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181027_wp_out_stab3\',
-%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181026_wp_out_stab\',
-%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181026_wp_out_stab2\'};
-% loop_config.set_pt = [3.0, 5.0, 5.0, 2.0, 5.0, 5.0, 5.0];
-loop_config.dir = {'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181126_3_filt_align_dep_39_um_v2\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181011_to_drift_1\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181027_wp_out_stab3\'};
-    %Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_31um\out\20181203T203502
-    %Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181203_filt_skew_pos50ghz_bad_setpt\
-    %Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181124_3_filt_align_dep_34_um\
-    %Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181122_filt_dep_none
-loop_config.set_pt = [ 5.0, 2.0, 5.0];
+loop_config.dir = {'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_31um\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181203_filt_skew_pos50ghz_bad_setpt\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181124_3_filt_align_dep_34_um\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181122_filt_dep_none\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181205_baseline_nuller_on_always\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181204_baseline_1\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181201_filt_skew_neg111ghz\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181203_filt_skew_pos50ghz\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181202_filt_skew_pos110ghz\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_36.8um\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181122_alignment_dep_34_5\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181011_to_drift_2\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181120_filt_dep_3filt\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181202_filt_skew_neg50ghz\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_44.9_um\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181026_wp_out_stab\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181026_wp_out_stab2\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_31um\'};
+%Vector of set points for each directory, has to be done manualy first, but is saved after data is analysed    
+loop_config.set_pt = [ 5.0, 9.0, 5.0, 5.0, 8.0, 8.0, 3.0, 3, 3, 5, 5, 2     5     3     5     5     5     5];
 selected_dirs = 1:numel(loop_config.dir); %which files to loop over (currently all)
 
 for dir_idx = selected_dirs
-try    
+try
+tic
+anal_opts=[]; %reset the options (would be good to clear all variables except the loop config
 anal_opts.tdc_import.dir = loop_config.dir{dir_idx};
 anal_opts.probe_set_pt=loop_config.set_pt(dir_idx);
 anal_opts.tdc_import.file_name='d';
@@ -638,8 +642,9 @@ toc
 
 %% Archive the analysed data
 
-clear drift_data main_data
+clear drift_data main_data %To make sure there isn't any bleed through between directories
 
+%Scan segmented data
 drift_data.to_val{:,1}=to_seg_fits.fit_trimmed.freq.val.*2;
 drift_data.to_val{:,2}=to_seg_fits.fit_trimmed.freq.unc.*2;
 drift_data.to_time=to_seg_fits.to_time;
@@ -649,7 +654,9 @@ for kk=1:numel(to_seg_fits.fit_trimmed.model)
     drift_data.grad{kk,2}=to_seg_fits.fit_trimmed.model{kk,1}.Coefficients{2,2};
 end
 drift_data.model=to_seg_fits.fit_trimmed.model;
+drift_data.avg_coefs = to_seg_fits.avg_coefs;
 
+%The analysis of the whole run
 main_data.set_pt = anal_opts.probe_set_pt;
 main_data.lin_fit{1} = to_freq_val_lin;
 main_data.lin_fit{2} = to_freq_unc_lin;
@@ -660,6 +667,6 @@ save([anal_opts.global.out_dir,'main_data.mat'],'main_data')
 save([anal_opts.global.out_dir,'drift_data.mat'],'drift_data')
 
 catch
-fprintf('Well that one (%s) didnt work \n',anal_opts.tdc_import.dir)
+fprintf('Well that one (%s) didnt work \n',anal_opts.tdc_import.dir) %Indicate if a directory couldn't be analysed properly
 end
 end

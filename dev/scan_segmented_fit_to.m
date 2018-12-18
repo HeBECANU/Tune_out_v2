@@ -107,6 +107,7 @@ to_seg_fits.good_shot_idx=cell(iimax,1);
 to_seg_fits.to_time = zeros(iimax,1);
 to_seg_fits.seg_edges = zeros(iimax,2);
 to_seg_fits.atom_num = zeros(iimax,2);
+to_seg_fits.avg_coefs = cell(iimax,1);
 %% Process
 fprintf('fitting tune out in segments %04u:%04u',iimax,0)
 for ii=1:iimax 
@@ -237,6 +238,7 @@ for ii=1:iimax
         to_seg_fits.xdat{ii}=xdat*anal_opts_fit_to.scale_x;
         to_seg_fits.ydat{ii}=num2cell([xdat;ydat],1);
         to_seg_fits.atom_num(ii,:) = [nanmean(data.mcp_tdc.num_counts(seg_mask)),nanstd(data.mcp_tdc.num_counts(seg_mask))];
+        to_seg_fits.avg_coefs{ii} = squeeze(mean(data.osc_fit.model_coefs(seg_mask,:,:))); %Save the average fit coefficents for a scan segment also
     end
 
 end
