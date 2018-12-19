@@ -49,104 +49,231 @@ tic
 %import_opts.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20180814_CW_AL_method_polz_dependence\wp_312deg_good_align\';
 %import_opts.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20180814_CW_AL_method_polz_dependence\wp_223deg_good_align';
 %import_opts.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20180814_CW_AL_method_polz_dependence\wp_267deg_good_align';
-import_opts.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\';
-import_opts.file_name='d';
-import_opts.force_reimport=false;
-import_opts.force_forc=false;
-import_opts.dld_xy_rot=0.61;
+anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181214_cw_run_2\';
+anal_opts.tdc_import.file_name='d';
+anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
+anal_opts.tdc_import.force_reimport=false;
+anal_opts.tdc_import.force_forc=false;
+anal_opts.tdc_import.dld_xy_rot=0.61;
 %Should probably try optimizing these
-xlim=[-20e-3, 20e-3];     %tight XY lims to eliminate hot spot from destroying pulse widths
-ylim=[-20e-3, 20e-3];
-tlim=[.4,1.4];
-import_opts.txylim=[tlim;xlim;ylim];
+tmp_xlim=[-20e-3, 20e-3];     %tight XY lims to eliminate hot spot from destroying pulse widths
+tmp_ylim=[-20e-3, 20e-3];
+tmp_tlim=[.4,1.8];
+anal_opts.tdc_import.txylim=[tlim;tmp_xlim;tmp_ylim];
+anal_opts.dld_aquire=4;
+anal_opts.trig_dld=20.3;
+anal_opts.dld_aquire=4;
+anal_opts.trig_ai_in=20;
+anal_opts.probe_set_pt=3.5;
 
+anal_opts.max_runtime=inf;
 anal_opts.hist.tbin = 5e-5;
 anal_opts.hist.tlim = import_opts.txylim(1,:);
 anal_opts.hist.tsmooth=0e-6;%2e-4;
 anal_opts.mod_freq=427;
-anal_opts.do_fft=false;
+anal_opts.do_fft=true;
 anal_opts.plot_fft=false;
 % END USER VAR-----------------------------------------------------------
 %this first section  sets up the struct 'data' which will contain everything you could want incuding the txy data and
 %the information from the log
-addpath('Colormaps') 
-addpath('FileTime_29Jun2011') %used for high precision windows timestamps in import_data
-constants
+%%
+data=[];
+%add all subfolders to the path
+this_folder = fileparts(which(mfilename));
+% Add that folder plus all subfolders to the path.
+addpath(genpath(this_folder));
+
+hebec_constants
 import_opts.shot_num=find_data_files(import_opts);
-import_opts.shot_num=import_opts.shot_num(import_opts.shot_num<400) %HACK
-[data,import_opts]=import_data(import_opts);
+%import_opts.shot_num=import_opts.shot_num(import_opts.shot_num<400) %HACK for small import 
+[data.mcp_tdc,import_opts]=import_mcp_tdc_data(import_opts);
 if ~exist([import_opts.dir,'out\'],'dir')
     mkdir([import_opts.dir,'out\'])
 end
 
-%import the log
+%% IMPORT LV LOG to data.labview
+%TO DO FUNCTIONALIZE
+%import the wavemeter log
 %adaptively to deal with the 2 different log files that are in the data
-clear('log')
-log.dir = strcat(import_opts.dir,'log_LabviewMatlab.txt');
-fid = fopen(log.dir );
-log.cell=textscan(fid,'%s','Delimiter','\n');
-log.cell=log.cell{1};
-for ii=1:size(log.cell,1)
-    if ~isequal(log.cell{ii},'') %catch the empty case
-        if contains(log.cell{ii},'measure_probe')
-            line_cells=textscan(log.cell{ii},'%f %s %s %s %f %s %u','Delimiter',',');
-            log.setpoints(ii)=line_cells{5};
-            log.probe_calibration(ii)=false;
-            log.iter_nums(ii)=line_cells{7};
-        elseif contains(log.cell{ii},'calibrate')
-            line_cells=textscan(log.cell{ii},'%f %s %s %s %s %u','Delimiter',',');
-            log.setpoints(ii)=NaN;
-            log.probe_calibration(ii)=true;
-            log.iter_nums(ii)=line_cells{6};
+lv_log=[];
+lv_log.dir = strcat(anal_opts.tdc_import.dir,'log_LabviewMatlab.txt');
+fid = fopen(lv_log.dir );
+lv_log.cell=textscan(fid,'%s','Delimiter','\n');
+fclose(fid);
+lv_log.cell=lv_log.cell{1};
+for ii=1:size(lv_log.cell,1)
+    if ~isequal(lv_log.cell{ii},'') %catch the empty case
+        if contains(lv_log.cell{ii},'measure_probe')
+            line_cells=textscan(lv_log.cell{ii},'%f %s %s %s %f %s %u','Delimiter',',');
+            lv_log.setpoints(ii)=line_cells{5};
+            lv_log.probe_calibration(ii)=false;
+            lv_log.iter_nums(ii)=line_cells{7};
+        elseif contains(lv_log.cell{ii},'calibrate')
+            line_cells=textscan(lv_log.cell{ii},'%f %s %s %s %s %u','Delimiter',',');
+            lv_log.setpoints(ii)=NaN;
+            lv_log.probe_calibration(ii)=true;
+            lv_log.iter_nums(ii)=line_cells{6};
         else %deals with the legacy case (only 20180813_CW_AL_tuneout_scan)
-            line_cells=textscan(log.cell{ii},'%f %s %s %s %f %s %u','Delimiter',',');
-            log.setpoints(ii)=line_cells{5};
-            log.probe_calibration(ii)=false;
-            log.iter_nums(ii)=line_cells{7};
+            line_cells=textscan(lv_log.cell{ii},'%f %s %s %s %f %s %u','Delimiter',',');
+            lv_log.setpoints(ii)=line_cells{5};
+            lv_log.probe_calibration(ii)=false;
+            lv_log.iter_nums(ii)=line_cells{7};
         end
-        log.posix_times(ii)=line_cells{1};
-        log.iso_times{ii}=line_cells{2};
+        lv_log.posix_times(ii)=line_cells{1};
+        lv_log.iso_times{ii}=line_cells{2};
     end
 end
-data.probe.setpoint=log.setpoints*1e6; %convert to hz
-data.probe.time=log.posix_times;
-data.probe.shot_num=log.iter_nums;
-data.probe.calibration=log.probe_calibration;
+data.labview=[];
+data.labview.setpoint=lv_log.setpoints*1e6; %convert to hz
+data.labview.time=lv_log.posix_times;
+data.labview.shot_num=lv_log.iter_nums;
+data.labview.calibration=lv_log.probe_calibration;
+%can check that the times look ok
+% plot(data.mcp_tdc.write_time-data.probe.time)
 
-%create a list of indicies that have an ok number of counts
+%% CHECK ATOM NUMBER
+%total number of detected counts
+sfigure(1);
+clf
+set(gcf,'color','w')
+subplot(4,1,1)
+%create a list of indicies (of the mcp_tdc) that have an ok number of counts
 %exclude the very low and then set the thresh based on the sd of the remaining
-not_zero_files=data.mcp_tdc.num_counts>1e2; 
-num_thresh=mean(data.mcp_tdc.num_counts(not_zero_files))-3*std(data.mcp_tdc.num_counts(not_zero_files));
-data.mcp_tdc.num_ok=data.mcp_tdc.num_counts>num_thresh;
+not_zero_files=data.mcp_tdc.num_counts>1e3; 
+num_thresh=mean(data.mcp_tdc.num_counts(not_zero_files))-4*std(data.mcp_tdc.num_counts(not_zero_files));
+data.mcp_tdc.num_ok=data.mcp_tdc.num_counts>num_thresh & ...
+    (data.mcp_tdc.time_create_write(:,1)'-data.mcp_tdc.time_create_write(1,1))<(anal_opts.max_runtime*60*60);
+fprintf('shots number ok %u out of %u \n',sum(data.mcp_tdc.num_ok),numel(data.mcp_tdc.num_ok))
 
+plot((data.mcp_tdc.time_create_write(:,2)-data.mcp_tdc.time_create_write(1,2))/(60*60),data.mcp_tdc.num_counts)
+xlabel('time (h)')
+ylabel('total counts')
+title('num count run trend')
+%should plot the threshold
 
-aligned_idx=min([size(data.probe.shot_num,2),size(data.mcp_tdc.shot_num,2),size(data.mcp_tdc.shot_num,2)]);
-data.probe.shot_num=data.probe.shot_num(1:aligned_idx);
-data.mcp_tdc.shot_num=data.mcp_tdc.shot_num(1:aligned_idx);
-data.probe.setpoint=data.probe.setpoint(1:aligned_idx);
-data.probe.calibration=data.probe.calibration(1:aligned_idx);
-%check that the shot numbers align
-if ~isequal(data.probe.shot_num,data.mcp_tdc.shot_num),error('shot numbers do not align'),end
+%% Match Labview data
+%because the mcp-dld detector has no direct communication with the bec computer
+% the data.labview.shot_num does not nessesarily correspond to data.mcp_tdc.shot_num
+%try and match up the file with if it is a calibaration using the time
+%it is slightly overkill here to search each one, but just being extra
+%cautious/flexible
+time_thresh=4; %how close for the times to be considered the same shot
+%lets examine what the time difference does
 
-%create a list of shots that belong to a particular probe beam set pt
-unique_freqs=unique(data.probe.setpoint);
-unique_freqs=unique_freqs(~isnan(unique_freqs));
-for ii=1:numel(unique_freqs)
-    freq=unique_freqs(ii);
-    %get the itteration numbers that had wavelength equaling freq
-    matching_itt_num=data.probe.shot_num(freq==data.probe.setpoint);
-    data.freq_sorted.freq(ii)=freq;
-    data.freq_sorted.indexes{ii}=matching_itt_num;
-    %I think this is cleaner than copying data arround a lot, however if there is a lot of reporcessing going on the
-    %line below can just write it out
-    %data.freq_sorted.txy={data.mcp_tdc.counts_txy{matching_itt_num}};
+data.mcp_tdc.labview_shot_num=[];
+data.mcp_tdc.probe.calibration=[];
+
+imax=min([size(data.labview.time,2),size(data.mcp_tdc.time_create_write,1)]);
+%imax=5000;
+time_diff=data.mcp_tdc.time_create_write(1:imax,2)'-anal_opts.dld_aquire-anal_opts.trig_dld-...
+    data.labview.time(1:imax);
+mean_delay_labview_tdc=median(time_diff);
+
+sfigure(1);
+set(gcf,'color','w')
+subplot(4,1,2)
+plot(data.mcp_tdc.shot_num,time_diff)
+xlabel('shot number')
+ylabel('time between labview and mcp tdc')
+title('raw time diff')
+%to do include ai_log
+iimax=size(data.mcp_tdc.time_create_write(:,1),1);
+data.mcp_tdc.probe.calibration=nan(iimax,1);
+data.mcp_tdc.labview_shot_num=nan(iimax,1);
+%loop over all the tdc_files 
+for ii=1:iimax
+    %predict the labview master trig time
+    %use the write time to handle being unpacked from 7z
+    est_labview_start=data.mcp_tdc.time_create_write(ii,2)...
+        -anal_opts.trig_dld-anal_opts.dld_aquire-mean_delay_labview_tdc;
+    [tval,nearest_idx]=closest_value(data.labview.time...
+        ,est_labview_start);
+    if abs(tval-est_labview_start)<time_thresh
+        data.mcp_tdc.labview_shot_num(ii)=data.labview.shot_num(nearest_idx);
+        data.mcp_tdc.probe.calibration(ii)=data.labview.calibration(nearest_idx);
+    end 
 end
-%usage example
-%to get all the files that are at freq =  data.freq_sorted.freq(5)
-%{data.mcp_tdc.counts_txy{data.freq_sorted.indexes{5}}}
-%gives a cell array each of which contains matricies of a shots txy data
-%vertcat(data.mcp_tdc.counts_txy{data.freq_sorted.indexes{5}})
-%gives all the data in a given wavelength
+
+
+%% IMPORT THE ANALOG INPUT LOG
+%load in the analog input files to check if the laser is single mode & that the potodiode value is close to the set
+%point
+% a two teired cache system is used one level for importing all 
+
+anal_opts.ai_log.dir=anal_opts.tdc_import.dir;
+anal_opts.ai_log.force_reimport=false;
+anal_opts.ai_log.force_load_save=false;
+anal_opts.ai_log.log_name='log_analog_in_';
+anal_opts.ai_log.pd.set=data.mcp_tdc.probe.calibration;
+%nan compatable logical inverse
+anal_opts.ai_log.pd.set(~isnan(anal_opts.ai_log.pd.set))=~anal_opts.ai_log.pd.set(~isnan(anal_opts.ai_log.pd.set));
+anal_opts.ai_log.pd.set=anal_opts.ai_log.pd.set*anal_opts.probe_set_pt;
+%anal_opts.ai_log.pd.set(isnan(anal_opts.ai_log.pd.set))=0;
+anal_opts.ai_log.aquire_time=4;
+
+anal_opts.ai_log.pd.diff_thresh=0.1;
+anal_opts.ai_log.pd.std_thresh=0.1;
+anal_opts.ai_log.pd.time_start=0.2;
+anal_opts.ai_log.pd.time_stop=2;
+anal_opts.ai_log.sfp.num_checks=10; %how many places to check that the laser is single mode
+anal_opts.ai_log.sfp.thresh_cmp_peak=20e-3; %theshold on the compressed signal to be considered a peak
+anal_opts.ai_log.sfp.peak_dist_min_pass=4.5;%minimum (min difference)between peaks for the laser to be considered single mode
+anal_opts.ai_log.plot.all=false;
+anal_opts.ai_log.plot.failed=false;
+anal_opts.ai_log.time_match_valid=5; %how close the predicted start of the shot is to the actual
+anal_opts.ai_log.scan_time=14e-3;  %estimate of the sfp scan time,used to set the window and the smoothing
+
+
+%because im only passing the ai_log feild to aviod conflicts forcing a reimport i need to coppy these feilds
+anal_opts.ai_log.trig_dld=anal_opts.trig_dld;
+anal_opts.ai_log.dld_aquire=anal_opts.dld_aquire;
+anal_opts.ai_log.aquire_time=anal_opts.dld_aquire;
+anal_opts.ai_log.trig_ai_in=anal_opts.trig_ai_in;
+ai_log_out=ai_log_import(anal_opts.ai_log,data);
+%copy the output across
+data.ai_log=ai_log_out;
+
+% % Trying to automate setpoint correction
+
+%save([datestr(datetime('now'),'yyyymmddTHHMMSS'),'.mat'],'-v7.3')
+
+
+%% IMPORT WM LOG FILES
+
+anal_opts.wm_log.dir=anal_opts.tdc_import.dir;
+anal_opts.wm_log.force_reimport=false;
+wm_log_name='log_wm_';
+wm_logs=dir([anal_opts.wm_log.dir,wm_log_name,'*.txt']);
+anal_opts.wm_log.names={wm_logs.name};
+data.wm_log.raw=wm_log_import(anal_opts.wm_log);
+
+
+%% CHECK THE WM INPUTS
+%check that the probe beam (optical) freq was stable & that 2x red ~ blue
+%(now redundant) check that the doubler photodiode voltage is ok
+%define a time window for checking if the doubler was ok &averaging the wavelength of the laser
+%i think it will be anal_opts.atom_laser.t0 after the creation time of the tdc file
+%compexity is that the time that the tdc file is wrote/reated is not relaible and depend on the flux rate and avaialble mem
+%to this end find the closest labview update time and go back one then fowards
+
+anal_opts.wm_log.plot_all=false;
+anal_opts.wm_log.plot_failed=false;
+anal_opts.wm_log.force_reimport=false;
+
+anal_opts.wm_log.time_pd_padding=4; %check this many s each side of probe
+anal_opts.wm_log.time_blue_padding=1; %check this many seconde each side of probe
+anal_opts.wm_log.time_probe=3;
+anal_opts.wm_log.ecd_volt_thresh=0.5;
+
+anal_opts.wm_log.red_sd_thresh=50; %allowable standard deviation in MHz
+anal_opts.wm_log.red_range_thresh=50; %allowable range deviation in MHz
+anal_opts.wm_log.rvb_thresh=10; %allowable value of abs(2*red-blue)
+
+data.wm_log.proc=wm_log_process(anal_opts,data);
+clear('sub_data')
+
+
+
 
 
 %%
@@ -193,6 +320,7 @@ fprintf('\nHistograms Done\n')
 %   *there is (at best) a sqrt(2) improvement in noise because now the out of phase component does not add
 %note because i moved on to the lock in method i have not implemented the auto phase alignment that the lock in method
 %has
+anal_opts.plot_fft=false;
 if anal_opts.do_fft
     fprintf('taking fft\n%04i\n',0)
     for ii=1:size(data.mcp_tdc.counts_txy,2)
@@ -201,7 +329,8 @@ if anal_opts.do_fft
         else
            hist_counts= data.mcp_tdc.hist.counts_smooth(ii,:);
         end
-        fftout=fft_tx( data.mcp_tdc.hist.bin_centers,hist_counts,10);%use a padded fft for smaller freq bins
+        %use a padded fft for smaller freq bins
+        fftout=fft_tx(data.mcp_tdc.hist.bin_centers,hist_counts,'padding',5,'window','hamming');
         [~,index]=min(abs(fftout(1,:)-anal_opts.mod_freq));
         %sample_freq=fftout(1,index)
         data.mod_amp_fft(ii)=fftout(2,index);
@@ -215,7 +344,7 @@ if anal_opts.do_fft
             set(gca,'xlim',[400,450]) 
             pause(0.01)
         end
-        fprintf('\b\b\b\b%04u',ii)
+        if mod(ii,10)==0, fprintf('\b\b\b\b%04u',ii), end
     end
     fprintf('\ndone fft\n')
 
@@ -364,16 +493,18 @@ figure(4);
 clf
 set(gcf,'color','w')
 subplot(1,2,1)
-plot(data.probe.setpoint(data.mcp_tdc.num_ok),data.lock_in.quad_rot(data.mcp_tdc.num_ok,1),'x')
-xlabel('pobe beam set freq')
+set_tmp=data.probe.setpoint(data.mcp_tdc.num_ok)*1e-9;
+mean_set_tmp=mean(set_tmp);
+plot(set_tmp-mean_set_tmp,data.lock_in.quad_rot(data.mcp_tdc.num_ok,1),'x')
+xlabel(sprintf('pobe beam set freq - %.3f (GHz)',mean_set_tmp))
 ylabel('In phase response')
 title(sprintf('%.2f pi',dtheta))
 subplot(1,2,2)
-plot(data.probe.setpoint(data.mcp_tdc.num_ok),data.lock_in.quad_rot(data.mcp_tdc.num_ok,2),'x')
-xlabel('pobe beam set freq')
+plot(set_tmp-mean_set_tmp,data.lock_in.quad_rot(data.mcp_tdc.num_ok,2),'x')
+xlabel(sprintf('pobe beam set freq - %.3f (GHz)',mean_set_tmp))
 ylabel('Out phase response')
 pause(0.1)
-saveas(gcf,[import_opts.dir,'out\aligned_response.png']) 
+%saveas(gcf,[import_opts.dir,'out\aligned_response.png']) 
 
 %%
 %calibration data
