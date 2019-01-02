@@ -9,6 +9,7 @@ setpts_all=data.wm_log.proc.probe.freq.set;
 temp_cal=data.mcp_tdc.probe.calibration';
 anal_opts_fit_to.bootstrap = false;
 delta_trap_freq_all = data.osc_fit.trap_freq_recons' - data.cal.freq_drift_model(data.mcp_tdc.time_create_write(:,1));
+cal_trend = data.cal.freq_drift_model(data.mcp_tdc.time_create_write(:,1))*1e6; %convert to hertz
 probe_freq= data.wm_log.proc.probe.freq.act.mean*1e6; %convert to hertz
 probe_freq_all= data.wm_log.proc.probe.freq.act.mean*1e6; %convert to hertz
 shot_time_abs=data.mcp_tdc.time_create_write(:,2);
@@ -287,7 +288,7 @@ fprintf('Plotting\n',iimax,0)
         to_unc_trim = to_seg_fits.fit_trimmed.freq.unc*anal_opts_fit_to.to_val_scale;
         to_val_ref = nanmean(to_val);
         to_val_ref_trim = to_val_trim(1);
-
+        
 
         slopes = cellfun(@(x) x.Coefficients.Estimate(2),to_seg_fits.fit_all.model);
         slopes_err = cellfun(@(x) x.Coefficients.SE(2),to_seg_fits.fit_all.model);
@@ -307,6 +308,9 @@ fprintf('Plotting\n',iimax,0)
         [acf_trim,lags_trim,bound_trim] = autocorr(to_val_trim);
         
         [nacf, nlags, ~] = autocorr(num_norm);
+        
+        cal_trend = cal_trend(1:last_good_shot);
+        cal_trend = cal_trend(to_plt_mask);
         
         sfigure(602);
         
@@ -357,17 +361,36 @@ fprintf('Plotting\n',iimax,0)
         xlabel('Time (h)')
         ylabel('Autocorrelation')
         
-        subplot(3,3,6) 
-        plot(shot_time_good,num_norm)
-%         plot(nlags,nacf)
-        hold on
-%         plot([min(nlags),max(nlags)],[0,0],'k');
-%         xlabel('Time (h)')
-        ylabel('Num counts')
-        title('Normalized Number')
+        
+%         subplot(3,3,6) 
+%         plot(num_norm,normalize(cal_trend),'.')
+%         hold on
+%         ylabel('Calibration mdl (normalized)')
+%         xlabel('Number (normalized')
+%         title('Normalized Number')
 
+        subplot(3,3,6) 
+        plot(normalize(cal_trend(to_plt_mask)),normalize(to_val),'.')
+        hold on
+        ylabel('Calibration mdl (normalized)')
+        xlabel('Number (normalized')
+        title('Normalized Number')
+        
+%         subplot(3,6,11) 
+%         plot(shot_time_good,num_norm)
+%         hold on
+%         ylabel('Num counts')
+%         title('Normalized Number')
+% 
+%         subplot(3,6,12) 
+%         plot(normalize(cal_trend))
+%         hold on
+%         xlabel('Time (h)')
+%         ylabel('Num counts')
+%         title('Calibration trend')
+        
         subplot(3,3,7)
-        errorbar(to_time,slopes,slopes_err)
+        plot(to_time,slopes);%,slopes_err)
         title('Fit gradient')
         xlabel('time (h)')
         ylabel('Gradient')

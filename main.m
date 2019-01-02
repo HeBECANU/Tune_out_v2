@@ -85,8 +85,9 @@ tic
 % BEGIN USER VAR-------------------------------------------------
 anal_opts=[];
 
-dir_idx = 5;
-% WORKS for 2, 4?
+for dir_idx = 1:4 %dirs to loop over
+    try
+% WORKS for 2, 4, 5
 init_loop_config % Creates a struct called init_loop_config
 
 anal_opts.tdc_import.dir = loop_config.dir{dir_idx};
@@ -606,3 +607,7 @@ fprintf('Done')
 % histogram(1./data.osc_fit.model_coefs(data.osc_fit.ok.rmse,7,1),linspace(0,3,1e2))
 
 toc
+    catch
+        fprintf('Well that one (%s) didnt work',anal_opts.tdc_import.dir)
+    end
+end
