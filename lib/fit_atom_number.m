@@ -6,9 +6,12 @@ atom_fit_mdl = @(b,x) b(1)*b(2)*((1-b(2)).^(x(:,1)-1));
 exp_qe=anal_opts_afit.qe;
 
 
+
+
 iimax=size(data.mcp_tdc.counts_txy,2); 
 fit_out_frac_ntot=nan(iimax,2,2); %value and uncert
 fit_predict=cell(iimax,1);
+fit_predict_unc=fit_predict;
 fprintf('Fitting atom number in shots %04i:%04i',iimax,0)
 pulse_num=anal_opts_afit.pulses(1):anal_opts_afit.pulses(2);
 for ii=1:iimax
@@ -16,13 +19,17 @@ for ii=1:iimax
         pulse_counts=data.mcp_tdc.al_pulses.num_counts(ii,pulse_num);
 
         coefs_guess=[data.mcp_tdc.num_counts(ii),1e-2];
-        pulse_fit=fitnlm(pulse_num,pulse_counts,atom_fit_mdl,coefs_guess);
+        opts = statset('nlinfit');
+        opts.RobustWgtFun = 'bisquare';
+        opts.MaxIter=2e3;
+        pulse_fit=fitnlm(pulse_num,pulse_counts,atom_fit_mdl,coefs_guess,'Options',opts);
         fit_out_frac_ntot(ii,:,:)=[[pulse_fit.Coefficients.Estimate(2),pulse_fit.Coefficients.SE(2)];...
                                     [pulse_fit.Coefficients.Estimate(1)/exp_qe,...
                                      pulse_fit.Coefficients.SE(1)/exp_qe]];
         %pass a function that can be used to get the atom number at any pulse number
         fit_predict{ii}=@(x) predict(pulse_fit,x)...
             ./pulse_fit.Coefficients.Estimate(2);
+        fit_predict_unc{ii}=@(x) make_unc_fun(x,pulse_fit);
         if anal_opts_afit.plot.each_shot
             fprintf('fit number in shot %u\n',ii)
             xplot=linspace(min(pulse_num),max(pulse_num),1e3)';
@@ -33,12 +40,14 @@ for ii=1:iimax
             plot(xplot,ci(:,2),'m-')
             plot(xplot,ci(:,1),'m-')
             hold off
+            xlabel('Pulse Index')
+            ylabel('Pulse Counts')
             set(gca, 'YScale', 'log')
             fprintf('frac predicted %.2e±%.2e\n',...
                 fit_out_frac_ntot(ii,1,1),fit_out_frac_ntot(ii,1,2))
             fprintf('Total no. fit %.2e±%.2e measured in file %.2e (qe %.1e corrected)\n',...
                 fit_out_frac_ntot(ii,2,1),fit_out_frac_ntot(ii,2,2),data.mcp_tdc.num_counts(ii)/exp_qe,exp_qe)
-            pause(0.1)
+            pause(1e-9)
         end
     end
     if mod(ii,10)==0, fprintf('\b\b\b\b%04u',ii), end
@@ -47,6 +56,7 @@ fprintf('...Done\n')
 
 out.fit_out_frac_ntot=fit_out_frac_ntot;
 out.fit_predict=fit_predict;
+out.fit_predict_unc=fit_predict_unc;
 %%
 if anal_opts_afit.plot.history
     figure(341)
@@ -76,4 +86,11 @@ end
 % this comes out to ~36 which is not too shabby
 
 
+end
+
+
+function fit_pred_unc=make_unc_fun(x,fit_obj)
+    ci_one_sd=1-erf(1/sqrt(2));%one sd CI
+    [~,ci]=predict(fit_obj,x,'Prediction' ,'curve','Alpha',ci_one_sd);
+    fit_pred_unc=(range(ci)/2)./fit_obj.Coefficients.Estimate(2);
 end
