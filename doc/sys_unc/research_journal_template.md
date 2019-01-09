@@ -1,17 +1,13 @@
 **Journal entry for week {1}, 6/1/19**
 
-## Article title: 
-{List the title}
+## Article title:
+Li-Yan's notes on the He* tuneout
 
 ### Authors:
-{List the authors}
+Li-Yan Tang
 
 #### Reference:
-{Give the full reference to the article, e.g. PHYSICAL REVIEW B 98, 214307 (2018)}
-
-#### Link:
-{Provide a hyperlink to the article abstract}
-
+Internal communication
 
 ## Purpose
 
