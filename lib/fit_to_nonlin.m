@@ -274,7 +274,7 @@ c_data = viridis(num_bin);
 x_res_grouped = ones(1,num_bin);
 y_res_grouped = cell(1,num_bin);
 ydat_chunks=nan(numel(num_bin),2);
-sfigure(487);	
+sfigure(487);
 clf
 for jj=0:(num_bin-1)
 %     hold on
