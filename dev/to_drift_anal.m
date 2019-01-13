@@ -15,8 +15,9 @@ loop_config.dir = {'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181205_baseline_nuller
         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181026_wp_out_stab\',
         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181026_wp_out_stab2\',
         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_31um\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181203_filt_skew_pos50ghz_bad_setpt\'};
-    loop_config.set_pt = [8.0, 3.0, 8.0, 3.0, 3.0, 5.0, 5.0, 2.0, 5.0];
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181203_filt_skew_pos50ghz_bad_setpt\',
+        'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190110_baseline_to_1'};
+    loop_config.set_pt = [8.0, 3.0, 8.0, 3.0, 3.0, 5.0, 5.0, 2.0, 5.0, 1.0];
 selected_dirs = 1:numel(loop_config.dir); %which files to loop over (currently all)
 TO_st_pt = 7.257355*1e14;
 drift_data_compiled.to_val{:,1}=[];

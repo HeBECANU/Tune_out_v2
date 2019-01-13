@@ -81,7 +81,7 @@ clear all
 %%
 % BEGIN USER VAR-------------------------------------------------
 %setup directories you wish to loop over
-loop_config.dir = {'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_31um\',
+loop_config.dir = {'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190110_baseline_to_1',
         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181203_filt_skew_pos50ghz_bad_setpt\',
         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181124_3_filt_align_dep_34_um\',
         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181122_filt_dep_none\',
@@ -100,8 +100,9 @@ loop_config.dir = {'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_de
         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181026_wp_out_stab2\',
         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_31um\'};
 %Vector of set points for each directory, has to be done manualy first, but is saved after data is analysed    
-loop_config.set_pt = [ 5.0, 9.0, 5.0, 5.0, 8.0, 8.0, 3.0, 3, 3, 5, 5, 2     5     3     5     5     5     5];
+loop_config.set_pt = [ 1.0, 9.0, 5.0, 5.0, 8.0, 8.0, 3.0, 3, 3, 5, 5, 2     5     3     5     5     5     5];
 selected_dirs = 1:numel(loop_config.dir); %which files to loop over (currently all)
+selected_dirs = 1;
 
 for dir_idx = selected_dirs
 try
