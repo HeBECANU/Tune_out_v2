@@ -274,10 +274,7 @@ c_data = viridis(num_bin);
 x_res_grouped = ones(1,num_bin);
 y_res_grouped = cell(1,num_bin);
 ydat_chunks=nan(numel(num_bin),2);
-sfigure(487);
-clf
 for jj=0:(num_bin-1)
-%     hold on
     bin_centre = bin_size*0.5+jj*bin_size+min(xdat_culled);
     x_res_grouped(jj+1) = bin_centre;
     x_mask = (abs(xdat_culled-bin_centre)<(bin_size*0.5));
@@ -285,7 +282,6 @@ for jj=0:(num_bin-1)
     ydat_chunks(jj+1,1)=nanmean(ydat_culled(x_mask));
     ydat_chunks(jj+1,2)=nanstd(ydat_culled(x_mask));
 end
-
 %Finally plot a nice version of the quad fit
 %set up the colors to use
 colors_main=[[233,87,0];[33,188,44];[0,165,166]];
