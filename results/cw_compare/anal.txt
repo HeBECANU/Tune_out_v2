@@ -1,0 +1,59 @@
+without calibation shots average subtracted
+====TO fit results==========
+dir =Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181214_cw_run_3\
+run start time               1544740497.8 (posix)
+run stop time                1544813435.9 (posix)
+duration                     72938.1 (s)
+TO freq (Linear)             725735811.4±(165±111) MHz
+TO wavelength (Linear)       413.087591±0.000094 nm 
+TO freq (Quadratic)          725735558.5±(353±1174) MHz
+TO wavelength (Quadratic)    413.087735±0.000101 nm 
+diff between Lin and Quad    -1.439144e-04±1.374679e-04 nm 
+diff from TOV1               -6.209031e-03±9.371682e-05 nm 
+number of probe files        2246 
+total used                   2246 
+files with enough number     2787
+shot uncert scaling @1SD 7736.7 MHz, 4403.69 fm /sqrt(shots)
+
+
+with calibation shots average subtracted
+====TO fit results==========
+dir =Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181214_cw_run_3\
+run start time               1544740497.8 (posix)
+run stop time                1544813435.9 (posix)
+duration                     72938.1 (s)
+TO freq (Linear)             725734979.3±(234±533) MHz
+TO wavelength (Linear)       413.088065±0.000133 nm 
+TO freq (Quadratic)          725734723.2±(302±884) MHz
+TO wavelength (Quadratic)    413.088210±0.000086 nm 
+diff between Lin and Quad    -1.457993e-04±1.586491e-04 nm 
+diff from TOV1               -5.735441e-03±1.332905e-04 nm 
+number of probe files        2246 
+total used                   2246 
+files with enough number     2787
+shot uncert scaling @1SD 11003.6 MHz, 6263.24 fm /sqrt(shots)
+
+
+linear shift 725734979.3-725735811.4=-832MHz
+
+
+with calibration model 
+====TO fit results==========
+dir =Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181214_cw_run_3\
+run start time               1544740497.8 (posix)
+run stop time                1544813435.9 (posix)
+duration                     72938.1 (s)
+TO freq (Linear)             725734845.0±(338±1805) MHz
+TO wavelength (Linear)       413.088141±0.000192 nm 
+TO freq (Quadratic)          725734323.2±(401±2483) MHz
+TO wavelength (Quadratic)    413.088438±0.000114 nm 
+diff between Lin and Quad    -2.969631e-04±2.238358e-04 nm 
+diff from TOV1               -5.658950e-03±1.924726e-04 nm 
+number of probe files        2246 
+total used                   2246 
+files with enough number     2787
+shot uncert scaling @1SD 15882.1 MHz, 9040.07 fm /sqrt(shots)
+>> 
+
+lin difference
+725734845.0-725734979.3=-134

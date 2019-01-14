@@ -1,5 +1,5 @@
 # Tune_out_v2_trap_freq
-**Bryce M. Henson**  
+**Bryce M. Henson, [Jacob A. Ross](https://github.com/GroundhogState), [Kieran F. Thomas](https://github.com/KF-Thomas)**  
 Determine the Tune out from a dataset using the measured change in trap frequency when the probe beam is applied.  
 The script:
   * defines the user controled options
@@ -49,11 +49,11 @@ DAC master trig ---------->		Digital output cards
 
 ## Install
 ``` 
-git clone --recursive https://github.com/brycehenson/Tune_out_v2_trap_freq.git
+git clone --recurse-submodules -j8 https://github.com/brycehenson/Tune_out_v2.git 
 ```
 then to update 
 ```
-git submodule update --recursive
+git submodule update --recursive --init
 git submodule foreach --recursive git pull origin master
 ```
 

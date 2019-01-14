@@ -19,3 +19,6 @@ power=50e-3;
 radius=50e-6;
 omega=sqrt((2*pi*(const.c^2)/(const.h*(transtion_freq^3)))*a*power/(radius^2))
 fprintf('transtion lifetime 1/rate %.2e \n',1/omega)
+
+
+%% calculating wavelength
