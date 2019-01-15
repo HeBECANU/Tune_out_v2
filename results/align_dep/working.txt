@@ -1,0 +1,34 @@
+
+
+====TO fit results==========
+dir =\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181122_alignment_dep_34_5\
+median damping time 1.12
+run start time               =1542895768.4 (posix)
+run stop time                =1542904230.2 (posix)
+duration                     =8461.9 (s)
+TO freq                      =362866967.7±(62±1) MHz
+TO wavelength                =413.088659±0.000035 nm 
+diff from TOV1               =-5.141242e-03±3.519387e-05 nm 
+number of probe files        =157 
+number of calibration files  =162 
+total used                   =319 
+files with enough number     =324
+shot uncert scaling @1SD     =1072.2 MHz, 610.30 fm /sqrt(shots)
+saving output...DoneElapsed time is 137.732830 seconds.
+
+
+
+====TO fit results==========
+dir =\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181122_alignment_dep_37_1\
+median damping time 1.03
+run start time               =1542904523.0 (posix)
+run stop time                =1542913216.1 (posix)
+duration                     =8693.2 (s)
+TO freq                      =362867548.5±(69±1) MHz
+TO wavelength                =413.087998±0.000039 nm 
+diff from TOV1               =-5.802356e-03±3.930350e-05 nm 
+number of probe files        =159 
+number of calibration files  =165 
+total used                   =324 
+files with enough number     =332
+shot uncert scaling @1SD     =1223.2 MHz, 696.25 fm /sqrt(shots)

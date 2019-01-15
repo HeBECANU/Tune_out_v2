@@ -5,14 +5,14 @@ if isstruct(struct)
         struct.(fn{1})=clean_log_structure(struct.(fn{1}),[struct_path,'.',fn{1}]);
     end
 else
-    if numel(struct)~=1 && iscell(struct) && isnumeric(struct{1})
+    if numel(struct)~=1 && iscell(struct) && isnumeric(struct{1}) && sum(~cellfun(@(x) isnumeric(x),struct))==0
         empty_mask=cellfun(@(x) isequal(x,[]),struct);
         struct(empty_mask)={nan};
         struct=cell2mat(struct);
     else
         try
             if iscell(struct)
-                %make empty cells empty strigns
+                %make empty cells empty strings
                 mask=cellfun(@(x) ~ischar(x),struct);
                 struct(mask)={''};
             end
