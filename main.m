@@ -77,13 +77,7 @@ tic
 %%
 % BEGIN USER VAR-------------------------------------------------
 anal_opts=[];
-%anal_opts.tdc_import.dir='Y:\EXPERIMENT-DATA\Tune Out V2\20180826_testing_wm_log\';
-%anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output';
-%anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181104_filters_dep_two\';
-%anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181102_filters_dep_two\';
-%anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181101_filters_dep_two';
-%anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181123_3_filt_align_dep_31um\';
-anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181201_filt_skew_neg111ghz\';
+anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190115_baseline_to_1\';
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
 anal_opts.tdc_import.force_reimport=false;
@@ -257,13 +251,13 @@ anal_opts.ai_log.plot.all=false;
 anal_opts.ai_log.plot.failed=false;
 anal_opts.ai_log.time_match_valid=5; %how close the predicted start of the shot is to the actual
 anal_opts.ai_log.scan_time=14e-3;  %estimate of the sfp scan time,used to set the window and the smoothing
-
-
 %because im only passing the ai_log feild to aviod conflicts forcing a reimport i need to coppy these feilds
 anal_opts.ai_log.trig_dld=anal_opts.trig_dld;
 anal_opts.ai_log.dld_aquire=anal_opts.dld_aquire;
 anal_opts.ai_log.aquire_time=anal_opts.dld_aquire;
 anal_opts.ai_log.trig_ai_in=anal_opts.trig_ai_in;
+
+%% Call the function
 ai_log_out=ai_log_import(anal_opts.ai_log,data);
 %copy the output across
 data.ai_log=ai_log_out;
