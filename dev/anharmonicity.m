@@ -157,7 +157,7 @@ ylabel('Fitted osc freq')
 % xlabel('Probe freq')
 % ylabel('Osc freq')
 
-subplot(2,2,3)
+subplot(2,2,4)
 et=errorbar(cal_trend(:,1),cal_trend(:,2),cal_trend(:,4),cal_trend(:,4),cal_trend(:,3),cal_trend(:,3),...
     '.','MarkerSize',20);
 et.Color = cm(20,:);
