@@ -1,0 +1,20 @@
+====TO fit results==========
+dir =Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181202_filt_skew_neg50ghz\
+median damping time 0.75
+run start time               1543763274.5 (posix)
+run stop time                1543827545.4 (posix)
+duration                     64270.9 (s)
+TO freq (Linear)             725736145.1±(158±18) MHz
+TO wavelength (Linear)       413.087401±0.000090 nm 
+TO freq (Quadratic)          725736090.2±(157±16) MHz
+TO wavelength (Quadratic)    413.087432±0.000045 nm 
+diff between Lin and Quad    -3.127909e-05±1.002812e-04 nm 
+diff from TOV1               -6.398992e-03±8.981405e-05 nm 
+number of probe files        645 
+number of calibration files  686 
+total used                   1331 
+files with enough number     1378
+shot uncert scaling @1SD 5720.8 MHz, 3256.29 fm /sqrt(shots)
+
+compared to
+

@@ -1,0 +1,60 @@
+===nuller=0
+Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\setting_up_1083_mag_align\20181210_nuller_+0.0_qt_nan_1083_off
+frac atoms after probe 0.836±0.028
+
+Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\setting_up_1083_mag_align\20181210_nuller_+0.0_qt_out_1083_on
+frac atoms after probe 0.170±0.035
+log frac atoms after/before probe -1.791±0.011
+
+Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\setting_up_1083_mag_align\20181210_nuller_+0.0_qt_in_1083_on
+frac atoms after probe 0.783±0.035
+log frac atoms after/before probe -0.245±0.003 
+
+===nuller=7
+Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\setting_up_1083_mag_align\20181210_nuller_+7.0_qt_nan_1083_off
+frac atoms after probe 0.876±0.131
+
+
+Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\setting_up_1083_mag_align\20181210_nuller_+7.0_qt_out_1083_on
+frac atoms after probe 0.117±0.015
+log frac atoms after/before probe -2.156±0.009 
+
+Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\setting_up_1083_mag_align\20181210_nuller_+7.0_qt_in_1083_on
+frac atoms after probe 0.875±0.094
+log frac atoms after/before probe -0.139±0.010 
+
+
+===nuller=5
+Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\setting_up_1083_mag_align\20181210_nuller_+5.0_qt_out_1083_on
+frac atoms after probe 0.087±0.013
+log frac atoms after/before probe -2.452±0.006 
+
+Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\setting_up_1083_mag_align\20181210_nuller_+5.0_qt_in_1083_on
+frac atoms after probe 0.772±0.025
+log frac atoms after/before probe -0.260±0.002 
+
+
+===nuller=-7
+Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\setting_up_1083_mag_align\20181210_nuller_-7.0_qt_nan_1083_off
+frac atoms after probe 0.969±0.087
+
+Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\setting_up_1083_mag_align\20181210_nuller_-7.0_qt_out_1083_on
+frac atoms after probe 0.546±0.039
+log frac atoms after/before probe -0.608±0.007 
+
+Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\setting_up_1083_mag_align\20181210_nuller_-7.0_qt_in_1083_on
+frac atoms after probe 0.947±0.106
+log frac atoms after/before probe -0.060±0.006 
+
+
+normalized loss
+ratio of log fractions with/without wp
+0		0.136
+5		0.106
+7		0.0644
+-7		0.09868
+
+Ok so it seems if there is a signal its not very strong!
+
+
+

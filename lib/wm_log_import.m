@@ -1,11 +1,14 @@
 function wm_log=wm_log_import(wm_log_import_opts)
 cache_opts=[];
-cache_opts.verbose=3;
+cache_opts.verbose=2;
 %cache_opts.force_cache_load=wm_log_import_opts.force_load_save;
 %wm_log_import_opts=rmfield(wm_log_import_opts,'force_load_save');
 cache_opts.force_recalc=wm_log_import_opts.force_reimport;
 wm_log_import_opts=rmfield(wm_log_import_opts,'force_reimport');
+
 cache_opts.mock_working_dir=wm_log_import_opts.dir;
+
+cache_opts.save_compressed=true;%needed otherwise save takes a very long time
 cache_opts.path_directions={1,'dir'};
 outputs=function_cache(cache_opts,@wm_log_import_core,{wm_log_import_opts});
 wm_log=outputs{1};
@@ -100,11 +103,10 @@ for ii=1:size(wm_log_import_opts.names,2)
         end
     end
 end
-fprintf('\nCleaning up output structure\n')
+fprintf('\nCleaning up output structure...')
 wm_log=clean_log_structure(wm_log,[]); %itteratively defined cleaner
-
-fprintf('done wm import\n')
-
+fprintf('Done\n')
+fprintf('Done wm import\n')
 
 end
 
