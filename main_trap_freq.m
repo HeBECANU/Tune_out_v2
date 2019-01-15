@@ -80,10 +80,7 @@
 clear all
 %%
 % BEGIN USER VAR-------------------------------------------------
-<<<<<<< HEAD:main.m
-anal_opts=[];
-anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190115_baseline_to_1\';
-=======
+
 %setup directories you wish to loop over
 loop_config.dir = {'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190115_baseline_to_1',
         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181203_filt_skew_pos50ghz_bad_setpt\',
@@ -114,7 +111,7 @@ tic
 anal_opts=[]; %reset the options (would be good to clear all variables except the loop config
 anal_opts.tdc_import.dir = loop_config.dir{dir_idx};
 anal_opts.probe_set_pt=loop_config.set_pt(dir_idx);
->>>>>>> de910ad7bed3a8f364574cc8be7d85d3fe1c66c2:main_trap_freq.m
+
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
 anal_opts.tdc_import.force_reimport=false;

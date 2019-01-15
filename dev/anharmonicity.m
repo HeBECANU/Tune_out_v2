@@ -149,13 +149,13 @@ title('Calibration fits')
 xlabel('Peak amplitude')
 ylabel('Fitted osc freq')
 
-% subplot(2,3,3)
-% cf = viridis(probe_slices);
-% colorinfo = (amps_meas_all-min(amps_meas_all))/(max(amps_meas_all)-min(amps_meas_all));
-% ef = scatter(probe_meas_all,freq_meas_all,10,colorinfo,'filled');
-% title('Freq change vs amplitude')
-% xlabel('Probe freq')
-% ylabel('Osc freq')
+subplot(2,3,3)
+cf = viridis(probe_slices);
+colorinfo = (amps_meas_all-min(amps_meas_all))/(max(amps_meas_all)-min(amps_meas_all));
+ef = scatter(probe_meas_all,freq_meas_all,10,colorinfo,'filled');
+title('Freq change vs amplitude')
+xlabel('Probe freq')
+ylabel('Osc freq')
 
 subplot(2,2,4)
 et=errorbar(cal_trend(:,1),cal_trend(:,2),cal_trend(:,4),cal_trend(:,4),cal_trend(:,3),cal_trend(:,3),...
