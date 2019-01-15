@@ -49,7 +49,9 @@ else
 end
 %this approach will only capture full scans of the TO
 [to_seg_fits.scan_edges,~] = find(edge_mask);
-to_seg_fits.scan_edges=[1,to_seg_fits.scan_edges'];
+if to_seg_fits.scan_edges(1)>2
+    to_seg_fits.scan_edges=[1,to_seg_fits.scan_edges'];
+end
 
 %apply some slightly over the top ckecks
 delta_mask = ~isnan(delta_trap_freq_all);

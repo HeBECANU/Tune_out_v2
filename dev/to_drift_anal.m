@@ -16,7 +16,7 @@ loop_config.dir = {'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181205_baseline_nuller
         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181026_wp_out_stab2\',
         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_31um\',
         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181203_filt_skew_pos50ghz_bad_setpt\',
-        'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190110_baseline_to_1'};
+        'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190115_baseline_to_1\'};
     loop_config.set_pt = [8.0, 3.0, 8.0, 3.0, 3.0, 5.0, 5.0, 2.0, 5.0, 1.0];
 selected_dirs = 1:numel(loop_config.dir); %which files to loop over (currently all)
 TO_st_pt = 7.257355*1e14;
@@ -107,6 +107,8 @@ for loop_idx=selected_dirs
     plot(to_time,(to_val+to_unc-TO_st_pt)./1e9,'b.-')
 
 end
+tot_avg_drift = sum(drift_data_compiled.to_val{1}./drift_data_compiled.to_val{2})./sum(1./drift_data_compiled.to_val{2})-TO_st_pt;
+plot([min(main_data_compiled.time),max(main_data_compiled.time)],[tot_avg_drift,tot_avg_drift]./1e9,'color',[0 0.5 0])
 title('Segment Scan data')
 xlabel('time since epoch (h)')
 ylabel([' TO value - ',num2str(TO_st_pt./1e9),' (GHz)'])
@@ -117,7 +119,9 @@ subplot(2,1,2)
 errorbar(main_data_compiled.time,(main_data_compiled.quad_fit{1}-TO_st_pt)./1e9,main_data_compiled.quad_fit{2}./1e9,'kx')
 hold on
 errorbar(main_data_compiled.time,(main_data_compiled.lin_fit{1}-TO_st_pt)./1e9,main_data_compiled.lin_fit{2}./1e9,'bo')
-legend('Quad','Lin')
+tot_avg_quad = sum(main_data_compiled.quad_fit{1}./main_data_compiled.quad_fit{2})./sum(1./main_data_compiled.quad_fit{2})-TO_st_pt;
+plot([min(main_data_compiled.time),max(main_data_compiled.time)],[tot_avg_quad,tot_avg_quad]./1e9,'color',[0 0.5 0])
+legend('Quad','Lin','Total avg')
 xlabel('time since epoch (h)')
 ylabel([' TO value - ',num2str(TO_st_pt./1e9),' (GHz)'])
 title('Quad fit data for whole runs')
@@ -218,7 +222,7 @@ set(gcf,'color','w')
 box on
 subplot(4,4,8)
 scatter(drift_data_compiled.avg_coef(:,6),(drift_data_compiled.to_val{:,1}-TO_st_pt)./1e9,'kx')
-xlabel('y ramp')
+xlabel('z ramp')
 ylabel([' TO value - ',num2str(TO_st_pt./1e9),' (GHz)'])
 set(gcf,'color','w')
 box on
@@ -243,6 +247,30 @@ box on
 subplot(4,4,12)
 scatter(drift_data_compiled.avg_coef_unc(:,1),(drift_data_compiled.to_val{:,1}-TO_st_pt)./1e9,'kx')
 xlabel('unc in osc amplitude')
+ylabel([' TO value - ',num2str(TO_st_pt./1e9),' (GHz)'])
+set(gcf,'color','w')
+box on
+subplot(4,4,13)
+scatter(drift_data_compiled.avg_coef_unc(:,3),(drift_data_compiled.to_val{:,1}-TO_st_pt)./1e9,'kx')
+xlabel('unc in phase')
+ylabel([' TO value - ',num2str(TO_st_pt./1e9),' (GHz)'])
+set(gcf,'color','w')
+box on
+subplot(4,4,14)
+scatter(drift_data_compiled.avg_coef_unc(:,4),(drift_data_compiled.to_val{:,1}-TO_st_pt)./1e9,'kx')
+xlabel('unc in detector offset')
+ylabel([' TO value - ',num2str(TO_st_pt./1e9),' (GHz)'])
+set(gcf,'color','w')
+box on
+subplot(4,4,15)
+scatter(drift_data_compiled.avg_coef_unc(:,7),(drift_data_compiled.to_val{:,1}-TO_st_pt)./1e9,'kx')
+xlabel('unc in damping rate')
+ylabel([' TO value - ',num2str(TO_st_pt./1e9),' (GHz)'])
+set(gcf,'color','w')
+box on
+subplot(4,4,16)
+scatter(drift_data_compiled.avg_coef_unc(:,8),(drift_data_compiled.to_val{:,1}-TO_st_pt)./1e9,'kx')
+xlabel('unc in y ramp')
 ylabel([' TO value - ',num2str(TO_st_pt./1e9),' (GHz)'])
 set(gcf,'color','w')
 box on
