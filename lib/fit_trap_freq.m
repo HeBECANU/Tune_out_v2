@@ -58,7 +58,7 @@ for ii=1:iimax
 
         %try to find the peak osc freq to start the fit there
         if anal_opts_osc_fit.adaptive_freq
-            out=fft_tx(txyz_tmp(1,:),txyz_tmp(anal_opts_osc_fit.dimesion+1,:),'padding',10);
+            out=fft_tx(txyz_tmp(1,:),txyz_tmp(anal_opts_osc_fit.dimesion+1,:),'padding',10,'window','hamming');
             [~,nearest_idx]=max(abs(out(2,:)));
             fit_freq=out(1,nearest_idx);
             %fft_phase=angle(out(2,nearest_idx))+0.535;
@@ -92,7 +92,21 @@ for ii=1:iimax
             (meanwidth/fitparam{2,1});
         %fprintf('sampling limit %2.3g Hz, fint unc %2.3g Hz, ratio %2.3g \n',[frequnclim,fitparam{2,2},fitparam{2,2}/frequnclim])
         osc_fit.fit_sample_limit{ii}=[frequnclim,fitparam{2,2},fitparam{2,2}/frequnclim];
+        %%
         if anal_opts_osc_fit.plot_fits
+            font_name='cmr10';
+            font_size_global=20;
+            folt_size_label=25;
+            colors_main=[[255,0,0];[33,188,44];[0,0,0]]./255;
+            lch=colorspace('RGB->LCH',colors_main(:,:));
+            lch(:,1)=lch(:,1)+20;
+            colors_detail=colorspace('LCH->RGB',lch);
+            %would prefer to use srgb_2_Jab here
+            color_shaded=colorspace('RGB->LCH',colors_main(3,:));
+            color_shaded(1)=50;
+            color_shaded=colorspace('LCH->RGB',color_shaded);
+
+
             tplotvalues=linspace(min(data.mcp_tdc.al_pulses.time),...
                 max(data.mcp_tdc.al_pulses.time),1e5)';
             predictorplot=[tplotvalues,...
@@ -100,6 +114,8 @@ for ii=1:iimax
                        interp1(predictor(:,1),predictor(:,3),tplotvalues)];
             [prediction,ci]=predict(fitobject,predictorplot);
             sfigure(51);
+            set(gca,'FontSize',font_size_global,'FontName',font_name)
+            
             subplot(2,1,1)
             plot(txyz_tmp(1,:),txyz_tmp(2,:),'kx-')
             hold on
@@ -112,17 +128,22 @@ for ii=1:iimax
             set(gcf,'Color',[1 1 1]);
             legend('x','y','z')
 
-            subplot(2,1,2)
-            plot(predictorplot(:,1),prediction,'-','LineWidth',1.5,'Color',[0.5 0.5 0.5])
+            %subplot(2,1,2)
+            shaded_ci_lines=false;
+            hold on
+            if shaded_ci_lines
+                patch([predictorplot(:,1)', fliplr(predictorplot(:,1)')], [ci(:,1)', fliplr(ci(:,2)')], color_shaded,'EdgeColor','none');  %[1,1,1]*0.80
+            else
+                plot(predictorplot(:,1),ci(:,1),'-','LineWidth',1.5,'Color',color_shaded)
+                plot(predictorplot(:,1),ci(:,2),'-','LineWidth',1.5,'Color',color_shaded)
+            end  
+            plot(predictorplot(:,1),prediction,'-','LineWidth',1.0,'Color',colors_main(3,:))
             ax = gca;
             set(ax, {'XColor', 'YColor'}, {'k', 'k'});
-            hold on
-            plot(predictorplot(:,1),ci(:,1),'-','LineWidth',1.5,'Color','k')
-            plot(predictorplot(:,1),ci(:,2),'-','LineWidth',1.5,'Color','k')
-            errorbar(predictor(:,1),txyz_tmp(anal_opts_osc_fit.dimesion+1,:)',xyzerr_tmp(anal_opts_osc_fit.dimesion,:),'k.','MarkerSize',10,'CapSize',0,'LineWidth',1,'Color','r') 
+            errorbar(predictor(:,1),txyz_tmp(anal_opts_osc_fit.dimesion+1,:)',xyzerr_tmp(anal_opts_osc_fit.dimesion,:),'o','CapSize',0,'MarkerSize',5,'Color',colors_main(1,:),'MarkerFaceColor',colors_detail(1,:),'LineWidth',1.5) 
             set(gcf,'Color',[1 1 1]);
-            ylabel('X(mm)')
-            xlabel('Time (s)')
+            xlabel('Time (s)','FontSize',folt_size_label)
+            ylabel('X(mm)','FontSize',folt_size_label)
             hold off
             ax = gca;
             set(ax, {'XColor', 'YColor'}, {'k', 'k'});
@@ -130,6 +151,7 @@ for ii=1:iimax
             saveas(gca,sprintf('%sfit_dld_shot_num%04u.png',anal_opts_osc_fit.global.out_dir,dld_shot_num))
             pause(1e-5)
         end% PLOTS
+        %%
     end
     if mod(ii,10)==0, fprintf('\b\b\b\b%04u',ii), end
 end

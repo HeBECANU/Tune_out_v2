@@ -1,9 +1,10 @@
 function wm_log_processed=wm_log_process(anal_opts,data)
 cache_opts=[];
-cache_opts.verbose=3;
+cache_opts.verbose=0;
 %cache_opts.force_cache_load=wm_log_import_opts.force_load_save;
 %wm_log_import_opts=rmfield(wm_log_import_opts,'force_load_save');
 cache_opts.force_recalc=anal_opts.wm_log.force_reimport;
+cache_opts.save_compressed=true;
 anal_opts.wm_log=rmfield(anal_opts.wm_log,'force_reimport');
 %create a temp copy of data to limit the effect that changes have on the cache function
 %this is the limitation of the pass data structure approach, the scope can quickly become to large

@@ -78,7 +78,7 @@ tic
 % BEGIN USER VAR-------------------------------------------------
 anal_opts=[];
 %anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181127_3_filt_power_linearity\';
-anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181127_3_filt_power_linearity\';
+anal_opts.tdc_import.dir='H:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181127_3_filt_power_linearity\';
 %anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181127_3_filt_power_linearity_attractive_misaligned\';
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
@@ -559,15 +559,17 @@ end
 figure(64)
 clf
 set(gcf,'color','w')
-patch([xsamp', fliplr(xsamp')], [yci_quad(:,1)', fliplr(yci_quad(:,2)')], color_shaded);  %[1,1,1]*0.80
+patch([xsamp', fliplr(xsamp')], [yci_quad(:,1)', fliplr(yci_quad(:,2)')], color_shaded,'EdgeColor','none');  %[1,1,1]*0.80
 hold on
-plt_data=errorbar(powers,ydat_chunks(:,1),ydat_chunks(:,2),'o','CapSize',0,'MarkerSize',5,'Color',colors_main(1,:),'MarkerFaceColor',colors_detail(1,:),'LineWidth',1.5);
-%plt_data=plot(probe_power,square_trap_freq,'xr'); %diagnostic
-plt_quad_val=plot(xsamp,ysamp_quad,'k-','color',colors_main(2,:),'LineWidth',1.5);
 plt_quad_ci=plot(xsamp,yci_quad,'r','color',colors_main(3,:),'LineWidth',1.5);
+plt_data=errorbar(powers,ydat_chunks(:,1),ydat_chunks(:,2),'o','CapSize',0,'MarkerSize',5,...
+    'Color',colors_main(1,:),'MarkerFaceColor',colors_detail(1,:),'LineWidth',1.5);
+%plt_data=plot(probe_power,square_trap_freq,'xr'); %diagnostic
+plt_quad_val=plot(xsamp,ysamp_quad,'-','color',colors_main(2,:),'LineWidth',1.5);
+
 set(gca,'FontSize',font_size_global,'FontName',font_name)
 xlabel('Probe Power (mW)','FontSize',folt_size_label)
-ylabel('Signal \omega_{Net.}^2-\omega_{Cal.}^2 (Hz^2)','FontSize',folt_size_label)
+ylabel('Response (Hz^2)','FontSize',folt_size_label) %\omega_{Net.}^2-\omega_{Cal.}^2 (Hz^2)
 %plt_cubic_val=plot(xsamp,ysamp_cubic,'-','color',[0, 0.4470, 0.7410]);
 %plt_cubic_std=plot(xsamp,yci_cubic,'-','color',[0.8500, 0.3250, 0.0980]);
 yticks([0:7]*400)
