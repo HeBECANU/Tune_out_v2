@@ -28,7 +28,7 @@ anal_opts.atom_laser.pulsedt=8.000e-3;
 anal_opts.atom_laser.t0=0.41784; %center i ntime of the first pulse
 anal_opts.atom_laser.start_pulse=1; %atom laser pulse to start with
 anal_opts.atom_laser.pulses=100;
-anal_opts.atom_laser.appr_osc_freq_guess=[52,40,40];
+anal_opts.atom_laser.appr_osc_freq_guess=[52,48,40];
 anal_opts.atom_laser.pulse_twindow=anal_opts.atom_laser.pulsedt*0.9;
 anal_opts.atom_laser.xylim=anal_opts.tdc_import.txylim(2:3,:); %set same lims for pulses as import
 
@@ -84,80 +84,82 @@ clf;
 
 loop_num=0;
 while true
-batch_data=[];
-batch_data.shot_num=[];
-anal_opts.tdc_import.shot_num=find_data_files(anal_opts.tdc_import);
+    pause(0.1)
+    batch_data=[];
+    batch_data.shot_num=[];
+    anal_opts.tdc_import.shot_num=find_data_files(anal_opts.tdc_import);
 
-max_shot_num=max(anal_opts.tdc_import.shot_num);
-anal_opts.tdc_import.shot_num=anal_opts.tdc_import.shot_num(...
-    anal_opts.tdc_import.shot_num>(max_shot_num-anal_opts.history.shots));
-%remove processed ones
+    max_shot_num=max(anal_opts.tdc_import.shot_num);
+    anal_opts.tdc_import.shot_num=anal_opts.tdc_import.shot_num(...
+        anal_opts.tdc_import.shot_num>(max_shot_num-anal_opts.history.shots));
+    %remove processed ones
 
-anal_opts.tdc_import.shot_num=anal_opts.tdc_import.shot_num(...
-    ~ismember(anal_opts.tdc_import.shot_num, trap_freq_history.shot_num ) );
+    anal_opts.tdc_import.shot_num=anal_opts.tdc_import.shot_num(...
+        ~ismember(anal_opts.tdc_import.shot_num, trap_freq_history.shot_num ) );
 
-if numel(anal_opts.tdc_import.shot_num)==0
-        if mod(loop_num,4)==0
-            pause(.2)
-            fprintf('\b\b\b')
-            loop_num=1;
-        else
-            pause(.1) %little wait animation
-            fprintf('.')
-            loop_num=loop_num+1;
-        end
-else
-    batch_data.mcp_tdc=import_mcp_tdc_data(anal_opts.tdc_import);
-    %data.mcp_tdc=mcp_tdc_data;
-    %just to give me a logical vector
-    batch_data.mcp_tdc.all_ok=batch_data.mcp_tdc.num_counts>1e4;
-    batch_data.mcp_tdc.all_ok(batch_data.mcp_tdc.all_ok)=...
-        cellfun(@(x) x(end,1),batch_data.mcp_tdc.counts_txy(batch_data.mcp_tdc.all_ok))>anal_opts.dld_aquire*0.8;
-    if sum(batch_data.mcp_tdc.all_ok)==0
-        fprintf('waiting for file to be writen\n')
-        pause(0.1)
+    if numel(anal_opts.tdc_import.shot_num)==0
+            if mod(loop_num,4)==0
+                pause(.2)
+                fprintf('\b\b\b')
+                loop_num=1;
+            else
+                pause(.1) %little wait animation
+                fprintf('.')
+                loop_num=loop_num+1;
+            end
     else
-        batch_data.mcp_tdc.al_pulses=bin_al_pulses(anal_opts.atom_laser,batch_data);
-        %%
-        anal_opts.osc_fit.adaptive_freq=true; %estimate the starting trap freq 
-        anal_opts.osc_fit.appr_osc_freq_guess=[52,46.7,40];
-        if sum(batch_data.mcp_tdc.all_ok)>2
-            anal_opts.osc_fit.plot_fits=false;
+        batch_data.mcp_tdc=import_mcp_tdc_data(anal_opts.tdc_import);
+        %data.mcp_tdc=mcp_tdc_data;
+        %just to give me a logical vector
+        batch_data.mcp_tdc.all_ok=batch_data.mcp_tdc.num_counts>1e4;
+        batch_data.mcp_tdc.all_ok(batch_data.mcp_tdc.all_ok)=...
+            cellfun(@(x) x(end,1),batch_data.mcp_tdc.counts_txy(batch_data.mcp_tdc.all_ok))>anal_opts.dld_aquire*0.8;
+        if sum(batch_data.mcp_tdc.all_ok)==0
+            fprintf('waiting for file to be writen\n')
+            pause(0.1)
         else
-            anal_opts.osc_fit.plot_fits=true;
-        end
-        
-        anal_opts.osc_fit.plot_err_history=false;
-        anal_opts.osc_fit.plot_fit_corr=false;
-        
-        anal_opts.osc_fit.global=anal_opts.global;
-        batch_data.osc_fit=fit_trap_freq(anal_opts.osc_fit,batch_data);
+            batch_data.mcp_tdc.al_pulses=bin_al_pulses(anal_opts.atom_laser,batch_data);
+            %%
+            anal_opts.osc_fit.adaptive_freq=true; %estimate the starting trap freq 
+            anal_opts.osc_fit.appr_osc_freq_guess=[52,44,40];
+            anal_opts.osc_fit.freq_fit_tolerance=5;
+            if sum(batch_data.mcp_tdc.all_ok)>2
+                anal_opts.osc_fit.plot_fits=false;
+            else
+                anal_opts.osc_fit.plot_fits=true;
+            end
 
-        batch_data.osc_fit.trap_freq_recons=nan*batch_data.osc_fit.ok.did_fits;
-        mask=batch_data.osc_fit.ok.did_fits;
-        batch_data.osc_fit.trap_freq_recons(mask)=3*(1/anal_opts.atom_laser.pulsedt)+batch_data.osc_fit.model_coefs(mask,2,1);
+            anal_opts.osc_fit.plot_err_history=false;
+            anal_opts.osc_fit.plot_fit_corr=false;
 
-        trap_freq_history.shot_num=[trap_freq_history.shot_num,anal_opts.tdc_import.shot_num(mask)];
-        trap_freq_history.trap_freq_val=[trap_freq_history.trap_freq_val,batch_data.osc_fit.trap_freq_recons(mask)];
-        trap_freq_history.trap_freq_unc=[trap_freq_history.trap_freq_unc,batch_data.osc_fit.model_coefs(mask,2,2)'];
-        
-        %trim the history vectors
-        if numel(trap_freq_history.shot_num)>anal_opts.history.shots
-            %bit sloppy but will assume they are the same length
-            trap_freq_history.shot_num=trap_freq_history.shot_num(end-anal_opts.history.shots:end);
-            trap_freq_history.trap_freq_val=trap_freq_history.trap_freq_val(end-anal_opts.history.shots:end);
-            trap_freq_history.trap_freq_unc=trap_freq_history.trap_freq_unc(end-anal_opts.history.shots:end);
+            anal_opts.osc_fit.global=anal_opts.global;
+            batch_data.osc_fit=fit_trap_freq(anal_opts.osc_fit,batch_data);
+
+            batch_data.osc_fit.trap_freq_recons=nan*batch_data.osc_fit.ok.did_fits;
+            mask=batch_data.osc_fit.ok.did_fits;
+            batch_data.osc_fit.trap_freq_recons(mask)=3*(1/anal_opts.atom_laser.pulsedt)+batch_data.osc_fit.model_coefs(mask,2,1);
+
+            trap_freq_history.shot_num=[trap_freq_history.shot_num,anal_opts.tdc_import.shot_num(mask)];
+            trap_freq_history.trap_freq_val=[trap_freq_history.trap_freq_val,batch_data.osc_fit.trap_freq_recons(mask)];
+            trap_freq_history.trap_freq_unc=[trap_freq_history.trap_freq_unc,batch_data.osc_fit.model_coefs(mask,2,2)'];
+
+            %trim the history vectors
+            if numel(trap_freq_history.shot_num)>anal_opts.history.shots
+                %bit sloppy but will assume they are the same length
+                trap_freq_history.shot_num=trap_freq_history.shot_num(end-anal_opts.history.shots:end);
+                trap_freq_history.trap_freq_val=trap_freq_history.trap_freq_val(end-anal_opts.history.shots:end);
+                trap_freq_history.trap_freq_unc=trap_freq_history.trap_freq_unc(end-anal_opts.history.shots:end);
+            end
+
+            sfigure(1);
+            errorbar(trap_freq_history.shot_num,...
+                trap_freq_history.trap_freq_val,trap_freq_history.trap_freq_unc,...
+                'kx-','MarkerSize',7,'CapSize',0,'LineWidth',1)
+            xlabel('Shot Number')
+            ylabel('Fit Trap Freq')
+            pause(1e-6)
+
         end
-        
-        sfigure(1);
-        errorbar(trap_freq_history.shot_num,...
-            trap_freq_history.trap_freq_val,trap_freq_history.trap_freq_unc,...
-            'kx-','MarkerSize',7,'CapSize',0,'LineWidth',1)
-        xlabel('Shot Number')
-        ylabel('Fit Trap Freq')
-        pause(1e-6)
-        
     end
-end
 
 end

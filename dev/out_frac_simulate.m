@@ -1,5 +1,10 @@
 %SIMULATE measuring atom number and outcoupling fraction by fitting
 %compare fitting in semi log and fitting the exponential form directly
+%it seems that fitting the exponential form directly is better!
+%to do
+% - use covariance to propagate to the error in the inital number
+%   - looks really hard...
+
 sim_det_num=zeros(300,1);
 sim_rem_num=sim_det_num;
 pulse_num=(1:size(sim_det_num,1))-1;
@@ -19,7 +24,7 @@ weights=1./(pred_det_noise_log.^2);
 %,'Weights',weights
 fit_mdl_log=fitlm(pulse_num,log(sim_det_num),'linear');  
 xplot=linspace(min(pulse_num),max(pulse_num),1e3)';
-[ymodel,ci]=predict(fit_mdl_log,xplot,'Prediction','observation','Alpha',0.03174);
+[ymodel,ci]=predict(fit_mdl_log,xplot,'Prediction','observation','Alpha',1-erf(1/sqrt(2)));
 plot(pulse_num,sim_det_num,'kx')
 hold on
 plot(xplot,exp(ymodel),'r-')
@@ -40,7 +45,7 @@ fprintf('semi log fit results\n')
 fprintf('frac actual %.2e,predicted %.2e±%.2e\nerr sigma %.2f frac err act %.3f sd %.3f\n',...
     out_frac,fit1_res(1,1),fit1_res(1,2),(fit1_res(1,1)-out_frac)/fit1_res(1,2),...
     (fit1_res(1,1)-out_frac)/out_frac,fit1_res(1,2)/out_frac)
-fprintf('no actual %.2e,predicted %.2e±%.2e\nerr sigma %.2f frac err act %.3f sd %.3f\n',...
+fprintf('no. actual %.2e,predicted %.2e±%.2e\nerr sigma %.2f frac err act %.3f sd %.3f\n',...
     atoms_inital,fit1_res(2,1),fit1_res(2,2),(fit1_res(2,1)-atoms_inital)/fit1_res(2,2)...
     ,(fit1_res(2,1)-atoms_inital)/atoms_inital,fit1_res(2,2)/atoms_inital)
 
@@ -78,7 +83,7 @@ fprintf('linear power fit results\n')
 fprintf('frac actual %.2e,predicted %.2e±%.2e\nerr sigma %.2f frac err act %.3f sd %.3f\n',...
     out_frac,fit2_res(1,1),fit2_res(1,2),(fit2_res(1,1)-out_frac)/fit2_res(1,2),...
     (fit2_res(1,1)-out_frac)/out_frac,fit2_res(1,2)/out_frac)
-fprintf('no actual %.2e,predicted %.2e±%.2e\nerr sigma %.2f frac err act %.3f sd %.3f\n',...
+fprintf('no. actual %.2e,predicted %.2e±%.2e\nerr sigma %.2f frac err act %.3f sd %.3f\n',...
     atoms_inital,fit2_res(2,1),fit2_res(2,2),(fit2_res(2,1)-atoms_inital)/fit2_res(2,2)...
     ,(fit2_res(2,1)-atoms_inital)/atoms_inital,fit2_res(2,2)/atoms_inital)
 
