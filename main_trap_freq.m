@@ -80,7 +80,9 @@
 clear all
 %%
 % BEGIN USER VAR-------------------------------------------------
+
 %setup directories you wish to loop over
+<<<<<<< HEAD
 loop_config.dir = {'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190110_baseline_to_1\',
             'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190115_baseline_to_1\',
             'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190117_true_baseline_to\',
@@ -100,6 +102,30 @@ loop_config.set_pt = [1.02 1.25 1.25 1.25 1.25 1.25 1.25];%1.25 for current runs
 %selected_dirs = 1:numel(loop_config.dir); %which files to loop over (currently all)
 selected_dirs = [5];%1,3,5
 %selected_dirs = 1;
+=======
+loop_config.dir = {'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190115_baseline_to_1',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181203_filt_skew_pos50ghz_bad_setpt\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181124_3_filt_align_dep_34_um\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181122_filt_dep_none\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181205_baseline_nuller_on_always\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181204_baseline_1\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181201_filt_skew_neg111ghz\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181203_filt_skew_pos50ghz\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181202_filt_skew_pos110ghz\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_36.8um\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181122_alignment_dep_34_5\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181011_to_drift_2\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181120_filt_dep_3filt\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181202_filt_skew_neg50ghz\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_44.9_um\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181026_wp_out_stab\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181026_wp_out_stab2\',
+        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_31um\'};
+%Vector of set points for each directory, has to be done manualy first, but is saved after data is analysed    
+loop_config.set_pt = [ 1.25, 9.0, 5.0, 5.0, 8.0, 8.0, 3.0, 3, 3, 5, 5, 2     5     3     5     5     5     5];
+selected_dirs = 1:numel(loop_config.dir); %which files to loop over (currently all)
+selected_dirs = 1;
+>>>>>>> 20481c725dfd35d85c6955d0de029b11a2239a86
 
 for dir_idx = selected_dirs
 try
@@ -107,6 +133,7 @@ tic
 anal_opts=[]; %reset the options (would be good to clear all variables except the loop config
 anal_opts.tdc_import.dir = loop_config.dir{dir_idx};
 anal_opts.probe_set_pt=loop_config.set_pt(dir_idx);
+
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
 anal_opts.tdc_import.force_reimport=false;
@@ -310,13 +337,13 @@ anal_opts.ai_log.plot.all=false;
 anal_opts.ai_log.plot.failed=false;
 anal_opts.ai_log.time_match_valid=5; %how close the predicted start of the shot is to the actual
 anal_opts.ai_log.scan_time=14e-3;  %estimate of the sfp scan time,used to set the window and the smoothing
-
-
 %because im only passing the ai_log feild to aviod conflicts forcing a reimport i need to coppy these feilds
 anal_opts.ai_log.trig_dld=anal_opts.trig_dld;
 anal_opts.ai_log.dld_aquire=anal_opts.dld_aquire;
 anal_opts.ai_log.aquire_time=anal_opts.dld_aquire;
 anal_opts.ai_log.trig_ai_in=anal_opts.trig_ai_in;
+
+%% Call the function
 ai_log_out=ai_log_import(anal_opts.ai_log,data);
 %copy the output across
 data.ai_log=ai_log_out;

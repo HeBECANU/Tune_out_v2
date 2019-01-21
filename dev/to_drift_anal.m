@@ -31,7 +31,6 @@ loop_config.dir = {'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\2
 % 
 %  dir: Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181011_to_drift_2\ didnt work 
 
-
     loop_config.set_pt = [8.0, 3.0, 8.0, 3.0, 3.0, 5.0, 5.0, 2.0, 5.0, 1.0];
 selected_dirs = 1:numel(loop_config.dir); %which files to loop over (currently all)
 %selected_dirs = [6,8,9,13,14]-1;
