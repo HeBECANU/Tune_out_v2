@@ -49,7 +49,9 @@ else
 end
 %this approach will only capture full scans of the TO
 [to_seg_fits.scan_edges,~] = find(edge_mask);
-to_seg_fits.scan_edges=[1,to_seg_fits.scan_edges'];
+if to_seg_fits.scan_edges(1)>2
+    to_seg_fits.scan_edges=[1,to_seg_fits.scan_edges'];
+end
 
 %apply some slightly over the top ckecks
 delta_mask = ~isnan(delta_trap_freq_all);
@@ -251,8 +253,13 @@ hold off
 %% Plot
 % Could refactor so entire thing is in a loop over ii - needs a few things stored in to_seg_fits
 fprintf('Plotting\n',iimax,0)
+dead_rows = [];
     for ii=1:iimax %Plots segmented data
-
+        if ~(to_seg_fits.seg_edges(ii,2)>to_seg_fits.seg_edges(ii,1))
+                    %remove the dead row
+                    dead_rows = [dead_rows, ii];
+            continue
+        end
         seg_mask_temp = [zeros(to_seg_fits.seg_edges(ii,1)-1,1);ones(to_seg_fits.seg_edges(ii,2)-to_seg_fits.seg_edges(ii,1)+1,1);...
                 zeros(num_shots-to_seg_fits.seg_edges(ii,2),1)]'==1;
         seg_mask = seg_mask_temp&probe_dat_mask;
@@ -286,6 +293,25 @@ fprintf('Plotting\n',iimax,0)
             xlabel('Time (h)')
         end
     end
+
+            %remove the dead row
+    to_seg_fits.fit_all.freq.val(dead_rows,:)=[];
+    to_seg_fits.fit_all.freq.unc(dead_rows,:)=[];
+    to_seg_fits.fit_all.model(dead_rows,:)=[];
+
+    to_seg_fits.fit_trimmed.freq.val(dead_rows,:)=[];
+    to_seg_fits.fit_trimmed.freq.unc(dead_rows,:)=[];
+    to_seg_fits.fit_trimmed.model(dead_rows,:)=[];
+    to_seg_fits.fit_trimmed.to_unc_boot(dead_rows,:)=[];
+
+%             to_seg_fits.set_sel = cell(iimax,1);
+%             to_seg_fits.delta_sig = cell(iimax,1);
+    to_seg_fits.xdat(dead_rows,:)=[];
+    to_seg_fits.ydat(dead_rows,:)=[];
+    to_seg_fits.good_shot_idx(dead_rows,:)=[];
+    to_seg_fits.to_time(dead_rows,:)=[];
+    to_seg_fits.atom_num(dead_rows,:)=[];
+    to_seg_fits.avg_coefs(dead_rows,:)=[];
     
     % Plot everything that was stored
     

@@ -1,24 +1,41 @@
 %Script that scrapes the analysed data from dirs (currently messy but works)
 clear all
 %setup directories you wish to loop over
-loop_config.dir = {'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181205_baseline_nuller_on_always\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181204_baseline_1\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181201_filt_skew_neg111ghz\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181203_filt_skew_pos50ghz\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181202_filt_skew_pos110ghz\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_36.8um\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181122_alignment_dep_34_5\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181011_to_drift_2\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181120_filt_dep_3filt\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181202_filt_skew_neg50ghz\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_44.9_um\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181026_wp_out_stab\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181026_wp_out_stab2\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_31um\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181203_filt_skew_pos50ghz_bad_setpt\',
-        'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190110_baseline_to_1'};
+loop_config.dir = {'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190115_baseline_to_1\',
+            'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190117_true_baseline_to\',
+            'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190118_baseline_to_3\',
+            'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190118_baseline_to_4\',
+            'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190118_baseline_to_5\',
+            'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190119_baseline_to_6\'};
+        %'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190110_baseline_to_1\'
+
+
+% {'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181205_baseline_nuller_on_always\',
+%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181204_baseline_1\',
+%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181201_filt_skew_neg111ghz\',
+%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181203_filt_skew_pos50ghz\',
+%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181202_filt_skew_pos110ghz\',
+%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_36.8um\',
+%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181122_alignment_dep_34_5\',
+%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181011_to_drift_2\',
+%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181120_filt_dep_3filt\',
+%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181202_filt_skew_neg50ghz\',
+%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_44.9_um\',
+%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181026_wp_out_stab\',
+%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181026_wp_out_stab2\',
+%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_31um\',
+%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181203_filt_skew_pos50ghz_bad_setpt\'};
+
+     
+%  dir: Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181122_alignment_dep_34_5\ didnt work 
+% 
+%  dir: Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181011_to_drift_2\ didnt work 
+
+
     loop_config.set_pt = [8.0, 3.0, 8.0, 3.0, 3.0, 5.0, 5.0, 2.0, 5.0, 1.0];
 selected_dirs = 1:numel(loop_config.dir); %which files to loop over (currently all)
+%selected_dirs = [6,8,9,13,14]-1;
+
 TO_st_pt = 7.257355*1e14;
 drift_data_compiled.to_val{:,1}=[];
 drift_data_compiled.to_val{:,2}=[];
@@ -55,8 +72,9 @@ for loop_idx=selected_dirs
             most_recent_dir=out_dirs(end-offset,1);
             check = drift_data.avg_coef; %check if it has the avg coefs update
         end
-    catch
+    catch e
         fprintf('\n dir: %s didnt work \n',current_dir)
+        msgText = getReport(e)
         continue
     end
     load([current_dir,'out\',most_recent_dir.name,'\main_data.mat'])
@@ -107,6 +125,8 @@ for loop_idx=selected_dirs
     plot(to_time,(to_val+to_unc-TO_st_pt)./1e9,'b.-')
 
 end
+tot_avg_drift = sum(drift_data_compiled.to_val{1}./drift_data_compiled.to_val{2})./sum(1./drift_data_compiled.to_val{2})-TO_st_pt;
+plot([min(main_data_compiled.time),max(main_data_compiled.time)],[tot_avg_drift,tot_avg_drift]./1e9,'color',[0 0.5 0])
 title('Segment Scan data')
 xlabel('time since epoch (h)')
 ylabel([' TO value - ',num2str(TO_st_pt./1e9),' (GHz)'])
@@ -117,12 +137,14 @@ subplot(2,1,2)
 errorbar(main_data_compiled.time,(main_data_compiled.quad_fit{1}-TO_st_pt)./1e9,main_data_compiled.quad_fit{2}./1e9,'kx')
 hold on
 errorbar(main_data_compiled.time,(main_data_compiled.lin_fit{1}-TO_st_pt)./1e9,main_data_compiled.lin_fit{2}./1e9,'bo')
-legend('Quad','Lin')
+tot_avg_quad = sum(main_data_compiled.quad_fit{1}./main_data_compiled.quad_fit{2})./sum(1./main_data_compiled.quad_fit{2})-TO_st_pt;
+plot([min(main_data_compiled.time),max(main_data_compiled.time)],[tot_avg_quad,tot_avg_quad]./1e9,'color',[0 0.5 0])
+legend('Quad','Lin','Total avg')
 xlabel('time since epoch (h)')
 ylabel([' TO value - ',num2str(TO_st_pt./1e9),' (GHz)'])
 title('Quad fit data for whole runs')
 set(gcf,'color','w')
-ylim([-3 5])
+%ylim([-3 5])
 %% Concatonated Drift data, right now is very messy could do with some cleaning, but it does work
 %Big plot over times
 sfigure(3221);
@@ -168,7 +190,7 @@ end
 hold off
 xlabel('time since epoch (h)')
 ylabel([' TO value - ',num2str(TO_st_pt./1e9),' (GHz)'])
-ylim([-5 5])
+ylim([-0.4 0.7])
 set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
 %% Plot tune out value against parameters in the analysis (to see if there is any underling corralations)
 %Should turn this into a loop, didn't get around to it
@@ -218,7 +240,7 @@ set(gcf,'color','w')
 box on
 subplot(4,4,8)
 scatter(drift_data_compiled.avg_coef(:,6),(drift_data_compiled.to_val{:,1}-TO_st_pt)./1e9,'kx')
-xlabel('y ramp')
+xlabel('z ramp')
 ylabel([' TO value - ',num2str(TO_st_pt./1e9),' (GHz)'])
 set(gcf,'color','w')
 box on
@@ -243,6 +265,30 @@ box on
 subplot(4,4,12)
 scatter(drift_data_compiled.avg_coef_unc(:,1),(drift_data_compiled.to_val{:,1}-TO_st_pt)./1e9,'kx')
 xlabel('unc in osc amplitude')
+ylabel([' TO value - ',num2str(TO_st_pt./1e9),' (GHz)'])
+set(gcf,'color','w')
+box on
+subplot(4,4,13)
+scatter(drift_data_compiled.avg_coef_unc(:,3),(drift_data_compiled.to_val{:,1}-TO_st_pt)./1e9,'kx')
+xlabel('unc in phase')
+ylabel([' TO value - ',num2str(TO_st_pt./1e9),' (GHz)'])
+set(gcf,'color','w')
+box on
+subplot(4,4,14)
+scatter(drift_data_compiled.avg_coef_unc(:,4),(drift_data_compiled.to_val{:,1}-TO_st_pt)./1e9,'kx')
+xlabel('unc in detector offset')
+ylabel([' TO value - ',num2str(TO_st_pt./1e9),' (GHz)'])
+set(gcf,'color','w')
+box on
+subplot(4,4,15)
+scatter(drift_data_compiled.avg_coef_unc(:,7),(drift_data_compiled.to_val{:,1}-TO_st_pt)./1e9,'kx')
+xlabel('unc in damping rate')
+ylabel([' TO value - ',num2str(TO_st_pt./1e9),' (GHz)'])
+set(gcf,'color','w')
+box on
+subplot(4,4,16)
+scatter(drift_data_compiled.avg_coef_unc(:,8),(drift_data_compiled.to_val{:,1}-TO_st_pt)./1e9,'kx')
+xlabel('unc in y ramp')
 ylabel([' TO value - ',num2str(TO_st_pt./1e9),' (GHz)'])
 set(gcf,'color','w')
 box on

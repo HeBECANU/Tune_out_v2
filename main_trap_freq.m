@@ -81,28 +81,25 @@ clear all
 %%
 % BEGIN USER VAR-------------------------------------------------
 %setup directories you wish to loop over
-loop_config.dir = {'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190110_baseline_to_1',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181203_filt_skew_pos50ghz_bad_setpt\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181124_3_filt_align_dep_34_um\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181122_filt_dep_none\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181205_baseline_nuller_on_always\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181204_baseline_1\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181201_filt_skew_neg111ghz\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181203_filt_skew_pos50ghz\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181202_filt_skew_pos110ghz\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_36.8um\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181122_alignment_dep_34_5\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181011_to_drift_2\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181120_filt_dep_3filt\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181202_filt_skew_neg50ghz\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_44.9_um\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181026_wp_out_stab\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181026_wp_out_stab2\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_31um\'};
+loop_config.dir = {'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190110_baseline_to_1\',
+            'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190115_baseline_to_1\',
+            'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190117_true_baseline_to\',
+            'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190118_baseline_to_3\',
+            'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190118_baseline_to_4\',
+            'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190118_baseline_to_5\',
+            'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190119_baseline_to_6\'};
+
+%         {'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181122_alignment_dep_34_5\',
+%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181011_to_drift_2\',
+%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181026_wp_out_stab\'};
+          %all the recent baseline runs
+    %'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\'
+    
 %Vector of set points for each directory, has to be done manualy first, but is saved after data is analysed    
-loop_config.set_pt = [ 1.0, 9.0, 5.0, 5.0, 8.0, 8.0, 3.0, 3, 3, 5, 5, 2     5     3     5     5     5     5];
-selected_dirs = 1:numel(loop_config.dir); %which files to loop over (currently all)
-selected_dirs = 1;
+loop_config.set_pt = [1.02 1.25 1.25 1.25 1.25 1.25 1.25];%1.25 for current runs
+%selected_dirs = 1:numel(loop_config.dir); %which files to loop over (currently all)
+selected_dirs = [5];%1,3,5
+%selected_dirs = 1;
 
 for dir_idx = selected_dirs
 try
@@ -121,7 +118,7 @@ tmp_ylim=[-30e-3, 30e-3];
 tlim=[0,4];
 anal_opts.tdc_import.txylim=[tlim;tmp_xlim;tmp_ylim];
 
-anal_opts.max_runtime=10;%cut off the data run after some number of hours
+anal_opts.max_runtime=inf;%inf%cut off the data run after some number of hours, should bin included as its own logic not applied to the atom number ok
 anal_opts.atom_laser.pulsedt=8.000e-3;
 anal_opts.atom_laser.t0=0.41784; %center i ntime of the first pulse
 anal_opts.atom_laser.start_pulse=1; %atom laser pulse to start with
@@ -228,13 +225,15 @@ subplot(4,1,1)
 %create a list of indicies (of the mcp_tdc) that have an ok number of counts
 %exclude the very low and then set the thresh based on the sd of the remaining
 not_zero_files=data.mcp_tdc.num_counts>1e3; 
-num_thresh=mean(data.mcp_tdc.num_counts(not_zero_files))-4*std(data.mcp_tdc.num_counts(not_zero_files));
+num_thresh=0.5*median(data.mcp_tdc.num_counts(not_zero_files));
 data.mcp_tdc.num_ok=data.mcp_tdc.num_counts>num_thresh & ...
     (data.mcp_tdc.time_create_write(:,1)'-data.mcp_tdc.time_create_write(1,1))<(anal_opts.max_runtime*60*60);
 fprintf('shots number ok %u out of %u \n',sum(data.mcp_tdc.num_ok),numel(data.mcp_tdc.num_ok))
-
-plot((data.mcp_tdc.time_create_write(:,2)-data.mcp_tdc.time_create_write(1,2))/(60*60),data.mcp_tdc.num_counts)
-xlabel('time (h)')
+drawnow
+%plot((data.mcp_tdc.time_create_write(:,2)-data.mcp_tdc.time_create_write(1,2))/(60*60),data.mcp_tdc.num_counts)
+%xlabel('time (h)')
+plot(data.mcp_tdc.num_counts)
+xlabel('shot number')
 ylabel('total counts')
 title('num count run trend')
 %should plot the threshold
@@ -255,15 +254,16 @@ imax=min([size(data.labview.time,2),size(data.mcp_tdc.time_create_write,1)]);
 %imax=5000;
 time_diff=data.mcp_tdc.time_create_write(1:imax,2)'-anal_opts.dld_aquire-anal_opts.trig_dld-...
     data.labview.time(1:imax);
-mean_delay_labview_tdc=median(time_diff);
+mean_delay_labview_tdc=0;%median(time_diff);
 
 sfigure(1);
 set(gcf,'color','w')
 subplot(4,1,2)
-plot(data.mcp_tdc.shot_num,time_diff)
+plot(data.mcp_tdc.shot_num,time_diff-mean_delay_labview_tdc)
 xlabel('shot number')
-ylabel('time between labview and mcp tdc')
+ylabel('corrected time between labview and mcp tdc')
 title('raw time diff')
+drawnow
 %to do include ai_log
 iimax=size(data.mcp_tdc.time_create_write(:,1),1);
 data.mcp_tdc.probe.calibration=nan(iimax,1);
@@ -321,6 +321,13 @@ ai_log_out=ai_log_import(anal_opts.ai_log,data);
 %copy the output across
 data.ai_log=ai_log_out;
 
+
+%%
+%HACK IF SFP BROKEN
+% 
+% data.ai_log.ok.reg_pd=true(size(data.mcp_tdc.shot_num))';
+% data.ai_log.ok.sfp=true(size(data.mcp_tdc.shot_num))';
+
 % % Trying to automate setpoint correction
 
 %save([datestr(datetime('now'),'yyyymmddTHHMMSS'),'.mat'],'-v7.3')
@@ -355,7 +362,7 @@ anal_opts.wm_log.ecd_volt_thresh=0.5;
 
 anal_opts.wm_log.red_sd_thresh=50; %allowable standard deviation in MHz
 anal_opts.wm_log.red_range_thresh=50; %allowable range deviation in MHz
-anal_opts.wm_log.rvb_thresh=10; %allowable value of abs(2*red-blue)
+anal_opts.wm_log.rvb_thresh=20; %allowable value of abs(2*red-blue)
 
 data.wm_log.proc=wm_log_process(anal_opts,data);
 clear('sub_data')
@@ -422,7 +429,7 @@ stairs(data.mcp_tdc.shot_num,tmp_probe_ok+0.01,'LineWidth',line_width)
 hold on
 stairs(data.mcp_tdc.shot_num,tmp_all_ok,'LineWidth',line_width)
 hold off
-legend('all','probe')
+legend('probe','all')
 ylabel('Good?')
 xlabel('Shot Number')
 set(gca,'ytick',[0,1],'yticklabel',{'False','True'})
@@ -520,11 +527,11 @@ anal_opts.fit_to.ci_size_disp=0.3174;%one sd %confidence interval to display
 anal_opts.fit_to.global=anal_opts.global;
 anal_opts.fit_to.ci_size_cut_outliers=0.05; %confidence interval for cutting outliers
 anal_opts.fit_to.scale_x=1e-9;
-anal_opts.fit_to.min_pts=10;
+anal_opts.fit_to.min_pts=7;
 
 anal_opts.fit_to.seg_time=60*30;
 anal_opts.fit_to.seg_shift=1*anal_opts.fit_to.seg_time;
-% to_seg_fits=segmentd_fit_to(anal_opts.fit_to,data);
+%to_seg_fits=segmentd_fit_to(anal_opts.fit_to,data);
 %curently broken
 to_seg_fits=scan_segmented_fit_to(anal_opts.fit_to,data);
 
@@ -560,9 +567,9 @@ anal_opts.fit_to.bootstrap=true;
 %1          0.3174
 %2          0.05
 %3          2.699e-03
-anal_opts.fit_to.ci_size_disp=0.3174;%one sd %confidence interval to display
+anal_opts.fit_to.ci_size_disp=1-erf(1/sqrt(2));%one sd %confidence interval to display
 anal_opts.fit_to.global=anal_opts.global;
-anal_opts.fit_to.ci_size_cut_outliers=0.05; %confidence interval for cutting outliers
+anal_opts.fit_to.ci_size_cut_outliers=1-erf(1.5/sqrt(2)); %confidence interval for cutting outliers
 anal_opts.fit_to.scale_x=1e-9;
 
 to_res=fit_to_nonlin(anal_opts.fit_to,data);
@@ -667,7 +674,8 @@ main_data.shots = tot_num_shots;
 save([anal_opts.global.out_dir,'main_data.mat'],'main_data')
 save([anal_opts.global.out_dir,'drift_data.mat'],'drift_data')
 
-catch
+catch e
 fprintf('Well that one (%s) didnt work \n',anal_opts.tdc_import.dir) %Indicate if a directory couldn't be analysed properly
+msgText = getReport(e)
 end
 end

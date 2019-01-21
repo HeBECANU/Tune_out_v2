@@ -62,8 +62,8 @@ end
 %1          0.3174
 %2          0.05
 %3          2.699e-03
-ci_size_disp=0.3174;%one sd %confidence interval to display
-ci_size_cut_outliers=0.01; %confidence interval for cutting outliers
+ci_size_disp=1-erf(1/sqrt(2));%one sd %confidence interval to display
+ci_size_cut_outliers=1-erf(2/sqrt(2)); %confidence interval for cutting outliers
 
 fprintf('Calculating Fits\n')
 %select the data in some freq range and that has an ok number
