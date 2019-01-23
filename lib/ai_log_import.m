@@ -79,6 +79,12 @@ args_single.pzt_volt_smothing_time=anal_opts.scan_time/100;
 
 %------------- BEGIN CODE --------------
 
+
+if ~isfield(anal_opts,'cw_meth') || isnan(anal_opts.cw_meth)
+    anal_opts.cw_meth=false;
+end
+
+
 dir_read=dir([anal_opts.dir,anal_opts.log_name,'*.txt']);
 ai_log_out.file_names={dir_read.name};
 
@@ -123,6 +129,7 @@ ai_log_out.times.create_ai_log=nan(dld_files,2);
 %loop over all the ai_logs
 fprintf('processing ai log for files %04u:%04u',iimax,0)
 for ii=1:iimax
+    try
     fprintf('\b\b\b\b%04i',ii)
     if ii==iimax || ii==1
         cache_opts.clean_cache=true; %clean cache at start and end
@@ -156,7 +163,6 @@ for ii=1:iimax
         ai_log_out.times.create_ai_log(idx_nearest_shot,:)=time_posix_ai_log_create_write(:); 
         ai_log_out.times.fname_ai_log(idx_nearest_shot)=time_posix_fname;
         ai_log_out.fname{idx_nearest_shot}=fname;
-        
         if numel(anal_opts.pd.set)==1
             set_pt_single=anal_opts.pd.set;
         else
@@ -166,16 +172,35 @@ for ii=1:iimax
                 error('set index has been exceeded')
             end
         end
-        if abs(ai_log_single_out.pd.mean-set_pt_single)>anal_opts.pd.diff_thresh
-            fprintf('\nprobe beam pd value wrong!!!!!!!!!\n')
-            fprintf('avg val %.2f set value %.2f \n04u%',ai_log_single_out.pd.mean,set_pt_single,0)
-        elseif ai_log_single_out.pd.std>anal_opts.pd.std_thresh
-            fprintf('\nprobe beam pd noisy!!!!!!!!!\n')
-            fprintf('std %.2f thresh value %.2f \n04u%',ai_log_single_out.pd.std,anal_opts.pd.std_thresh,0)
-        else
-            ai_log_out.ok.reg_pd(idx_nearest_shot)=true;
+            
+        if anal_opts.cw_meth %pass fail criteria for cw mod method
+            
+            if abs(ai_log_single_out.pd.mean-set_pt_single/2)>anal_opts.pd.diff_thresh
+                fprintf('\nprobe beam pd value wrong!!!!!!!!!\n')
+                fprintf('avg val %.2f set value %.2f \n04u%',ai_log_single_out.pd.mean,set_pt_single/2,0)
+            elseif (ai_log_single_out.pd.std-set_pt_single/sqrt(2))>anal_opts.pd.std_thresh
+                fprintf('\nprobe beam pd noisy!!!!!!!!!\n')
+                fprintf('std %.2f set value %.2f \n04u%',ai_log_single_out.pd.std,set_pt_single/sqrt(2),0)
+            else
+                ai_log_out.ok.reg_pd(idx_nearest_shot)=true;
+            end
+
+        else %pass fail criteria for trap freq method (constant probe beam)
+            
+            if abs(ai_log_single_out.pd.mean-set_pt_single)>anal_opts.pd.diff_thresh
+                fprintf('\nprobe beam pd value wrong!!!!!!!!!\n')
+                fprintf('avg val %.2f set value %.2f \n04u%',ai_log_single_out.pd.mean,set_pt_single,0)
+            elseif ai_log_single_out.pd.std>anal_opts.pd.std_thresh
+                fprintf('\nprobe beam pd noisy!!!!!!!!!\n')
+                fprintf('std %.2f thresh value %.2f \n04u%',ai_log_single_out.pd.std,anal_opts.pd.std_thresh,0)
+            else
+                ai_log_out.ok.reg_pd(idx_nearest_shot)=true;
+            end
         end
         
+        
+    end
+    catch
     end
 end %loop over files
 fprintf('Done\n')
@@ -200,6 +225,8 @@ function ai_log_single_out=ai_log_single(args_single)
 % ai_log_single_out.pd.median
 % ai_log_out.ok.sfp
 
+
+
 %%load the data
 path=strcat(args_single.dir,args_single.fname);
 fid = fopen(path,'r');
@@ -221,21 +248,22 @@ ai_log_single_out.pd.median=median(probe_pd_during_meas);
 
 
 %% plot the anlog values
-if args_single.plot.all || (args_single.plot.failed && ~ai_log_single_out.reg_pd)      
+%as this function is not passed what the pd value should be it cant decide if it is failed for the
+%args_single.plot.failed option
+if args_single.plot.all || (args_single.plot.failed)      
     sfigure(1);
-    subplot(2,2,4)
-    title_strs={'Failed','OK'};
     set(gcf,'color','w')
+    subplot(2,2,4)
+    cla;
     plot((1:numel(probe_pd_during_meas))/sr,probe_pd_during_meas,'b')
-    yl=ylim;
-    xl=xlim;
-    hold on
-    line([xl(1),xl(2)],[args_single.pd.set,args_single.pd.set],'Color','k','LineWidth',3)
-    hold off
-    ylim([yl(1),yl(2)])
+    %yl=ylim;
+    %xl=xlim;
+%     hold on
+%     line([xl(1),xl(2)],[args_single.pd.set,args_single.pd.set],'Color','k','LineWidth',3)
+%     hold off
+    %ylim([yl(1),yl(2)])
     ylabel('probe voltage')
     xlabel('time (s)')
-    title(title_strs(ai_log_single_out.reg_pd+1))
     pause(1e-6)
 
 end
@@ -310,6 +338,7 @@ while test_sm_while
             title_strs={'Failed','OK'};
             sfigure(1);
             subplot(2,2,1)
+            cla;
              set(gcf,'color','w')
             title('smoothing pzt v')
             time=(1:numel(sub_ptz_raw))/sr;
@@ -321,6 +350,7 @@ while test_sm_while
             ylabel('volts (v)')
 
             subplot(2,2,2)
+            cla;
             %select a single scan
             %to do this we will mask out the positive slope
             diff_sub_raw=diff(sub_ptz_raw)*sr;
@@ -336,13 +366,14 @@ while test_sm_while
 
 
             subplot(2,2,3)
+            cla;
             plot(sweep{jj}.pzt_smooth,sweep{jj}.pd_full_raw,'k')
             xlabel('pzt(v)')
             ylabel('pd (v)')
             hold on
             plot(sweep{jj}.pks.full.pzt,sweep{jj}.pks.full.pd,'xk','markersize',20)
-            plot(sweep{jj}.pzt_smooth,sweep{jj}.pd_cmp_raw*cmp_multiplier_disp,'r')
-            plot(sweep{jj}.pks.cmp.pzt,sweep{jj}.pks.cmp.pd*cmp_multiplier_disp,'rx','markersize',20);
+            plot(sweep{jj}.pzt_smooth,sweep{jj}.pd_cmp_raw*args_single.cmp_multiplier_disp,'r')
+            plot(sweep{jj}.pks.cmp.pzt,sweep{jj}.pks.cmp.pd*args_single.cmp_multiplier_disp,'rx','markersize',20);
             hold off
             title(title_strs(single_mode_vec(jj)+1))
 

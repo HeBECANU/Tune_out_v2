@@ -1,3 +1,4 @@
+%monitor the forbidden transtion run
 % monitor an experiment that uses measrument of the trap freq
 % It would be usefull to get a decent idea of what the trap frequency is doing during a run without
 % the need for a full processing of the data as in main
@@ -27,14 +28,9 @@ anal_opts.tdc_import.txylim=[tlim;tmp_xlim;tmp_ylim];
 anal_opts.atom_laser.pulsedt=8.000e-3;
 anal_opts.atom_laser.t0=0.41784; %center i ntime of the first pulse
 anal_opts.atom_laser.start_pulse=1; %atom laser pulse to start with
-anal_opts.atom_laser.pulses=100;
-<<<<<<< HEAD
-anal_opts.atom_laser.appr_osc_freq_guess=[52,40,40];
-anal_opts.atom_laser.pulse_twindow=anal_opts.atom_laser.pulsedt*0.95;
-=======
+anal_opts.atom_laser.pulses=325;
 anal_opts.atom_laser.appr_osc_freq_guess=[52,48,40];
 anal_opts.atom_laser.pulse_twindow=anal_opts.atom_laser.pulsedt*0.9;
->>>>>>> master
 anal_opts.atom_laser.xylim=anal_opts.tdc_import.txylim(2:3,:); %set same lims for pulses as import
 
 anal_opts.global.fall_time=0.417;
@@ -45,13 +41,7 @@ anal_opts.dld_aquire=4;
 anal_opts.trig_ai_in=20;
 
 
-anal_opts.osc_fit.binsx=1000;
-anal_opts.osc_fit.blur=1;
-anal_opts.osc_fit.xlim=[-20,20]*1e-3;
-anal_opts.osc_fit.tlim=[0.86,1.08];
-anal_opts.osc_fit.dimesion=2; %Select coordinate to bin. 1=X, 2=Y.
-
-anal_opts.history.shots=50;
+anal_opts.history.shots=inf;
 
 % END USER VAR-----------------------------------------------------------
 fclose('all')
@@ -77,21 +67,21 @@ anal_opts.global.out_dir=anal_out.dir;
 
 
 %%
-trap_freq_history=[];
-trap_freq_history.trap_freq_val=[];
-trap_freq_history.trap_freq_unc=[];
-trap_freq_history.shot_num=[];
+atom_loss_history=[];
+atom_loss_history.frac_rem_log_val=[];
+atom_loss_history.frac_rem_log_unc=[];
+atom_loss_history.shot_num=[];
 sfigure(1);
 set(gcf,'color','w')
 clf;
-
+sfigure(2)
+set(gcf,'color','w')
 %%
 
 loop_num=0;
 while true
     pause(0.1)
     batch_data=[];
-    batch_data.shot_num=[];
     anal_opts.tdc_import.shot_num=find_data_files(anal_opts.tdc_import);
 
     max_shot_num=max(anal_opts.tdc_import.shot_num);
@@ -100,7 +90,7 @@ while true
     %remove processed ones
 
     anal_opts.tdc_import.shot_num=anal_opts.tdc_import.shot_num(...
-        ~ismember(anal_opts.tdc_import.shot_num, trap_freq_history.shot_num ) );
+        ~ismember(anal_opts.tdc_import.shot_num, atom_loss_history.shot_num ) );
 
     if numel(anal_opts.tdc_import.shot_num)==0
             if mod(loop_num,4)==0
@@ -125,43 +115,59 @@ while true
         else
             batch_data.mcp_tdc.al_pulses=bin_al_pulses(anal_opts.atom_laser,batch_data);
             %%
-            anal_opts.osc_fit.adaptive_freq=true; %estimate the starting trap freq 
-            anal_opts.osc_fit.appr_osc_freq_guess=[52,44,40];
-            anal_opts.osc_fit.freq_fit_tolerance=5;
-            if sum(batch_data.mcp_tdc.all_ok)>2
-                anal_opts.osc_fit.plot_fits=false;
-            else
-                anal_opts.osc_fit.plot_fits=true;
-            end
+            mask=batch_data.mcp_tdc.all_ok;
+            
+            %% FITTING THE ATOM NUMBER PART 1
+            %use the inital few atom laser pulses in order to determine the atom number
+            %not of that much benifit TBH
+            anal_opts.atom_num_fit=[];
+            anal_opts.atom_num_fit.pulses=[1,15]; %min,max index of pulses
+            sfigure(2)
+            subplot(2,1,1)
+            %only show the fit if there is less than 5 shots
+            anal_opts.atom_num_fit.plot.each_shot=sum(batch_data.mcp_tdc.all_ok)<5;
 
-            anal_opts.osc_fit.plot_err_history=false;
-            anal_opts.osc_fit.plot_fit_corr=false;
+            anal_opts.atom_num_fit.plot.history=false;
+            anal_opts.atom_num_fit.qe=anal_opts.global.qe;
 
-            anal_opts.osc_fit.global=anal_opts.global;
-            batch_data.osc_fit=fit_trap_freq(anal_opts.osc_fit,batch_data);
+            data.num_fit.pre_probe=fit_atom_number(anal_opts.atom_num_fit,batch_data);
 
-            batch_data.osc_fit.trap_freq_recons=nan*batch_data.osc_fit.ok.did_fits;
-            mask=batch_data.osc_fit.ok.did_fits;
-            batch_data.osc_fit.trap_freq_recons(mask)=3*(1/anal_opts.atom_laser.pulsedt)+batch_data.osc_fit.model_coefs(mask,2,1);
+            %% FITTING THE ATOM NUMBER PART 2
+            sfigure(2)
+            subplot(2,1,2)
+            anal_opts.atom_num_fit.pulses=[144,210]; %min,max index of pulses
+            data.num_fit.post_probe=fit_atom_number(anal_opts.atom_num_fit,batch_data);
 
-            trap_freq_history.shot_num=[trap_freq_history.shot_num,anal_opts.tdc_import.shot_num(mask)];
-            trap_freq_history.trap_freq_val=[trap_freq_history.trap_freq_val,batch_data.osc_fit.trap_freq_recons(mask)];
-            trap_freq_history.trap_freq_unc=[trap_freq_history.trap_freq_unc,batch_data.osc_fit.model_coefs(mask,2,2)'];
+            %% Compare
+
+            atom_num_pre=cellfun(@(x) x(16),data.num_fit.pre_probe.fit_predict(mask));
+            atom_num_post=cellfun(@(x) x(144),data.num_fit.post_probe.fit_predict(mask));
+            atom_num_unc_pre=cellfun(@(x) x(16),data.num_fit.pre_probe.fit_predict_unc(mask));
+            atom_num_unc_post=cellfun(@(x) x(144),data.num_fit.post_probe.fit_predict_unc(mask));
+            
+            frac_rem_vec_lin=atom_num_post./atom_num_pre;
+            frac_rem_vec_log_val=log(atom_num_post./atom_num_pre);
+            frac_rem_vec_log_unc=abs(sqrt((atom_num_unc_pre./atom_num_pre).^2+(atom_num_unc_post./atom_num_post).^2));
+           
+            
+            atom_loss_history.shot_num=[atom_loss_history.shot_num,anal_opts.tdc_import.shot_num(mask)];
+            atom_loss_history.frac_rem_log_val=[atom_loss_history.frac_rem_log_val,frac_rem_vec_log_val'];
+            atom_loss_history.frac_rem_log_unc=[atom_loss_history.frac_rem_log_unc,frac_rem_vec_log_unc'];
 
             %trim the history vectors
-            if numel(trap_freq_history.shot_num)>anal_opts.history.shots
+            if numel(atom_loss_history.shot_num)>anal_opts.history.shots
                 %bit sloppy but will assume they are the same length
-                trap_freq_history.shot_num=trap_freq_history.shot_num(end-anal_opts.history.shots:end);
-                trap_freq_history.trap_freq_val=trap_freq_history.trap_freq_val(end-anal_opts.history.shots:end);
-                trap_freq_history.trap_freq_unc=trap_freq_history.trap_freq_unc(end-anal_opts.history.shots:end);
+                atom_loss_history.shot_num=atom_loss_history.shot_num(end-anal_opts.history.shots:end);
+                atom_loss_history.frac_rem_log_val=atom_loss_history.frac_rem_log_val(end-anal_opts.history.shots:end);
+                atom_loss_history.frac_rem_log_unc=atom_loss_history.frac_rem_log_unc(end-anal_opts.history.shots:end);
             end
 
             sfigure(1);
-            errorbar(trap_freq_history.shot_num,...
-                trap_freq_history.trap_freq_val,trap_freq_history.trap_freq_unc,...
+            errorbar(atom_loss_history.shot_num,...
+                atom_loss_history.frac_rem_log_val,atom_loss_history.frac_rem_log_unc,...
                 'kx-','MarkerSize',7,'CapSize',0,'LineWidth',1)
             xlabel('Shot Number')
-            ylabel('Fit Trap Freq')
+            ylabel('Log Number remaining')
             pause(1e-6)
 
         end

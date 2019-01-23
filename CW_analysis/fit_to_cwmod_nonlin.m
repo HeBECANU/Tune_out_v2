@@ -1,22 +1,26 @@
-function to_res=fit_to_nonlin(anal_opts_fit_to,data)
+function to_res=fit_to_cwmod_nonlin(anal_opts_fit_to,data)
 
 temp_cal=data.mcp_tdc.probe.calibration'; %because its used a lot make a temp var for calibration logic vector
 temp_cal(isnan(temp_cal))=1;    
 %manual bootstrap rand(size(data.osc_fit.ok.rmse))>0.9
-probe_dat_mask=data.osc_fit.ok.all & ~temp_cal &  ~isnan(data.wm_log.proc.probe.freq.act.mean)'...
-    & ~isnan(data.osc_fit.trap_freq_recons);
+probe_dat_mask=data.mcp_tdc.probe.calibration;
+probe_dat_mask(isnan(probe_dat_mask))=true;
+probe_dat_mask=data.mcp_tdc.probe.ok.all&~probe_dat_mask;
 
 to_res.num_shots=sum(probe_dat_mask);
 to_res.fit_mask=probe_dat_mask;
 
+mask_cal=data.mcp_tdc.probe.calibration;
+mask_cal(isnan(mask_cal))=false;
+mask_cal=data.mcp_tdc.probe.ok.all&mask_cal;
+
+
 probe_freq= data.wm_log.proc.probe.freq.act.mean(probe_dat_mask')*1e6;
-trap_freq=data.osc_fit.trap_freq_recons(probe_dat_mask)';
-trap_freq_unc=data.osc_fit.trap_freq_recons_unc(probe_dat_mask)';
-cal_trap_freq=data.cal.freq_drift_model(data.mcp_tdc.time_create_write(probe_dat_mask,1));
-cal_trap_freq_unc=data.cal.unc;
-delta_trap_freq=trap_freq-cal_trap_freq;
-square_trap_freq= (trap_freq).^2-(cal_trap_freq).^2;
-square_trap_freq_unc=sqrt(2).*sqrt((trap_freq_unc.*trap_freq).^2+(cal_trap_freq_unc.*cal_trap_freq).^2);
+mod_signal= data.lock_in.quad_rot(probe_dat_mask,1)';
+%dont know how to define an uncert
+mod_cal=data.cal.mod_drift_model(data.mcp_tdc.time_create_write(probe_dat_mask,1))';
+%-mean(data.lock_in.quad_rot(mask_cal,1));
+mod_signal=mod_signal-mod_cal;
 %define the color for each shot on the plot
 cdat=viridis(1e4);
 c_cord=linspace(0,1,size(cdat,1));
@@ -43,7 +47,7 @@ if anal_opts_fit_to.plot_inital
     ylabel('delta freq')
     subplot(2,1,2)
 
-    scatter((probe_freq-nanmean(probe_freq))*1e-9,square_trap_freq,30,cdat,'square','filled')
+    scatter((probe_freq-nanmean(probe_freq))*1e-9,mod_signal,30,cdat,'square','filled')
     xlabel('delta probe beam frequency (GHz)')
     ylabel('square difference in freq (\omega_{Net}^2-\omega_{cal}^2)')
     colormap(viridis(1000))
@@ -73,8 +77,8 @@ fprintf('Calculating Fits\n')
 
 %set up the data input for the fit
 xdat=probe_freq(~isnan(probe_freq))';
-ydat=square_trap_freq(~isnan(probe_freq))';
-wdat=1./square_trap_freq_unc(~isnan(probe_freq))';
+ydat=mod_signal(~isnan(probe_freq));
+wdat=ones(size(ydat)); %unity weighting
 wdat(isnan(wdat))=1e-20; %if nan then set to smallest value you can
 wdat=wdat./sum(wdat);
 cdat=cdat(~isnan(probe_freq),:);
@@ -116,7 +120,7 @@ for ii=1:2 %iterate over linear and quadratic fits
     caxis([0,range(shot_time)/(60*60)])
     %plot(xdat,ydat,'bx')
     xlabel(sprintf('probe beam set freq - %.3f(GHz)',freq_offset*1e-9))
-    ylabel('Response (Hz^2)')
+    ylabel('Atom Laser Modulation (Hz)')
     title('Good Data')
     first_plot_lims=[get(gca,'xlim');get(gca,'ylim')];
     %color the ones that will be removed
@@ -212,7 +216,7 @@ for ii=1:2 %iterate over linear and quadratic fits
     hold off
     xlabel(sprintf('probe beam set freq - %.3f (GHz)',freq_offset*1e-9))
     %ylabel('Response (Hz^2)')
-    ylabel('\omega_{trap+probe}^2-\omega_{trap}^2 (Hz^2)')
+    ylabel('Atom Laser Modulation (Hz)')
     title('Fit Outliers Removed')
     set(gca,'xlim',first_plot_lims(1,:))
     set(gca,'ylim',first_plot_lims(2,:))
@@ -274,7 +278,10 @@ c_data = viridis(num_bin);
 x_res_grouped = ones(1,num_bin);
 y_res_grouped = cell(1,num_bin);
 ydat_chunks=nan(numel(num_bin),2);
+sfigure(487);
+clf
 for jj=0:(num_bin-1)
+%     hold on
     bin_centre = bin_size*0.5+jj*bin_size+min(xdat_culled);
     x_res_grouped(jj+1) = bin_centre;
     x_mask = (abs(xdat_culled-bin_centre)<(bin_size*0.5));
@@ -282,6 +289,20 @@ for jj=0:(num_bin-1)
     ydat_chunks(jj+1,1)=nanmean(ydat_culled(x_mask));
     ydat_chunks(jj+1,2)=nanstd(ydat_culled(x_mask));
 end
+%% Violin plot, BROKEN
+%kierian whenere does this violin come from??
+% 
+% violin(y_res_grouped,'x',x_res_grouped,'facecolor',c_data,'edgecolor','none','bw',10,'mc','k','medc','r-.');
+% ylabel('Residuals in Signal')
+% xlabel(sprintf('Tune-out value - %.3f (MHz)',freq_offset*1e-6))
+% set(gcf,'color','w')
+% sfigure(476);
+% histogram(res,'FaceAlpha',0.45)
+% xlabel('Residuals in Signal')
+% ylabel('Count')
+% set(gcf,'color','w')
+
+
 %Finally plot a nice version of the quad fit
 %set up the colors to use
 colors_main=[[233,87,0];[33,188,44];[0,165,166]];
@@ -332,13 +353,10 @@ wdat=inmat(3,:);
 
 modelfun = @(b,x) (repmat(x(:,1),1,n+1).^(0:n))*(b(1:(n+1))'); %simple linear model
 opts = statset('nlinfit');
-%robust fit
-opts.RobustWgtFun = 'welsch' ; %a bit of robust fitting
-opts.Tune = 1;
-% if robust cant use the combined err model
-%,'ErrorModel','combined'
+%opts.RobustWgtFun = 'welsch' ; %a bit of robust fitting
+%opts.Tune = 1;
 beta0 = [1e-5,1e-2.*ones(1,n)]; %intial guesses
-fit_mdl = fitnlm(xdat,ydat,modelfun,beta0,'Options',opts); %constant, 'Weight',wdat add for weighted fits, haven't got them quite working yet
+fit_mdl = fitnlm(xdat,ydat,modelfun,beta0,'Options',opts,'ErrorModel','combined'); %constant, 'Weight',wdat add for weighted fits, haven't got them quite working yet
 
 %fzero(@(x) predict(fit_mdl,x),0)
 mdl_zeros = roots(fliplr(fit_mdl.Coefficients.Estimate(:)'));

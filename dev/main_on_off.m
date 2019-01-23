@@ -91,6 +91,7 @@ anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimp
 anal_opts.tdc_import.force_reimport=false;
 anal_opts.tdc_import.force_forc=false;
 anal_opts.tdc_import.dld_xy_rot=0.61;
+anal_opts.tdc_import.shot_num=find_data_files(anal_opts.tdc_import);
 %Should probably try optimizing these
 tmp_xlim=[-8e-3, 8e-3];  % %[-8e-3, 8e-3] %[-5e-3, 2e-3]    %tight XY lims to eliminate hot spot from destroying pulse widths
 tmp_ylim=[-16e-3, 25e-3];
@@ -159,48 +160,36 @@ data.mcp_tdc=mcp_tdc_data;
 %TO DO FUNCTIONALIZE
 %import the wavemeter log
 %adaptively to deal with the 2 different log files that are in the data
-lv_log=[];
-lv_log.dir = strcat(anal_opts.tdc_import.dir,'log_LabviewMatlab.txt');
-fid = fopen(lv_log.dir );
-lv_log.cell=textscan(fid,'%s','Delimiter','\n');
-fclose(fid);
-lv_log.cell=lv_log.cell{1};
-for ii=1:size(lv_log.cell,1)
-    if ~isequal(lv_log.cell{ii},'') %catch the empty case
-        if contains(lv_log.cell{ii},'measure_probe')
-            line_cells=textscan(lv_log.cell{ii},'%f %s %s %s %f %s %u','Delimiter',',');
-            lv_log.setpoints(ii)=line_cells{5};
-            lv_log.probe_calibration(ii)=false;
-            lv_log.iter_nums(ii)=line_cells{7};
-        elseif contains(lv_log.cell{ii},'calibrate')
-            line_cells=textscan(lv_log.cell{ii},'%f %s %s %s %s %u','Delimiter',',');
-            lv_log.setpoints(ii)=NaN;
-            lv_log.probe_calibration(ii)=true;
-            lv_log.iter_nums(ii)=line_cells{6};
-        else %deals with the legacy case (only 20180813_CW_AL_tuneout_scan)
-            line_cells=textscan(lv_log.cell{ii},'%f %s %s %s %f %s %u','Delimiter',',');
-            lv_log.setpoints(ii)=line_cells{5};
-            lv_log.probe_calibration(ii)=false;
-            lv_log.iter_nums(ii)=line_cells{7};
-        end
-        lv_log.posix_times(ii)=line_cells{1};
-        lv_log.iso_times{ii}=line_cells{2};
-    end
-end
-data.labview=[];
-data.labview.setpoint=lv_log.setpoints*1e6; %convert to hz
-data.labview.time=lv_log.posix_times;
-data.labview.shot_num=lv_log.iter_nums;
-data.labview.calibration=lv_log.probe_calibration;
-%can check that the times look ok
+
+data.labview = import_labview_log(anal_opts);
+
+% can check that the times look ok
 % plot(data.mcp_tdc.write_time-data.probe.time)
 
+<<<<<<< HEAD:main.m
+
+%% IMPORT WM LOG FILES
+wm_log_import_opts.dir=anal_opts.tdc_import.dir;
+wm_log_import_opts.force_reimport=false;
+wm_log_name='log_wm_';
+wm_logs=dir([wm_log_import_opts.dir,wm_log_name,'*.txt']);
+wm_log_import_opts.names={wm_logs.name};
+data.wm_log=wm_log_import(wm_log_import_opts);
+=======
+>>>>>>> master:dev/main_on_off.m
 
 
 %% Match Labview data
 %because the mcp-dld detector has no direct communication with the bec computer
 % the data.labview.shot_num does not nessesarily correspond to data.mcp_tdc.shot_num
 
+<<<<<<< HEAD:main.m
+anal_opts.match_times=true;
+data_mcp_tdc = match_timestamps(data, anal_opts);
+data.mcp_tdc.probe = data_mcp_tdc.probe;
+data.mcp_tdc.labview_shot_num = data_mcp_tdc.labview_shot_num;
+
+=======
 
     %try and match up the file with if it is a calibaration using the time
     %it is slightly overkill here to search each one, but just being extra
@@ -235,11 +224,16 @@ data.labview.calibration=lv_log.probe_calibration;
             data.mcp_tdc.probe.calibration(ii)=data.labview.calibration(nearest_idx);
         end 
     end
+>>>>>>> master:dev/main_on_off.m
 
 %% IMPORT THE ANALOG INPUT LOG
 %the code will check that the probe beam PD was ok and that the laser was single mode
 anal_opts.ai_log.dir=anal_opts.tdc_import.dir;
+<<<<<<< HEAD:main.m
+anal_opts.ai_log.force_reimport=false ;
+=======
 anal_opts.ai_log.force_reimport=false;
+>>>>>>> master:dev/main_on_off.m
 anal_opts.ai_log.force_load_save=false;
 anal_opts.ai_log.log_name='log_analog_in_';
 anal_opts.ai_log.pd.set=5;
@@ -254,7 +248,6 @@ anal_opts.ai_log.plot.all=false;
 anal_opts.ai_log.plot.failed=false;
 anal_opts.ai_log.time_match_valid=5; %how close the predicted start of the shot is to the actual
 anal_opts.ai_log.scan_time=14e-3;  %estimate of the sfp scan time,used to set the window and the smoothing
-
 
 %because im only passing the ai_log feild to aviod conflicts forcing a reimport i need to coppy these feilds
 anal_opts.ai_log.trig_dld=anal_opts.trig_dld;

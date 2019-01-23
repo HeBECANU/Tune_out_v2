@@ -1,13 +1,37 @@
+%% looking at what other transitions can be acessed with this laser system
+% the  2_3S1 -> 3_3S1'     427.701058514445 nm   700939247.242651 Hz is pretty interesting
+
+%this seems to give the wrong value for the 1083 p2 transtion
+%https://doi.org/10.1103/PhysRevLett.92.023001 quotes the measured value at 276 732 186 818.4
+% whereas this predicts 276732176.556172 a difference of 10 MHz
+
+
 %% Physical constants
-c = 299792458; %m/s
-e_charge = 1.60217662e-19; %C
-h = 6.62607004e-34; %J/s
-m_e = 9.10938356*1e-31; %kg
-eps_0 = 8.854187817*1e-12;
- const = 2*pi*e_charge^2/(eps_0*m_e*c^3)
- gl/gu*const*(c/(wv))^2*fik
+hebec_constants
+c = const.c; %m/s
+e_charge = const.electron; %C
+h = const.h; %J/s
+m_e = const.me; %kg
+eps_0 = const.epsilon0;
+
+%%
+%https://arxiv.org/abs/physics/0105110 gives the energy of of 23s1->333s1
+%0.1065403108
+hartree=4.35974417e-18;
+
+freq_33s1=(hartree*0.1065403108)/const.h;
+%which gives 701158331.496693
+%this disagrees whith these level data by 62GHz !!!!!
+
+%% gordon drake gives 
+%http://www.nrcresearchpress.com/doi/pdf/10.1139/p06-009
+% see table 6
+% as 700939270.97MHz which only slightly disagrees (23mhz) with the level calculation
+
+% gl/gu*const*(c/(wv))^2*fik
 %% Load in energy level data
-He_data=csv2struct('he_levels.csv');
+% REQUIRES EXCEL!!! 
+He_data=readtable(fullfile('dev','he_levels.csv'));
 eV_2_3S1= 19.81961468; %eV
 eV_2_3P2= 20.96408703; %eV
 eV_2_3P1= 20.96409651; %eV
@@ -15,9 +39,10 @@ eV_to_wavelength = @(eV_f,eV_i) c/((eV_f-eV_i)*e_charge/h);
 He_spectrum = {};
 He_spectrum.transition = [];
 He_spectrum.wavelength = ones((numel(He_data.Level_eV)-1)*3,1);
+he_level_numbers=cellfun(@str2num,He_data.Level_eV);
 %%
 for ii=2:numel(He_data.Level_eV)
-    eV_current = str2num(He_data.Level_eV{ii});
+    eV_current = he_level_numbers(ii);
     %Find spectroscopic notation of energy level
     config_current = He_data.Configuration{ii};
     dot_pos = strfind(config_current,'.');
@@ -43,7 +68,7 @@ for ii=2:numel(He_data.Level_eV)
 end
 %% Table creation
 wv_min = 400*1e-9;
-wv_max = 450*1e-9;
+wv_max = 2000*1e-9;
 He_spectrum.freq = c./(He_spectrum.wavelength);
 He_spectrum_full_tbl = table(He_spectrum.wavelength.*1e9,c./(He_spectrum.wavelength).*1e-6,'RowNames',He_spectrum.transition);
 indx_bounds = and((He_spectrum.wavelength>wv_min), (He_spectrum.wavelength<wv_max));
