@@ -1,13 +1,14 @@
 %Script that scrapes the analysed data from dirs (currently messy but works)
 clear all
 %setup directories you wish to loop over
-loop_config.dir = {'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190115_baseline_to_1\',
-            'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190117_true_baseline_to\',
+loop_config.dir = {'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190122_nuller_avg_along_weak\',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190117_true_baseline_to\',
             'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190118_baseline_to_3\',
             'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190118_baseline_to_4\',
             'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190118_baseline_to_5\',
             'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190119_baseline_to_6\'};
         %'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190110_baseline_to_1\'
+        %'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190115_baseline_to_1\',
 
 
 % {'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181205_baseline_nuller_on_always\',
@@ -31,9 +32,10 @@ loop_config.dir = {'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\2
 % 
 %  dir: Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181011_to_drift_2\ didnt work 
 
-    loop_config.set_pt = [8.0, 3.0, 8.0, 3.0, 3.0, 5.0, 5.0, 2.0, 5.0, 1.0];
+    loop_config.set_pt = [1.25, 8.0, 3.0, 8.0, 3.0, 3.0, 5.0, 5.0, 2.0, 5.0, 1.0];
 selected_dirs = 1:numel(loop_config.dir); %which files to loop over (currently all)
 %selected_dirs = [6,8,9,13,14]-1;
+%selected_dirs=1-1;
 
 TO_st_pt = 7.257355*1e14;
 drift_data_compiled.to_val{:,1}=[];

@@ -253,6 +253,11 @@ hold off
 %% Plot
 % Could refactor so entire thing is in a loop over ii - needs a few things stored in to_seg_fits
 fprintf('Plotting\n',iimax,0)
+sfigure(602);
+%clear the plot
+if anal_opts_fit_to.clear_plot
+    clf
+end
 dead_rows = [];
     for ii=1:iimax %Plots segmented data
         if ~(to_seg_fits.seg_edges(ii,2)>to_seg_fits.seg_edges(ii,1))
@@ -264,7 +269,6 @@ dead_rows = [];
                 zeros(num_shots-to_seg_fits.seg_edges(ii,2),1)]'==1;
         seg_mask = seg_mask_temp&probe_dat_mask;
 
-        sfigure(602);
         if mod(ii,2) == 0
             marker='x';
         else
@@ -335,7 +339,7 @@ dead_rows = [];
     
     [acf,lags,bound] = autocorr(to_val);
     [acf_trim,lags_trim,bound_trim] = autocorr(to_val_trim);
-    
+    plot_name='single_run_drift_anal';
     subplot(4,4,[5 6])
     set(gcf,'color','w')
     plot(to_time,to_val-to_val_ref,'k')
@@ -410,8 +414,8 @@ dead_rows = [];
     plot([slope_TO_mean,slope_TO_mean],[0,max(histcounts(slope_TO,8,'Normalization','pdf'))],'r')
     ylabel('P(X)')
     title('fit slope * TO (normalized)')
+    saveas(gcf,fullfile(anal_opts_fit_to.global.out_dir,[plot_name,'.png']))
     
-
 end
 
 

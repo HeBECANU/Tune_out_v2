@@ -82,28 +82,27 @@ clear all
 % BEGIN USER VAR-------------------------------------------------
 
 %setup directories you wish to loop over
-<<<<<<< HEAD
-loop_config.dir = {'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190110_baseline_to_1\',
-            'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190115_baseline_to_1\',
-            'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190117_true_baseline_to\',
-            'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190118_baseline_to_3\',
-            'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190118_baseline_to_4\',
-            'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190118_baseline_to_5\',
-            'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190119_baseline_to_6\'};
-
-%         {'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181122_alignment_dep_34_5\',
-%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181011_to_drift_2\',
-%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181026_wp_out_stab\'};
-          %all the recent baseline runs
-    %'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\'
-    
-%Vector of set points for each directory, has to be done manualy first, but is saved after data is analysed    
-loop_config.set_pt = [1.02 1.25 1.25 1.25 1.25 1.25 1.25];%1.25 for current runs
-%selected_dirs = 1:numel(loop_config.dir); %which files to loop over (currently all)
-selected_dirs = [5];%1,3,5
-%selected_dirs = 1;
-=======
-loop_config.dir = {'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190115_baseline_to_1',
+% 
+loop_config.dir = {
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190131_to_hwp_89_low_pow_test',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190131_to_hwp_89_low_num_test',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190131_to_hwp_89',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190131_to_hwp_89_redo',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190131_to_hwp_89\',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190131_to_hwp_170',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190130_to_hwp_0',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190130_to_hwp_20\',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190130_to_hwp_37\',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190129_to_hwp_100',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190129_to_hwp_127\',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190127_to_hwp_157',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190127_to_hwp_75',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190124_to_hwp_105\',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190123_to_hwp_162\',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190123_to_hwp_137',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190123_to_hwp_68',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190122_to_hwp_27\',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190115_baseline_to_1\',
         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181203_filt_skew_pos50ghz_bad_setpt\',
         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181124_3_filt_align_dep_34_um\',
         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181122_filt_dep_none\',
@@ -122,10 +121,10 @@ loop_config.dir = {'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\2
         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181026_wp_out_stab2\',
         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_31um\'};
 %Vector of set points for each directory, has to be done manualy first, but is saved after data is analysed    
-loop_config.set_pt = [ 1.25, 9.0, 5.0, 5.0, 8.0, 8.0, 3.0, 3, 3, 5, 5, 2     5     3     5     5     5     5];
+loop_config.set_pt = [0.31,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25 1.25, 9.0, 5.0, 5.0, 8.0, 8.0, 3.0, 3, 3, 5, 5, 2,5,3,5 ,5,5,5];
 selected_dirs = 1:numel(loop_config.dir); %which files to loop over (currently all)
 selected_dirs = 1;
->>>>>>> 20481c725dfd35d85c6955d0de029b11a2239a86
+
 
 for dir_idx = selected_dirs
 try
@@ -133,7 +132,7 @@ tic
 anal_opts=[]; %reset the options (would be good to clear all variables except the loop config
 anal_opts.tdc_import.dir = loop_config.dir{dir_idx};
 anal_opts.probe_set_pt=loop_config.set_pt(dir_idx);
-
+ 
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
 anal_opts.tdc_import.force_reimport=false;
@@ -330,13 +329,13 @@ anal_opts.ai_log.pd.diff_thresh=0.1;
 anal_opts.ai_log.pd.std_thresh=0.1;
 anal_opts.ai_log.pd.time_start=0.2;
 anal_opts.ai_log.pd.time_stop=2;
-anal_opts.ai_log.sfp.num_checks=10; %how many places to check that the laser is single mode
+anal_opts.ai_log.sfp.num_checks=20; %how many places to check that the laser is single mode
 anal_opts.ai_log.sfp.thresh_cmp_peak=20e-3; %theshold on the compressed signal to be considered a peak
 anal_opts.ai_log.sfp.peak_dist_min_pass=4.5;%minimum (min difference)between peaks for the laser to be considered single mode
 anal_opts.ai_log.plot.all=false;
 anal_opts.ai_log.plot.failed=false;
-anal_opts.ai_log.time_match_valid=5; %how close the predicted start of the shot is to the actual
-anal_opts.ai_log.scan_time=14e-3;  %estimate of the sfp scan time,used to set the window and the smoothing
+anal_opts.ai_log.time_match_valid=8; %how close the predicted start of the shot is to the actual
+anal_opts.ai_log.scan_time=1/20; %fast setting 1/100hz %estimate of the sfp scan time,used to set the window and the smoothing
 %because im only passing the ai_log feild to aviod conflicts forcing a reimport i need to coppy these feilds
 anal_opts.ai_log.trig_dld=anal_opts.trig_dld;
 anal_opts.ai_log.dld_aquire=anal_opts.dld_aquire;
@@ -545,6 +544,7 @@ data.cal=make_cal_model(anal_opts.cal_mdl,data);
 anal_opts.fit_to=[];
 anal_opts.fit_to.bootstrap=false;
 anal_opts.fit_to.plots=true;
+anal_opts.fit_to.clear_plot=true;
 %thresholds for CI
 %sd         CI
 %1          1.3174
@@ -628,10 +628,13 @@ to_wav_val_quad=const.c/(to_fit_trimed_val{2}*2);
 to_freq_val_quad=to_fit_trimed_val{2}*2+anal_opts.aom_freq;
 to_freq_unc_quad=new_to_freq_unc{2}*2;
 to_wav_unc_quad=new_to_freq_unc{2}*const.c/((to_fit_trimed_val{2}*2)^2);
-fprintf('run start time               %.1f (posix)\n',...
-    data.mcp_tdc.time_create_write(1,2)-anal_opts.trig_dld-anal_opts.dld_aquire)
-fprintf('run stop time                %.1f (posix)\n',...
-    data.mcp_tdc.time_create_write(end,2)-anal_opts.trig_dld-anal_opts.dld_aquire)
+time_run_start=data.mcp_tdc.time_create_write(1,2)-anal_opts.trig_dld-anal_opts.dld_aquire;
+time_run_stop=data.mcp_tdc.time_create_write(end,2)-anal_opts.trig_dld-anal_opts.dld_aquire;
+fprintf('run start time               %.1f        (posix)\n',time_run_start)
+fprintf('                             %s (ISO)\n',datestr(datetime(time_run_start,'ConvertFrom','posix'),'yyyy-mm-ddTHH:MM:SS'))
+fprintf('run stop time                %.1f        (posix)\n',time_run_stop)
+fprintf('                             %s (ISO)\n',datestr(datetime(time_run_stop,'ConvertFrom','posix'),'yyyy-mm-ddTHH:MM:SS'))
+
 fprintf('duration                     %.1f (s)\n',...
     data.mcp_tdc.time_create_write(end,2)-data.mcp_tdc.time_create_write(1,2))
 fprintf('TO freq (Linear)             %.1f±(%.0f±%.0f) MHz\n',...
