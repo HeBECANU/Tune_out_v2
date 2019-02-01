@@ -57,7 +57,10 @@ function light_on_data = light_on_analysis(config)
         scan_config = config;
         for ii=1:num_scans
             scan_config.idx_lims = borders(ii,:); % marks the edges of each scan
-            scan_data{ii} = process_scan(pd_raw,T,scan_config);
+            sc_data.pd_raw = pd_raw;
+            sc_data.T = T;
+            sc_data.sub_dat_smooth = sub_dat_smooth;
+            scan_data{ii} = process_scan(sc_data,scan_config);
         end %loop over scans 
         light_on_data{pp} = scan_data; 
 %         light_on_data{pp}.raw = pd_raw(pos_slope_mask) - config.zero_offset;
@@ -67,7 +70,7 @@ function light_on_data = light_on_analysis(config)
     
 end
 
-function scan_data = process_scan(pd_raw,T,config)
+function scan_data = process_scan(sc_data,config)
     % Takes a single forward scan of the SFP and returns a list of the
     % peak/BG ratio (will change later)
     % Input: scan (array of photodiode readings)
@@ -76,10 +79,14 @@ function scan_data = process_scan(pd_raw,T,config)
     % INIT OUTPUT 
 %     scan_data = cell(num_peaks,1);
     scan_data = [];
+    pd_raw = sc_data.pd_raw;
+    T = sc_data.T;
+    sub_dat_smooth = sc_data.sub_dat_smooth;
     idx_lims = config.idx_lims;
     % Extract the scan of interest & find peaks
     scan_data.sweep = pd_raw(idx_lims(1):idx_lims(2)) - config.zero_offset;
     scan_data.T_sweep = T(idx_lims(1):idx_lims(2)); % Timestamps in the scan
+    scan_data.ptz_raw = sub_dat_smooth(idx_lims(1):idx_lims(2));
     [~,locs] = findpeaks(scan_data.sweep,'MinPeakHeight',config.treshold);
     
 %     if ~isempty(locs) % If there are peaks found

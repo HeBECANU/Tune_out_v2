@@ -18,10 +18,10 @@ config.sampl_start = 1;
 config.demo_max = 4e3;
 config.treshold = 1e-1; %min peak height for find_peaks
 config.plot_out = false;
-
-config.num_dirs = 4;
+config.R = 0.9875;
+config.num_dirs = 1;
 config.test.num_files = 1;
-config.test.num_scans = NaN;
+config.test.num_scans = 10;
 
 
 %% Calibration data
@@ -48,8 +48,8 @@ config_light.zero_offset =-0.017;%mean(all_null{1});
 config_light.peak_width = 0.5e-4;
 config_light.valley_width = 0.7;
 config_light.logscale = false;
-config_light.lebesgue_thresh = .012; %Empirically chosen
-config_light.lebesgue_thresh_demo = .15; %~1% of peak height
+config_light.lebesgue_thresh = 1e-2*5; %Empirically chosen
+config_light.lebesgue_thresh_demo = .5; %~1% of peak height
 light_on_data = cell(numel(light_on_dirnames),1);
 if ~isnan(config.num_dirs)
     num_dirs = config.num_dirs;
@@ -75,63 +75,16 @@ insp_data = cell(num_dirs,1);
 for ii=1:num_dirs
     insp_data{ii} = inspect_light_on(light_on_data{ii},config_light);
     
-    figure()
-    for jj = 1:numel(light_on_data{ii}) %loop over files
-       for kk = 1:numel(light_on_data{ii}{jj}) %loop over scans
-            plot(sort(light_on_data{ii}{jj}{kk}.sweep))
-            hold on
-       end
-    end
-    set(gca,'Yscale','log')
-    title('Sorted scan data')
-    
-    LB = insp_data{ii}.L_back;
-    fprintf('Directory %u ratio %.5f +- %.5f, integrated BG %e +- %e\n',...
-        ii,nanmean(insp_data{ii}.all_ratios),nanstd(insp_data{ii}.all_ratios),mean(LB),std(LB))
+    present_lebesgue(insp_data{ii})
     
     
-    figure()
-    suptitle(sprintf('Directory %u', ii))
-    subplot(2,1,1)
     
-    for jj=1:numel(insp_data{ii}.L_ratios)
-        plot(insp_data{ii}.L_ratios{jj},'x')
-        hold on
-    end
-    title('Back/peak ratios by scan')
-    xlabel('Scan number')
-    ylabel('Back/peak ratio: Lebesgue method')
-    ylim([0,0.08])
-
-
-    subplot(4,1,3)
-    for jj = 1:numel(insp_data{ii}.varf_ratios)
-        Y = insp_data{ii}.varf_ratios{jj};
-        X = insp_data{ii}.varf_axis{jj};
-        for kk = 1:numel(X)
-            plot(X{kk},Y{kk},'k')
-            hold on
-        end
-    end
-    title(sprintf('Ratio vs cutoff for dir %u', ii))
-    xlabel('Integration cutoff')
-    ylabel('Background/peak ratio')
-    ylim([-0.01,0.15])
-    
-    subplot(4,1,4)
-    for jj = 1:numel(insp_data{ii}.varf_back)
-        Y = insp_data{ii}.varf_back{jj};
-        X = insp_data{ii}.varf_axis{jj};
-        for kk = 1:numel(X)
-            plot(X{kk},Y{kk},'k')
-            hold on
-        end
-    end
-    title('Back values')
 end
 
+
+
 figure()
-subplot(1,2,1)
+% subplot(1,2,1)
 X = 1:num_dirs;
 Y = cellfun(@(x) x.L_mean,insp_data);
 Y_err = cellfun(@(x) x.L_std,insp_data);
@@ -141,8 +94,18 @@ xlabel('Number filters')
 ylabel('Background/peak ratio')
 xlim([0,5])
 
-subplot(1,2,2)
 
+%% So yep, the worst place to put a delta-function perturbation is at 1sd.
+% Why? If the filters are Gaussian, the shift is linear in detuning and
+% power -> shift = power*detuning, power going like a Gaussian
+
+% So: Given the ratio, put a Lorentzian of the same width with a given
+%power at 1SD? 
+% 
+
+% subplot(1,2,2)
+fwtext('Done!')
+fwtext('')
 
 
 % allstats = cell_vertcat(cellfun(@(x) x.stats, light_on_data,'UniformOutput',false)');
@@ -152,3 +115,59 @@ subplot(1,2,2)
 
 
 
+function present_lebesgue(insp_data)
+
+%     figure()
+%     for jj = 1:numel(light_on_data{ii}) %loop over files
+%        for kk = 1:numel(light_on_data{ii}{jj}) %loop over scans
+%             plot(sort(light_on_data{ii}{jj}{kk}.sweep))
+%             hold on
+%        end
+%     end
+%     set(gca,'Yscale','log')
+%     title('Sorted scan data')
+    
+    LB = insp_data.L_back;
+    fprintf('Directory ratio %.5f +- %.5f, integrated BG %e +- %e \n',...
+        nanmean(insp_data.all_ratios),nanstd(insp_data.all_ratios),mean(LB),std(LB))
+    
+    
+    figure()
+%     suptitle(sprintf('Directory %u', ii))
+    subplot(2,1,1)
+    
+    for jj=1:numel(insp_data.L_ratios)
+        plot(insp_data.L_ratios{jj},'x')
+        hold on
+    end
+    title('Back/peak ratios by scan')
+    xlabel('Scan number')
+    ylabel('Back/peak ratio: Lebesgue method')
+    ylim([0,0.08])
+
+
+    subplot(4,1,3)
+    for jj = 1:numel(insp_data.varf_ratios)
+        Y = insp_data.varf_ratios{jj};
+        X = insp_data.varf_axis{jj};
+        for kk = 1:numel(X)
+            plot(X{kk},Y{kk},'k')
+            hold on
+        end
+    end
+    title(sprintf('Ratio vs cutoff for dir'))
+    xlabel('Integration cutoff')
+    ylabel('Background/peak ratio')
+    ylim([-0.01,0.15])
+    
+    subplot(4,1,4)
+    for jj = 1:numel(insp_data.varf_back)
+        Y = insp_data.varf_back{jj};
+        X = insp_data.varf_axis{jj};
+        for kk = 1:numel(X)
+            plot(X{kk},Y{kk},'k')
+            hold on
+        end
+    end
+    title('Back values')
+end
