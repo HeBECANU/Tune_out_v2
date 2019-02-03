@@ -111,7 +111,7 @@ while true
         batch_data.mcp_tdc=import_mcp_tdc_data(anal_opts.tdc_import);
         %data.mcp_tdc=mcp_tdc_data;
         %just to give me a logical vector
-        batch_data.mcp_tdc.all_ok=batch_data.mcp_tdc.num_counts>1e4;
+        batch_data.mcp_tdc.all_ok=batch_data.mcp_tdc.num_counts>5e3;
         batch_data.mcp_tdc.all_ok(batch_data.mcp_tdc.all_ok)=...
             cellfun(@(x) x(end,1),batch_data.mcp_tdc.counts_txy(batch_data.mcp_tdc.all_ok))>anal_opts.dld_aquire*0.8;
         if sum(batch_data.mcp_tdc.all_ok)==0
@@ -154,10 +154,24 @@ while true
             sfigure(1);
             errorbar(trap_freq_history.shot_num,...
                 trap_freq_history.trap_freq_val,trap_freq_history.trap_freq_unc,...
-                'kx-','MarkerSize',7,'CapSize',0,'LineWidth',1)
+                'kx-','MarkerSize',7,'CapSize',0,'LineWidth',1.5)
+            grid on
+            h=gca;
+            grid on    % turn on major grid lines
+            grid minor % turn on minor grid lines
+            % Set limits and grid spacing separately for the two directions:
+            % Must set major grid line properties for both directions simultaneously:
+            h.GridLineStyle='-'; % the default is some dotted pattern, I prefer solid
+            h.GridAlpha=1;  % the default is partially transparent
+            h.GridColor=[0,0,0]; % here's the color for the major grid lines
+            % Idem for minor grid line properties:
+            h.MinorGridLineStyle='-';
+            h.MinorGridAlpha=0.1;
+            h.MinorGridColor=[0,0,0]; % here's the color for the minor grid lines
             xlabel('Shot Number')
             ylabel('Fit Trap Freq')
             pause(1e-6)
+            saveas(gcf,fullfile(anal_out.dir,'freq_history.png'))
 
         end
     end
