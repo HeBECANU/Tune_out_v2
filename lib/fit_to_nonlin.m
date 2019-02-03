@@ -332,10 +332,13 @@ wdat=inmat(3,:);
 
 modelfun = @(b,x) (repmat(x(:,1),1,n+1).^(0:n))*(b(1:(n+1))'); %simple linear model
 opts = statset('nlinfit');
-%opts.RobustWgtFun = 'welsch' ; %a bit of robust fitting
-%opts.Tune = 1;
+%robust fit
+opts.RobustWgtFun = 'welsch' ; %a bit of robust fitting
+opts.Tune = 1;
+% if robust cant use the combined err model
+%,'ErrorModel','combined'
 beta0 = [1e-5,1e-2.*ones(1,n)]; %intial guesses
-fit_mdl = fitnlm(xdat,ydat,modelfun,beta0,'Options',opts,'ErrorModel','combined'); %constant, 'Weight',wdat add for weighted fits, haven't got them quite working yet
+fit_mdl = fitnlm(xdat,ydat,modelfun,beta0,'Options',opts); %constant, 'Weight',wdat add for weighted fits, haven't got them quite working yet
 
 %fzero(@(x) predict(fit_mdl,x),0)
 mdl_zeros = roots(fliplr(fit_mdl.Coefficients.Estimate(:)'));
