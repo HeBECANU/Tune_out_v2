@@ -128,7 +128,7 @@ for ii=1:iimax
             set(gcf,'Color',[1 1 1]);
             legend('x','y','z')
 
-            %subplot(2,1,2)
+            subplot(2,1,2)
             shaded_ci_lines=false;
             hold on
             if shaded_ci_lines
