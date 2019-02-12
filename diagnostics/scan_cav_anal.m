@@ -1,5 +1,5 @@
 % clear all
-close all
+% close all
 
 fwtext('CAVITY SCAN ANALYSIS')
 
@@ -19,9 +19,11 @@ config.demo_max = 4e3;
 config.treshold = 1e-1; %min peak height for find_peaks
 config.plot_out = false;
 config.R = 0.9875;
-config.num_dirs = 1;
-config.test.num_files = 1;
-config.test.num_scans = 10;
+config.pv_method = true;
+config.lebesgue_method = true;
+config.num_dirs = 4;
+config.test.num_files = 4;
+config.test.num_scans = 100;
 
 
 %% Calibration data
@@ -45,11 +47,14 @@ config_light = config;
 config_light.plot_out = false;
 config_light.lorentz_fit = false;
 config_light.zero_offset =-0.017;%mean(all_null{1});
-config_light.peak_width = 0.5e-4;
+config_light.peak_width = 1e-4;
+config_light.window_size = 2e-3;
 config_light.valley_width = 0.7;
 config_light.logscale = false;
 config_light.lebesgue_thresh = 1e-2*5; %Empirically chosen
 config_light.lebesgue_thresh_demo = .5; %~1% of peak height
+config_light.pv_peak_factor = 5;
+config_light.pv_plot = false;
 light_on_data = cell(numel(light_on_dirnames),1);
 if ~isnan(config.num_dirs)
     num_dirs = config.num_dirs;
@@ -67,33 +72,58 @@ end
 fwtext('All dirs analyzed')
 
 %%
-close all
+% close all
 fwtext('Presenting results')
-fprintf('Lebesgue cutoff used: %f\n', config_light.lebesgue_thresh)
+config_disp = config_light;
+config_disp.lbg = false;
+config_disp.insp_hists= true;
 
+
+if config_disp.insp_hists
+    sfigure(1337);
+    clf;
+end
 insp_data = cell(num_dirs,1);
 for ii=1:num_dirs
-    insp_data{ii} = inspect_light_on(light_on_data{ii},config_light);
-    
-    present_lebesgue(insp_data{ii})
-    
-    
-    
+
+    insp_data{ii} = inspect_light_on(light_on_data{ii},config_disp);
+    if config.disp.lbg
+        present_lebesgue(insp_data{ii},config)        
+    end
+end
+if config.pv_method
+    sfigure(200);
+    X = 0:num_dirs-1;
+    Y = cellfun(@(x) x.pv_stats(1),insp_data);
+    Y_err = cellfun(@(x) x.pv_stats(2),insp_data);
+    Y_num = cellfun(@(x) x.pv_stats(3),insp_data);
+    Y_stderr = Y_err./Y_num;
+    errorbar(X,Y,Y_stderr,'bo')
+    title('Background dependence on filters: peak/valley method')
+    xlabel('Number of filters')
+    ylabel('Background/peak ratio')
+    xlim([-1,num_dirs])
+    xticks([0,1,2,3])
 end
 
 
+if config.lebesgue_method
+    fprintf('Lebesgue cutoff used: %f\n', config_light.lebesgue_thresh)
 
-figure()
-% subplot(1,2,1)
-X = 1:num_dirs;
-Y = cellfun(@(x) x.L_mean,insp_data);
-Y_err = cellfun(@(x) x.L_std,insp_data);
-errorbar(X,Y,Y_err,'ro')
-title('Background dependence on filters: Lebesgue method')
-xlabel('Number filters')
-ylabel('Background/peak ratio')
-xlim([0,5])
-
+    sfigure(100)
+    % subplot(1,2,1)
+    X = 0:num_dirs-1;
+    Y = cellfun(@(x) x.L_mean,insp_data);
+    Y_err = cellfun(@(x) x.L_std,insp_data);
+    Y_num = cellfun(@(x) x.L_num,insp_data);
+    Y_stderr = Y_err./Y_num;
+    errorbar(X,Y,Y_stderr,'ro')
+    title('Background dependence on filters: Lebesgue method')
+    xlabel('Number of filters')
+    ylabel('Background/peak ratio')
+    xlim([-1,num_dirs])
+    xticks([0,1,2,3])
+end
 
 %% So yep, the worst place to put a delta-function perturbation is at 1sd.
 % Why? If the filters are Gaussian, the shift is linear in detuning and
@@ -115,7 +145,7 @@ fwtext('')
 
 
 
-function present_lebesgue(insp_data)
+function present_lebesgue(insp_data,config)
 
 %     figure()
 %     for jj = 1:numel(light_on_data{ii}) %loop over files
@@ -131,43 +161,44 @@ function present_lebesgue(insp_data)
     fprintf('Directory ratio %.5f +- %.5f, integrated BG %e +- %e \n',...
         nanmean(insp_data.all_ratios),nanstd(insp_data.all_ratios),mean(LB),std(LB))
     
-    
-    figure()
-%     suptitle(sprintf('Directory %u', ii))
-    subplot(2,1,1)
-    
-    for jj=1:numel(insp_data.L_ratios)
-        plot(insp_data.L_ratios{jj},'x')
-        hold on
-    end
-    title('Back/peak ratios by scan')
-    xlabel('Scan number')
-    ylabel('Back/peak ratio: Lebesgue method')
-    ylim([0,0.08])
+    if config.disp.lbg
+        figure()
+    %     suptitle(sprintf('Directory %u', ii))
+        subplot(2,1,1)
 
-
-    subplot(4,1,3)
-    for jj = 1:numel(insp_data.varf_ratios)
-        Y = insp_data.varf_ratios{jj};
-        X = insp_data.varf_axis{jj};
-        for kk = 1:numel(X)
-            plot(X{kk},Y{kk},'k')
+        for jj=1:numel(insp_data.L_ratios)
+            plot(insp_data.L_ratios{jj},'x')
             hold on
         end
-    end
-    title(sprintf('Ratio vs cutoff for dir'))
-    xlabel('Integration cutoff')
-    ylabel('Background/peak ratio')
-    ylim([-0.01,0.15])
-    
-    subplot(4,1,4)
-    for jj = 1:numel(insp_data.varf_back)
-        Y = insp_data.varf_back{jj};
-        X = insp_data.varf_axis{jj};
-        for kk = 1:numel(X)
-            plot(X{kk},Y{kk},'k')
-            hold on
+        title('Back/peak ratios by scan')
+        xlabel('Scan number')
+        ylabel('Back/peak ratio: Lebesgue method')
+        ylim([0,0.08])
+
+
+        subplot(4,1,3)
+        for jj = 1:numel(insp_data.varf_ratios)
+            Y = insp_data.varf_ratios{jj};
+            X = insp_data.varf_axis{jj};
+            for kk = 1:numel(X)
+                plot(X{kk},Y{kk},'k')
+                hold on
+            end
         end
+        title(sprintf('Ratio vs cutoff for dir'))
+        xlabel('Integration cutoff')
+        ylabel('Background/peak ratio')
+        ylim([-0.01,0.15])
+
+        subplot(4,1,4)
+        for jj = 1:numel(insp_data.varf_back)
+            Y = insp_data.varf_back{jj};
+            X = insp_data.varf_axis{jj};
+            for kk = 1:numel(X)
+                plot(X{kk},Y{kk},'k')
+                hold on
+            end
+        end
+        title('Back values')
     end
-    title('Back values')
 end

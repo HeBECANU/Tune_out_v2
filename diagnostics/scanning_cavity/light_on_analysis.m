@@ -54,6 +54,12 @@ function light_on_data = light_on_analysis(config)
         end        
         
         % Set up for scan iterator
+        if config.pv_plot
+            sfigure(68);
+            clf;
+            sfigure(69);
+            clf;
+        end
         scan_config = config;
         for ii=1:num_scans
             scan_config.idx_lims = borders(ii,:); % marks the edges of each scan
@@ -62,6 +68,7 @@ function light_on_data = light_on_analysis(config)
             sc_data.sub_dat_smooth = sub_dat_smooth;
             scan_data{ii} = process_scan(sc_data,scan_config);
         end %loop over scans 
+
         light_on_data{pp} = scan_data; 
 %         light_on_data{pp}.raw = pd_raw(pos_slope_mask) - config.zero_offset;
     end
@@ -79,6 +86,7 @@ function scan_data = process_scan(sc_data,config)
     % INIT OUTPUT 
 %     scan_data = cell(num_peaks,1);
     scan_data = [];
+    scan_config = config;
     pd_raw = sc_data.pd_raw;
     T = sc_data.T;
     sub_dat_smooth = sc_data.sub_dat_smooth;
@@ -87,79 +95,24 @@ function scan_data = process_scan(sc_data,config)
     scan_data.sweep = pd_raw(idx_lims(1):idx_lims(2)) - config.zero_offset;
     scan_data.T_sweep = T(idx_lims(1):idx_lims(2)); % Timestamps in the scan
     scan_data.ptz_raw = sub_dat_smooth(idx_lims(1):idx_lims(2));
-    [~,locs] = findpeaks(scan_data.sweep,'MinPeakHeight',config.treshold);
+    [~,scan_config.locs] = findpeaks(scan_data.sweep,'MinPeakHeight',config.treshold);
     
 %     if ~isempty(locs) % If there are peaks found
         
         % Whole-scan methods
         % Lebesgue
-        config_lebesgue = config;
+        if config.lebesgue_method
+            config_lebesgue = scan_config;
+            scan_data.lebesgue = lebesgue_method(scan_data,config_lebesgue);
+        end
+        if config.pv_method
+            config_pv = scan_config;
+            scan_data.pv_data = pv_method(scan_data,config_pv);
+        end
         
-        scan_data.lebesgue = lebesgue_method(scan_data,config_lebesgue);
-        
-        % Airy fits
-        % Single-peak methods
-        % Peak/valley
-        % Peak/complement
-        
-        
-        
-        
-%         half_FSR = round(0.5*median(diff(locs)));
-%         midpoints = locs(1:end-1) + half_FSR;
-% 
-%         hwin_size = floor(0.5*median(diff(locs))); %Index width of peaks          
-% 
-%         num_peaks = length(locs);
-%         for jj = 1:num_peaks
-%             p_cent = locs(jj); %Select a peak
-%             scan_lims = [(max(1,p_cent-hwin_size)), min(length(sweep),p_cent + hwin_size)];
-%             if diff(scan_lims) > 1.5*hwin_size % ensure all or most of a scan is taken
-%                 scan = sweep(scan_lims(1):scan_lims(2));
-%                 peak_config = config;
-%                 peak_config.T_cen = T_sweep(p_cent);
-%                 peak_config.p_cent = p_cent;
-%                 peak_config.T_win  = T_sweep(scan_lims(1):scan_lims(2));
-%                 peak_config.dT = dT;
-%                 scan_data.data{jj}.data = peak_process(scan,peak_config);
-%             end 
-%         end %loop over peaks  
-%         scan_data.raw_scan = sweep- config.zero_offset;
-%         scan_data.raw_T = T_sweep;
-%         
-%         for kk = 1:numel(midpoints)
-%             scan_data.valley.midpoint{kk} = midpoints(kk);
-%             val_size = config.valley_width*hwin_size;
-%             midp_lims = [(max(1,midpoints(kk)-val_size)), min(length(sweep),midpoints(kk) + val_size)];
-%             scan_data.valley.midp_vals = sweep(midp_lims(1):midp_lims(2));
-%             scan_data.valley.midp_Twin = T_sweep(midp_lims(1):midp_lims(2));
-%             
-%         end
-%         
-%     end %isempty(locs)
-    
-    
-    
 end
 
-function peak_data = peak_process(scan,config)
-        scan = scan - config.zero_offset;
-        T_cen = config.T_cen;
-        T_win = config.T_win;
-        line_lim = config.peak_width;
-        dT = config.dT;
-        
-        line_lims = [T_cen - line_lim,T_cen + line_lim];
-        peak_mask = T_win > line_lims(1) & T_win< line_lims(2);
-       
-        peak_power = sum(scan(peak_mask)*dT);
-        back_power = sum(scan(~peak_mask)*dT);
-        
-        peak_data.powers = [peak_power,back_power];
-        peak_data.raw = scan;
-        peak_data.ratio_b2p = peak_power/back_power;
-        peak_data.T_win = T_win;
-end
+
 
 function lebesgue_data = lebesgue_method(data,config)
 
@@ -196,4 +149,122 @@ function lebesgue_data = lebesgue_method(data,config)
     lebesgue_data.varf_back = varfrac_back;
     lebesgue_data.Xs = X_s;
     
+end
+
+function pv_data = pv_method(data,config)
+
+    X = data.sweep;
+    T = data.T_sweep;
+    dT = mean(diff(T));
+    num_peaks = length(config.locs);
+    num_pairs = num_peaks - 1;
+    width = config.peak_width;
+
+    
+    % Determine FWHM
+
+    peak_widths = zeros(num_peaks,1);
+    for ii=1:num_peaks
+        idx_min= max(1,config.locs(ii)-floor(config.window_size/dT));
+        idx_max= min(length(X),floor(config.window_size/dT)+config.locs(ii));
+        T_cent = T(idx_min:idx_max)-T(config.locs(1));
+        T_mid = median(T_cent);        
+        coefs = [1,width,T_mid,0];
+%         lorentz_fit = fitnlm(T_cent,X(idx_min:idx_max),@Lorentzian,coefs);
+%         coefs = lorentz_fit.Coefficients.Estimate;
+        
+        if config.pv_plot
+            sfigure(68);
+            subplot(2,1,1)
+            plot(T_cent,X(idx_min:idx_max),'k');
+            hold on
+            plot(T_cent,Lorentzian(coefs,T_cent),'r-.')
+            subplot(2,1,2)
+            plot(T_cent,X(idx_min:idx_max),'k');
+            hold on
+            plot(T_cent,Lorentzian(coefs,T_cent),'r-.')
+            set(gca,'Yscale','log')
+        end
+    
+        peak_widths(ii) = coefs(2);
+    end
+
+
+    peak_pows = zeros(num_pairs,1);
+    back_pows = zeros(num_pairs,1);
+    ratios = zeros(num_pairs,1);
+    for ii=1:num_pairs
+        width = config.pv_peak_factor*peak_widths(ii);
+        idx_min= max(1,-floor(width/dT)+config.locs(ii));
+        idx_max= min(floor(width/dT)+config.locs(ii+1),length(T));
+        T_pp = T(idx_min:idx_max);
+        T_mid = median(T_pp); 
+        T_offset = T_pp-T_mid;
+        
+
+
+        %Integrate the peak & valley
+        
+        p1_idxs = [max(1,-floor(width/dT)+config.locs(ii)),min(floor(width/dT)+config.locs(ii),length(T))];
+        p2_idxs = [max(1,-floor(width/dT)+config.locs(ii+1)),min(floor(width/dT)+config.locs(ii+1),length(T))];
+        p1_vals = X(p1_idxs(1):p1_idxs(2));
+        p2_vals = X(p2_idxs(1):p2_idxs(2));
+        p1_pow = sum(p1_vals*dT);
+        p2_pow = sum(p2_vals*dT);
+        mn_pow = (p1_pow+p2_pow)/2;
+        
+        if config.pv_plot
+            sfigure(69);
+            subplot(2,2,1)
+            plot(T_offset,X(idx_min:idx_max))
+            hold on
+            subplot(2,2,2)
+            plot(T_offset,X(idx_min:idx_max))
+            hold on
+            set(gca,'Yscale','log')
+            subplot(2,2,3)
+            plot(T(p1_idxs(1):p1_idxs(2)),p1_vals)
+            hold on
+            subplot(2,2,4)
+            plot(T(p1_idxs(1):p1_idxs(2)),p2_vals)
+            hold on
+        end
+        
+        % Integrate background power over same width
+        
+        bg_cent = floor(median(config.locs(ii:ii+1)));
+        bg_idxs = bg_cent + floor(width/dT)*[-1,1];
+        bg_idxs = [max(1,bg_idxs(1)),min(bg_idxs(2),length(X))];
+        bg_vals = X(bg_idxs(1):bg_idxs(2));
+        bg_pow  = sum(bg_vals*dT);
+        
+        peak_pows(ii) = mn_pow;
+        back_pows(ii) = bg_pow;
+        ratios(ii) = bg_pow/mn_pow;
+        
+            
+    end
+    pv_data.peaks = peak_pows;
+    pv_data.backs = back_pows;
+    pv_data.ratio = ratios;
+end
+
+
+function peak_data = peak_process(scan,config)
+        scan = scan - config.zero_offset;
+        T_cen = config.T_cen;
+        T_win = config.T_win;
+        line_lim = config.peak_width;
+        dT = config.dT;
+        
+        line_lims = [T_cen - line_lim,T_cen + line_lim];
+        peak_mask = T_win > line_lims(1) & T_win< line_lims(2);
+       
+        peak_power = sum(scan(peak_mask)*dT);
+        back_power = sum(scan(~peak_mask)*dT);
+        
+        peak_data.powers = [peak_power,back_power];
+        peak_data.raw = scan;
+        peak_data.ratio_b2p = peak_power/back_power;
+        peak_data.T_win = T_win;
 end
