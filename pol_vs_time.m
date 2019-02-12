@@ -1,0 +1,39 @@
+loop_config.dir = {
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190201_to_hwp_111_nuller_reconfig';
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190201_to_hwp_131_nuller_reconfig';
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190203_to_hwp_29_nuller_reconfig';
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190203_to_hwp_151_nuller_reconfig';
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190203_to_hwp_171_nuller_reconfig';
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190203_to_hwp_191_nuller_reconfig';
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190204_to_hwp_24_nuller_reconfig';
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190204_to_hwp_46_nuller_reconfig';
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190204_to_hwp_51_nuller_reconfig';
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190204_to_hwp_61_nuller_reconfig';
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190204_to_hwp_70_nuller_reconfig';
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190204_to_hwp_92_nuller_reconfig';
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190204_to_hwp_121_nuller_reconfig';
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190204_to_hwp_141_nuller_reconfig';
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190204_to_hwp_160_nuller_reconfig';
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190204_to_hwp_180_nuller_reconfig';
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190206_to_hwp_100_nuller_reconfig';
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190207_to_hwp_80_nuller_reconfig';
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190201_to_hwp_89';
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190131_to_hwp_170';
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190131_to_hwp_150';
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190131_to_hwp_130';
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190131_to_hwp_107';
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output';
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output';
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output';
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output';
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output';
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output';
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output';
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output';
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output';
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output';
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output';
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output';
+    };
+
+pol_angle = [111,131,29,151,171,191,24,46,51,61,70,92,121,141,160,180,100,80,
