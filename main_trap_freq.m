@@ -82,7 +82,30 @@ clear all
 % BEGIN USER VAR-------------------------------------------------
 
 %setup directories you wish to loop over
-loop_config.dir = {'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190115_baseline_to_1',
+% 
+loop_config.dir = {
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190201_to_hwp_111_nuller_reconfig'
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190201_to_hwp_111_nuller_reconfig',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190201_to_hwp_89',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190201_to_hwp_89_low_pow_test',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190201_to_hwp_89_low_num_test',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190131_to_hwp_89',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190131_to_hwp_89_redo',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190131_to_hwp_89\',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190131_to_hwp_170',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190130_to_hwp_0',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190130_to_hwp_20\',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190130_to_hwp_37\',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190129_to_hwp_100',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190129_to_hwp_127\',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190127_to_hwp_157',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190127_to_hwp_75',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190124_to_hwp_105\',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190123_to_hwp_162\',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190123_to_hwp_137',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190123_to_hwp_68',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190122_to_hwp_27\',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190115_baseline_to_1\',
         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181203_filt_skew_pos50ghz_bad_setpt\',
         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181124_3_filt_align_dep_34_um\',
         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181122_filt_dep_none\',
@@ -101,9 +124,10 @@ loop_config.dir = {'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\2
         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181026_wp_out_stab2\',
         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_31um\'};
 %Vector of set points for each directory, has to be done manualy first, but is saved after data is analysed    
-loop_config.set_pt = [ 1.25, 9.0, 5.0, 5.0, 8.0, 8.0, 3.0, 3, 3, 5, 5, 2     5     3     5     5     5     5];
+loop_config.set_pt = [1.25,1.25,1.25,0.31,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25 1.25, 9.0, 5.0, 5.0, 8.0, 8.0, 3.0, 3, 3, 5, 5, 2,5,3,5 ,5,5,5];
 selected_dirs = 1:numel(loop_config.dir); %which files to loop over (currently all)
 selected_dirs = 1;
+
 
 for dir_idx = selected_dirs
 try
@@ -111,7 +135,7 @@ tic
 anal_opts=[]; %reset the options (would be good to clear all variables except the loop config
 anal_opts.tdc_import.dir = loop_config.dir{dir_idx};
 anal_opts.probe_set_pt=loop_config.set_pt(dir_idx);
-
+ 
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
 anal_opts.tdc_import.force_reimport=false;
@@ -123,7 +147,7 @@ tmp_ylim=[-30e-3, 30e-3];
 tlim=[0,4];
 anal_opts.tdc_import.txylim=[tlim;tmp_xlim;tmp_ylim];
 
-anal_opts.max_runtime=10;%cut off the data run after some number of hours
+anal_opts.max_runtime=inf;%inf%cut off the data run after some number of hours, should bin included as its own logic not applied to the atom number ok
 anal_opts.atom_laser.pulsedt=8.000e-3;
 anal_opts.atom_laser.t0=0.41784; %center i ntime of the first pulse
 anal_opts.atom_laser.start_pulse=1; %atom laser pulse to start with
@@ -230,13 +254,15 @@ subplot(4,1,1)
 %create a list of indicies (of the mcp_tdc) that have an ok number of counts
 %exclude the very low and then set the thresh based on the sd of the remaining
 not_zero_files=data.mcp_tdc.num_counts>1e3; 
-num_thresh=mean(data.mcp_tdc.num_counts(not_zero_files))-4*std(data.mcp_tdc.num_counts(not_zero_files));
+num_thresh=0.5*median(data.mcp_tdc.num_counts(not_zero_files));
 data.mcp_tdc.num_ok=data.mcp_tdc.num_counts>num_thresh & ...
     (data.mcp_tdc.time_create_write(:,1)'-data.mcp_tdc.time_create_write(1,1))<(anal_opts.max_runtime*60*60);
 fprintf('shots number ok %u out of %u \n',sum(data.mcp_tdc.num_ok),numel(data.mcp_tdc.num_ok))
-
-plot((data.mcp_tdc.time_create_write(:,2)-data.mcp_tdc.time_create_write(1,2))/(60*60),data.mcp_tdc.num_counts)
-xlabel('time (h)')
+drawnow
+%plot((data.mcp_tdc.time_create_write(:,2)-data.mcp_tdc.time_create_write(1,2))/(60*60),data.mcp_tdc.num_counts)
+%xlabel('time (h)')
+plot(data.mcp_tdc.num_counts)
+xlabel('shot number')
 ylabel('total counts')
 title('num count run trend')
 %should plot the threshold
@@ -257,15 +283,16 @@ imax=min([size(data.labview.time,2),size(data.mcp_tdc.time_create_write,1)]);
 %imax=5000;
 time_diff=data.mcp_tdc.time_create_write(1:imax,2)'-anal_opts.dld_aquire-anal_opts.trig_dld-...
     data.labview.time(1:imax);
-mean_delay_labview_tdc=median(time_diff);
+mean_delay_labview_tdc=0;%median(time_diff);
 
 sfigure(1);
 set(gcf,'color','w')
 subplot(4,1,2)
-plot(data.mcp_tdc.shot_num,time_diff)
+plot(data.mcp_tdc.shot_num,time_diff-mean_delay_labview_tdc)
 xlabel('shot number')
-ylabel('time between labview and mcp tdc')
+ylabel('corrected time between labview and mcp tdc')
 title('raw time diff')
+drawnow
 %to do include ai_log
 iimax=size(data.mcp_tdc.time_create_write(:,1),1);
 data.mcp_tdc.probe.calibration=nan(iimax,1);
@@ -305,13 +332,13 @@ anal_opts.ai_log.pd.diff_thresh=0.1;
 anal_opts.ai_log.pd.std_thresh=0.1;
 anal_opts.ai_log.pd.time_start=0.2;
 anal_opts.ai_log.pd.time_stop=2;
-anal_opts.ai_log.sfp.num_checks=10; %how many places to check that the laser is single mode
+anal_opts.ai_log.sfp.num_checks=20; %how many places to check that the laser is single mode
 anal_opts.ai_log.sfp.thresh_cmp_peak=20e-3; %theshold on the compressed signal to be considered a peak
 anal_opts.ai_log.sfp.peak_dist_min_pass=4.5;%minimum (min difference)between peaks for the laser to be considered single mode
 anal_opts.ai_log.plot.all=false;
 anal_opts.ai_log.plot.failed=false;
-anal_opts.ai_log.time_match_valid=5; %how close the predicted start of the shot is to the actual
-anal_opts.ai_log.scan_time=14e-3;  %estimate of the sfp scan time,used to set the window and the smoothing
+anal_opts.ai_log.time_match_valid=8; %how close the predicted start of the shot is to the actual
+anal_opts.ai_log.scan_time=1/20; %fast setting 1/100hz %estimate of the sfp scan time,used to set the window and the smoothing
 %because im only passing the ai_log feild to aviod conflicts forcing a reimport i need to coppy these feilds
 anal_opts.ai_log.trig_dld=anal_opts.trig_dld;
 anal_opts.ai_log.dld_aquire=anal_opts.dld_aquire;
@@ -322,6 +349,13 @@ anal_opts.ai_log.trig_ai_in=anal_opts.trig_ai_in;
 ai_log_out=ai_log_import(anal_opts.ai_log,data);
 %copy the output across
 data.ai_log=ai_log_out;
+
+
+%%
+%HACK IF SFP BROKEN
+% 
+% data.ai_log.ok.reg_pd=true(size(data.mcp_tdc.shot_num))';
+% data.ai_log.ok.sfp=true(size(data.mcp_tdc.shot_num))';
 
 % % Trying to automate setpoint correction
 
@@ -357,7 +391,7 @@ anal_opts.wm_log.ecd_volt_thresh=0.5;
 
 anal_opts.wm_log.red_sd_thresh=50; %allowable standard deviation in MHz
 anal_opts.wm_log.red_range_thresh=50; %allowable range deviation in MHz
-anal_opts.wm_log.rvb_thresh=10; %allowable value of abs(2*red-blue)
+anal_opts.wm_log.rvb_thresh=20; %allowable value of abs(2*red-blue)
 
 data.wm_log.proc=wm_log_process(anal_opts,data);
 clear('sub_data')
@@ -424,7 +458,7 @@ stairs(data.mcp_tdc.shot_num,tmp_probe_ok+0.01,'LineWidth',line_width)
 hold on
 stairs(data.mcp_tdc.shot_num,tmp_all_ok,'LineWidth',line_width)
 hold off
-legend('all','probe')
+legend('probe','all')
 ylabel('Good?')
 xlabel('Shot Number')
 set(gca,'ytick',[0,1],'yticklabel',{'False','True'})
@@ -513,6 +547,7 @@ data.cal=make_cal_model(anal_opts.cal_mdl,data);
 anal_opts.fit_to=[];
 anal_opts.fit_to.bootstrap=false;
 anal_opts.fit_to.plots=true;
+anal_opts.fit_to.clear_plot=true;
 %thresholds for CI
 %sd         CI
 %1          1.3174
@@ -522,11 +557,11 @@ anal_opts.fit_to.ci_size_disp=0.3174;%one sd %confidence interval to display
 anal_opts.fit_to.global=anal_opts.global;
 anal_opts.fit_to.ci_size_cut_outliers=0.05; %confidence interval for cutting outliers
 anal_opts.fit_to.scale_x=1e-9;
-anal_opts.fit_to.min_pts=10;
+anal_opts.fit_to.min_pts=7;
 
 anal_opts.fit_to.seg_time=60*30;
 anal_opts.fit_to.seg_shift=1*anal_opts.fit_to.seg_time;
-% to_seg_fits=segmentd_fit_to(anal_opts.fit_to,data);
+%to_seg_fits=segmentd_fit_to(anal_opts.fit_to,data);
 %curently broken
 to_seg_fits=scan_segmented_fit_to(anal_opts.fit_to,data);
 
@@ -562,9 +597,9 @@ anal_opts.fit_to.bootstrap=true;
 %1          0.3174
 %2          0.05
 %3          2.699e-03
-anal_opts.fit_to.ci_size_disp=0.3174;%one sd %confidence interval to display
+anal_opts.fit_to.ci_size_disp=1-erf(1/sqrt(2));%one sd %confidence interval to display
 anal_opts.fit_to.global=anal_opts.global;
-anal_opts.fit_to.ci_size_cut_outliers=0.05; %confidence interval for cutting outliers
+anal_opts.fit_to.ci_size_cut_outliers=1-erf(1.5/sqrt(2)); %confidence interval for cutting outliers
 anal_opts.fit_to.scale_x=1e-9;
 
 to_res=fit_to_nonlin(anal_opts.fit_to,data);
@@ -596,10 +631,13 @@ to_wav_val_quad=const.c/(to_fit_trimed_val{2}*2);
 to_freq_val_quad=to_fit_trimed_val{2}*2+anal_opts.aom_freq;
 to_freq_unc_quad=new_to_freq_unc{2}*2;
 to_wav_unc_quad=new_to_freq_unc{2}*const.c/((to_fit_trimed_val{2}*2)^2);
-fprintf('run start time               %.1f (posix)\n',...
-    data.mcp_tdc.time_create_write(1,2)-anal_opts.trig_dld-anal_opts.dld_aquire)
-fprintf('run stop time                %.1f (posix)\n',...
-    data.mcp_tdc.time_create_write(end,2)-anal_opts.trig_dld-anal_opts.dld_aquire)
+time_run_start=data.mcp_tdc.time_create_write(1,2)-anal_opts.trig_dld-anal_opts.dld_aquire;
+time_run_stop=data.mcp_tdc.time_create_write(end,2)-anal_opts.trig_dld-anal_opts.dld_aquire;
+fprintf('run start time               %.1f        (posix)\n',time_run_start)
+fprintf('                             %s (ISO)\n',datestr(datetime(time_run_start,'ConvertFrom','posix'),'yyyy-mm-ddTHH:MM:SS'))
+fprintf('run stop time                %.1f        (posix)\n',time_run_stop)
+fprintf('                             %s (ISO)\n',datestr(datetime(time_run_stop,'ConvertFrom','posix'),'yyyy-mm-ddTHH:MM:SS'))
+
 fprintf('duration                     %.1f (s)\n',...
     data.mcp_tdc.time_create_write(end,2)-data.mcp_tdc.time_create_write(1,2))
 fprintf('TO freq (Linear)             %.1f±(%.0f±%.0f) MHz\n',...
@@ -669,7 +707,8 @@ main_data.shots = tot_num_shots;
 save([anal_opts.global.out_dir,'main_data.mat'],'main_data')
 save([anal_opts.global.out_dir,'drift_data.mat'],'drift_data')
 
-catch
+catch e
 fprintf('Well that one (%s) didnt work \n',anal_opts.tdc_import.dir) %Indicate if a directory couldn't be analysed properly
+msgText = getReport(e)
 end
 end

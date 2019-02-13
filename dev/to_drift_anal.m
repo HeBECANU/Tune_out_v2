@@ -1,24 +1,42 @@
 %Script that scrapes the analysed data from dirs (currently messy but works)
 clear all
 %setup directories you wish to loop over
-loop_config.dir = {'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181205_baseline_nuller_on_always\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181204_baseline_1\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181201_filt_skew_neg111ghz\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181203_filt_skew_pos50ghz\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181202_filt_skew_pos110ghz\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_36.8um\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181122_alignment_dep_34_5\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181011_to_drift_2\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181120_filt_dep_3filt\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181202_filt_skew_neg50ghz\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_44.9_um\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181026_wp_out_stab\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181026_wp_out_stab2\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_31um\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181203_filt_skew_pos50ghz_bad_setpt\',
-        'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190115_baseline_to_1\'};
-    loop_config.set_pt = [8.0, 3.0, 8.0, 3.0, 3.0, 5.0, 5.0, 2.0, 5.0, 1.0];
+loop_config.dir = {'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190122_nuller_avg_along_weak\',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190117_true_baseline_to\',
+            'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190118_baseline_to_3\',
+            'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190118_baseline_to_4\',
+            'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190118_baseline_to_5\',
+            'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190119_baseline_to_6\'};
+        %'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190110_baseline_to_1\'
+        %'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190115_baseline_to_1\',
+
+
+% {'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181205_baseline_nuller_on_always\',
+%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181204_baseline_1\',
+%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181201_filt_skew_neg111ghz\',
+%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181203_filt_skew_pos50ghz\',
+%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181202_filt_skew_pos110ghz\',
+%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_36.8um\',
+%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181122_alignment_dep_34_5\',
+%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181011_to_drift_2\',
+%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181120_filt_dep_3filt\',
+%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181202_filt_skew_neg50ghz\',
+%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_44.9_um\',
+%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181026_wp_out_stab\',
+%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181026_wp_out_stab2\',
+%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_31um\',
+%         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181203_filt_skew_pos50ghz_bad_setpt\'};
+
+     
+%  dir: Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181122_alignment_dep_34_5\ didnt work 
+% 
+%  dir: Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181011_to_drift_2\ didnt work 
+
+    loop_config.set_pt = [1.25, 8.0, 3.0, 8.0, 3.0, 3.0, 5.0, 5.0, 2.0, 5.0, 1.0];
 selected_dirs = 1:numel(loop_config.dir); %which files to loop over (currently all)
+%selected_dirs = [6,8,9,13,14]-1;
+%selected_dirs=1-1;
+
 TO_st_pt = 7.257355*1e14;
 drift_data_compiled.to_val{:,1}=[];
 drift_data_compiled.to_val{:,2}=[];
@@ -55,8 +73,9 @@ for loop_idx=selected_dirs
             most_recent_dir=out_dirs(end-offset,1);
             check = drift_data.avg_coef; %check if it has the avg coefs update
         end
-    catch
+    catch e
         fprintf('\n dir: %s didnt work \n',current_dir)
+        msgText = getReport(e)
         continue
     end
     load([current_dir,'out\',most_recent_dir.name,'\main_data.mat'])
@@ -126,7 +145,7 @@ xlabel('time since epoch (h)')
 ylabel([' TO value - ',num2str(TO_st_pt./1e9),' (GHz)'])
 title('Quad fit data for whole runs')
 set(gcf,'color','w')
-ylim([-3 5])
+%ylim([-3 5])
 %% Concatonated Drift data, right now is very messy could do with some cleaning, but it does work
 %Big plot over times
 sfigure(3221);
@@ -172,7 +191,7 @@ end
 hold off
 xlabel('time since epoch (h)')
 ylabel([' TO value - ',num2str(TO_st_pt./1e9),' (GHz)'])
-ylim([-5 5])
+ylim([-0.4 0.7])
 set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
 %% Plot tune out value against parameters in the analysis (to see if there is any underling corralations)
 %Should turn this into a loop, didn't get around to it

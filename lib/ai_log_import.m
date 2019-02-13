@@ -129,6 +129,7 @@ ai_log_out.times.create_ai_log=nan(dld_files,2);
 %loop over all the ai_logs
 fprintf('processing ai log for files %04u:%04u',iimax,0)
 for ii=1:iimax
+    try
     fprintf('\b\b\b\b%04i',ii)
     if ii==iimax || ii==1
         cache_opts.clean_cache=true; %clean cache at start and end
@@ -198,6 +199,8 @@ for ii=1:iimax
         end
         
         
+    end
+    catch
     end
 end %loop over files
 fprintf('Done\n')

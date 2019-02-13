@@ -128,7 +128,7 @@ for ii=1:iimax
             set(gcf,'Color',[1 1 1]);
             legend('x','y','z')
 
-            %subplot(2,1,2)
+            subplot(2,1,2)
             shaded_ci_lines=false;
             hold on
             if shaded_ci_lines
@@ -149,7 +149,7 @@ for ii=1:iimax
             set(ax, {'XColor', 'YColor'}, {'k', 'k'});
             set(gca,'linewidth',1.0)
             saveas(gca,sprintf('%sfit_dld_shot_num%04u.png',anal_opts_osc_fit.global.out_dir,dld_shot_num))
-            pause(1e-5)
+            drawnow
         end% PLOTS
         %%
     end
