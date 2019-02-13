@@ -66,8 +66,6 @@ for ii=1:num_dirs
     config_light.dirname= light_on_dirnames{ii};
     config_light.dir = fullfile(config.datadir,config_light.dirname);
     light_on_data{ii} = light_on_analysis(config_light);
-    
-%     fprintf(['Completed ',config_light.dirname,', back/peak ratio %.4f +/- %.4f\n'],light_on_data{ii}.stats)
 end
 fwtext('All dirs analyzed')
 
@@ -87,7 +85,7 @@ insp_data = cell(num_dirs,1);
 for ii=1:num_dirs
 
     insp_data{ii} = inspect_light_on(light_on_data{ii},config_disp);
-    if config.disp.lbg
+    if config_disp.lbg
         present_lebesgue(insp_data{ii},config)        
     end
 end
