@@ -84,7 +84,7 @@ clear all
 %setup directories you wish to loop over
 % 
 loop_config.dir = {
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190211_to_hwp_168.5_nuller_reconfig_pdset_0.4v',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190213_to_hwp_168.5_nuller_reconfig_pdset_0.7v',
     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190211_to_hwp_168.5_nuller_reconfig_pdset_0.2v',
     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190211_to_hwp_250_nuller_reconfig_tenma_setpoint',
     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190211_to_hwp_240_nuller_reconfig',
@@ -153,7 +153,7 @@ loop_config.dir = {
         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181026_wp_out_stab2\',
         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_31um\'};
 %Vector of set points for each directory, has to be done manualy first, but is saved after data is analysed    
-loop_config.set_pt = [0.4,0.2,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,0.31,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25 1.25, 9.0, 5.0, 5.0, 8.0, 8.0, 3.0, 3, 3, 5, 5, 2,5,3,5 ,5,5,5];
+loop_config.set_pt = [0.7,0.2,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,0.31,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25 1.25, 9.0, 5.0, 5.0, 8.0, 8.0, 3.0, 3, 3, 5, 5, 2,5,3,5 ,5,5,5];
 selected_dirs = 1:numel(loop_config.dir); %which files to loop over (currently all)
 selected_dirs = 1;
 
@@ -211,16 +211,8 @@ anal_opts.osc_fit.dimesion=2; %Select coordinate to bin. 1=X, 2=Y.
 %the information from the logs
 data=[]; %CLEAR THE DATA
 anal_out=[];
-%set up an output dir %https://gist.github.com/ferryzhou/2269380
+%add a file seperator to the end of the import path
 if anal_opts.tdc_import.dir(end) ~= filesep, anal_opts.tdc_import.dir = [anal_opts.tdc_import.dir filesep]; end
-if (exist([anal_opts.tdc_import.dir,'out'], 'dir') == 0), mkdir([anal_opts.tdc_import.dir,'out']); end
- 
-anal_out.dir=sprintf('%sout\\%s\\',...
-    anal_opts.tdc_import.dir,datestr(datetime('now'),'yyyymmddTHHMMSS'));
-if (exist(anal_out.dir, 'dir') == 0), mkdir(anal_out.dir); end
-anal_opts.global.out_dir=anal_out.dir;
- 
-diary([anal_out.dir,'anal.txt'])
 
 %add all subfolders to the path
 this_folder = fileparts(which(mfilename));
@@ -232,6 +224,17 @@ anal_opts.global.velocity=const.g0*anal_opts.global.fall_time;
 %% IMPORT TDC DATA to data.mcp_tdc
 anal_opts.tdc_import.shot_num=find_data_files(anal_opts.tdc_import);
 %anal_opts.tdc_import.shot_num= anal_opts.tdc_import.shot_num(1:10); %debuging
+
+%set up an output dir %https://gist.github.com/ferryzhou/2269380
+if (exist([anal_opts.tdc_import.dir,'out'], 'dir') == 0), mkdir([anal_opts.tdc_import.dir,'out']); end
+%make a subfolder with the ISO timestamp for that date
+anal_out.dir=sprintf('%sout\\%s\\',...
+    anal_opts.tdc_import.dir,datestr(datetime('now'),'yyyymmddTHHMMSS'));
+if (exist(anal_out.dir, 'dir') == 0), mkdir(anal_out.dir); end
+anal_opts.global.out_dir=anal_out.dir;
+%start up the diary of stdout
+diary([anal_out.dir,'anal.txt'])
+%import the data
 [mcp_tdc_data,import_opts]=import_mcp_tdc_data(anal_opts.tdc_import);
 data.mcp_tdc=mcp_tdc_data;
 %% IMPORT LV LOG to data.labview
@@ -330,16 +333,16 @@ data.mcp_tdc.labview_shot_num=nan(iimax,1);
 for ii=1:iimax
     %predict the labview master trig time
     %use the write time to handle being unpacked from 7z
-    est_labview_start=data.mcp_tdc.time_create_write(ii,2)...
+    tmp_est_labview_start=data.mcp_tdc.time_create_write(ii,2)...
         -anal_opts.trig_dld-anal_opts.dld_aquire-mean_delay_labview_tdc;
     [tval,nearest_idx]=closest_value(data.labview.time...
-        ,est_labview_start);
-    if abs(tval-est_labview_start)<time_thresh
+        ,tmp_est_labview_start);
+    if abs(tval-tmp_est_labview_start)<time_thresh
         data.mcp_tdc.labview_shot_num(ii)=data.labview.shot_num(nearest_idx);
         data.mcp_tdc.probe.calibration(ii)=data.labview.calibration(nearest_idx);
     end 
 end
-
+clear('tmp_est_labview_start')
 
 %% IMPORT THE ANALOG INPUT LOG
 %load in the analog input files to check if the laser is single mode & that the potodiode value is close to the set
@@ -375,10 +378,7 @@ anal_opts.ai_log.aquire_time=anal_opts.dld_aquire;
 anal_opts.ai_log.trig_ai_in=anal_opts.trig_ai_in;
 
 %% Call the function
-ai_log_out=ai_log_import(anal_opts.ai_log,data);
-%copy the output across
-data.ai_log=ai_log_out;
-
+data.ai_log=ai_log_import(anal_opts.ai_log,data);
 
 %%
 %HACK IF SFP BROKEN
@@ -691,24 +691,13 @@ fprintf('shot uncert scaling @1SD %.1f MHz, %.2f fm /sqrt(shots)\n',single_shot_
 diary off
 
 
-%%
-fprintf('saving output...')
-%no compression bc its very slowwww
-%save(fullfile(anal_out.dir,'data_anal_full.mat'),'data','to_res','anal_opts','-nocompression','-v7.3')
-fprintf('Done')
-
-%% try and find what the outliers were doing
-%given this mask ~color_idx find the shot nums and times 
-%~isnan(probe_freq)
-
-
 %% damping results
 %plot out what the distibution over damping times is
 % figure(7);
 % set(gcf,'color','w')
 % histogram(1./data.osc_fit.model_coefs(data.osc_fit.ok.rmse,7,1),linspace(0,3,1e2))
 
-toc
+
 
 %% Archive the analysed data
 
@@ -736,8 +725,20 @@ main_data.shots = tot_num_shots;
 save([anal_opts.global.out_dir,'main_data.mat'],'main_data')
 save([anal_opts.global.out_dir,'drift_data.mat'],'drift_data')
 
-catch e
-fprintf('Well that one (%s) didnt work \n',anal_opts.tdc_import.dir) %Indicate if a directory couldn't be analysed properly
-msgText = getReport(e)
+%%
+fprintf('saving full output...')
+%no compression bc its very slowwww
+%save(fullfile(anal_out.dir,'data_anal_full.mat'),'data','to_res','anal_opts','-nocompression','-v7.3')
+
+%write a file called done to the out directory
+fid = fopen(ullfile(anal_out.dir,'Done.txt'),'wt');
+fprintf(fid, 'Done');
+fclose(fid);
+toc
+fprintf('Done')
+
+catch err
+fprintf('Analysis on folder\n (%s) failed \n',anal_opts.tdc_import.dir) %Indicate if a directory couldn't be analysed properly
+msgText = getReport(err)
 end
 end
