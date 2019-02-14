@@ -1,4 +1,5 @@
 function wm_log_processed=wm_log_process(anal_opts,data)
+%this is so quick it barely needs cacheing
 cache_opts=[];
 cache_opts.verbose=0;
 %cache_opts.force_cache_load=wm_log_import_opts.force_load_save;
@@ -18,7 +19,6 @@ wm_log_processed=outputs{1};
 end
 
 function wm_log_processed=wm_log_process_core(anal_opts,data)
-
 %mean_shot_duration=mean(diff(data.labview.time(:)));
 
 wm_log_processed=[];
