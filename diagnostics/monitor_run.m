@@ -46,7 +46,7 @@ anal_opts.osc_fit.binsx=1000;
 anal_opts.osc_fit.blur=1;
 anal_opts.osc_fit.xlim=[-20,20]*1e-3;
 anal_opts.osc_fit.tlim=[0.86,1.08];
-anal_opts.osc_fit.dimesion=2; %Select coordinate to bin. 1=X, 2=Y.
+anal_opts.osc_fit.dimesion=2; %Sel ect coordinate to bin. 1=X, 2=Y.
 
 anal_opts.history.shots=50;
 
