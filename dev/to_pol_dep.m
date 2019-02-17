@@ -242,7 +242,8 @@ polz_data = [
 hwp_ang= polz_data(:,7);
 %hwp_ang = hwp_ang-360.*(hwp_ang>180);
 %0.32,91,230,7,240,0;
-polz_power_frac=2*polz_data(:,1)./(polz_data(:,1)+polz_data(:,3));
+polz_power_frac=polz_data(:,1)./(polz_data(:,3));
+%polz_power_frac=2*polz_data(:,1)./(polz_data(:,1)+polz_data(:,3));
 %polz_power_frac=2*polz_data(:,1).*polz_data(:,3)./(polz_data(:,1).^2+polz_data(:,3).^2);
 
 bc_angles_wraped=polz_data(:,2);
