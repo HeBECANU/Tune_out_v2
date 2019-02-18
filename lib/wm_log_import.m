@@ -28,7 +28,8 @@ function wm_log=wm_log_import_core(wm_log_import_opts)
 wm_log=struct();
 add_to_struct=true;
 fprintf('importing %u wavemeter-laser feedback log files',size(wm_log_import_opts.names,2))
-for ii=1:size(wm_log_import_opts.names,2)
+iimax=size(wm_log_import_opts.names,2);
+for ii=1:iimax
     path=strcat(wm_log_import_opts.dir,wm_log_import_opts.names{ii});
     fid = fopen(path,'r');
     wm_log_file_cells=textscan(fid,'%s','Delimiter','\n');
@@ -38,16 +39,23 @@ for ii=1:size(wm_log_import_opts.names,2)
     %    plot(wm_log.get_status.posix_time)
     %    pause(1)
     %end
-    fprintf('\nFile %03u importing %03uk lines:%03uk',ii,round(size(wm_log_file_cells{1},1)*1e-3),0)
+    fprintf('\nFile %03u/%03u importing %03uk lines:%03uk',ii,iimax,round(size(wm_log_file_cells{1},1)*1e-3),0)
     %now process these lines and place the entries into a feild of the wm_log struct depending on the operation performed
-    for jj=1:size(wm_log_file_cells{1},1)
+    jjmax=size(wm_log_file_cells{1},1);
+    for jj=1:jjmax
         if mod(jj,1e4)==0,fprintf('\b\b\b\b%03uk',round(jj*1e-3)),end  %fprintf('\b\b\b\b%04u',jj)
         if ~isempty(wm_log_file_cells{1}{jj})
             try
-            formated_line=jsondecode(wm_log_file_cells{1}{jj});
+                line_tmp=wm_log_file_cells{1}{jj};
+                
+                if jj==jjmax %deal with the last line of the log which specifies the path of the new log, with the incorrect json syntax (single slash instead of double)
+                    line_tmp=strrep(line_tmp,'\\','\');%change the new correct format(double slash) to the old incorrect single slash
+                    line_tmp=strrep(line_tmp,'\','\\');%change the new correct format(double slash) to the old incorrect single slash
+                end
+                formated_line=jsondecode(line_tmp);
             catch
-                warning(sprintf('json encode faiiled file %u line %u \n',ii,jj))
-                fprintf('\nFile %03u importing %03uk lines:%03uk',ii,round(size(wm_log_file_cells{1},1)*1e-3),0)
+                warning(sprintf('json encode faiiled file %u line %u \n\n',ii,jj))
+                fprintf('\nFile %03u/%03u importing %03uk lines:%03uk',ii,iimax,round(size(wm_log_file_cells{1},1)*1e-3),0)
                 add_to_struct=false;
             end
 

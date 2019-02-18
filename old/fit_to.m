@@ -1,4 +1,6 @@
 function to_res=fit_to(anal_opts_fit_to,data)
+%old fit function
+%abandoned as of 20190213
 
 temp_cal=data.mcp_tdc.probe.calibration'; %because its used a lot make a temp var for calibration logic vector
 temp_cal(isnan(temp_cal))=1;    
