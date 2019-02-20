@@ -15,8 +15,10 @@ main_data_compiled.quad_fit{1} = [];
 main_data_compiled.quad_fit{2} = [];
 main_data_compiled.shots = [];
 main_data_compiled.time = [];
-break_idx = [];
-main_data_compiled.set_pts = [];
+main_data_compiled.grad = [];
+main_data_compiled.freq = [];
+%break_idx = [];
+main_data_compiled.set_pt = [];
 for loop_idx=selected_dirs
     current_dir = loop_config.dir{loop_idx};
     out_dirs=dir([current_dir,'out\']);
@@ -41,7 +43,7 @@ for loop_idx=selected_dirs
     %scrapes set points if you want to redo some analysis
     try
         %fprintf('\n dir: %s , st pt = %u \n',current_dir,main_data.set_pt)
-        main_data_compiled.set_pts = [main_data_compiled.set_pts,main_data.set_pt];
+        main_data_compiled.set_pt = [main_data_compiled.set_pt,main_data.set_pt];
     catch
         fprintf('\n dir: %s , no st pt record \n',current_dir)
     end
@@ -62,17 +64,18 @@ for loop_idx=selected_dirs
     drift_data_compiled.avg_coef = [drift_data_compiled.avg_coef;c_vals];
     drift_data_compiled.avg_coef_unc = [drift_data_compiled.avg_coef_unc;c_uncs];
     
-%     drift_data_compiled.model=to_seg_fits.fit_trimmed.model;
-
     main_data_compiled.lin_fit{1} = [main_data_compiled.lin_fit{1};main_data.lin_fit{1}];
     main_data_compiled.lin_fit{2} = [main_data_compiled.lin_fit{2};main_data.lin_fit{2}];
     main_data_compiled.quad_fit{1} = [main_data_compiled.quad_fit{1};main_data.quad_fit{1}];
     main_data_compiled.quad_fit{2} = [main_data_compiled.quad_fit{2};main_data.quad_fit{2}];
     main_data_compiled.shots = [main_data_compiled.shots;main_data.shots];
     main_data_compiled.time = [main_data_compiled.time;nanmean(drift_data.to_time)];
+    %main_data_compiled.set_pt = [main_data_compiled.set_pt;main_data.set_pt];
+    main_data_compiled.grad = [main_data_compiled.grad;nanmean(grad_temp(:,1))];
+    main_data_compiled.freq = [main_data_compiled.freq;nanmean(c_vals(:,2))];
     
-    break_idx = [break_idx;numel(drift_data.to_time)];
+    %break_idx = [break_idx;numel(drift_data.to_time)];
+end
 data.drift = drift_data_compiled;
 data.main = main_data_compiled;
-end
 end
