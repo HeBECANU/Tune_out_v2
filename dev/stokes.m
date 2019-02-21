@@ -1,11 +1,19 @@
-%phi = linspace(-pi/2.1,pi/2.1,2)';
-phi = linspace(-pi/2*0.0444,pi/2*0.05,2)'; %approx. the worst impurity that we have
-S = [cos(phi),zeros(length(phi),1),sin(phi)]'; %stokes parameters
+%phi = linspace(-pi/5,pi/5,2)';
+phi = linspace(-pi/2*0.05,pi/2*0.05,2)'; %approx. the worst impurity that we have
+alpha = 0;
+S = [cos(phi).*cos(alpha),cos(phi).*sin(alpha),sin(phi)]'; %stokes parameters
 p_min = [];
 p_max = [];
 theta_vec = linspace(-pi/2,pi/2,1e4);
 S_path = zeros(3,length(phi),length(theta_vec)); %bryce:change: theta->theta_vec
+S_lin = zeros(4,length(phi),length(theta_vec));
 jj = 1;
+theta_anal = pi/2;
+rot_mat = [1, 0, 0, 0; 
+    0, cos(2*theta_anal), sin(2*theta_anal), 0;
+    0, -sin(2*theta_anal),cos(2*theta_anal),0;
+    0, 0, 0, 1];
+lin_pol = 0.5.*[1,1,0,0;1,1,0,0;0,0,0,0;0,0,0,0];
 for theta = theta_vec
     QWP = [cos(2*theta)^2, sin(2*theta)*cos(2*theta), -sin(2*theta);
         sin(2*theta)*cos(2*theta), sin(2*theta)^2, cos(2*theta);
@@ -13,7 +21,8 @@ for theta = theta_vec
     %QWP-inv(QWP)
     Sp = QWP*S;
     S_path(:,:,jj) = Sp;
-    chi = 1/2*atan(Sp(3,:)./abs(Sp(1,:)));
+    S_lin(:,:,jj) = lin_pol*rot_mat*[1,1;Sp];
+    chi = 1/2*atan(Sp(3,:)./sqrt(Sp(1,:).^2+Sp(2,:).^2));
     p_min = [p_min;sin(chi).^2];
     p_max = [p_max;cos(chi).^2];
     jj = jj + 1;
@@ -45,7 +54,13 @@ end
 xlabel('Angle of QWP from the vertical')
 ylabel('Measured intensity ratio')
 grid on
-
+figure(1111);
+clf
+plot(theta_vec,squeeze(S_lin(1,1,:)))
+hold on
+plot(theta_vec,squeeze(S_lin(1,2,:)))
+xlabel('Angle of QWP from the vertical')
+ylabel('Transmitted power through Pol Analyser')
 
 %% bryce playing with ploting
 figure(1110);
