@@ -84,6 +84,16 @@ clear all
 %setup directories you wish to loop over
 % 
 loop_config.dir = {
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190221_to_amp_10',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190220_filt_dep_1_run3',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190219_laser_unlock_1filt',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190219_filt_dep_3_run2',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190218_filt_dep_1_run2',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190218_filt_dep_0',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190218_filt_dep_1_run1',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190218_filt_dep_1_run2',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190218_filt_dep_2',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190218_filt_dep_3',
     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190217_to_hwp_168.5_nuller_reconfig_new_fiber_pdset_1.0v_wide',
     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190216_to_hwp_168.5_nuller_reconfig_new_fiber_pdset_1.0v_short_run',
     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190216_to_hwp_168.5_nuller_reconfig_new_fiber_pdset_1.0v_bad_laser_2',
@@ -164,7 +174,7 @@ loop_config.dir = {
         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181026_wp_out_stab2\',
         'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_31um\'};
 %Vector of set points for each directory, has to be done manualy first, but is saved after data is analysed    
-loop_config.set_pt = [1.0,1.0,1.0,1.0,2.5,2.0,0.6,0.4,0.7,0.8,0.4,0.2,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,0.31,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25 1.25, 9.0, 5.0, 5.0, 8.0, 8.0, 3.0, 3, 3, 5, 5, 2,5,3,5 ,5,5,5];
+loop_config.set_pt = [1.0,2.0,2.0,2.0,2.0,1.0,1.0,1.0,1.0,2.5,2.0,0.6,0.4,0.7,0.8,0.4,0.2,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,0.31,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25 1.25, 9.0, 5.0, 5.0, 8.0, 8.0, 3.0, 3, 3, 5, 5, 2,5,3,5 ,5,5,5];
 selected_dirs = 1:numel(loop_config.dir); %which files to loop over (currently all)
 selected_dirs = 1;
 
@@ -331,7 +341,7 @@ mean_delay_labview_tdc=0;%median(time_diff);
 sfigure(1);
 set(gcf,'color','w')
 subplot(4,1,2)
-plot(data.mcp_tdc.shot_num,time_diff-mean_delay_labview_tdc)
+plot(data.mcp_tdc.shot_num(1:imax),time_diff-mean_delay_labview_tdc)
 xlabel('shot number')
 ylabel('corrected time between labview and mcp tdc')
 title('raw time diff')
@@ -742,7 +752,7 @@ fprintf('saving full output...')
 %save(fullfile(anal_out.dir,'data_anal_full.mat'),'data','to_res','anal_opts','-nocompression','-v7.3')
 
 %write a file called done to the out directory
-fid = fopen(ullfile(anal_out.dir,'Done.txt'),'wt');
+fid = fopen(fullfile(anal_out.dir,'Done.txt'),'wt');
 fprintf(fid, 'Done');
 fclose(fid);
 toc
