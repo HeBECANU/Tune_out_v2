@@ -57,6 +57,8 @@ end
 delta_mask = ~isnan(delta_trap_freq_all);
 probe_dat_mask = data.osc_fit.ok.rmse & data.mcp_tdc.all_ok'...
 & ~isnan(data.osc_fit.trap_freq_recons) & delta_mask' & ~temp_cal;
+cal_dat_mask = data.osc_fit.ok.rmse & data.mcp_tdc.all_ok'...
+& ~isnan(data.osc_fit.trap_freq_recons) & delta_mask' & temp_cal;
 %exclude edges if they are past the last good shor 
 last_good_shot = find(probe_dat_mask==1,1,'last');
 to_seg_fits.scan_edges = to_seg_fits.scan_edges(to_seg_fits.scan_edges<last_good_shot);
@@ -110,6 +112,7 @@ to_seg_fits.to_time = zeros(iimax,1);
 to_seg_fits.seg_edges = zeros(iimax,2);
 to_seg_fits.atom_num = zeros(iimax,2);
 to_seg_fits.avg_coefs = cell(iimax,1);
+to_seg_fits.avg_coefs_cal = cell(iimax,1);
 %% Process
 fprintf('fitting tune out in segments %04u:%04u',iimax,0)
 for ii=1:iimax 
@@ -125,6 +128,7 @@ for ii=1:iimax
     % Select out data for scanwise fits
     seg_mask_temp = [zeros(seg_start-1,1);ones(seg_end-seg_start+1,1);zeros(num_shots-seg_end,1)]'==1;
     seg_mask = seg_mask_temp&probe_dat_mask;
+    seg_mask_cal = seg_mask_temp&cal_dat_mask;
     delta_sig = square_trap_freq(seg_mask);
     xdat=probe_freq_all(seg_mask)';
     ydat=delta_sig';
@@ -241,6 +245,7 @@ for ii=1:iimax
         to_seg_fits.ydat{ii}=num2cell([xdat;ydat],1);
         to_seg_fits.atom_num(ii,:) = [nanmean(data.mcp_tdc.num_counts(seg_mask)),nanstd(data.mcp_tdc.num_counts(seg_mask))];
         to_seg_fits.avg_coefs{ii} = squeeze(mean(data.osc_fit.model_coefs(seg_mask,:,:))); %Save the average fit coefficents for a scan segment also
+        to_seg_fits.avg_coefs_cal{ii} = squeeze(mean(data.osc_fit.model_coefs(seg_mask_cal,:,:)));
     end
 
 end

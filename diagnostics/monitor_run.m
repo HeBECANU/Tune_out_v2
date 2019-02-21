@@ -63,11 +63,13 @@ hebec_constants
 anal_opts.tdc_import.mat_save=false;
 anal_opts.global.velocity=const.g0*anal_opts.global.fall_time;
 
-if anal_opts.tdc_import.dir(end) ~= '\', dirpath = [dirpath '\']; end
+if anal_opts.tdc_import.dir(end) ~= filesep, dirpath = [dirpath filesep]; end
 if (exist([anal_opts.tdc_import.dir,'out'], 'dir') == 0), mkdir([anal_opts.tdc_import.dir,'out']); end
  
-anal_out.dir=sprintf('%sout\\monitor\\',...
-    anal_opts.tdc_import.dir);
+%anal_out.dir=sprintf('%sout\\monitor\\',...
+%    anal_opts.tdc_import.dir);
+
+anal_out.dir=[fullfile(anal_opts.tdc_import.dir,'out','monitor'),filesep];
 if (exist(anal_out.dir, 'dir') == 0), mkdir(anal_out.dir); end
 anal_opts.global.out_dir=anal_out.dir;
 
