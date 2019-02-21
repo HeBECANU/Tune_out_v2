@@ -17,6 +17,7 @@ main_data_compiled.shots = [];
 main_data_compiled.time = [];
 main_data_compiled.grad = [];
 main_data_compiled.freq = [];
+main_data_compiled.scan_num = [];
 %break_idx = [];
 main_data_compiled.set_pt = [];
 for loop_idx=selected_dirs
@@ -70,7 +71,7 @@ for loop_idx=selected_dirs
     main_data_compiled.quad_fit{2} = [main_data_compiled.quad_fit{2};main_data.quad_fit{2}];
     main_data_compiled.shots = [main_data_compiled.shots;main_data.shots];
     main_data_compiled.time = [main_data_compiled.time;nanmean(drift_data.to_time)];
-    %main_data_compiled.set_pt = [main_data_compiled.set_pt;main_data.set_pt];
+    main_data_compiled.scan_num = [main_data_compiled.scan_num;numel(drift_data.atom_num)];
     main_data_compiled.grad = [main_data_compiled.grad;nanmean(grad_temp(:,1))];
     main_data_compiled.freq = [main_data_compiled.freq;nanmean(c_vals(:,2))];
     
