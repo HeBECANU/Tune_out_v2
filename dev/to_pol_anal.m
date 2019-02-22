@@ -188,23 +188,121 @@ box on
 set(gcf,'color','w')
 set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
 %%
-weights = 1./(data.drift.to_val{2}.*1e6).^2;
+weights = 1./(data.drift.to_val{2}./1e6).^2;
 sfigure(1923);
 clf
-subplot(2,2,1)
+subplot(4,4,1)
 corr_plot(to_pol_drift,to_res,weights)
 xlabel('Pol Angle')
 ylabel(' Residual (MHz)')
-subplot(2,2,2)
+subplot(4,4,2)
 corr_plot(data.drift.avg_coef(:,1),to_res,weights)
-xlabel('Amp')
+xlabel('Amp (Probe)')
 ylabel(' Residual (MHz)')
-subplot(2,2,3)
+subplot(4,4,3)
 corr_plot(data.drift.grad{:,1},to_res,weights)
 xlabel('Signal Grad')
 ylabel(' Residual (MHz)')
-subplot(2,2,4)
+subplot(4,4,4)
 corr_plot(data.drift.avg_coef(:,2),to_res,weights)
-xlabel('Trap Freq')
+xlabel('Trap Freq (Probe)')
 ylabel(' Residual (MHz)')
+subplot(4,4,5)
+corr_plot(data.drift.avg_coef_cal(:,2),to_res,weights)
+xlabel('Trap Freq (Cal)')
+ylabel(' Residual (MHz)')
+subplot(4,4,6)
+corr_mdl = corr_plot(data.drift.avg_coef_cal(:,2)-data.drift.avg_coef(:,2),to_res,weights);
+xlabel('Trap Freq Dif (Cal-Probe)')
+ylabel(' Residual (MHz)')
+subplot(4,4,7)
+corr_plot(data.drift.avg_coef_cal(:,3),to_res,weights)
+xlabel('Phase (Cal)')
+ylabel(' Residual (MHz)')
+subplot(4,4,8)
+corr_plot(data.drift.avg_coef(:,3),to_res,weights)
+xlabel('Phase (Probe)')
+ylabel(' Residual (MHz)')
+subplot(4,4,9)
+corr_plot(data.drift.avg_coef(:,7),to_res,weights)
+xlabel('Dampening (Probe)')
+ylabel(' Residual (MHz)')
+subplot(4,4,10)
+corr_plot(data.drift.avg_coef_cal(:,7),to_res,weights)
+xlabel('Dampening (Cal)')
+ylabel(' Residual (MHz)')
+subplot(4,4,11)
+corr_plot(data.drift.avg_coef_cal(:,1),to_res,weights)
+xlabel('Amp (Cal)')
+ylabel(' Residual (MHz)')
+subplot(4,4,12)
+corr_plot(data.drift.avg_coef_cal(:,5),to_res,weights)
+xlabel('Ramp (Cal)')
+ylabel(' Residual (MHz)')
+subplot(4,4,13)
+corr_plot(data.drift.avg_coef(:,5),to_res,weights)
+xlabel('Ramp (Probe)')
+ylabel(' Residual (MHz)')
+subplot(4,4,14)
+corr_plot(data.drift.avg_coef_cal(:,4),to_res,weights)
+xlabel('offset (Cal)')
+ylabel(' Residual (MHz)')
+subplot(4,4,15)
+corr_plot(data.drift.avg_coef(:,4),to_res,weights)
+xlabel('offset (Probe)')
+ylabel(' Residual (MHz)')
+subplot(4,4,16)
+corr_plot(data.drift.avg_coef_cal(:,7)-data.drift.avg_coef(:,7),to_res,weights)
+xlabel('Damp diff (Cal-Probe)')
+ylabel(' Residual (MHz)')
+set(gcf, 'Units', 'pixels', 'Position', [100, 100, 3200, 2000])
+%%
+fprintf('Fixed period fit with correlation correction\n')
+corr_cor = predict(corr_mdl,data.drift.avg_coef_cal(:,2)-data.drift.avg_coef(:,2));
+vec_corr_to = data.drift.to_val{1}./1e6-corr_cor;
+to_vals_error = data.drift.to_val{2}./1e6;
+
+%fit sin waves to the two sets of data
+modelfun = @(b,x) b(1).*(cos(x(:,1).*pi./180+b(2).*2*pi).^2)+b(3);
+opts = statset('MaxIter',1e4);
+ci_size_cut_outliers=1-erf(10/sqrt(2));%1-erf(zvalue/sqrt(2)) %confidence interval for cutting outliers
+beta0 = [1e3,0.5,nanmean(vec_corr_to)]; %intial guesses
+wlin=1./(to_vals_error.^2);
+fit_mdl_lin = fitnlm(to_pol_drift,vec_corr_to,modelfun,beta0,...
+    'Options',opts,'Weights',wlin,'CoefficientNames' ,{'amp','phase','offset'});
+
+%cut outliers
+[to_predict,yci_cull_lim]=predict(fit_mdl_lin,to_pol_drift,'Prediction','observation','Alpha',ci_size_cut_outliers);
+is_outlier_idx=vec_corr_to>yci_cull_lim(:,1) & vec_corr_to<yci_cull_lim(:,2);
+vec_corr_to_trim = vec_corr_to(is_outlier_idx);
+to_res = vec_corr_to-to_predict;
+
+beta0 = fit_mdl_lin.Coefficients{:,1}'; %intial guesses
+fit_mdl_lin = fitnlm(to_pol_drift(is_outlier_idx),vec_corr_to(is_outlier_idx),modelfun,beta0,...
+    'Options',opts,'CoefficientNames' ,{'amp','phase','offset'});
+lin_fit_max=[fit_mdl_lin.Coefficients.Estimate(1)+fit_mdl_lin.Coefficients.Estimate(3)...
+    sqrt(fit_mdl_lin.Coefficients.SE(1)^2+fit_mdl_lin.Coefficients.SE(3)^2)];
+
+sfigure(8119);
+clf
+ci_size_disp=1-erf(1/sqrt(2));%one sd %confidence interval to display
+plot_padd=20;
+xsamp = linspace(min(to_pol_drift)-plot_padd,max(to_pol_drift)+plot_padd,1e4).';
+fit_values = fit_mdl_lin.Coefficients{:,1};
+%subplot(2,1,1)
+hold on
+title(['amp= ',num2str(fit_values(1)),'MHz , phase= ',num2str(fit_values(2)),', offset= ',num2str(fit_values(3)),'MHz , period=180(fixed)^\circ'])
+xlabel('Input Pol angle (degrees)')
+ylabel(sprintf('Tune out value-%.1f±%.1f (MHz)',lin_fit_max(1),lin_fit_max(2)) )
+fprintf('Tune out value-%.1f±%.1f (MHz) (BLUE)\n',lin_fit_max(1),lin_fit_max(2))
+fprintf('Tune out value-%.1f±%.1f (MHz) (RED)\n',lin_fit_max(1)/2,lin_fit_max(2)/2)
+errorbar(to_pol_drift,vec_corr_to_trim-lin_fit_max(1),to_vals_error(is_outlier_idx),'ko')
+[y_lin,yci_lin]=predict(fit_mdl_lin,xsamp,'Prediction','observation','Alpha',ci_size_disp); %'Prediction','observation'
+%y_lin = b1(1).*(cos(xsamp.*pi/180+b1(2).*2*pi).^2)+b1(3);
+plot(xsamp,y_lin-lin_fit_max(1),'b-','LineWidth',1.6)
+plot(xsamp,yci_lin(:,1)-lin_fit_max(1),'r-','LineWidth',1.6)
+plot(xsamp,yci_lin(:,2)-lin_fit_max(1),'r-','LineWidth',1.6)
+errorbar(to_pol_drift(~is_outlier_idx),vec_corr_to(~is_outlier_idx)-lin_fit_max(1),to_vals_error(~is_outlier_idx),'rx')
+box on
+set(gcf,'color','w')
 set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])

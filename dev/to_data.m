@@ -8,7 +8,9 @@ drift_data_compiled.atom_num=[];
 drift_data_compiled.grad{:,1}=[];
 drift_data_compiled.grad{:,2}=[];
 drift_data_compiled.avg_coef = [];
+drift_data_compiled.avg_coef_cal = [];
 drift_data_compiled.avg_coef_unc = [];
+drift_data_compiled.avg_coef_cal_unc = [];
 main_data_compiled.lin_fit{1} = [];
 main_data_compiled.lin_fit{2} = [];
 main_data_compiled.quad_fit{1} = [];
@@ -64,6 +66,18 @@ for loop_idx=selected_dirs
     
     drift_data_compiled.avg_coef = [drift_data_compiled.avg_coef;c_vals];
     drift_data_compiled.avg_coef_unc = [drift_data_compiled.avg_coef_unc;c_uncs];
+    
+    try
+    R = drift_data.avg_coefs_cal;
+    R = R(~cellfun('isempty',R));
+    temp = cell2mat(R);
+    c_uncs = reshape(temp(:,2),8,numel(R))';
+    c_vals = reshape(temp(:,1),8,numel(R))';
+    
+    drift_data_compiled.avg_coef_cal = [drift_data_compiled.avg_coef_cal;c_vals];
+    drift_data_compiled.avg_coef_cal_unc = [drift_data_compiled.avg_coef_cal_unc;c_uncs];
+    catch
+    end
     
     main_data_compiled.lin_fit{1} = [main_data_compiled.lin_fit{1};main_data.lin_fit{1}];
     main_data_compiled.lin_fit{2} = [main_data_compiled.lin_fit{2};main_data.lin_fit{2}];

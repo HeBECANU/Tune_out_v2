@@ -1,4 +1,4 @@
-function t = corr_plot(x,y,w)
+function fit_mdl = corr_plot(x,y,w)
 w=w/sum(w);
 
 %Finally plot a nice version of the quad fit
@@ -19,7 +19,7 @@ beta0 = [1e14,1e5];
 opts = statset('nlinfit');
 
 fit_mdl = fitnlm(x,y,mdl_fun,beta0,'Options',opts,'Weight',w);%'ErrorModel','combined'
-ci_size_disp = 1-erf(5/sqrt(2));
+ci_size_disp = 1-erf(1/sqrt(2));
 
 x_samp = linspace(min(x), max(x));
 [ysamp_culled,yci_culled]=predict(fit_mdl,x_samp','Alpha',ci_size_disp); %'Prediction','observation'

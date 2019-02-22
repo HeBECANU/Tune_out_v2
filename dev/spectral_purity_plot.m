@@ -32,7 +32,25 @@ xlabel('Filter Number')
 ylabel(sprintf('Tune-out value - %.3f (MHz)',plot_offset.*1e-6))
 xlim([-0.1, 3.2])
 %%
-x_grouped
+to_vals = data.drift.to_val{1};
+weights=1./data.drift.to_val{2}.^2';
+weights=weights/sum(weights);
+num_bin = 4;
+bin_size = 1;
+c_data = viridis(num_bin);
+x_grouped = ones(1,num_bin);
+y_grouped=nan(numel(num_bin),2);
+x_lims = ones(2,num_bin);
+for jj=0:(num_bin-1)
+    bin_centre = jj*bin_size+min(filt_num);
+    x_mask = (abs(filt_num-bin_centre)<(bin_size*0.5));
+    x_grouped(jj+1) = nanmean(filt_num(x_mask));
+    y_grouped(jj+1,1)=sum(to_vals(x_mask).*weights(x_mask)')./sum(weights(x_mask));
+    y_grouped(jj+1,2)=sqrt(nanvar(to_vals(x_mask),weights(x_mask)));
+end
+
+yneg = (y_grouped(:,2).*1e-6)./2;
+ypos = (y_grouped(:,2).*1e-6)./2;
 
 colors_main=[[233,87,0];[33,188,44];[0,165,166]];
 plot_title='Spectral purity';
@@ -53,7 +71,7 @@ mdl_fun = @(b,x) b(1)+b(2).*x(:,1);
 beta0 = [1e14,1e5];
 opts = statset('nlinfit');
 
-fit_mdl = fitnlm(grads',to_vals',mdl_fun,beta0,'Options',opts,'Weight',weights);%'ErrorModel','combined'
+fit_mdl = fitnlm(filt_num',to_vals',mdl_fun,beta0,'Options',opts,'Weight',weights);%'ErrorModel','combined'
 ci_size_disp = 1-erf(1/sqrt(2));
 
 sfigure(3001);
@@ -70,11 +88,11 @@ xl=xlim;
 title(plot_title)
 plot(x_grouped_pad,(ysamp_culled-plot_offset).*1e-6,'-','color',colors_main(2,:),'LineWidth',1.5)
 
-errorbar(x_grouped,(y_grouped(:,1)-plot_offset).*1e-6,yneg,ypos,xneg,xpos,'o','CapSize',0,'MarkerSize',5,'Color',colors_main(1,:),...
+errorbar(x_grouped,(y_grouped(:,1)-plot_offset).*1e-6,yneg,ypos,'o','CapSize',0,'MarkerSize',5,'Color',colors_main(1,:),...
     'MarkerFaceColor',colors_detail(1,:),'LineWidth',1.5);
 xlabel('Filter Number')
 ylabel(sprintf('Tune-out value - %.3f (MHz)',plot_offset.*1e-6))
-set(gca,'xlim',[0,ceil(max(x_grouped)*1.05)])
+set(gca,'xlim',[-0.1,3.1])
 %set(gca,'ylim',first_plot_lims(2,:))
 set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
 set(gcf,'color','w')
