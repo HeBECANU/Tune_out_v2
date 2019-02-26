@@ -24,7 +24,9 @@ main_data_compiled.scan_num = [];
 main_data_compiled.set_pt = [];
 for loop_idx=selected_dirs
     current_dir = loop_config.dir{loop_idx};
+    if exist('Z:\EXPERIMENT-DATA\2018_Tune_Out_V2','file')~=7, error(sprintf('dir \n %s \n does not exist',current_dir)) ,end
     out_dirs=dir([current_dir,'out\']);
+    if size(out_dirs,1)==0, error(sprintf('dir \n %s \n does not contain any out dirs',current_dir)), end 
     offset=0; %to make sure file contains the mat files
     most_recent_dir=out_dirs(end-offset,1);
     %runs through all the out put dirs for a given run and looks for saved data, if none is there

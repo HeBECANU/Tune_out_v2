@@ -1,13 +1,13 @@
 %Script that scrapes the analysed data from dirs (currently messy but works)
 clear all
 %% setup directories
-loop_config.dir = {'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190213_to_hwp_168.5_nuller_reconfig_pdset_0.4v\';
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190213_to_hwp_168.5_nuller_reconfig_pdset_0.7v\';
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190213_to_hwp_168.5_nuller_reconfig_pdset_0.8v\';
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190214_to_hwp_168.5_nuller_reconfig_new_fiber_pdset_1.0v\';
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190214_to_hwp_168.5_nuller_reconfig_new_fiber_pdset_2.0v\';
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190214_to_hwp_168.5_nuller_reconfig_new_fiber_pdset_2.5v\';
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190214_to_hwp_168.5_nuller_reconfig_pdset_0.6v\'
+loop_config.dir = {'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190213_to_hwp_168.5_nuller_reconfig_pdset_0.4v\';
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190213_to_hwp_168.5_nuller_reconfig_pdset_0.7v\';
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190213_to_hwp_168.5_nuller_reconfig_pdset_0.8v\';
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190214_to_hwp_168.5_nuller_reconfig_new_fiber_pdset_1.0v\';
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190214_to_hwp_168.5_nuller_reconfig_new_fiber_pdset_2.0v\';
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190214_to_hwp_168.5_nuller_reconfig_new_fiber_pdset_2.5v\';
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190214_to_hwp_168.5_nuller_reconfig_pdset_0.6v\'
     };
 
 %% Get data
@@ -16,8 +16,8 @@ data = to_data(loop_config);
 % Extract variables to plot
 grads = data.drift.grad{:,1}./2;
 grads_unc = data.drift.grad{:,2}./2;
-to_vals = data.drift.to_val{:,1};
-to_vals_unc = data.drift.to_val{:,2};
+to_vals = data.drift.to_val{:,1}.*1e-6;
+to_vals_unc = data.drift.to_val{:,2}.*1e-6;
 
 grads_avg = data.main.grad./2;
 to_vals_run = data.main.lin_fit{:,1};
@@ -33,17 +33,17 @@ disp_config.beta0 = [1e14,1e5];
 disp_config.opts=statset('nlinfit');
 disp_config.fig_number=821;
 plot_sexy(disp_config,grads,to_vals,to_vals_unc)
-
+xlabel('Gradient of Signal (Hz^2/Hz) \times 10^{-9}')
 
 
 %%
-% % Plot 'em all with errors
-% sfigure(9009);
-% errorbar(grads,to_vals,to_vals_unc,'kx','CapSize',0)
-% xlabel('Gradient of Signal')
-% ylabel(' Tune-out value (MHz)')
-% set(gcf,'color','w')
-% box on
+% Plot 'em all with errors
+sfigure(9009);
+errorbar(grads,to_vals,to_vals_unc,'kx','CapSize',0)
+xlabel('Gradient of Signal')
+ylabel(' Tune-out value (MHz)')
+set(gcf,'color','w')
+box on
 % 
 % sfigure(9010);
 % errorbar(grads_avg,to_vals_run,to_vals_run_unc,'ko','CapSize',0)

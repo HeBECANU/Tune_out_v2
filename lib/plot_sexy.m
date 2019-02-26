@@ -38,7 +38,7 @@ fig_number=disp_config.fig_number;
 %     errorbar(X,Y,Y_err,'k.','CapSize',0)
 
     % Set fit weights
-    weights = 1./Y.^2;
+    weights = 1./Y_err.^2;
     weights = weights/sum(weights);
 
 
@@ -88,7 +88,7 @@ fig_number=disp_config.fig_number;
 
     sfigure(fig_number);
     clf
-    x_grouped_pad = linspace(-1, x_grouped(end)*2.01,6);
+    x_grouped_pad = linspace(-1, x_grouped(end)*2.01);
     [ysamp_culled,yci_culled]=predict(fit_mdl,x_grouped_pad','Alpha',ci_size_disp); %'Prediction','observation'
     %we add another offset so that the plot is about the TO
     plot_offset=sum(Y.*weights)./sum(weights);%predict(fit_mdl,0);
@@ -102,13 +102,13 @@ fig_number=disp_config.fig_number;
 
     errorbar(x_grouped,(y_grouped(:,1)-plot_offset),yneg,ypos,xneg,xpos,'o','CapSize',0,'MarkerSize',5,'Color',colors_main(1,:),...
         'MarkerFaceColor',colors_detail(1,:),'LineWidth',1.5);
-    xlabel('Amplitude of Oscillations (mm)')
     ylabel(sprintf('Tune-out value - %.3f (MHz)',plot_offset))
     set(gca,'xlim',[1,ceil(max(x_grouped)*1.05)])
     %set(gca,'ylim',first_plot_lims(2,:))
     set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
     set(gcf,'color','w')
     set(gca,'FontSize',font_size_global,'FontName',font_name)
+    set(gca, 'Layer','top')
     box on
 
 end

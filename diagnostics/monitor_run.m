@@ -63,7 +63,7 @@ hebec_constants
 anal_opts.tdc_import.mat_save=false;
 anal_opts.global.velocity=const.g0*anal_opts.global.fall_time;
 
-if anal_opts.tdc_import.dir(end) ~= filesep, dirpath = [dirpath filesep]; end
+if anal_opts.tdc_import.dir(end) ~= filesep, anal_opts.tdc_import.dir = [anal_opts.tdc_import.dir filesep]; end
 if (exist([anal_opts.tdc_import.dir,'out'], 'dir') == 0), mkdir([anal_opts.tdc_import.dir,'out']); end
  
 %anal_out.dir=sprintf('%sout\\monitor\\',...
