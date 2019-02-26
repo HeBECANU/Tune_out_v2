@@ -8,7 +8,9 @@ drift_data_compiled.atom_num=[];
 drift_data_compiled.grad{:,1}=[];
 drift_data_compiled.grad{:,2}=[];
 drift_data_compiled.avg_coef = [];
+drift_data_compiled.avg_coef_cal = [];
 drift_data_compiled.avg_coef_unc = [];
+drift_data_compiled.avg_coef_cal_unc = [];
 main_data_compiled.lin_fit{1} = [];
 main_data_compiled.lin_fit{2} = [];
 main_data_compiled.quad_fit{1} = [];
@@ -22,7 +24,9 @@ main_data_compiled.scan_num = [];
 main_data_compiled.set_pt = [];
 for loop_idx=selected_dirs
     current_dir = loop_config.dir{loop_idx};
+    if exist('Z:\EXPERIMENT-DATA\2018_Tune_Out_V2','file')~=7, error(sprintf('dir \n %s \n does not exist',current_dir)) ,end
     out_dirs=dir([current_dir,'out\']);
+    if size(out_dirs,1)==0, error(sprintf('dir \n %s \n does not contain any out dirs',current_dir)), end 
     offset=0; %to make sure file contains the mat files
     most_recent_dir=out_dirs(end-offset,1);
     %runs through all the out put dirs for a given run and looks for saved data, if none is there
@@ -64,6 +68,18 @@ for loop_idx=selected_dirs
     
     drift_data_compiled.avg_coef = [drift_data_compiled.avg_coef;c_vals];
     drift_data_compiled.avg_coef_unc = [drift_data_compiled.avg_coef_unc;c_uncs];
+    
+    try
+    R = drift_data.avg_coefs_cal;
+    R = R(~cellfun('isempty',R));
+    temp = cell2mat(R);
+    c_uncs = reshape(temp(:,2),8,numel(R))';
+    c_vals = reshape(temp(:,1),8,numel(R))';
+    
+    drift_data_compiled.avg_coef_cal = [drift_data_compiled.avg_coef_cal;c_vals];
+    drift_data_compiled.avg_coef_cal_unc = [drift_data_compiled.avg_coef_cal_unc;c_uncs];
+    catch
+    end
     
     main_data_compiled.lin_fit{1} = [main_data_compiled.lin_fit{1};main_data.lin_fit{1}];
     main_data_compiled.lin_fit{2} = [main_data_compiled.lin_fit{2};main_data.lin_fit{2}];

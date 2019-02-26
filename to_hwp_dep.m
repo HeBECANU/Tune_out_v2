@@ -200,51 +200,53 @@ to_vals_lin_quad = [
 
 
 polz_data = [
-    0.34,111.0,79.0,20.0,NaN,NaN,304;
-    0.37,130.5,120.0,40.0,nan,nan,314;
-    0.14,151.0,98.0,63.0,nan,nan,325.0;
-    0.13,170,113,84,nan,nan,335;
-    0.68,190,133,104,nan,nan,344;
-    0.94,29,89,120,85,119,354;
-    0.96,50.5,75,146,nan,nan,6;
-    0.59,70,120,165,nan,nan,15;
-    0.06,92,77,181,nan,nan,26;
-    0.52,61,84,154,nan,nan,10;
-    0.86,46,74,137,nan,nan,3;
-    0.54,24.5,72,112,nan,nan,352;
-    0.19,180,93,89,nan,nan,339;
-    0.12,160,120,70.5,nan,nan,319;
-    0.33,140.5,112,50,118,50,320;
-    0.36,121,86,32,nan,nan,310;
-    0.17,100,72,191,nan,nan,300;
-    0.07,80,107.5,165,nan,nan,290;
-    0.25,99.5,72,188,72,187.5,299;
-    0.37,120,78,221,nan,nan,309;
-    0.24,140,62,230,nan,nan,320;
-    0.23,147,87.6,238,nan,nan,324;
-    0.11,155,60.4,248,nan,nan,327;
-    0.14,160,76,249,nan,nan,329;
-    0.20,165,80,255,77,254,332;
-    0.16,171,79,264,nan,nan,335;
-    0.23,176.5,65,266,nan,nan,338.5;
-    0.23,176.5,65,266,nan,nan,338.5;
-    0.33,181,71,271,nan,nan,340;
-    0.52,187,92,278,nan,nan,342;
-    0.66,194,78,282,nan,nan,347;
-    0.72,199,82,290,80,291,350;
-    0.65,208,57,298,nan,nan,353;
-    0.90,217,78,308,nan,nan,358;
-    0.70,231,70.1,135,nan,nan,4;
-    0.64,239.5,53,150,60,151,9.5;
-    0.58,249,75.1,160,nan,nan,14.5];
+    0.34,111.0,79.0,20.0,NaN,NaN,304,1;
+    0.37,130.5,120.0,40.0,nan,nan,314,1;
+    0.14,151.0,98.0,63.0,nan,nan,325.0,1;
+    0.13,170,113,84,nan,nan,335,0;
+    0.68,190,133,104,nan,nan,344,0;
+    0.94,29,89,120,85,119,354,0;
+    0.96,50.5,75,146,nan,nan,6,0;
+    0.59,70,120,165,nan,nan,15,0;
+    0.06,92,77,181,nan,nan,26,1;
+    0.52,61,84,154,nan,nan,10,0;
+    0.86,46,74,137,nan,nan,3,0;
+    0.54,24.5,72,112,nan,nan,352,0;
+    0.19,180,93,89,nan,nan,339,0;
+    0.12,160,120,70.5,nan,nan,319,1;
+    0.33,140.5,112,50,118,50,320,1;
+    0.36,121,86,32,nan,nan,310,1;
+    0.17,100,72,191,nan,nan,300,1;
+    0.07,80,107.5,165,nan,nan,290,0;
+    0.25,99.5,72,188,72,187.5,299,1;
+    0.37,120,78,221,nan,nan,309,1;
+    0.24,140,62,230,nan,nan,320,1;
+    0.23,147,87.6,238,nan,nan,324,1;
+    0.11,155,60.4,248,nan,nan,327,1;
+    0.14,160,76,249,nan,nan,329,1;
+    0.20,165,80,255,77,254,332,1;
+    0.16,171,79,264,nan,nan,335,0;
+    0.23,176.5,65,266,nan,nan,338.5,0;
+    0.23,176.5,65,266,nan,nan,338.5,0;
+    0.33,181,71,271,nan,nan,340,0;
+    0.52,187,92,278,nan,nan,342,0;
+    0.66,194,78,282,nan,nan,347,0;
+    0.72,199,82,290,80,291,350,0;
+    0.65,208,57,298,nan,nan,353,0;
+    0.90,217,78,308,nan,nan,358,0;
+    0.70,231,70.1,135,nan,nan,4,0;
+    0.64,239.5,53,150,60,151,9.5,0;
+    0.58,249,75.1,160,nan,nan,14.5,0];
 
 
 hwp_ang= polz_data(:,7);
 %hwp_ang = hwp_ang-360.*(hwp_ang>180);
 %0.32,91,230,7,240,0;
-polz_power_frac=polz_data(:,1)./(polz_data(:,3));
+%polz_power_frac=polz_data(:,1)./(polz_data(:,3));
 %polz_power_frac=2*polz_data(:,1)./(polz_data(:,1)+polz_data(:,3));
-%polz_power_frac=2*polz_data(:,1).*polz_data(:,3)./(polz_data(:,1).^2+polz_data(:,3).^2);
+polz_power_frac=2*polz_data(:,1).*polz_data(:,3)./(polz_data(:,1).^2+polz_data(:,3).^2);
+%polz_power_frac=2*sqrt(polz_data(:,1).*polz_data(:,3))./(polz_data(:,1)+polz_data(:,3));
+%polz_power_frac=sin(2*atan(sqrt(polz_data(:,1)./polz_data(:,3))));
 
 bc_angles_wraped=polz_data(:,2);
 %move the data into the center
@@ -254,9 +256,9 @@ bc_angles_wraped=mod(bc_angles_wraped+shift,180)-shift;
 
 %polz_sign=[0,0,0,0,1,0,0,1,1,1,0,1,0,0,1,1,0,1,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,1,0,0,0,0,1,1,1,1,0]';
 %polz_sign=[0,0,0,0,1,0,0,1,1,1,0,1,0,0,1,1,0,1,0,0,0,0,1,1,1,1,1]';
-polz_sign=[1,1,1,0,0,0,0,0,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]';
+polz_sign=polz_data(:,8);
 polz_sign(~polz_sign)=-1;
-vec_amp=0e3%19e3;
+vec_amp=0;%-6e3;%19e3;
 
 %% FIt and plot (with freq as free)
 %fit sin waves to the two sets of data
@@ -362,7 +364,7 @@ fit_mdl_lin = fitnlm(bc_angles_wraped,vec_corr_to,modelfun,beta0,...
     'Options',opts,'Weights',wlin,'CoefficientNames' ,{'amp','phase','offset'});
 
 %cut outliers
-[~,yci_cull_lim]=predict(fit_mdl_lin,bc_angles_wraped,'Prediction','observation','Alpha',ci_size_cut_outliers);
+[to_predict,yci_cull_lim]=predict(fit_mdl_lin,bc_angles_wraped,'Prediction','observation','Alpha',ci_size_cut_outliers);
 is_outlier_idx=vec_corr_to>yci_cull_lim(:,1) & vec_corr_to<yci_cull_lim(:,2);
 vec_corr_to_trim = vec_corr_to(is_outlier_idx);
 to_vals_lin_trim = to_vals_lin_quad(is_outlier_idx);
@@ -375,6 +377,8 @@ fit_mdl_lin = fitnlm(bc_angles_wraped(is_outlier_idx),vec_corr_to(is_outlier_idx
     'Options',opts,'CoefficientNames' ,{'amp','phase','offset'});
 lin_fit_max=[fit_mdl_lin.Coefficients.Estimate(1)+fit_mdl_lin.Coefficients.Estimate(3)...
     sqrt(fit_mdl_lin.Coefficients.SE(1)^2+fit_mdl_lin.Coefficients.SE(3)^2)];
+
+to_res = vec_corr_to-to_predict;
 
 sfigure(867);
 clf
@@ -415,7 +419,7 @@ set(gcf,'color','w')
 
 %% Plot the purity data
 hilight_cut=size(bc_angles_wraped,1)-2;
-sin_f = @(b,x) b(1).*(sin(x(:,1).*pi/180+b(2).*2*pi))+b(3);
+sin_f = @(b,x) b(1).*(sin(x(:,1).*pi./90+b(2).*2*pi))+b(3);
 beta0=[0.015,0,0];
 fit_mdl_sin = fitnlm(bc_angles_wraped,-polz_power_frac.*polz_sign,sin_f,beta0,...
     'Options',opts,'CoefficientNames' ,{'amp','phase','offset'});

@@ -1,5 +1,5 @@
 %phi = linspace(-pi/5,pi/5,2)';
-phi = linspace(-pi/2*0.05,pi/2*0.05,2)'; %approx. the worst impurity that we have
+phi = linspace(-pi/2*0.01,pi/2*0.01,2)'; %approx. the worst impurity that we have
 alpha = 0;
 S = [cos(phi).*cos(alpha),cos(phi).*sin(alpha),sin(phi)]'; %stokes parameters
 p_min = [];
@@ -14,6 +14,7 @@ rot_mat = [1, 0, 0, 0;
     0, -sin(2*theta_anal),cos(2*theta_anal),0;
     0, 0, 0, 1];
 lin_pol = 0.5.*[1,1,0,0;1,1,0,0;0,0,0,0;0,0,0,0];
+chi_p = [];
 for theta = theta_vec
     QWP = [cos(2*theta)^2, sin(2*theta)*cos(2*theta), -sin(2*theta);
         sin(2*theta)*cos(2*theta), sin(2*theta)^2, cos(2*theta);
@@ -23,6 +24,7 @@ for theta = theta_vec
     S_path(:,:,jj) = Sp;
     S_lin(:,:,jj) = lin_pol*rot_mat*[1,1;Sp];
     chi = 1/2*atan(Sp(3,:)./sqrt(Sp(1,:).^2+Sp(2,:).^2));
+    chi_p = [chi_p;chi];
     p_min = [p_min;sin(chi).^2];
     p_max = [p_max;cos(chi).^2];
     jj = jj + 1;
@@ -82,3 +84,14 @@ xlabel('S_1')
 ylabel('S_2')
 zlabel('S_3')
 hold off
+sfigure(2211);
+scatter(theta_vec,sin(2.*chi_p(:,1)))
+xlabel('ang of QWP')
+ylabel('A')
+sfigure(2021);
+scatter(theta_vec,1/2*atan(S_path(2,1,:)./S_path(1,1,:)))
+hold on
+scatter(theta_vec,1/2*atan(S_path(2,2,:)./S_path(1,2,:)))
+hold off
+xlabel('ang of QWP')
+ylabel('\psi')
