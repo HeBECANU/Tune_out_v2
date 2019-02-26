@@ -16,6 +16,6 @@ function I_p_psi_chi=stokes_to_sph_core(stokes_in)
 I_p_psi_chi=zeros(1,4);
 I_p_psi_chi(1)=stokes_in(1);
 I_p_psi_chi(2)=sqrt(sum(stokes_in(2:4).^2))/stokes_in(1);
-I_p_psi_chi(3)=1/2*atan(stokes_in(3)/stokes_in(2));
-I_p_psi_chi(4) = 1/2*atan(stokes_in(4)./sqrt(stokes_in(2).^2+stokes_in(3).^2));
+I_p_psi_chi(3)=1/2*atan2(stokes_in(3),stokes_in(2));
+I_p_psi_chi(4) = 1/2*atan2(stokes_in(4),sqrt(stokes_in(2).^2+stokes_in(3).^2));
 end
