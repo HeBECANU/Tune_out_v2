@@ -115,7 +115,7 @@ while true
         batch_data.mcp_tdc=import_mcp_tdc_data(anal_opts.tdc_import);
         %data.mcp_tdc=mcp_tdc_data;
         %just to give me a logical vector
-        batch_data.mcp_tdc.all_ok=batch_data.mcp_tdc.num_counts>5e3;
+        batch_data.mcp_tdc.all_ok=batch_data.mcp_tdc.num_counts>4e3;
         batch_data.mcp_tdc.all_ok(batch_data.mcp_tdc.all_ok)=...
             cellfun(@(x) x(end,1),batch_data.mcp_tdc.counts_txy(batch_data.mcp_tdc.all_ok))>anal_opts.dld_aquire*0.8;
         if sum(batch_data.mcp_tdc.all_ok)==0

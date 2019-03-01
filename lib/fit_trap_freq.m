@@ -144,6 +144,10 @@ for ii=1:iimax
             set(gcf,'Color',[1 1 1]);
             xlabel('Time (s)','FontSize',folt_size_label)
             ylabel('X(mm)','FontSize',folt_size_label)
+            title(sprintf('amp=%.2f±%.2f mm,omega=%.2f±%.2f Hz,Damp=%.2f±%.2f s',...
+                fitobject.Coefficients.Estimate(1),fitobject.Coefficients.SE(1),...
+                 fitobject.Coefficients.Estimate(2),fitobject.Coefficients.SE(2),...
+                 fitobject.Coefficients.Estimate(7),fitobject.Coefficients.SE(7)))
             hold off
             ax = gca;
             set(ax, {'XColor', 'YColor'}, {'k', 'k'});

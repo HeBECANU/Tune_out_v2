@@ -398,7 +398,7 @@ mean_delay_labview_tdc=0;%median(time_diff);
 sfigure(1);
 set(gcf,'color','w')
 subplot(4,1,2)
-plot(data.mcp_tdc.shot_num,time_diff-mean_delay_labview_tdc)
+plot(data.mcp_tdc.shot_num(1:imax),time_diff-mean_delay_labview_tdc)
 xlabel('shot number')
 ylabel('corrected time between labview and mcp tdc')
 title('raw time diff')

@@ -266,21 +266,23 @@ ylabel(sprintf('Tune-out value - %.3f (MHz)',mean(temp_to)*1e-6))
 title('Sensitivity to fit Order')
 xlim([0 3])
 %% Have a look at the residuals
-res = ydat_culled-predict(mdl_culled,xdat_culled','Alpha',0.2)';
-num_bin = 20;
-x_range = max(xdat_culled)-min(xdat_culled);
-bin_size = x_range/num_bin;
-c_data = viridis(num_bin);
-x_res_grouped = ones(1,num_bin);
-y_res_grouped = cell(1,num_bin);
+%res = ydat_culled-predict(mdl_culled,xdat_culled','Alpha',0.2)';
+
+% Cluster the data for a nice display
+%find the unique values with some tolerance
+
+bin_center=uniquetol(xdat_culled,1e-3);
+bin_edges=[-inf,(bin_center(2:end)+bin_center(1:end-1))/2,inf];
+num_bin=numel(bin_edges)-1;
+x_res_grouped = nan(1,num_bin);
+%y_res_grouped = cell(1,num_bin);
 ydat_chunks=nan(numel(num_bin),2);
-for jj=0:(num_bin-1)
-    bin_centre = bin_size*0.5+jj*bin_size+min(xdat_culled);
-    x_res_grouped(jj+1) = bin_centre;
-    x_mask = (abs(xdat_culled-bin_centre)<(bin_size*0.5));
-    y_res_grouped{:,jj+1} = res(x_mask)';
-    ydat_chunks(jj+1,1)=nanmean(ydat_culled(x_mask));
-    ydat_chunks(jj+1,2)=nanstd(ydat_culled(x_mask));
+for jj=1:num_bin
+    mask=xdat_culled>bin_edges(jj) & xdat_culled<bin_edges(jj+1);
+    x_res_grouped(jj) = nanmean(xdat_culled(mask)) ;
+    %y_res_grouped{:,jj+1} = res(x_mask)';
+    ydat_chunks(jj,1)=nanmean(ydat_culled(mask));
+    ydat_chunks(jj,2)=nanstd(ydat_culled(mask));
 end
 %Finally plot a nice version of the quad fit
 %set up the colors to use
@@ -305,7 +307,7 @@ color_shaded=colorspace('LCH->RGB',color_shaded);
 
 sfigure(82);
 clf
-[ysamp_culled,yci_culled]=predict(mdl_culled,xsamp_culled,'Prediction','observation','Alpha',ci_size_disp); %'Prediction','observation'
+[ysamp_culled,yci_culled]=predict(to_res.fit_trimmed.model{1},xsamp_culled,'Prediction','observation','Alpha',ci_size_disp); %'Prediction','observation'
 patch([xsamp_culled', fliplr(xsamp_culled')]-plot_offset, [yci_culled(:,1)', fliplr(yci_culled(:,2)')], color_shaded,'EdgeColor','none');  %
 hold on
 plot(xsamp_culled-plot_offset,yci_culled','r','color',colors_main(3,:),'LineWidth',1.5);

@@ -15,7 +15,7 @@ stokes_elip=@(phi,alpha) [1,cos(phi).*cos(alpha),cos(phi).*sin(alpha),sin(phi)]'
 %lightin = stokes_lpvertical();
 %lightin= mueller_stokes(mueller_rotator(rotate_angle),lightin)
 rotate_angle=pi/8; %free parameter
-light_in=stokes_elip(0.8*pi/2,rotate_angle); %first argument 0 is pure lin pi/2 is pure circ, second is roatation
+light_in=stokes_elip(0.02*pi/2,rotate_angle); %first argument 0 is pure lin pi/2 is pure circ, second is roatation
 % rotate it by some amount
 %%
 lin_pol_angles=linspace(0,2,1e3)*pi;
@@ -65,21 +65,24 @@ a_min=I_p_psi_chi(:,3)+pi/2;
 
 %%
 
-rotate_angle=pi/2; %free parameter
-impurity_angle=2*0.07;
-lightin_pcirc=stokes_elip(impurity_angle,rotate_angle); %first argument 0 is pure lin pi/2 is pure circ, second is roatation
-lightin_ncirc=stokes_elip(-impurity_angle,rotate_angle); %first argument 0 is pure lin pi/2 is pure circ, second is roatation
+rotate_angle_common=pi/2; %free parameter
+rotate_angle_diff=-pi*7/8; %free parameter
+impurity_angle=pi*0.001;
+qwp_fast_angle_offset=0*(pi/180);
+lightin_pcirc=stokes_elip(impurity_angle,rotate_angle_common); %first argument 0 is pure lin pi/2 is pure circ, second is roatation
+lightin_ncirc=stokes_elip(-impurity_angle,rotate_angle_common+rotate_angle_diff); %first argument 0 is pure lin pi/2 is pure circ, second is roatation
 light_lr_circ={lightin_pcirc,lightin_ncirc};
 lr_compare=[];
 for ii=1:2
 light_in=light_lr_circ{ii};
 I_p_psi_chi=stokes_to_sph(light_in);
 a_max=I_p_psi_chi(:,3);
-a_min=I_p_psi_chi(:,3)+pi/2;
+a_min_start=I_p_psi_chi(:,3)+pi/2;
 %center the qwp rotation on the min or max transmission
-qwp_angles=a_min+linspace(-1,1,1e3)*pi;
+qwp_angles=a_min_start+linspace(-1,1,1e4)*pi; %a_min_start
+
 %qwp_angles=a_max+linspace(-1,1,1e3)*pi;
-light_qwp=mueller_rotate(mueller_linretarder(2*pi/4),qwp_angles);
+light_qwp=mueller_rotate(mueller_linretarder(2*pi/4),qwp_angles+qwp_fast_angle_offset);
 lightout=mueller_stokes(light_qwp,light_in);
 
 I_p_psi_chi=stokes_to_sph(lightout);
@@ -93,25 +96,25 @@ lr_compare(ii).p_min=p_min;
 lr_compare(ii).p_max=p_max;
 lr_compare(ii).a_max=a_max;
 lr_compare(ii).a_min=a_min;
-lr_compare(ii).qwp_angles=qwp_angles;
+lr_compare(ii).qwp_angles=qwp_angles-a_min_start;
 end
-figure(46)
+sfigure(46)
 clf
 set(gcf,'color','w')
 
-angle_conv=1/(2*pi);
-angle_conv_label='/2\pi';
+angle_conv=360/(2*pi);
+angle_conv_label='°';
 subplot(2,2,1)
-plot(lr_compare(1).qwp_angles*angle_conv,lr_compare(1).a_max*angle_conv,'r')
+plot(lr_compare(1).qwp_angles*angle_conv,unwrap(lr_compare(1).a_max*4)*angle_conv/4,'r')
 hold on
-plot(lr_compare(2).qwp_angles*angle_conv,lr_compare(2).a_max*angle_conv,'b')
+plot(lr_compare(2).qwp_angles*angle_conv,unwrap(lr_compare(2).a_max*4)*angle_conv/4,'b')
 hold off
 ylabel(sprintf('angle of PBS to give max power %s',angle_conv_label))
 xlabel(sprintf('qwp angle %s',angle_conv_label))
 subplot(2,2,2)
-plot(lr_compare(1).qwp_angles*angle_conv,lr_compare(1).a_min*angle_conv,'r')
+plot(lr_compare(1).qwp_angles*angle_conv,unwrap(lr_compare(1).a_min*4)*angle_conv/4,'r')
 hold on
-plot(lr_compare(2).qwp_angles*angle_conv,lr_compare(2).a_min*angle_conv,'b')
+plot(lr_compare(2).qwp_angles*angle_conv,unwrap(lr_compare(2).a_min*4)*angle_conv/4,'b')
 hold off
 ylabel(sprintf('angle of PBS to give min power %s',angle_conv_label))
 xlabel(sprintf('qwp angle %s',angle_conv_label))
@@ -130,3 +133,15 @@ hold off
 ylabel('min power of PBS')
 xlabel(sprintf('qwp angle %s',angle_conv_label))
 
+
+
+%%
+%lightin_pcirc=stokes_elip(impurity_angle,rotate_angle);
+% qwp_angle=0.2
+wp_angles = linspace(0,2*pi,100);
+fdlts = zeros(size(wp_angles));
+for ii=1:length(wp_angles)
+    fdlts(ii) = trace(mueller_rotate(mueller_linretarder(2*pi/4),0)*mueller_rotate(mueller_linretarder(2*pi/4),wp_angles(ii)))/4;
+end
+sfigure(889);
+plot(wp_angles,fdlts)
