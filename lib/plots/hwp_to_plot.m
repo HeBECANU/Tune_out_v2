@@ -1,6 +1,6 @@
+function dum = hwp_to_plot()
 %complete plot of hwp
 %Script that scrapes the analysed data from dirs (currently messy but works)
-clear all
 %setup directories you wish to loop over
 loop_config.dir = {
     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_51_nuller_reconfig\',
@@ -78,3 +78,4 @@ disp_config.opts=statset('nlinfit');
 disp_config.fig_number=3400;
 plot_sexy(disp_config,to_pol_drift,vec_corr_to,to_vals_error)
 xlabel('Input Polarization angle (degrees)')
+end

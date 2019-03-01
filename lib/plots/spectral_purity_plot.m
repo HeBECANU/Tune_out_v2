@@ -1,15 +1,15 @@
+function dum = spectral_purity_plot()
 %Script that scrapes the analysed data from dirs (currently messy but works)
-clear all
 %setup directories you wish to loop over
 loop_config.dir = {
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190218_filt_dep_0\',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190218_filt_dep_1\',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190218_filt_dep_1_run2\',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190218_filt_dep_2\',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190218_filt_dep_3\',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190219_filt_dep_2_run2\',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190219_filt_dep_3_run2\',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190220_filt_dep_1_run3\'
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190218_filt_dep_0\',
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190218_filt_dep_1\',
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190218_filt_dep_1_run2\',
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190218_filt_dep_2\',
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190218_filt_dep_3\',
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190219_filt_dep_2_run2\',
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190219_filt_dep_3_run2\',
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190220_filt_dep_1_run3\'
     };
 
 data = to_data(loop_config);
@@ -98,3 +98,4 @@ set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
 set(gcf,'color','w')
 set(gca,'FontSize',font_size_global,'FontName',font_name)
 box on
+end

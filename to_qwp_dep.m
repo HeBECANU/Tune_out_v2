@@ -1,4 +1,9 @@
 %quick plot of to dependence on polarisation angle
+% To predict your new centre freq:
+% fprintf('%f',predict(fit_mdl_lin,ANGLE_GOES_HERE,'Prediction','observation','Alpha',ci_size_disp))
+
+
+
 
 to_vals_lin_quad = [
      150,725742096.2,39,725742099.5,51;
@@ -15,7 +20,14 @@ to_vals_lin_quad = [
      220,725730129.5,69,725730014.2,87;
      226,725729582.1,77,725729563.4,106;
      234,725729042.5,19,725728945.3,30;
-     246,725728713.1,60,725728802.2,75];
+     246,725728713.1,60,725728802.2,75;
+     254,725730171.3,91,725730299.0,154;
+     260,725731285.4,53,725731289.0,88;
+     286,725736861.9,90,725736679.4,129; %should not be use in final value as has no analog logs
+     310,725741328.1,87,725741307.8,104;
+     286.5,725737277.3,79,725737412.3,105;
+     270,725733518.4,83,725733480.3,96
+     ];
 
 polz_data = [
    150,90.6,245,63.9,152;
@@ -32,7 +44,13 @@ polz_data = [
    220,110,273,44.1,192;
    226,87,290,73,199;
    234,95,226,82,319;
-   246,101,50,42,316
+   246,101,50,42,316;
+   254,115,240,22.1,143;
+   260,124,51,18.1,329;
+   286,1.2,201,0.05,352; %again don't use in final value
+   310,140.7,117,40.8,205;
+   286.5,165,88.5,2.18,179;
+   270,167.3,248,5.37,159
    ];%
 
 to_lin_val=725736124;
@@ -44,7 +62,7 @@ qwp_ang= polz_data(:,1);
 %0.32,91,230,7,240,0;
 A=2*polz_data(:,2).*polz_data(:,4)./(polz_data(:,2).^2+polz_data(:,4).^2);
 
-%polz_power_frac=2*sqrt(polz_data(:,2).*polz_data(:,4))./(polz_data(:,2)+polz_data(:,4));
+A=2*sqrt(polz_data(:,2).*polz_data(:,4))./(polz_data(:,2)+polz_data(:,4));
 
 %%
 sfigure(3)
@@ -78,6 +96,7 @@ plot(xsamp,yci_lin(:,2)-to_lin_val,'-','LineWidth',1.6,'Color',[1,1,1]*0.6)
 errorbar(qwp_ang,to_vals_lin_quad(:,2)-to_lin_val,to_vals_lin_quad(:,3),'xk')
 hold off
 box on
+xlim([120,320])
 set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
 
 
@@ -98,3 +117,6 @@ subplot(2,2,3)
 scatter(A_plot,to_vals_lin_quad(:,2))
 title('TO vs A')
 suptitle('TO dependence on ?pplz')
+subplot(2,2,4)
+scatter(polz_data(:,1),unwrap(mod(polz_data(:,5)+45,180).*pi/180))
+title('qwp vs min pol ang')
