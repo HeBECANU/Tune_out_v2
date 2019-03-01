@@ -2,14 +2,14 @@
 clear all
 %setup directories you wish to loop over
 loop_config.dir = {
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190218_filt_dep_0\',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190218_filt_dep_1\',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190218_filt_dep_1_run2\',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190218_filt_dep_2\',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190218_filt_dep_3\',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190219_filt_dep_2_run2\',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190219_filt_dep_3_run2\',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190220_filt_dep_1_run3\'
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190218_filt_dep_0\',
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190218_filt_dep_1\',
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190218_filt_dep_1_run2\',
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190218_filt_dep_2\',
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190218_filt_dep_3\',
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190219_filt_dep_2_run2\',
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190219_filt_dep_3_run2\',
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190220_filt_dep_1_run3\'
     };
 
 data = to_data(loop_config);
@@ -31,70 +31,41 @@ set(gcf,'color','w')
 xlabel('Filter Number')
 ylabel(sprintf('Tune-out value - %.3f (MHz)',plot_offset.*1e-6))
 xlim([-0.1, 3.2])
+
 %%
-to_vals = data.drift.to_val{1};
-weights=1./data.drift.to_val{2}.^2';
-weights=weights/sum(weights);
-num_bin = 4;
-bin_size = 1;
-c_data = viridis(num_bin);
-x_grouped = ones(1,num_bin);
-y_grouped=nan(numel(num_bin),2);
-x_lims = ones(2,num_bin);
-for jj=0:(num_bin-1)
-    bin_centre = jj*bin_size+min(filt_num);
-    x_mask = (abs(filt_num-bin_centre)<(bin_size*0.5));
-    x_grouped(jj+1) = nanmean(filt_num(x_mask));
-    y_grouped(jj+1,1)=sum(to_vals(x_mask).*weights(x_mask)')./sum(weights(x_mask));
-    y_grouped(jj+1,2)=sqrt(nanvar(to_vals(x_mask),weights(x_mask)));
-end
+%make a nice figure
 
-yneg = (y_grouped(:,2).*1e-6)./2;
-ypos = (y_grouped(:,2).*1e-6)./2;
+to_freqs_val = data.drift.to_val{1}./1e6; %convert to blue
+to_freqs_err = data.drift.to_val{2}./1e6; %convert to blue
 
-colors_main=[[233,87,0];[33,188,44];[0,165,166]];
-plot_title='Spectral purity';
-font_name='cmr10';
-font_size_global=14;
-
-
-colors_main=colors_main./255;
-lch=colorspace('RGB->LCH',colors_main(:,:));
-lch(:,1)=lch(:,1)+20;
-colors_detail=colorspace('LCH->RGB',lch);
-%would prefer to use srgb_2_Jab here
-color_shaded=colorspace('RGB->LCH',colors_main(3,:));
-color_shaded(1)=125;
-color_shaded=colorspace('LCH->RGB',color_shaded);
-
+%fit sin waves to the two sets of data
 mdl_fun = @(b,x) b(1)+b(2).*x(:,1);
-beta0 = [1e14,1e5];
-opts = statset('nlinfit');
+beta0 = [nanmean(to_freqs_val),1e5];
+wlin=1./(to_freqs_err.^2);
+opts = statset('MaxIter',1e4);
+fit_mdl_lin = fitnlm(filt_num,to_freqs_val,mdl_fun,beta0,...
+    'Options',opts,'Weights',wlin,'CoefficientNames' ,{'offset','grad'});
 
-fit_mdl = fitnlm(filt_num',to_vals',mdl_fun,beta0,'Options',opts,'Weight',weights);%'ErrorModel','combined'
-ci_size_disp = 1-erf(1/sqrt(2));
+sfigure(8320);
+disp_config.colors_main = [[75,151,201];[193,114,66];[87,157,95]];
+disp_config.plot_title = '';
+disp_config.x_label = 'Number of Filters';
+disp_config.x_ticks= 0:3
+disp_config.font_name = 'cmr10';
+disp_config.font_size_global=14;
+disp_config.mdl_fun = mdl_fun;
+disp_config.beta0 = beta0;
+disp_config.opts=statset('nlinfit');
+disp_config.fig_number=3400;
+disp_config.bin_tol=0.01;
+%set offset to zero filter value
+% disp_config.plot_offset.val=fit_mdl_lin.Coefficients.Estimate(1);
+% disp_config.plot_offset.unc=fit_mdl_lin.Coefficients.SE(1);
+%set offset to value found from lin pol dependence
+disp_config.plot_offset.val=predict(fit_mdl_lin,3);
 
-sfigure(3001);
-clf
-x_grouped_pad = linspace(-1, x_grouped(end)*2.01,6);
-[ysamp_culled,yci_culled]=predict(fit_mdl,x_grouped_pad','Alpha',ci_size_disp); %'Prediction','observation'
-%we add another offset so that the plot is about the TO
-plot_offset=predict(fit_mdl,0);
-patch([x_grouped_pad, fliplr(x_grouped_pad)], ([yci_culled(:,1)', fliplr(yci_culled(:,2)')]-plot_offset).*1e-9, color_shaded,'EdgeColor','none');  %
-hold on
-plot(x_grouped_pad,(yci_culled'-plot_offset).*1e-6,'r','color',colors_main(3,:),'LineWidth',1.5);
-xl=xlim;
-%line(xl,[0,0],'color','k','LineWidth',1)
-title(plot_title)
-plot(x_grouped_pad,(ysamp_culled-plot_offset).*1e-6,'-','color',colors_main(2,:),'LineWidth',1.5)
+plot_sexy(disp_config,filt_num,to_freqs_val,wlin,fit_mdl_lin)
 
-errorbar(x_grouped,(y_grouped(:,1)-plot_offset).*1e-6,yneg,ypos,'o','CapSize',0,'MarkerSize',5,'Color',colors_main(1,:),...
-    'MarkerFaceColor',colors_detail(1,:),'LineWidth',1.5);
-xlabel('Filter Number')
-ylabel(sprintf('Tune-out value - %.3f (MHz)',plot_offset.*1e-6))
-set(gca,'xlim',[-0.1,3.1])
-%set(gca,'ylim',first_plot_lims(2,:))
-set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
-set(gcf,'color','w')
-set(gca,'FontSize',font_size_global,'FontName',font_name)
-box on
+
+
+

@@ -23,17 +23,27 @@ grads_avg = data.main.grad./2;
 to_vals_run = data.main.lin_fit{:,1};
 to_vals_run_unc =  data.main.lin_fit{:,2};
 
-disp_config.num_bin = 12; 
+%%
+mdl_fun = @(b,x) b(1)+b(2).*x(:,1);
+beta0 = [nanmean(to_vals),1e5];
+opts = statset('MaxIter',1e4);
+weights = 1./to_vals_unc.^2;
+fit_mdl = fitnlm(grads',to_vals',mdl_fun,beta0,'Options',opts,'Weight',weights,'CoefficientNames' ,{'offset','grad'});%'ErrorModel','combined'
+
+disp_config=[];
+disp_config.bin_tol = 0.02; 
 disp_config.colors_main = [[233,87,0];[33,188,44];[0,165,166]];
-disp_config.plot_title = 'Hyperpolarizability';
+disp_config.plot_title = '';
+disp_config.x_label='Gradient of Signal (Hz^2/GHz)';
 disp_config.font_name = 'cmr10';
 disp_config.font_size_global=14;
 disp_config.mdl_fun = @(b,x) b(1)+b(2).*x(:,1);
 disp_config.beta0 = [1e14,1e5];
 disp_config.opts=statset('nlinfit');
 disp_config.fig_number=821;
-plot_sexy(disp_config,grads,to_vals,to_vals_unc)
-xlabel('Gradient of Signal (Hz^2/Hz) \times 10^{-9}')
+disp_config.plot_offset.val=predict(fit_mdl,0);
+
+plot_sexy(disp_config,grads,to_vals,to_vals_unc,fit_mdl)
 
 
 %%
