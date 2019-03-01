@@ -1,5 +1,5 @@
 %phi = linspace(-pi/5,pi/5,2)';
-phi = linspace(-pi/2*0.01,pi/2*0.01,2)'; %approx. the worst impurity that we have
+phi = linspace(-pi/2*0.09,pi/2*0.09,2)'; %approx. the worst impurity that we have
 alpha = 0;
 S = [cos(phi).*cos(alpha),cos(phi).*sin(alpha),sin(phi)]'; %stokes parameters
 p_min = [];
@@ -19,8 +19,11 @@ for theta = theta_vec
     QWP = [cos(2*theta)^2, sin(2*theta)*cos(2*theta), -sin(2*theta);
         sin(2*theta)*cos(2*theta), sin(2*theta)^2, cos(2*theta);
         sin(2*theta), -cos(2*theta), 0];
+    HWP = [cos(2*theta)^2-sin(2*theta)^2, 2*cos(2*theta)*sin(2*theta),0;
+        2*cos(2*theta)*sin(2*theta),-cos(2*theta)^2+sin(2*theta)^2,0;
+        0,0,-1];
     %QWP-inv(QWP)
-    Sp = QWP*S;
+    Sp = HWP*S;
     S_path(:,:,jj) = Sp;
     S_lin(:,:,jj) = lin_pol*rot_mat*[1,1;Sp];
     chi = 1/2*atan(Sp(3,:)./sqrt(Sp(1,:).^2+Sp(2,:).^2));

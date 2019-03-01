@@ -1,6 +1,6 @@
+function dum = hwp_to_plot()
 %complete plot of hwp
 %Script that scrapes the analysed data from dirs (currently messy but works)
-clear all
 %setup directories you wish to loop over
 % BEGIN USER VAR-------------------------------------------------
 loop_config.dir = {
@@ -83,6 +83,7 @@ disp_config.font_name = 'cmr10';
 disp_config.font_size_global=14;
 disp_config.opts=statset('nlinfit');
 disp_config.fig_number=3400;
+<<<<<<< HEAD
 disp_config.bin_tol=0.01;
 
 modelfun = @(b,x) b(1).*(cos(x(:,1).*pi./180+b(2).*2*pi).^2)+b(3);
@@ -90,3 +91,5 @@ opts = statset('MaxIter',1e4);
 weights = 1./to_vals_error.^2;
 fit_mdl = fitnlm(to_pol_drift',vec_corr_to',modelfun,beta0,'Options',opts,'Weight',weights);%'ErrorModel','combined'
 plot_sexy(disp_config,to_pol_drift,vec_corr_to,weights,fit_mdl)
+end
+

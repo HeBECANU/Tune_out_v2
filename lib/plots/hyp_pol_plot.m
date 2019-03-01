@@ -1,5 +1,5 @@
+function dum  = hyp_pol_plot()
 %Script that scrapes the analysed data from dirs (currently messy but works)
-clear all
 %% setup directories
 loop_config.dir = {'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190213_to_hwp_168.5_nuller_reconfig_pdset_0.4v\';
     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190213_to_hwp_168.5_nuller_reconfig_pdset_0.7v\';
@@ -138,3 +138,4 @@ box on
 % set(gcf,'color','w')
 % set(gca,'FontSize',font_size_global,'FontName',font_name)
 % box on
+end

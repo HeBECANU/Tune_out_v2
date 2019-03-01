@@ -1,5 +1,5 @@
+function dum = spectral_purity_plot()
 %Script that scrapes the analysed data from dirs (currently messy but works)
-clear all
 %setup directories you wish to loop over
 loop_config.dir = {
     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190218_filt_dep_0\',
@@ -67,5 +67,15 @@ disp_config.plot_offset.val=predict(fit_mdl_lin,3);
 plot_sexy(disp_config,filt_num,to_freqs_val,wlin,fit_mdl_lin)
 
 
-
+% errorbar(x_grouped,(y_grouped(:,1)-plot_offset).*1e-6,yneg,ypos,'o','CapSize',0,'MarkerSize',5,'Color',colors_main(1,:),...
+%     'MarkerFaceColor',colors_detail(1,:),'LineWidth',1.5);
+% xlabel('Filter Number')
+% ylabel(sprintf('Tune-out value - %.3f (MHz)',plot_offset.*1e-6))
+% set(gca,'xlim',[-0.1,3.1])
+% %set(gca,'ylim',first_plot_lims(2,:))
+% set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
+% set(gcf,'color','w')
+% set(gca,'FontSize',font_size_global,'FontName',font_name)
+% box on
+end
 
