@@ -166,7 +166,7 @@ stokes_reconst=[
                 2*I_45_0-I_0_0-I_90_0,
                 2*I_45_90-I_0_0-I_90_0,
                 ];
-
+nfrac=0.02;
 stokes_noisy_reconst=[
                 I_0_0*(1+normrnd(0,1)*nfrac)+I_90_0*(1+normrnd(0,1)*nfrac),
                 I_0_0*(1+normrnd(0,1)*nfrac)-I_90_0*(1+normrnd(0,1)*nfrac),
@@ -179,7 +179,7 @@ fprintf('stokes truth\n')
 fprintf('%f\n',light_in)
 fprintf('stokes noise free reconst\n')
 fprintf('%f\n',stokes_reconst)
-nfrac=0.05;
+
 fprintf('stokes noisy(%f) reconst\n',nfrac)
 fprintf('%f\n',stokes_noisy_reconst)
 
