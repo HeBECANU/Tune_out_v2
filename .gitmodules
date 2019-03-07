@@ -13,6 +13,3 @@
 [submodule "lib/fast_sorted_mask"]
 	path = lib/fast_sorted_mask
 	url = https://github.com/brycehenson/fast_sorted_mask.git
-[submodule "lib/sewm"]
-	path = lib/sewm
-	url = https://github.com/spicydonkey/sewm.git
