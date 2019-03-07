@@ -53,7 +53,7 @@ git clone --recurse-submodules -j8 https://github.com/brycehenson/Tune_out_v2.gi
 ```
 then to update 
 ```
-git submodule update --remote --merge
+git submodule update --init --recursive --remote --merge
 ```
 
 
