@@ -79,10 +79,11 @@ A=2*sqrt(polz_data(:,2).*polz_data(:,4))./(polz_data(:,2)+polz_data(:,4));
 %fit sin waves to the two sets of data
 modelfun = @(b,x) b(1).*sin(x(:,1).*2*pi./180 -b(3).*(2*pi/360) )+b(2);
 opts = statset('MaxIter',1e4);
-beta0 = [1e3,-to_lin_val,qwp_cen_angle]; %intial guesses
+beta0 = [6e3,to_lin_val,qwp_cen_angle]; %intial guesses
 wlin=1./(to_vals_lin_quad(:,3).^2);
 fit_mdl_lin = fitnlm(qwp_ang,to_vals_lin_quad(:,2),modelfun,beta0,...
     'Options',opts,'Weights',wlin,'CoefficientNames' ,{'amp','freq_offset','fast_angle'});
+
 
 
 sfigure(3)
@@ -90,6 +91,15 @@ clf
 set(gcf,'color','w')
 xlabel('QWP angle (º)')
 ylabel(sprintf('Tune out value Relative to Linear Pol (MHz)'))
+colors_main=[[233,87,0];[33,188,44];[0,165,166]];
+colors_main=colors_main./255;
+lch=colorspace('RGB->LCH',colors_main(:,:));
+lch(:,1)=lch(:,1)+20;
+colors_detail=colorspace('LCH->RGB',lch);
+%would prefer to use srgb_2_Jab here
+color_shaded=colorspace('RGB->LCH',colors_main(3,:));
+color_shaded(1)=100;
+color_shaded=colorspace('LCH->RGB',color_shaded);
 ci_size_disp=1-erf(1/sqrt(2));%one sd %confidence interval to display
 plot_padd=50;
 xsamp = linspace(min(qwp_ang)-plot_padd,max(qwp_ang)+plot_padd,1e4).';
@@ -101,7 +111,8 @@ hold on
 plot(xsamp,y_lin-to_lin_val,'b-','LineWidth',1.6)
 plot(xsamp,yci_lin(:,1)-to_lin_val,'-','LineWidth',1.6,'Color',[1,1,1]*0.6)
 plot(xsamp,yci_lin(:,2)-to_lin_val,'-','LineWidth',1.6,'Color',[1,1,1]*0.6)
-errorbar(qwp_ang,to_vals_lin_quad(:,2)-to_lin_val,to_vals_lin_quad(:,3),'xk')
+errorbar(qwp_ang,to_vals_lin_quad(:,2)-to_lin_val,to_vals_lin_quad(:,3),'o','CapSize',0,'MarkerSize',5,'Color',colors_main(1,:),...
+    'MarkerFaceColor',colors_detail(1,:),'LineWidth',2.5)
 hold off
 box on
 xlim([120,320])

@@ -63,11 +63,11 @@ a_min=I_p_psi_chi(:,3)+pi/2;
 
 %as expexted there is no measurabl difference
 
-%%
+%% What about if we measure the angle of the polarizer to give min/max power as a function of quater wp angle
 
 rotate_angle_common=pi/2; %free parameter
 rotate_angle_diff=-pi*7/8; %free parameter
-impurity_angle=pi*0.001;
+impurity_angle=pi*0.01;
 qwp_fast_angle_offset=0*(pi/180);
 lightin_pcirc=stokes_elip(impurity_angle,rotate_angle_common); %first argument 0 is pure lin pi/2 is pure circ, second is roatation
 lightin_ncirc=stokes_elip(-impurity_angle,rotate_angle_common+rotate_angle_diff); %first argument 0 is pure lin pi/2 is pure circ, second is roatation
@@ -133,15 +133,66 @@ hold off
 ylabel('min power of PBS')
 xlabel(sprintf('qwp angle %s',angle_conv_label))
 
+%looks like that gives a very measurable signal, in fact see handedness_data.m for some data i took on this
+
+%% Simulating measuring stokes parameters
+% ok so there is another fairly common approach at polarimitery which is described https://www.fiberoptics4sale.com/blogs/wave-optics/103674886-how-to-measure-stokes-polarization-parameters
+%Bryce:TO DO: elminate hwp by using rotation of the lin polarizer
+
+light_in=light_lr_circ{1};
+
+%measure I(0,0)
+angle_pol=0*pi/180;
+light_after_pol=mueller_stokes(mueller_rotate(mueller_linpolarizer,angle_pol),light_in);
+I_0_0=light_after_pol(1);
+
+angle_pol=45*pi/180;
+light_after_pol=mueller_stokes(mueller_rotate(mueller_linpolarizer,angle_pol),light_in);
+I_45_0=light_after_pol(1);
+
+angle_pol=90*pi/180;
+light_after_pol=mueller_stokes(mueller_rotate(mueller_linpolarizer,angle_pol),light_in);
+I_90_0=light_after_pol(1);
+
+angle_qwp=90*pi/180;
+angle_pol=45*pi/180;
+light_after_qwp=mueller_stokes(mueller_rotate(mueller_linretarder(2*pi/4),angle_qwp),light_in);
+light_after_pol=mueller_stokes(mueller_rotate(mueller_linpolarizer,angle_pol),light_after_qwp);
+I_45_90=light_after_pol(1);
+
+stokes_reconst=[
+                I_0_0+I_90_0,
+                I_0_0-I_90_0,
+                2*I_45_0-I_0_0-I_90_0,
+                2*I_45_90-I_0_0-I_90_0,
+                ];
+nfrac=0.02;
+stokes_noisy_reconst=[
+                I_0_0*(1+normrnd(0,1)*nfrac)+I_90_0*(1+normrnd(0,1)*nfrac),
+                I_0_0*(1+normrnd(0,1)*nfrac)-I_90_0*(1+normrnd(0,1)*nfrac),
+                2*I_45_0*(1+normrnd(0,1)*nfrac)-I_0_0*(1+normrnd(0,1)*nfrac)-I_90_0*(1+normrnd(0,1)*nfrac),
+                2*I_45_90*(1+normrnd(0,1)*nfrac)-I_0_0-I_90_0*(1+normrnd(0,1)*nfrac),
+                ];
+            
+%ok we can see that we get out the correct stokes parameters
+fprintf('stokes truth\n')
+fprintf('%f\n',light_in)
+fprintf('stokes noise free reconst\n')
+fprintf('%f\n',stokes_reconst)
+
+fprintf('stokes noisy(%f) reconst\n',nfrac)
+fprintf('%f\n',stokes_noisy_reconst)
 
 
-%%
-%lightin_pcirc=stokes_elip(impurity_angle,rotate_angle);
-% qwp_angle=0.2
-wp_angles = linspace(0,2*pi,100);
-fdlts = zeros(size(wp_angles));
-for ii=1:length(wp_angles)
-    fdlts(ii) = trace(mueller_rotate(mueller_linretarder(2*pi/4),0)*mueller_rotate(mueller_linretarder(2*pi/4),wp_angles(ii)))/4;
-end
-sfigure(889);
-plot(wp_angles,fdlts)
+
+
+%% BRYCE:COM: What IS THIS FOR????
+% %lightin_pcirc=stokes_elip(impurity_angle,rotate_angle);
+% % qwp_angle=0.2
+% wp_angles = linspace(0,2*pi,100);
+% fdlts = zeros(size(wp_angles));
+% for ii=1:length(wp_angles)
+%     fdlts(ii) = trace(mueller_rotate(mueller_linretarder(2*pi/4),0)*mueller_rotate(mueller_linretarder(2*pi/4),wp_angles(ii)))/4;
+% end
+% sfigure(889);
+% plot(wp_angles,fdlts)

@@ -41,21 +41,28 @@ loop_config.dir = {
     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190203_to_hwp_151_nuller_reconfig\'
     };
 
+%add all subfolders to the path
+this_folder = fileparts(which(mfilename));
+folder=strsplit(this_folder,filesep); %split path into folders
+folder=strjoin(folder(1:end-2),filesep); %go up two
+% Add that folder plus all subfolders to the path.
+addpath(genpath(folder));
+
 data = to_data(loop_config);
 drift_data_compiled = data.drift;
 main_data_compiled = data.main;
 TO_st_pt = 7.257355*1e14;
 selected_dirs = 1:numel(loop_config.dir);
-to_pol = zeros(numel(loop_config.dir),1);
-to_pol_drift = zeros(numel(data.drift.to_time),1);
+tmp_to_lin_pol_angle = zeros(numel(loop_config.dir),1);
+to_lin_pol_angle = zeros(numel(data.drift.to_time),1);
 shot_idx = 1;
 
 for loop_idx=selected_dirs
     current_dir = loop_config.dir{loop_idx};
     strt = strfind(current_dir,'hwp_');
     fin = strfind(current_dir,'_n');
-    to_pol(loop_idx) = str2num(current_dir(strt+4:fin-1));
-    to_pol_drift(shot_idx:(shot_idx+data.main.scan_num(loop_idx)-1),1) = ones(data.main.scan_num(loop_idx),1).*to_pol(loop_idx);
+    tmp_to_lin_pol_angle(loop_idx) = str2num(current_dir(strt+4:fin-1));
+    to_lin_pol_angle(shot_idx:(shot_idx+data.main.scan_num(loop_idx)-1),1) = ones(data.main.scan_num(loop_idx),1).*tmp_to_lin_pol_angle(loop_idx);
     shot_idx = shot_idx+data.main.scan_num(loop_idx);
 end
 %% configs
@@ -65,24 +72,23 @@ ci_size_cut_outliers=1-erf(10/sqrt(2));%1-erf(zvalue/sqrt(2)) %confidence interv
 %%
 fprintf('Fixed period fit Single Scans\n')
 
-vec_corr_to = data.drift.to_val{1}./1e6;
-to_vals_error = data.drift.to_val{2}./1e6;
+vec_corr_to = data.drift.to_val{1}./1e6; %convert to blue
+to_vals_error = data.drift.to_val{2}./1e6; %convert to blue
 
 %fit sin waves to the two sets of data
 beta0 = [1e3,0.5,nanmean(vec_corr_to)]; %intial guesses
 wlin=1./(to_vals_error.^2);
-fit_mdl_lin = fitnlm(to_pol_drift,vec_corr_to,modelfun,beta0,...
+fit_mdl_lin = fitnlm(to_lin_pol_angle,vec_corr_to,modelfun,beta0,...
     'Options',opts,'Weights',wlin,'CoefficientNames' ,{'amp','phase','offset'});
 
 %cut outliers
-[to_predict,yci_cull_lim]=predict(fit_mdl_lin,to_pol_drift,'Prediction','observation','Alpha',ci_size_cut_outliers);
+[to_predict,yci_cull_lim]=predict(fit_mdl_lin,to_lin_pol_angle,'Prediction','observation','Alpha',ci_size_cut_outliers);
 is_outlier_idx=vec_corr_to>yci_cull_lim(:,1) & vec_corr_to<yci_cull_lim(:,2);
 vec_corr_to_trim = vec_corr_to(is_outlier_idx);
 to_res = vec_corr_to-to_predict;
 
 beta0 = fit_mdl_lin.Coefficients{:,1}'; %intial guesses
-% fit_mdl_lin = fitnlm(to_pol_drift(is_outlier_idx),vec_corr_to(is_outlier_idx),modelfun,beta0,...
-%     'Options',opts,'Weights',wlin,'CoefficientNames' ,{'amp','phase','offset'});
+
 lin_fit_max=[fit_mdl_lin.Coefficients.Estimate(1)+fit_mdl_lin.Coefficients.Estimate(3)...
     sqrt(fit_mdl_lin.Coefficients.SE(1)^2+fit_mdl_lin.Coefficients.SE(3)^2)];
 
@@ -90,7 +96,7 @@ sfigure(8319);
 clf
 ci_size_disp=1-erf(1/sqrt(2));%one sd %confidence interval to display
 plot_padd=20;
-xsamp = linspace(min(to_pol_drift)-plot_padd,max(to_pol_drift)+plot_padd,1e4).';
+xsamp = linspace(min(to_lin_pol_angle)-plot_padd,max(to_lin_pol_angle)+plot_padd,1e4).';
 fit_values = fit_mdl_lin.Coefficients{:,1};
 %subplot(2,1,1)
 hold on
@@ -99,16 +105,32 @@ xlabel('Input Pol angle (degrees)')
 ylabel(sprintf('Tune out value-%.1f±%.1f (MHz)',lin_fit_max(1),lin_fit_max(2)) )
 fprintf('Tune out value-%.1f±%.1f (MHz) (BLUE)\n',lin_fit_max(1),lin_fit_max(2))
 fprintf('Tune out value-%.1f±%.1f (MHz) (RED)\n',lin_fit_max(1)/2,lin_fit_max(2)/2)
-errorbar(to_pol_drift,vec_corr_to_trim-lin_fit_max(1),to_vals_error(is_outlier_idx),'ko')
+errorbar(to_lin_pol_angle,vec_corr_to_trim-lin_fit_max(1),to_vals_error(is_outlier_idx),'ko')
 [y_lin,yci_lin]=predict(fit_mdl_lin,xsamp,'Prediction','observation','Alpha',ci_size_disp); %'Prediction','observation'
 %y_lin = b1(1).*(cos(xsamp.*pi/180+b1(2).*2*pi).^2)+b1(3);
 plot(xsamp,y_lin-lin_fit_max(1),'b-','LineWidth',1.6)
 plot(xsamp,yci_lin(:,1)-lin_fit_max(1),'r-','LineWidth',1.6)
 plot(xsamp,yci_lin(:,2)-lin_fit_max(1),'r-','LineWidth',1.6)
-errorbar(to_pol_drift(~is_outlier_idx),vec_corr_to(~is_outlier_idx)-lin_fit_max(1),to_vals_error(~is_outlier_idx),'rx')
+errorbar(to_lin_pol_angle(~is_outlier_idx),vec_corr_to(~is_outlier_idx)-lin_fit_max(1),to_vals_error(~is_outlier_idx),'rx')
 box on
 set(gcf,'color','w')
 set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
+
+%make a nice figure
+sfigure(8320);
+disp_config.colors_main = [[75,151,201];[193,114,66];[87,157,95]];
+disp_config.plot_title = '';
+disp_config.x_label = 'Input Polarization Angle (Degrees)';
+disp_config.font_name = 'cmr10';
+disp_config.font_size_global=14;
+disp_config.opts=statset('nlinfit');
+disp_config.fig_number=3400;
+disp_config.bin_tol=0.01;
+disp_config.plot_offset.val=lin_fit_max(1);
+disp_config.plot_offset.unc=lin_fit_max(2);
+plot_sexy(disp_config,to_lin_pol_angle,vec_corr_to,wlin,fit_mdl_lin)
+
+
 
 
 %% Plot tune out value against parameters in the analysis (to see if there is any underling corralations)
@@ -117,7 +139,7 @@ weights = 1./(data.drift.to_val{2}./1e6).^2;
 sfigure(1923);
 clf
 subplot(4,4,1)
-corr_plot(to_pol_drift,to_res,weights);
+corr_plot(to_lin_pol_angle,to_res,weights);
 xlabel('Pol Angle')
 ylabel(' Residual (MHz)')
 subplot(4,4,2)
@@ -190,11 +212,11 @@ to_vals_error = data.drift.to_val{2}./1e6;
 %fit sin waves to the two sets of data
 beta0 = [1e3,0.5,nanmean(vec_corr_to)]; %intial guesses
 wlin=1./(to_vals_error.^2);
-fit_mdl_lin = fitnlm(to_pol_drift,vec_corr_to,modelfun,beta0,...
+fit_mdl_lin = fitnlm(to_lin_pol_angle,vec_corr_to,modelfun,beta0,...
     'Options',opts,'Weights',wlin,'CoefficientNames' ,{'amp','phase','offset'});
 
 %cut outliers
-[to_predict,yci_cull_lim]=predict(fit_mdl_lin,to_pol_drift,'Prediction','observation','Alpha',ci_size_cut_outliers);
+[to_predict,yci_cull_lim]=predict(fit_mdl_lin,to_lin_pol_angle,'Prediction','observation','Alpha',ci_size_cut_outliers);
 is_outlier_idx=vec_corr_to>yci_cull_lim(:,1) & vec_corr_to<yci_cull_lim(:,2);
 vec_corr_to_trim = vec_corr_to(is_outlier_idx);
 to_res = vec_corr_to-to_predict;
@@ -209,7 +231,7 @@ sfigure(8119);
 clf
 ci_size_disp=1-erf(1/sqrt(2));%one sd %confidence interval to display
 plot_padd=20;
-xsamp = linspace(min(to_pol_drift)-plot_padd,max(to_pol_drift)+plot_padd,1e4).';
+xsamp = linspace(min(to_lin_pol_angle)-plot_padd,max(to_lin_pol_angle)+plot_padd,1e4).';
 fit_values = fit_mdl_lin.Coefficients{:,1};
 %subplot(2,1,1)
 hold on
@@ -218,13 +240,13 @@ xlabel('Input Pol angle (degrees)')
 ylabel(sprintf('Tune out value-%.1f±%.1f (MHz)',lin_fit_max(1),lin_fit_max(2)) )
 fprintf('Tune out value-%.1f±%.1f (MHz) (BLUE)\n',lin_fit_max(1),lin_fit_max(2))
 fprintf('Tune out value-%.1f±%.1f (MHz) (RED)\n',lin_fit_max(1)/2,lin_fit_max(2)/2)
-errorbar(to_pol_drift,vec_corr_to_trim-lin_fit_max(1),to_vals_error(is_outlier_idx),'ko')
+errorbar(to_lin_pol_angle,vec_corr_to_trim-lin_fit_max(1),to_vals_error(is_outlier_idx),'ko')
 [y_lin,yci_lin]=predict(fit_mdl_lin,xsamp,'Prediction','observation','Alpha',ci_size_disp); %'Prediction','observation'
 %y_lin = b1(1).*(cos(xsamp.*pi/180+b1(2).*2*pi).^2)+b1(3);
 plot(xsamp,y_lin-lin_fit_max(1),'b-','LineWidth',1.6)
 plot(xsamp,yci_lin(:,1)-lin_fit_max(1),'r-','LineWidth',1.6)
 plot(xsamp,yci_lin(:,2)-lin_fit_max(1),'r-','LineWidth',1.6)
-errorbar(to_pol_drift(~is_outlier_idx),vec_corr_to(~is_outlier_idx)-lin_fit_max(1),to_vals_error(~is_outlier_idx),'rx')
+errorbar(to_lin_pol_angle(~is_outlier_idx),vec_corr_to(~is_outlier_idx)-lin_fit_max(1),to_vals_error(~is_outlier_idx),'rx')
 box on
 set(gcf,'color','w')
 set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])

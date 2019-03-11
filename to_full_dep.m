@@ -41,6 +41,10 @@ loop_config.dir = {
 data.hwp = to_data(loop_config);
 %% QWP
 loop_config.dir = {
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190304_qwp_280_pure',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190302_qwp_283_pure_long',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190301_qwp_283_pure_run',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190301_qwp_246_2',
     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190227_qwp_270',
     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190227_qwp_286',
     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190227_qwp_310',
@@ -65,7 +69,11 @@ loop_config.dir = {
 data.qwp = to_data(loop_config);
 %% MIX
 loop_config.dir = {
-    
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190307_hwp_06_qwp_290',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190305_hwp_340_qwp_270',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190307_hwp_10_qwp_280',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190306_overnight_hwp_354_qwp_268',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190306_hwp_350_qwp_274'
 };
 data.mix = to_data(loop_config);
 

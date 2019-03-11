@@ -28,12 +28,14 @@ function Out = csv2struct(filename)
 %
 % Written by Jarek Tuszynski, Leidos, jaroslaw.w.tuszynski_at_leidos.com
 % Code covered by BSD License
+
 %% read xls file with a single header row
 [~, ~, raw] = xlsread(filename);
 nRow = size(raw,1);
 nCol = size(raw,2);
 header = raw(1,:);   % Store header information
 raw(1,:) = [];       % Remove headed from the data
+
 %% Split data into txt & num parts
 num = [];
 txt = [];
@@ -53,6 +55,7 @@ for c = 1:nCol
   end
 end
 clear raw
+
 %% Create struct with fields derived from column names from header
 iNum = 1;
 iTxt = 1;

@@ -2,6 +2,7 @@ function dum = hwp_to_plot()
 %complete plot of hwp
 %Script that scrapes the analysed data from dirs (currently messy but works)
 %setup directories you wish to loop over
+% BEGIN USER VAR-------------------------------------------------
 loop_config.dir = {
     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_51_nuller_reconfig\',
     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190203_to_hwp_29_nuller_reconfig\',
@@ -41,6 +42,15 @@ loop_config.dir = {
     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190201_to_hwp_111_nuller_reconfig\',
     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190203_to_hwp_151_nuller_reconfig\'
     };
+% END USER VAR-----------------------------------------------------------
+
+%add all subfolders to the path
+this_folder = fileparts(which(mfilename));
+folder=strsplit(this_folder,filesep); %spllit path into folders
+folder=strjoin(folder(1:end-2),filesep); %go up two
+% Add that folder plus all subfolders to the path.
+addpath(genpath(folder));
+
 
 data = to_data(loop_config);
 drift_data_compiled = data.drift;
@@ -64,18 +74,22 @@ vec_corr_to = data.drift.to_val{1}./1e6;
 to_vals_error = data.drift.to_val{2}./1e6;
 
 %fit sin waves to the two sets of data
-modelfun = @(b,x) b(1).*(cos(x(:,1).*pi./180+b(2).*2*pi).^2)+b(3);
-opts = statset('MaxIter',1e4);
+
 beta0 = [1e3,0.5,nanmean(vec_corr_to)]; %intial guesses
-disp_config.num_bin = 20; 
 disp_config.colors_main = [[233,87,0];[33,188,44];[0,165,166]];
 disp_config.plot_title = 'Tune-out Dependence on Input Polarization Angle';
+disp_config.x_label='Input Polarization angle (degrees)';
 disp_config.font_name = 'cmr10';
 disp_config.font_size_global=14;
-disp_config.mdl_fun = modelfun;
-disp_config.beta0 = beta0;
 disp_config.opts=statset('nlinfit');
 disp_config.fig_number=3400;
-plot_sexy(disp_config,to_pol_drift,vec_corr_to,to_vals_error)
-xlabel('Input Polarization angle (degrees)')
+<<<<<<< HEAD
+disp_config.bin_tol=0.01;
+
+modelfun = @(b,x) b(1).*(cos(x(:,1).*pi./180+b(2).*2*pi).^2)+b(3);
+opts = statset('MaxIter',1e4);
+weights = 1./to_vals_error.^2;
+fit_mdl = fitnlm(to_pol_drift',vec_corr_to',modelfun,beta0,'Options',opts,'Weight',weights);%'ErrorModel','combined'
+plot_sexy(disp_config,to_pol_drift,vec_corr_to,weights,fit_mdl)
 end
+

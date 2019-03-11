@@ -116,7 +116,7 @@ loop_config.dir = {
     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190223_qwp_150',
     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190221_to_amp_7',
     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190221_to_amp_3',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190217_to_hwp_168.5_nuller_reconfig_new_fiber_pdset_1.0v_wide',
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190217_to_hwp_168.5_nuller_reconfig_new_fiber_pdset_1.0v_wide',
     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190216_to_hwp_168.5_nuller_reconfig_new_fiber_pdset_1.0v_short_run',
     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190216_to_hwp_168.5_nuller_reconfig_new_fiber_pdset_1.0v_bad_laser_2',
     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190216_to_hwp_168.5_nuller_reconfig_new_fiber_pdset_1.0v_bad_laser_1',
@@ -246,7 +246,7 @@ loop_config.set_pt = [1.4,1.4,1.5,1.5,1.5,1.5,1.5,1.5,1.0,1.0,1.0,1.0,1.0,1.0,1.
     1.0,1.0,1.0,1.0,1.0,1.0,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,0....
     5.0, 5.0, 8.0, 8.0, 3.0, 3, 3, 5, 5, 2,5,3,5 ,5,5,5];
 %selected_dirs = 1:numel(loop_config.dir); %which files to loop over (currently all)
-selected_dirs = 1;
+selected_dirs = 18;
 
 
 for dir_idx = selected_dirs
