@@ -1,6 +1,3 @@
-[submodule "lib/bootstrap_error"]
-	path = lib/bootstrap_error
-	url = https://github.com/brycehenson/bootstrap_error.git
 [submodule "fileexchange_utils/Violinplot-Matlab"]
 	path = fileexchange_utils/Violinplot-Matlab
 	url = https://github.com/bastibe/Violinplot-Matlab.git

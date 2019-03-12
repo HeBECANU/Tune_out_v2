@@ -26,7 +26,11 @@ to_vals_lin_quad = [
      286,725736861.9,90,725736679.4,129; %should not be use in final value as has no analog logs
      310,725741328.1,87,725741307.8,104;
      286.5,725737277.3,79,725737412.3,105;
-     270,725733518.4,83,725733480.3,96
+     270,725733518.4,83,725733480.3,96;
+     246,725729215.0,103,725729418,121;
+     283,725735078.9,45,725735160.3,81;
+     283,725736295.0,22,725736324.0,35;
+     280,725735737.3,36,725735760.8,54
      ];
 
 polz_data = [
@@ -50,7 +54,11 @@ polz_data = [
    286,1.2,201,0.05,352; %again don't use in final value
    310,140.7,117,40.8,205;
    286.5,165,88.5,2.18,179;
-   270,167.3,248,5.37,159
+   270,167.3,248,5.37,159;
+   246,127,29,45,136;
+   283,195,83,0.6,352;
+   283,195,83,0.6,352;
+   280,168,257,0.13,171
    ];%
 
 to_lin_val=725736124;
@@ -60,16 +68,12 @@ qwp_cen_angle=195;
 qwp_ang= polz_data(:,1);
 %hwp_ang = hwp_ang-360.*(hwp_ang>180);
 %0.32,91,230,7,240,0;
-A=2*polz_data(:,2).*polz_data(:,4)./(polz_data(:,2).^2+polz_data(:,4).^2);
-
+%A=2*polz_data(:,2).*polz_data(:,4)./(polz_data(:,2).^2+polz_data(:,4).^2);
+pol_power_dif=(-polz_data(:,4)+polz_data(:,1))./(polz_data(:,4)+polz_data(:,1));
 A=2*sqrt(polz_data(:,2).*polz_data(:,4))./(polz_data(:,2)+polz_data(:,4));
 
 %%
-sfigure(3)
-clf
-set(gcf,'color','w')
-xlabel('QWP angle (º)')
-ylabel(sprintf('Tune out value Relative to Linear Pol (MHz)'))
+
 
 
 %fit sin waves to the two sets of data
@@ -81,6 +85,12 @@ fit_mdl_lin = fitnlm(qwp_ang,to_vals_lin_quad(:,2),modelfun,beta0,...
     'Options',opts,'Weights',wlin,'CoefficientNames' ,{'amp','freq_offset','fast_angle'});
 
 
+
+sfigure(3)
+clf
+set(gcf,'color','w')
+xlabel('QWP angle (º)')
+ylabel(sprintf('Tune out value Relative to Linear Pol (MHz)'))
 colors_main=[[233,87,0];[33,188,44];[0,165,166]];
 colors_main=colors_main./255;
 lch=colorspace('RGB->LCH',colors_main(:,:));
@@ -90,10 +100,6 @@ colors_detail=colorspace('LCH->RGB',lch);
 color_shaded=colorspace('RGB->LCH',colors_main(3,:));
 color_shaded(1)=100;
 color_shaded=colorspace('LCH->RGB',color_shaded);
-
-
-
-
 ci_size_disp=1-erf(1/sqrt(2));%one sd %confidence interval to display
 plot_padd=50;
 xsamp = linspace(min(qwp_ang)-plot_padd,max(qwp_ang)+plot_padd,1e4).';
@@ -116,6 +122,7 @@ set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
 [~,A_min_idx] = min(A);
 counts = 1:length(A);
 sign_flip = ones(size(A')).*(1-2*(counts>A_min_idx));
+sign_flip = ones(size(A')).*(1-2*(45>abs(polz_data(:,1)'-235)));
 A_plot = A.*sign_flip';
 
 sfigure(7920);
@@ -133,3 +140,12 @@ suptitle('TO dependence on ?pplz')
 subplot(2,2,4)
 scatter(polz_data(:,1),unwrap(mod(polz_data(:,5)+45,180).*pi/180))
 title('qwp vs min pol ang')
+sfigure(2782);
+subplot(2,1,1)
+scatter(polz_data(:,1),pol_power_dif)
+xlabel('QWP ang')
+ylabel('pol power dif')
+subplot(2,1,2)
+scatter(polz_data(:,1),mod(polz_data(:,5),180))
+xlabel('QWP ang')
+ylabel('min power ang')
