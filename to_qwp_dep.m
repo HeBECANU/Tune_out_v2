@@ -30,8 +30,11 @@ to_vals_lin_quad = [
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
      270,725733518.4,83,725733480.3,96
 =======
+=======
+>>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
 =======
 >>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
 =======
@@ -46,6 +49,9 @@ to_vals_lin_quad = [
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
+=======
 >>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
 =======
 >>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
@@ -80,8 +86,11 @@ polz_data = [
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
    270,167.3,248,5.37,159
 =======
+=======
+>>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
 =======
 >>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
 =======
@@ -96,6 +105,9 @@ polz_data = [
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
+=======
 >>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
 =======
 >>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
@@ -116,8 +128,13 @@ qwp_ang= polz_data(:,1);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 A=2*polz_data(:,2).*polz_data(:,4)./(polz_data(:,2).^2+polz_data(:,4).^2);
 
+=======
+%A=2*polz_data(:,2).*polz_data(:,4)./(polz_data(:,2).^2+polz_data(:,4).^2);
+pol_power_dif=(-polz_data(:,4)+polz_data(:,1))./(polz_data(:,4)+polz_data(:,1));
+>>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
 =======
 %A=2*polz_data(:,2).*polz_data(:,4)./(polz_data(:,2).^2+polz_data(:,4).^2);
 pol_power_dif=(-polz_data(:,4)+polz_data(:,1))./(polz_data(:,4)+polz_data(:,1));
@@ -162,9 +179,12 @@ color_shaded=colorspace('LCH->RGB',color_shaded);
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 
 
+=======
+>>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
 =======
 >>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
 =======
@@ -228,8 +248,11 @@ scatter(polz_data(:,1),unwrap(mod(polz_data(:,5)+45,180).*pi/180))
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 title('qwp vs min pol ang')
 =======
+=======
+>>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
 =======
 >>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
 =======
@@ -248,6 +271,10 @@ xlabel('QWP ang')
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+ylabel('min power ang')
+>>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
+=======
 ylabel('min power ang')
 >>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
 =======

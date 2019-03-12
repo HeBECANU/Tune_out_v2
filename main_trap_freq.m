@@ -88,6 +88,7 @@ loop_config.dir = {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190227_qwp_270',
     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190227_qwp_286',
 <<<<<<< HEAD
@@ -103,6 +104,8 @@ loop_config.dir = {
 >>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
 =======
 >>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
+=======
+>>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190227_qwp_270\',
     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190227_qwp_286',
     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190227_qwp_310',
@@ -110,6 +113,9 @@ loop_config.dir = {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
+=======
 >>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
 =======
 >>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
@@ -264,8 +270,11 @@ loop_config.dir = {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 loop_config.set_pt = [1.4,1.5,1.5,1.5,1.5,1.5,1.5,1.0,1.0,1.0,1.0,1.0,1.0,1.0, 1.0,1.0,1.0,1.0,1.0,2.5,2.51,0.6,0.4,0.7,0.8,0.4,0.2,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,0.31,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25 1.25, 9.0, 5.0, 5.0, 8.0, 8.0, 3.0, 3, 3, 5, 5, 2,5,3,5 ,5,5,5];
 =======
+=======
+>>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
 =======
 >>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
 =======
@@ -279,6 +288,9 @@ loop_config.set_pt = [1.4,1.4,1.5,1.5,1.5,1.5,1.5,1.5,1.0,1.0,1.0,1.0,1.0,1.0,1.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
+=======
 >>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
 =======
 >>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
