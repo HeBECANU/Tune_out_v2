@@ -237,7 +237,7 @@ loop_config.set_pt = [1.4,1.4,1.5,1.5,1.5,1.5,1.5,1.5,1.0,1.0,1.0,1.0,1.0,1.0,1.
     5.0, 5.0, 8.0, 8.0, 3.0, 3, 3, 5, 5, 2,5,3,5 ,5,5,5];
 
 %selected_dirs = 1:numel(loop_config.dir); %which files to loop over (currently all)
-selected_dirs = 18;
+selected_dirs = 1;
 
 
 for dir_idx = selected_dirs
