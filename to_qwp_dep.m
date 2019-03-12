@@ -27,13 +27,19 @@ to_vals_lin_quad = [
      310,725741328.1,87,725741307.8,104;
      286.5,725737277.3,79,725737412.3,105;
 <<<<<<< HEAD
+<<<<<<< HEAD
      270,725733518.4,83,725733480.3,96
 =======
+=======
+>>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
      270,725733518.4,83,725733480.3,96;
      246,725729215.0,103,725729418,121;
      283,725735078.9,45,725735160.3,81;
      283,725736295.0,22,725736324.0,35;
      280,725735737.3,36,725735760.8,54
+<<<<<<< HEAD
+>>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
+=======
 >>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
      ];
 
@@ -59,13 +65,19 @@ polz_data = [
    310,140.7,117,40.8,205;
    286.5,165,88.5,2.18,179;
 <<<<<<< HEAD
+<<<<<<< HEAD
    270,167.3,248,5.37,159
 =======
+=======
+>>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
    270,167.3,248,5.37,159;
    246,127,29,45,136;
    283,195,83,0.6,352;
    283,195,83,0.6,352;
    280,168,257,0.13,171
+<<<<<<< HEAD
+>>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
+=======
 >>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
    ];%
 
@@ -77,8 +89,13 @@ qwp_ang= polz_data(:,1);
 %hwp_ang = hwp_ang-360.*(hwp_ang>180);
 %0.32,91,230,7,240,0;
 <<<<<<< HEAD
+<<<<<<< HEAD
 A=2*polz_data(:,2).*polz_data(:,4)./(polz_data(:,2).^2+polz_data(:,4).^2);
 
+=======
+%A=2*polz_data(:,2).*polz_data(:,4)./(polz_data(:,2).^2+polz_data(:,4).^2);
+pol_power_dif=(-polz_data(:,4)+polz_data(:,1))./(polz_data(:,4)+polz_data(:,1));
+>>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
 =======
 %A=2*polz_data(:,2).*polz_data(:,4)./(polz_data(:,2).^2+polz_data(:,4).^2);
 pol_power_dif=(-polz_data(:,4)+polz_data(:,1))./(polz_data(:,4)+polz_data(:,1));
@@ -108,9 +125,12 @@ color_shaded=colorspace('RGB->LCH',colors_main(3,:));
 color_shaded(1)=100;
 color_shaded=colorspace('LCH->RGB',color_shaded);
 
+<<<<<<< HEAD
 
 
 
+=======
+>>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
 sfigure(3)
 clf
 set(gcf,'color','w')
@@ -165,8 +185,11 @@ suptitle('TO dependence on ?pplz')
 subplot(2,2,4)
 scatter(polz_data(:,1),unwrap(mod(polz_data(:,5)+45,180).*pi/180))
 <<<<<<< HEAD
+<<<<<<< HEAD
 title('qwp vs min pol ang')
 =======
+=======
+>>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
 title('qwp vs min pol ang')
 sfigure(2782);
 subplot(2,1,1)
@@ -176,5 +199,9 @@ ylabel('pol power dif')
 subplot(2,1,2)
 scatter(polz_data(:,1),mod(polz_data(:,5),180))
 xlabel('QWP ang')
+<<<<<<< HEAD
+ylabel('min power ang')
+>>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
+=======
 ylabel('min power ang')
 >>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
