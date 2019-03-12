@@ -35,7 +35,7 @@ for loop_idx=selected_dirs
         while ~and(isfile([current_dir,'out\',most_recent_dir.name,'\main_data.mat']),isfile([current_dir,'out\',most_recent_dir.name,'\drift_data.mat']))
             offset = offset + 1;
             most_recent_dir=out_dirs(end-offset,1);
-            check = drift_data.avg_coef; %check if it has the avg coefs update
+            %check = drift_data.avg_coef; %check if it has the avg coefs update
         end
     catch e
         fprintf('\n dir: %s didnt work \n',current_dir)

@@ -268,8 +268,7 @@ xlim([0 3])
 %% Have a look at the residuals
 %res = ydat_culled-predict(mdl_culled,xdat_culled','Alpha',0.2)';
 
-% Cluster the data for a nice display
-%find the unique values with some tolerance
+%% Make a clean plot with single markers pre freq
 
 bin_center=uniquetol(xdat_culled,1e-3);
 bin_edges=[-inf,(bin_center(2:end)+bin_center(1:end-1))/2,inf];
@@ -287,12 +286,12 @@ end
 %Finally plot a nice version of the quad fit
 %set up the colors to use
 colors_main=[[233,87,0];[33,188,44];[0,165,166]];
-plot_title='Tune-Out Fit';
+
 font_name='cmr10';
 font_size_global=14;
 
 %we add another offset so that the plot is about the TO
-plot_offset=1*(to_res.fit_trimmed.to_freq{2}-freq_offset)*1e-9;
+plot_offset=1*(to_res.fit_trimmed.to_freq{1}-freq_offset)*1e-9;
 x_res_grouped=x_res_grouped-plot_offset;
 
 
@@ -313,17 +312,18 @@ hold on
 plot(xsamp_culled-plot_offset,yci_culled','r','color',colors_main(3,:),'LineWidth',1.5);
 xl=xlim;
 line(xl,[0,0],'color','k','LineWidth',1)
-title(plot_title)
 plot(xsamp_culled-plot_offset,ysamp_culled,'-','color',colors_main(2,:),'LineWidth',1.5)
 errorbar(x_res_grouped,ydat_chunks(:,1),ydat_chunks(:,2),'o','CapSize',0,'MarkerSize',5,'Color',colors_main(1,:),...
     'MarkerFaceColor',colors_detail(1,:),'LineWidth',1.5);
-xlabel(sprintf('Probe Beam (Optical) Frequency - %.3f (GHz)',freq_offset*1e-9-plot_offset))
+xlabel(sprintf('Probe Beam (Optical) Frequency - %.3f (GHz)',freq_offset*1e-9-plot_offset)) %TODO the pobe beam should be converted to the blue size much earlier in code 
 ylabel('Response (Hz^2)')
 set(gca,'xlim',[floor(min(x_res_grouped)),ceil(max(x_res_grouped))])
 set(gca,'ylim',first_plot_lims(2,:))
 set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
 set(gcf,'color','w')
 set(gca,'FontSize',font_size_global,'FontName',font_name)
+
+
 end
 
 function [to_freq,fit_mdl]=fit_poly_data(in,n)
