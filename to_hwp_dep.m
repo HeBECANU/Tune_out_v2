@@ -248,7 +248,11 @@ polz_power_frac=sqrt(polz_data(:,1)./(polz_data(:,3)));
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 %polz_power_frac=2*sqrt(polz_data(:,1).*polz_data(:,3))./(polz_data(:,1)+polz_data(:,3));
+=======
+polz_power_frac=2*sqrt(polz_data(:,1).*polz_data(:,3))./(polz_data(:,1)+polz_data(:,3));
+>>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
 =======
 polz_power_frac=2*sqrt(polz_data(:,1).*polz_data(:,3))./(polz_data(:,1)+polz_data(:,3));
 >>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
@@ -376,6 +380,9 @@ modelfun = @(b,x) b(1).*(cos(x(:,1).*pi./180+b(2).*2*pi).^2)+b(3);
 %modelfun = @(b,x) b(1).*(cos(2.*(x(:,1).*pi./180+b(2).*2*pi)))+b(3);
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
+=======
 >>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
 =======
 >>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
@@ -505,8 +512,13 @@ beta0=[0.15,0,0];
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 fit_mdl_sin = fitnlm(bc_angles_wraped,-2.*polz_power_frac.*polz_sign,sin_f,beta0,...
     'Options',opts,'CoefficientNames' ,{'amp','phase','offset'});
+=======
+fit_mdl_sin = fitnlm(bc_angles_wraped,-polz_power_frac.*polz_sign,sin_f,beta0,...
+    'Options',opts,'CoefficientNames' ,{'retardance','phase','S_3'});
+>>>>>>> 6de15477018eba4f08a344e5fafd952c48dbe4ed
 =======
 fit_mdl_sin = fitnlm(bc_angles_wraped,-polz_power_frac.*polz_sign,sin_f,beta0,...
     'Options',opts,'CoefficientNames' ,{'retardance','phase','S_3'});
