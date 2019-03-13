@@ -476,19 +476,19 @@ set(gcf,'color','w')
 
 %% Plot the purity data
 hilight_cut=size(bc_angles_wraped,1)-2;
-sin_f = @(b,x) sin(b(1))*sqrt(1-b(3)^2).*(cos(x(:,1).*pi./90+b(2).*2*pi))+b(3).*cos(b(1));
+sin_f = @(b,x) sin(b(1))*sqrt(1-b(3)^2).*(cos(x(:,1).*pi./45+b(2).*2*pi))+b(3).*cos(b(1));
 beta0=[0.15,0,0];
-fit_mdl_sin = fitnlm(bc_angles_wraped,-polz_power_frac.*polz_sign,sin_f,beta0,...
+fit_mdl_sin = fitnlm(hwp_ang,polz_power_frac.*polz_sign,sin_f,beta0,...
     'Options',opts,'CoefficientNames' ,{'retardance','phase','S_3'});
-xsamp = linspace(50,280,1e4).';
+xsamp = linspace(0,360,1e4).';
 [y_lin,yci_lin]=predict(fit_mdl_sin,xsamp,'Prediction','observation','Alpha',ci_size_disp); %'Prediction','observation'
 sfigure(553);
 clf
-scatter(bc_angles_wraped,polz_power_frac,'kx')
-xlabel('pol angle')
+scatter(hwp_ang,polz_power_frac,'kx')
+xlabel('hwp angle')
 ylabel('A')
 hold on
-scatter(bc_angles_wraped,-polz_power_frac.*polz_sign,'bo')
+scatter(hwp_ang,polz_power_frac.*polz_sign,'bo')
 plot(xsamp,y_lin,'b-','LineWidth',1.6)
 plot(xsamp,yci_lin(:,1),'r-','LineWidth',1.6)
 plot(xsamp,yci_lin(:,2),'r-','LineWidth',1.6)

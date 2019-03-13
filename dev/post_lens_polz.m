@@ -1,4 +1,6 @@
 
+offset =-.07;
+
 pol_pre_comp = [0,30,45,60;
                 190,230,240,197;
                 30,338,330,324;
@@ -41,47 +43,54 @@ d_th_max = naked_pol(:,1) - naked_pol(:,3);
 d_th_min = naked_pol(:,1) - naked_pol(:,5);
 naked_power = naked_pol(:,2)+naked_pol(:,4);
 
-contrast = @(pol_data) (pol_data(:,2) - pol_data(:,4))./(pol_data(:,2) + pol_data(:,4));
-ratio = @(pol_data) pol_data(:,4)./pol_data(:,2);
+contrast = @(offset,pol_data) (pol_data(:,2) - pol_data(:,4))./(pol_data(:,2) + pol_data(:,4)-2*offset);
+ratio = @(offset,pol_data) (pol_data(:,4)-offset)./(pol_data(:,2)-offset);
 q = @(p) p(:,1);
 qwpa = 0:20:18;
 
 sfigure(5831);
 clf
-subplot(2,2,1)
-plot(q(pol_pre_comp),contrast(pol_pre_comp),'kx-')
+% subplot(2,2,1)
+% plot(q(pol_pre_comp),contrast(offset,pol_pre_comp),'kx-')
+% hold on
+% plot(q(pol_post_comp),contrast(offset,pol_post_comp),'rx-')
+% plot(q(pol_post_aptr),contrast(offset,pol_post_aptr),'ro-')
+% plot(q(naked_pol),contrast(offset,naked_pol),'go-')
+% ylim([0,1])
+% xlabel('QWP angle')
+% ylabel('Contrast')
+% legend('Pre-window','After chamber','After chamber with aperture','At window','location','SouthWest')
+% title('Circ part pre and post window')
+% subplot(2,2,2)
+plot(q(pol_pre_comp),ratio(offset,pol_pre_comp),'kx-')
 hold on
-plot(q(pol_post_comp),contrast(pol_post_comp),'rx-')
-plot(q(pol_post_aptr),contrast(pol_post_aptr),'ro-')
-plot(q(naked_pol),contrast(naked_pol),'go-')
-ylim([0,1])
-xlabel('QWP angle')
-ylabel('Contrast')
-legend('Pre-window','After chamber','After chamber with aperture','At window','location','SouthWest')
-title('Contrast pre and post window')
-subplot(2,2,2)
-plot(q(pol_pre_comp),ratio(pol_pre_comp),'kx-')
-hold on
-plot(q(pol_post_comp),ratio(pol_post_comp),'rx-')
-plot(q(pol_post_aptr),ratio(pol_post_aptr),'ro-')
-plot(q(naked_pol),ratio(naked_pol),'go-')
+% plot(q(pol_pre_comp),contrast(offset,pol_pre_comp),'ko-')
+plot(q(pol_post_comp),ratio(offset,pol_post_comp),'rx-')
+plot(q(pol_post_aptr),ratio(offset,pol_post_aptr),'ro-')
+plot(q(naked_pol),ratio(offset,naked_pol),'bo-')
+plot(q(naked_pol),sqrt(contrast(offset,naked_pol)),'g*-')
+% plot(q(naked_pol),ratio(offset,naked_pol)+(contrast(offset,naked_pol)),'k*-')
 ylim([0,1])
 xlabel('QWP angle')
 ylabel('min/max ratio')
+legend('Pre-window ratio with mirror',...
+        'post-window ratio, no aperture','post-window ratio, with aperture',...
+        'Pre-window ')
 title('Power ratio pre and post window')
-
-subplot(2,2,3)
-plot(q(naked_pol),naked_power,'gx-')
-ylim([0,max(naked_power)])
-title(sprintf('Total power, [mean,std] = [%.2f,%.2f]',mean(naked_power),std(naked_power)))
-xlabel('QWP angle')
-ylabel('Pmax+Pmin')
-
-
-subplot(2,2,4)
-plot(q(naked_pol),d_th_min,'b*-')
-hold on
-plot(q(naked_pol),d_th_max,'r*-')
-xlabel('QWP angle')
-ylabel('Polarizer angle offset')
-legend('Minimizing angle','Maximizing angle','location','NorthWest')
+% 
+% subplot(2,2,3)
+% plot(q(naked_pol),naked_power,'gx-')
+% ylim([0,max(naked_power)])
+% title(sprintf('Total power, [mean,std] = [%.2f,%.2f]',mean(naked_power),std(naked_power)))
+% xlabel('QWP angle')
+% ylabel('Pmax+Pmin')
+% 
+% 
+% subplot(2,2,4)
+% plot(q(naked_pol),(d_th_min),'b*-')
+% hold on
+% plot(q(naked_pol),(d_th_max),'r*-')
+% plot(q(naked_pol),mod((d_th_max)-(d_th_min),360)-270,'k-.')
+% xlabel('QWP angle')
+% ylabel('Polarizer angle offset')
+% legend('Minimizing angle','Maximizing angle','Angular offset','location','NorthWest')

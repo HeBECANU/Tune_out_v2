@@ -75,5 +75,6 @@ hold on
 scatter(180+qwp,pol_min,'gx')
 hold off
 
+legend('308^\circ','5^\circ','334^\circ')
 
 

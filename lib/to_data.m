@@ -24,6 +24,9 @@ main_data_compiled.scan_num = [];
 main_data_compiled.set_pt = [];
 for loop_idx=selected_dirs
     current_dir = loop_config.dir{loop_idx};
+    if ~strcmp(current_dir(end),'\')
+        current_dir = [current_dir,'\'];
+    end
     if exist('Z:\EXPERIMENT-DATA\2018_Tune_Out_V2','file')~=7, error(sprintf('dir \n %s \n does not exist',current_dir)) ,end
     out_dirs=dir([current_dir,'out\']);
     if size(out_dirs,1)==0, error(sprintf('dir \n %s \n does not contain any out dirs',current_dir)), end 
