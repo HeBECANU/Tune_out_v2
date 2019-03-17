@@ -237,17 +237,84 @@ polz_data = [
     0.70,231,70.1,135,nan,nan,4,0;
     0.64,239.5,53,150,60,151,9.5,0;
     0.58,249,75.1,160,nan,nan,14.5,0];
+                %HWP pmax phimax pmin phimin
+pol_data_pre = [20,475,339,4.6,292
+                10,550,260,4.0,308
+                0,530,262,1.9,312
+                350,545,190,7.5,232
+                340,450,200,4.2,242
+                330,550,212,2.6,253
+                320,465,218,7.75,176
+                310,525,141,14.2,188
+                300,565,150,21.3,106
+                290,505,69,14.5,22
+                ];
+
+
+% Retaking HWP data in a hurry
+% 
+% 
+% Set control HWP to 283 for max transmission 470/3.4
+% insert test wp:
+% 	zero transmission	1/467	20 deg
+% 	zero reflection		520/3.3	334 deg
+
+calibration = [283
+
+% control P_T		P_R		test	P_T		P_R		test
+slow_dat = [290		610		4.2		337		2		488		293
+            300		530		4.2		239		2		610		193
+            310		593		6.1		138		2.7		597		93
+            320		580		6.6		128		2.45	454		83	% * realized side monitor was contributing to background...
+            330		606		4.5		29		1.84	454		73];
+
+
+contrast = @(x) abs(diff(x,1,2)./sum(x,2));
+A_c = @(x) 1-x.^2;
+sfigure(752);
+clf
+subplot(3,1,1)
+plot(slow_dat(:,1),contrast(slow_dat(:,2:3)),'rx')
+hold on
+plot(slow_dat(:,1),contrast(slow_dat(:,5:6)),'r*')
+plot(polz_data(:,end-1),contrast([polz_data(:,1),polz_data(:,3)]),'kx')
+plot(pol_data_pre(:,1),contrast([pol_data_pre(:,2),pol_data_pre(:,4)]),'bo')
+title('Max contrast')
+legend('Friday night 2 header','2 header other extremum', 'old post window','friday arvo','location','SouthWest')
+
+
+subplot(3,1,2)
+plot(slow_dat(:,1),A_fun(slow_dat(:,2),slow_dat(:,3)),'rx')
+hold on
+plot(slow_dat(:,1),A_fun(slow_dat(:,5),slow_dat(:,6)),'r*')
+plot(polz_data(:,end-1),A_fun(polz_data(:,1),polz_data(:,3)),'kx')
+plot(pol_data_pre(:,1),A_fun(pol_data_pre(:,2),pol_data_pre(:,4)),'bo')
+legend('Friday night 2 header','2 header other extremum', 'old post window','friday arvo','location','NorthWest')
+title('A (old method)')
+
+subplot(3,1,3)
+plot(slow_dat(:,1),A_c(contrast(slow_dat(:,2:3))),'rx')
+hold on
+plot(slow_dat(:,1),A_c(contrast(slow_dat(:,5:6))),'r*')
+plot(polz_data(:,end-1),A_c(contrast([polz_data(:,1),polz_data(:,3)])),'kx')
+plot(pol_data_pre(:,1),A_c(contrast([pol_data_pre(:,2),pol_data_pre(:,4)])),'bo')
+legend('Friday night 2 header','2 header other extremum', 'old post window','friday arvo','location','NorthWest')
+title('A (new method possibly broken)')
 
 
 hwp_ang= polz_data(:,7);
 %hwp_ang = hwp_ang-360.*(hwp_ang>180);
 %0.32,91,230,7,240,0;
+A_fun = @(p_min,p_max) 2.*sqrt(p_min.*p_max)./(p_max+p_min);
 polz_power_frac=sqrt(polz_data(:,1)./(polz_data(:,3)));
 %polz_power_frac=2*polz_data(:,1)./(polz_data(:,1)+polz_data(:,3));
 %polz_power_frac=2*polz_data(:,1).*polz_data(:,3)./(polz_data(:,1).^2+polz_data(:,3).^2);
-polz_power_frac=2*sqrt(polz_data(:,1).*polz_data(:,3))./(polz_data(:,1)+polz_data(:,3));
+polz_power_frac=A_fun(polz_data(:,1),polz_data(:,3));
+slow_power_frac1 = A_fun(slow_dat(:,2),slow_dat(:,3));
+slow_power_frac2 = A_fun(slow_dat(:,6),slow_dat(:,5));
 %polz_power_frac=sin(2*atan(sqrt(polz_data(:,1)./polz_data(:,3))));
 pol_power_dif=(polz_data(:,3)-polz_data(:,1))./(polz_data(:,3)+polz_data(:,1));
+A_pre = A_fun(pol_data_pre(:,2),pol_data_pre(:,4));
 
 bc_angles_wraped=polz_data(:,2);
 %move the data into the center
@@ -492,9 +559,10 @@ scatter(hwp_ang,polz_power_frac.*polz_sign,'bo')
 plot(xsamp,y_lin,'b-','LineWidth',1.6)
 plot(xsamp,yci_lin(:,1),'r-','LineWidth',1.6)
 plot(xsamp,yci_lin(:,2),'r-','LineWidth',1.6)
+scatter(pol_data_pre(:,1),A_pre,'*')
 set(gcf,'color','w')
 set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
-
+legend('unflipped','flipped','fit','e1','e2','pre')
 sfigure(6219);
 clf
 errorbar(hwp_ang(is_outlier_idx),vec_corr_to(is_outlier_idx)-lin_fit_max(1),to_vals_lin_quad(is_outlier_idx,3),'ko')
