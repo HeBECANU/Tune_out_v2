@@ -68,8 +68,10 @@ qwp_cen_angle=195;
 qwp_ang= polz_data(:,1);
 %hwp_ang = hwp_ang-360.*(hwp_ang>180);
 %0.32,91,230,7,240,0;
+A=2*polz_data(:,2).*polz_data(:,4)./(polz_data(:,2).^2+polz_data(:,4).^2);
 %A=2*polz_data(:,2).*polz_data(:,4)./(polz_data(:,2).^2+polz_data(:,4).^2);
 pol_power_dif=(-polz_data(:,4)+polz_data(:,1))./(polz_data(:,4)+polz_data(:,1));
+
 A=2*sqrt(polz_data(:,2).*polz_data(:,4))./(polz_data(:,2)+polz_data(:,4));
 
 %%
@@ -85,6 +87,15 @@ fit_mdl_lin = fitnlm(qwp_ang,to_vals_lin_quad(:,2),modelfun,beta0,...
     'Options',opts,'Weights',wlin,'CoefficientNames' ,{'amp','freq_offset','fast_angle'});
 
 
+colors_main=[[233,87,0];[33,188,44];[0,165,166]];
+colors_main=colors_main./255;
+lch=colorspace('RGB->LCH',colors_main(:,:));
+lch(:,1)=lch(:,1)+20;
+colors_detail=colorspace('LCH->RGB',lch);
+%would prefer to use srgb_2_Jab here
+color_shaded=colorspace('RGB->LCH',colors_main(3,:));
+color_shaded(1)=100;
+color_shaded=colorspace('LCH->RGB',color_shaded);
 
 sfigure(3)
 clf
@@ -149,3 +160,4 @@ subplot(2,1,2)
 scatter(polz_data(:,1),mod(polz_data(:,5),180))
 xlabel('QWP ang')
 ylabel('min power ang')
+

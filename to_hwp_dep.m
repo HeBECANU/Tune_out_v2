@@ -259,14 +259,14 @@ pol_data_pre = [20,475,339,4.6,292
 % 	zero transmission	1/467	20 deg
 % 	zero reflection		520/3.3	334 deg
 
-calibration = [283
+%calibration = [283
 
 % control P_T		P_R		test	P_T		P_R		test
-slow_dat = [290		610		4.2		337		2		488		293
-            300		530		4.2		239		2		610		193
-            310		593		6.1		138		2.7		597		93
-            320		580		6.6		128		2.45	454		83	% * realized side monitor was contributing to background...
-            330		606		4.5		29		1.84	454		73];
+slow_dat = [290,610,4.2,337,2,488,293;
+            300,530,4.2,239,2,610,193;
+            310,593,6.1,138,2.7,597,93;
+            320,580,6.6,128,2.45,454,83;
+            330,606,4.5,29,1.84,454,73];% * realized side monitor was contributing to background...
 
 
 contrast = @(x) abs(diff(x,1,2)./sum(x,2));
@@ -312,14 +312,18 @@ polz_power_frac=sqrt(polz_data(:,1)./(polz_data(:,3)));
 polz_power_frac=A_fun(polz_data(:,1),polz_data(:,3));
 slow_power_frac1 = A_fun(slow_dat(:,2),slow_dat(:,3));
 slow_power_frac2 = A_fun(slow_dat(:,6),slow_dat(:,5));
+%polz_power_frac=sqrt(polz_data(:,1)./(polz_data(:,3)));
+%polz_power_frac=2*polz_data(:,1)./(polz_data(:,1)+polz_data(:,3));
+%polz_power_frac=2*polz_data(:,1).*polz_data(:,3)./(polz_data(:,1).^2+polz_data(:,3).^2);
+%polz_power_frac=2*sqrt(polz_data(:,1).*polz_data(:,3))./(polz_data(:,1)+polz_data(:,3));
 %polz_power_frac=sin(2*atan(sqrt(polz_data(:,1)./polz_data(:,3))));
 pol_power_dif=(polz_data(:,3)-polz_data(:,1))./(polz_data(:,3)+polz_data(:,1));
 A_pre = A_fun(pol_data_pre(:,2),pol_data_pre(:,4));
 
 bc_angles_wraped=polz_data(:,2);
 %move the data into the center
-shift=-(171-90);
-shift=-(171-90);
+%shift=-(171-90);
+shift=0;
 bc_angles_wraped=mod(bc_angles_wraped+shift,180)-shift;
 
 %polz_sign=[0,0,0,0,1,0,0,1,1,1,0,1,0,0,1,1,0,1,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0,0,1,0,0,0,0,1,1,1,1,0]';
@@ -423,17 +427,21 @@ set(gcf,'color','w')
 fprintf('Fixed period fit\n')
 
 %fit sin waves to the two sets of data
+%modelfun = @(b,x) b(1).*(cos(x(:,1).*pi./180+b(2).*2*pi).^2)+b(3);
+%modelfun = @(b,x) b(1).*(x(:,2).*cos(2.*(x(:,1).*pi./180+b(2).*2*pi)))+b(3);
+
 modelfun = @(b,x) b(1).*(cos(x(:,1).*pi./180+b(2).*2*pi).^2)+b(3);
 %modelfun = @(b,x) b(1).*(cos(2.*(x(:,1).*pi./180+b(2).*2*pi)))+b(3);
+
 opts = statset('MaxIter',1e4);
 ci_size_cut_outliers=1-erf(10/sqrt(2));%1-erf(zvalue/sqrt(2)) %confidence interval for cutting outliers
 beta0 = [1e3,0.5,nanmean(vec_corr_to)]; %intial guesses
 wlin=1./(to_vals_lin_quad(:,3).^2);
-fit_mdl_lin = fitnlm(bc_angles_wraped,vec_corr_to,modelfun,beta0,...
+fit_mdl_lin = fitnlm([bc_angles_wraped,pol_power_dif],vec_corr_to,modelfun,beta0,...
     'Options',opts,'Weights',wlin,'CoefficientNames' ,{'amp','phase','offset'});
 
 %cut outliers
-[to_predict,yci_cull_lim]=predict(fit_mdl_lin,bc_angles_wraped,'Prediction','observation','Alpha',ci_size_cut_outliers);
+[to_predict,yci_cull_lim]=predict(fit_mdl_lin,[bc_angles_wraped,pol_power_dif],'Prediction','observation','Alpha',ci_size_cut_outliers);
 is_outlier_idx=vec_corr_to>yci_cull_lim(:,1) & vec_corr_to<yci_cull_lim(:,2);
 vec_corr_to_trim = vec_corr_to(is_outlier_idx);
 to_vals_lin_trim = to_vals_lin_quad(is_outlier_idx);
@@ -442,7 +450,7 @@ beta0 = fit_mdl_lin.Coefficients{:,1}'; %intial guesses
 %wlin=1./(to_vals_lin_quad(is_outlier_idx,3).^2);
 % fit_mdl_lin = fitnlm(bc_angles_wraped(is_outlier_idx),vec_corr_to(is_outlier_idx),modelfun,beta0,...
 %     'Options',opts,'Weights',wlin,'CoefficientNames' ,{'amp','phase','offset'});
-fit_mdl_lin = fitnlm(bc_angles_wraped(is_outlier_idx),vec_corr_to(is_outlier_idx),modelfun,beta0,...
+fit_mdl_lin = fitnlm([bc_angles_wraped(is_outlier_idx),pol_power_dif(is_outlier_idx)],vec_corr_to(is_outlier_idx),modelfun,beta0,...
     'Options',opts,'CoefficientNames' ,{'amp','phase','offset'});
 lin_fit_max=[fit_mdl_lin.Coefficients.Estimate(1)+fit_mdl_lin.Coefficients.Estimate(3)...
     sqrt(fit_mdl_lin.Coefficients.SE(1)^2+fit_mdl_lin.Coefficients.SE(3)^2)];
@@ -456,14 +464,16 @@ plot_padd=20;
 xsamp = linspace(min(bc_angles_wraped)-plot_padd,max(bc_angles_wraped)+plot_padd,1e4).';
 fit_values = fit_mdl_lin.Coefficients{:,1};
 %subplot(2,1,1)
+%bc_angles_wraped_shift = (1/2.*acos(pol_power_dif.*cos(2.*(bc_angles_wraped.*pi./180+fit_values(2).*2*pi)))-fit_values(2).*2*pi).*180/pi+360;
+bc_angles_wraped_shift = bc_angles_wraped;
 hold on
 title(['amp= ',num2str(fit_values(1)),'MHz , phase= ',num2str(fit_values(2)),', offset= ',num2str(fit_values(3)),'MHz , period=180(fixed)^\circ'])
 xlabel('Input Pol angle (degrees)')
 ylabel(sprintf('Tune out value-%.1f±%.1f (MHz)',lin_fit_max(1),lin_fit_max(2)) )
 fprintf('Tune out value-%.1f±%.1f (MHz) (BLUE)\n',lin_fit_max(1),lin_fit_max(2))
 fprintf('Tune out value-%.1f±%.1f (MHz) (RED)\n',lin_fit_max(1)/2,lin_fit_max(2)/2)
-errorbar(bc_angles_wraped,vec_corr_to_trim-lin_fit_max(1),to_vals_lin_quad(is_outlier_idx,3),'ko')
-[y_lin,yci_lin]=predict(fit_mdl_lin,xsamp,'Prediction','observation','Alpha',ci_size_disp); %'Prediction','observation'
+errorbar(bc_angles_wraped_shift,vec_corr_to_trim-lin_fit_max(1),to_vals_lin_quad(is_outlier_idx,3),'ko')
+[y_lin,yci_lin]=predict(fit_mdl_lin,[xsamp,ones(length(xsamp),1)],'Prediction','observation','Alpha',ci_size_disp); %'Prediction','observation'
 %y_lin = b1(1).*(cos(xsamp.*pi/180+b1(2).*2*pi).^2)+b1(3);
 plot(xsamp,y_lin-lin_fit_max(1),'b-','LineWidth',1.6)
 plot(xsamp,yci_lin(:,1)-lin_fit_max(1),'r-','LineWidth',1.6)
@@ -549,13 +559,32 @@ fit_mdl_sin = fitnlm(hwp_ang,polz_power_frac.*polz_sign,sin_f,beta0,...
     'Options',opts,'CoefficientNames' ,{'retardance','phase','S_3'});
 xsamp = linspace(0,360,1e4).';
 [y_lin,yci_lin]=predict(fit_mdl_sin,xsamp,'Prediction','observation','Alpha',ci_size_disp); %'Prediction','observation'
-sfigure(553);
+sfigure(558);
 clf
 scatter(hwp_ang,polz_power_frac,'kx')
 xlabel('hwp angle')
 ylabel('A')
 hold on
 scatter(hwp_ang,polz_power_frac.*polz_sign,'bo')
+plot(xsamp,y_lin,'b-','LineWidth',1.6)
+plot(xsamp,yci_lin(:,1),'r-','LineWidth',1.6)
+plot(xsamp,yci_lin(:,2),'r-','LineWidth',1.6)
+set(gcf,'color','w')
+
+%fit_mdl_sin = fitnlm(bc_angles_wraped,-2.*polz_power_frac.*polz_sign,sin_f,beta0,...
+%    'Options',opts,'CoefficientNames' ,{'amp','phase','offset'});
+fit_mdl_sin = fitnlm(bc_angles_wraped,-polz_power_frac.*polz_sign,sin_f,beta0,...
+    'Options',opts,'CoefficientNames' ,{'retardance','phase','S_3'});
+
+xsamp = linspace(50,280,1e4).';
+[y_lin,yci_lin]=predict(fit_mdl_sin,xsamp,'Prediction','observation','Alpha',ci_size_disp); %'Prediction','observation'
+sfigure(553);
+clf
+scatter(bc_angles_wraped,2.*polz_power_frac,'kx')
+xlabel('pol angle')
+ylabel('A')
+hold on
+scatter(bc_angles_wraped,-2.*polz_power_frac.*polz_sign,'bo')
 plot(xsamp,y_lin,'b-','LineWidth',1.6)
 plot(xsamp,yci_lin(:,1),'r-','LineWidth',1.6)
 plot(xsamp,yci_lin(:,2),'r-','LineWidth',1.6)

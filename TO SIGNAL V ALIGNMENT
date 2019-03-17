@@ -1,0 +1,30 @@
+TO SIGNAL V ALIGNMENT
+Procedure:
+* Begin with aligned beam. Pick a micrometer axis and step 3um, traversing over side lobe of trap perturbation signal.
+* Traverse back in 2um steps:
+	* Set micrometer position. Accumulate data for five minutes. 
+	* Repeat until entire signal profile has been drawn out
+* Repeat for other axis
+
+Time	Horz
+INIT	21		 
+BEGIN
+1351	01		
+1357	04		
+1402	07		
+1406	10
+1411	13
+1415	16
+1420	19
+1426	17.5
+1431	22
+1439	25
+1444	28
+1445	26.5
+1449	28
+1452	31
+1455	34
+1468	37
+1502	40
+1506	43
+1510	46

@@ -1,4 +1,6 @@
 # Windows default autosave extension
 *.asv
+# Windows thumb
+*.db
 # Data files
 *.mat
