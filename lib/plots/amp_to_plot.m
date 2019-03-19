@@ -1,11 +1,11 @@
+function dum = amp_to_plot()
 %%plot of the tune out value versus kick amplitude
-clear all
 %% setup directories
 loop_config.dir = {
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190221_to_amp_3\',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190221_to_amp_7\',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190221_to_amp_10\',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190214_to_hwp_168.5_nuller_reconfig_new_fiber_pdset_1.0v\'
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190221_to_amp_3\',
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190221_to_amp_7\',
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190221_to_amp_10\',
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190214_to_hwp_168.5_nuller_reconfig_new_fiber_pdset_1.0v\'
     };
 
 
@@ -28,3 +28,4 @@ Y_err=data.drift.to_val{2}.*1e-6;
 
 % Plot the graph
 plot_sexy(disp_config,X,Y,Y_err)
+end

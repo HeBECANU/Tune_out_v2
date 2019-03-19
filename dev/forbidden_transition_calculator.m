@@ -67,8 +67,8 @@ for ii=2:numel(He_data.Level_eV)
 
 end
 %% Table creation
-wv_min = 400*1e-9;
-wv_max = 2000*1e-9;
+wv_min = 800/2*1e-9;
+wv_max = 880/2*1e-9;
 He_spectrum.freq = c./(He_spectrum.wavelength);
 He_spectrum_full_tbl = table(He_spectrum.wavelength.*1e9,c./(He_spectrum.wavelength).*1e-6,'RowNames',He_spectrum.transition);
 indx_bounds = and((He_spectrum.wavelength>wv_min), (He_spectrum.wavelength<wv_max));

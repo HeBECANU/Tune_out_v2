@@ -1,10 +1,11 @@
 function I_p_psi_chi=stokes_to_sph(stokes_in)
 
 if iscell(stokes_in)
-    I_p_psi_chi=vec_cellfun(@(x) stokes_to_sph_core(x{:}),stokes_in');
+    %vec_cellfun
+    %I_p_psi_chi=arrayfun(@(x) stokes_to_sph_core(x{:}),stokes_in');
     %bit faster than doing
-    %a=arrayfun(@(x) stokes_to_sph_core(x{:}),stokes_in,'UniformOutput',0);
-    %out=cat(1,a{:});
+    a=arrayfun(@(x) stokes_to_sph_core(x{:}),stokes_in,'UniformOutput',0);
+    I_p_psi_chi=cat(1,a{:});
 else
     I_p_psi_chi=stokes_to_sph_core(stokes_in);
 end
