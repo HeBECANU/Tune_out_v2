@@ -84,6 +84,7 @@ clear all
 %setup directories you wish to loop over
 % 
 loop_config.dir = {
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output',
     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190227_qwp_270\',
     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190227_qwp_286',
     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190227_qwp_310',
