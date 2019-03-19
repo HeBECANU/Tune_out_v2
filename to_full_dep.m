@@ -167,7 +167,6 @@ to_val_run = [data.hwp.main.lin_fit{1};data.qwp.main.lin_fit{1};data.mix.main.li
 V = zeros(numel(to_val),1);%fourth stokes parameter
 d_p = zeros(numel(to_val),1);%power diffrence between min and max transmition
 theta = zeros(numel(to_val),1);%min angle
-V_run = zeros(size(pol_data_post,1),1);
 
 V_run = pol_data_post(:,7).*2.*sqrt(pol_data_post(:,3).*pol_data_post(:,5))...
     ./(pol_data_post(:,3)+pol_data_post(:,5));%the V parameter for each run
@@ -177,7 +176,7 @@ theta_run = pol_data_post(:,6).*pi/180; %using min pow angle
 shot_idx = 1;
 scan_num_vec = [data.hwp.main.scan_num;data.qwp.main.scan_num;data.mix.main.scan_num];
 
-for loop_idx=1:size(pol_data_post,1)
+for loop_idx=1:size(V_run,1)
     scan_num = scan_num_vec(loop_idx);
     V(shot_idx:(shot_idx+scan_num-1),1) = ones(scan_num,1).*V_run(loop_idx);
     d_p(shot_idx:(shot_idx+scan_num-1),1) = ones(scan_num,1).*d_p_run(loop_idx);

@@ -124,6 +124,10 @@ ai_log_out.ok.sfp=false(dld_files,1);
 ai_log_out.pd.mean=nan(dld_files,1);
 ai_log_out.pd.std=nan(dld_files,1);
 ai_log_out.pd.median=nan(dld_files,1);
+%%%%
+ai_log_out.phos.max=nan(dld_files,1);
+ai_log_out.phos.min=nan(dld_files,1);
+%%%%
 ai_log_out.fname=cell(dld_files,1);
 ai_log_out.times.create_ai_log=nan(dld_files,2);
 %loop over all the ai_logs
@@ -162,6 +166,9 @@ for ii=1:iimax
         %output all the times mainly as a diagnostic
         ai_log_out.times.create_ai_log(idx_nearest_shot,:)=time_posix_ai_log_create_write(:); 
         ai_log_out.times.fname_ai_log(idx_nearest_shot)=time_posix_fname;
+        %%%%
+        ai_log_out.phos(idx_nearest_shot)=ai_log_single_out.phos;
+        %%%%
         ai_log_out.fname{idx_nearest_shot}=fname;
         if numel(anal_opts.pd.set)==1
             set_pt_single=anal_opts.pd.set;
@@ -241,6 +248,10 @@ aquire_time=samples/sr;
 sampl_start=max(1,ceil(args_single.pd.time_start*sr));
 sampl_stop=min(samples,ceil(args_single.pd.time_stop*sr));
 probe_pd_during_meas=ai_dat.Data(1,sampl_start:sampl_stop);
+
+phos_during_meas=ai_dat.Data(3,sampl_start:sampl_stop);
+
+ai_log_single_out.phos=phos_during_meas;
 
 ai_log_single_out.pd.mean=mean(probe_pd_during_meas);
 ai_log_single_out.pd.std=std(probe_pd_during_meas);
