@@ -1,135 +1,10 @@
-function [V,d_p,theta] = pol_data_import(pol_opts)
-%% the idea of this function is to create a bunch of differenet models of the pol state for hwp/ qwp data angles
-V = zeros(67,1);%the V parameter for each run
-d_p = zeros(67,1);%contrast
-theta = zeros(67,1); %using min pow angle
-
-sin_mdl = @(b,x) b(1).*sin(b(2).*x.*pi/180+b(3))+b(4);
-sin_mdl_abs = @(b,x) abs(b(1).*sin(b(2).*x.*pi/180+b(3))+b(4));
-lin_mdl = @(b,x) b(1).*x+b(2);
-
-hwp_ang = [6.0000
-  354.0000
-  314.0000
-  335.0000
-  344.0000
-  353.0000
-  347.0000
-  342.0000
-  340.0000
-  338.5000
-  338.5000
-  335.0000
-  332.0000
-  319.0000
-  327.0000
-  324.0000
-  320.0000
-  309.0000
-  299.0000
-  290.0000
-  310.0000
-  352.0000
-    3.0000
-   10.0000
-   26.0000
-    4.0000
-  358.0000
-  350.0000
-  300.0000
-  320.0000
-  329.0000
-  339.0000
-   15.0000
-    9.5000
-   14.5000
-  304.0000
-  325.0000];
-
-qwp_ang = [280.0000
-  283.0000
-  283.0000
-  246.0000
-  270.0000
-  286.5000
-  310.0000
-  286.0000
-  254.0000
-  246.0000
-  234.0000
-  226.0000
-  220.0000
-  202.0000
-  187.0000
-  177.0000
-  162.0000
-  154.0000
-  130.0000
-  134.0000
-  138.0000
-  142.0000
-  146.0000
-  150.0000
-  260.0000];
-
-if strcmp(pol_opts.location(1:3),'pre')
-%Pre (at) window pol data for QWP data
-%QWP HWP QWP_anal HWP_Anal :155 Phi_min Phi_max (Transmit,Reflect)...
-data=  [130,333,nan,155,343,140,332,131,112,108,347,196;
-        134,333,nan,155,300,162,325,160,242,130,352,286;
-        138,333,nan,155,273,185,275,180,068,150,314,109;
-        142,333,nan,155,252,202,256,202,169,178,285,209;
-        146,333,nan,155,245,216,270,185,270,156,307,124;
-        150,333,nan,155,242,222,297,165,297,138,335,130;
-        154,333,nan,155,235,256,325,138,079,116,380,117;
-        162,333,nan,155,195,278,380,66.,039,084,409,084;
-        177,333,nan,155,087,282,527,10.2,122,12.,421,165;
-        187,333,nan,155,022,406,500,03.6,204,0.8,437,250;
-        202,333,nan,155,21.7,412,420,38.8,287,27.8,418,242;
-        220,333,nan,155,150,306,350,129,275,125,367,232;
-        226,333,nan,155,199,262,309,157,179,159,352,126;
-        234,333,nan,155,240.,210,260,208,172,220,282,208;
-        246,333,nan,155,242.,211,353,158,226,147,346,272;
-        254,333,nan,155,267.,222,411,111,037,100,395,351;
-        280,333,nan,155,021.,477,535,03.7,204,01.3,508,249;
-        283,333,nan,155,13.7,464,540,05.2,204,04.6,463,158;
-        270,340,nan,155,126.,360,412,105,121,076,368,77;
-        274,350,nan,155,203.,280,317,207,024,184,291,86;
-        268,354,nan,155,299.,153,297,155,066,160,312,21;
-        280,010,nan,155,472,045,465,41.7,066,34,437,22;
-        290,006,nan,155,326,158,372,148,059,140,366,14];
-QWP = data(:,1);
-P_1 = data(:,7:8);
-P_2 = data(:,10:11);
-offset = 5; %rough guess zero actually
-QWP_corr = mod(QWP,360);
-
-contrast = @(x) abs(diff(x,1,2)./sum(x,2));
-
-d_p_qwp = (contrast(P_1)+contrast(P_2))./2;
-V_qwp = sqrt(1-d_p_qwp.^2);
-V_qwp(1:end-5) = V_qwp(1:end-5).*(1-2.*(abs(QWP_corr(1:end-5)-234)<45));
-V_qwp(end-4:end) = V_qwp(end-4:end).*-1;
-theta_qwp = mod(2.*data(:,9),180)+offset;
-
-V(38:62) = pchip(mod(data(1:end-5,1),180),V_qwp(1:end-5),mod(qwp_ang,180));
-V(63:end) = V_qwp(end-4:end);
-
-d_p(38:62) =  pchip(mod(data(1:end-5,1),180),d_p_qwp(1:end-5),mod(qwp_ang,180));
-d_p(63:end) = d_p_qwp(end-4:end);
-
-theta(38:62) = pchip(mod(data(1:end-5,1),180),theta_qwp(1:end-5),mod(qwp_ang,180));
-theta(63:end) = theta_qwp(end-4:end);
-
- %Pre (at) window pol data for HWP data 
- %          HWP     QWP     P MAX PHI MAX P PHI PMIN PHI MIN P PHI
- if strcmp(pol_opts.location(4:end),'_cen')
-     %_cen
-     data = [23,120,0,62,45,0.63,91,38.2,136;
+%pre window data (for B to fill)
+ data_cen = [23,120,0,62,45,0.63,91,38.2,136;
          40,126,323,60,8,0.43,48,63,103;
          50,115,307,52.4,352,0.14,35,53,80;
          60,100,289,44.8,334,0.03,17,47,62;
          70,120,266,65,311,0.3,358,48,43;
+         80,110,249,50,294,0.51,340,64,25;
          80,114,76,44,121,1,158,60,203;
          90,120,232,55,277,0.87,320,68,5;
          100,121,208,61,253,0.5,298,50.7,343;
@@ -148,11 +23,10 @@ theta(63:end) = theta_qwp(end-4:end);
          250,95,271,38,316,0.2,356,50,41;
          305,100,160,42,205,0.2,249,65,294;
          295,90,180,46,225,0.13,270,61,315;
-        315,116,139,56,184,0.4,228,26.7,273;
-        355,88,102,42,147,0.75,188,45.8,233;
-        80,110,249,50,294,0.51,340,64,25;
+         315,116,139,56,184,0.4,228,26.7,273;
          315,120,134,68,179,0.43,228,60,273;
          325,120,122,58,167,0.78,210,51,255;
+         355,88,102,42,147,0.75,188,45.8,233;
          345,122,84,40.4,129,0.77,169,54,214;
          355,92,48,61.5,93,0.65,149,47.2,194;
          5,91,39,50.1,84,0.68,128,63,173;
@@ -161,9 +35,8 @@ theta(63:end) = theta_qwp(end-4:end);
          160,108,85,60,130,0.63,179,61,224;
          190,112,26,56,71,0.25,118,58,136;
          220,110,328,54,13,1.4,58,55,103];
- elseif strcmp(pol_opts.location(4:end),'_left')    
-     %_left
-     data = [220,25,144,10,201,0.175,239,13.3,284;
+     
+ data_left = [220,25,144,10,201,0.175,239,13.3,284;
               300,25,168,12.3,213,0.04,259,11.5,304;
               310,20.6,149,10.7,194,0.12,241,10,286;
               320,23,130,9.2,175,0.17,218,10.3,263;
@@ -172,8 +45,8 @@ theta(63:end) = theta_qwp(end-4:end);
               350,24,71,9.7,116,0.04,160,10.7,205;
               360,21.2,55,7.0,102,0.06,140,9.6,185;
               10,26,19,18.4,64,0.23,121,13.5,166;
-              20,18.7,358,13,43,0.2,100,9.8,145;
               20,25,0,17,45,0.24,101,13.7,146;
+              20,18.7,358,13,43,0.2,100,9.8,145;
               30,23,351,11.5,36,0.09,78,9.2,123;
               40,25,321,8.9,16,0.045,59,9.6,104;
               50,24,304,11.1,349,0.025,40,9.4,85;
@@ -187,9 +60,8 @@ theta(63:end) = theta_qwp(end-4:end);
               5,23.7,37,11.5,82,0.105,131,9.1,176;
               15,25.3,14,14.6,59,0.14,109,8.9,154;
               25,18.3,0,9.4,45,0.157,91,8.9,136];
-elseif strcmp(pol_opts.location(4:end),'_right')         
-    %_right
-    data=[300,16.3,171,7.9,216,0.017,258,7.4,303;
+     
+data_right=[300,16.3,171,7.9,216,0.017,258,7.4,303;
             310,13.8,147,6.9,192,0.14,239,7.0,284;
             320,13.0,126,7.2,171,0.22,215,6.2,260;
             330,13.1,102,8.6,147,0.26,196,6.9,241;
@@ -210,27 +82,28 @@ elseif strcmp(pol_opts.location(4:end),'_right')
             15,16.8,18,7.8,63,0.037,106,9.0,151;
             25,17.1,358,8.0,43,0.131,88,9.5,133;
             35,17.2,334,9.7,19,0.317,78,12.3,123];
- end
-    HWP = data(:,1);
-    theta_hwp = data(:,7);
-    d_p_hwp = (data(:,2)-data(:,6))./(data(:,2)+data(:,6));%contrast
-    V_hwp = sqrt(1-d_p_hwp.^2).*(1-2.*(22.5<abs(mod(HWP,90)-42.5)));
-    
-    beta0 = [-0.18297,4.0,1.5186,-0.033813];
-    interp_fit_V = fitnlm(mod(data(:,1),90),V_hwp,sin_mdl,beta0);
-    beta0 = [-0.18297,4.0,1.5186,-0.033813];
-    interp_fit_d_p = fitnlm(mod(data(:,1),90),d_p_hwp,sin_mdl_abs,beta0);
-    beta0 = [-3,180];
-    interp_fit_theta = fitnlm(mod(data(:,1)+20,90),mod(theta_hwp,180),lin_mdl,beta0);
-    
-    V(1:37) = predict(interp_fit_V,mod(hwp_ang,90));
-    d_p(1:37) = predict(interp_fit_d_p,mod(hwp_ang,90));
-    theta(1:37) = predict(interp_fit_theta,mod(hwp_ang+20,90));
+hwp_ang = data_cen(:,1);     
+d_p_cen = (data_cen(:,2)-data_cen(:,6))./(data_cen(:,2)+data_cen(:,6));%contrast 
+V_cen = sqrt(1-d_p_cen.^2).*(1-2.*(22.5<abs(mod(hwp_ang,90)-42.5)));
 
-    theta = deg2rad(theta);
-%% complete polarisation data for post window
-elseif strcmp(pol_opts.location,'post')
-%%      QWP    HWP      Pmax     Phi max     Pmin     Phi min   hand
+hwp_ang = data_left(:,1);  
+d_p_left = (data_left(:,2)-data_left(:,6))./(data_left(:,2)+data_left(:,6));%contrast 
+V_left = sqrt(1-d_p_left.^2).*(1-2.*(22.5<abs(mod(hwp_ang,90)-42.5)));
+
+hwp_ang = data_right(:,1);
+d_p_right = (data_right(:,2)-data_right(:,6))./(data_right(:,2)+data_right(:,6));%contrast 
+V_right = sqrt(1-d_p_right.^2).*(1-2.*(22.5<abs(mod(hwp_ang,90)-42.5)));
+
+sfigure(1);
+clf
+scatter(mod(data_cen(:,1),90),V_cen)
+hold on
+scatter(mod(data_left(:,1),90),V_left)
+scatter(mod(data_right(:,1),90),V_right,'g')
+hold off
+ylabel('A')
+xlabel('HWP ang')
+
     pol_data_val = [
                        NaN    6.0000   75.0000  146.0000    0.9600   50.5000   -1.0000
                        NaN  354.0000   89.0000  120.0000    0.9400   29.0000   -1.0000
@@ -300,53 +173,9 @@ elseif strcmp(pol_opts.location,'post')
                   280.0000  10.0000   148.0000  352.0000    11.200   83.0000   -1.0000
                   290.0000   6.0000   123.5000   12.0000    49.100   281.000   -1.0000
                   ];
-    %if we want to use the observation method
-    V = pol_data_val(:,7).*2.*sqrt(pol_data_val(:,3).*pol_data_val(:,5))...
+                  V_cen = pol_data_val(:,7).*2.*sqrt(pol_data_val(:,3).*pol_data_val(:,5))...
         ./(pol_data_val(:,3)+pol_data_val(:,5));%the V parameter for each run
-    d_p = (pol_data_val(:,3)-pol_data_val(:,5))./(pol_data_val(:,3)+pol_data_val(:,5));%contrast
-    theta = pol_data_val(:,6).*pi/180; %using min pow angle
-end
-% sfigure(23984);
-% clf
-% scatter(hwp_ang,V(1:37))
-% hold on
-% scatter(HWP,V_hwp)
-%this next bit is tricky, have to spit it up into the qwp and hwp sections
-if strcmp(pol_opts.predict,'full_fit') %the interpolation method
-    beta0 = [-1.0002,2.0139,-0.41317,-0.023839];
-    fit_V_qwp = fitnlm(qwp_ang,V(38:62),sin_mdl,beta0);
-    beta0 = [-0.18297,4.0,1.5186,-0.033813];
-    fit_V_hwp = fitnlm(hwp_ang,V(1:37),sin_mdl,beta0);
-    beta0 = [0.0347422680412371,-0.018908];
-    fit_theta_hwp = fitnlm(mod(hwp_ang+21,90),mod(theta(1:37),pi),lin_mdl,beta0);
-    beta0 = [1.0,2.0139,-0.41317,-0.023839];
-    fit_d_p_qwp = fitnlm(qwp_ang,d_p(38:63),sin_mdl_abs,beta0);
-    
-    V(38:62) = sin_mdl(fit_V_qwp.Coefficients.Estimate,qwp_ang);
-    d_p(38:62) = sin_mdl_abs(fit_d_p_qwp.Coefficients.Estimate,qwp_ang);
-    V(1:37) = sin_mdl(fit_V_hwp.Coefficients.Estimate,hwp_ang);
-    d_p(1:37) = real(sqrt(1-sin_mdl(fit_V_hwp.Coefficients.Estimate,hwp_ang).^2));
-    theta(1:37) = lin_mdl(fit_theta_hwp.Coefficients.Estimate,mod(hwp_ang+21,90));
-elseif strcmp(pol_opts.predict,'fit') %the interpolation method
-    sin_mdl_qwp = @(b,x) sin_mdl([-1,2.0,b(1),0],x);
-    beta0 = [-0.4131];
-    fit_V_qwp = fitnlm(qwp_ang,V(38:62),sin_mdl_qwp,beta0);
-    sin_mdl_hwp = @(b,x) sin_mdl([b(1),4.0,b(2),b(3)],x);
-    beta0 = [-0.18297,1.5186,-0.033813];
-    fit_V_hwp = fitnlm(hwp_ang,V(1:37),sin_mdl_hwp,beta0);
-    beta0 = [0.0347422680412371,-0.018908];
-    fit_theta_hwp = fitnlm(mod(hwp_ang+21,90),mod(theta(1:37),pi),lin_mdl,beta0);
-    
-    V(38:62) = sin_mdl_qwp(fit_V_qwp.Coefficients.Estimate,qwp_ang);
-    d_p(38:62) = real(sqrt(1-sin_mdl_qwp(fit_V_qwp.Coefficients.Estimate,qwp_ang).^2));
-    V(1:37) = sin_mdl_hwp(fit_V_hwp.Coefficients.Estimate,hwp_ang);
-    d_p(1:37) = real(sqrt(1-sin_mdl_hwp(fit_V_hwp.Coefficients.Estimate,hwp_ang).^2));
-    theta(1:37) = lin_mdl(fit_theta_hwp.Coefficients.Estimate,mod(hwp_ang+21,90));
-end
-% % scatter(mod(hwp_ang+21,90),mod(theta(1:37),pi))
-% scatter(qwp_ang,mod(theta(1:37),pi))
-%         xsamp = linspace(0,360);
-%         plot(xsamp,lin_mdl(fit_theta_hwp.Coefficients.Estimate,xsamp));
-%         xsamp = linspace(0,360);
-%         plot(xsamp,sin_mdl(fit_V_qwp.Coefficients.Estimate,xsamp));
-end
+              hold on
+        hwp_ang = pol_data_val(1:37,2);
+        scatter(mod(hwp_ang,90),(V_cen(1:37)),'kx')
+        legend('Bryce Pre Cen','Bryce Pre Left','Bryce Pre Right','Post orgigina')

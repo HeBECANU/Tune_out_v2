@@ -1,8 +1,20 @@
+clear all
 %% Theory
 to_freq_theory = 725736.480*1e9; %best theory guess in Hz
 to_wav_theory = 299792458./to_freq_theory;
 %% Exp parameters
 aom_freq = 189.*1e6; %aom offset in Hz
+%% polarisation data options
+pol_opts.location = 'pre_right';%post, pre_cen, pre_left, pre_right
+pol_opts.predict = 'fit';%'interp'; %obs (obsovation) fit (pertial fit) full_fit (fit with all parameters free)
+%% Display options
+opts = statset('MaxIter',1e4);
+ci_size=1-erf(1/sqrt(2));%1-erf(zvalue/sqrt(2)) %confidence interval for cutting outliers
+disp_config.font_name = 'Times New Roman';%'cmr10';
+disp_config.font_size_global=14;
+disp_config.opts=statset('nlinfit');
+disp_config.colors_main = [[75,151,201];[193,114,66];[87,157,95]];
+disp_config.bin_tol=0.01;
 %% HWP
 loop_config.dir = {
     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_51_nuller_reconfig\'
@@ -82,18 +94,6 @@ loop_config.dir = {
     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190307_hwp_06_qwp_290'
 };
 data.mix = to_data(loop_config);
-%% polarisation data options
-pol_opts.location = 'post';
-pol_opts.predict = 'obs';%'interp'; %options measure (what we measured) or interpolated (create model based on all measured values)
-%% Display options
-opts = statset('MaxIter',1e4);
-ci_size=1-erf(1/sqrt(2));%1-erf(zvalue/sqrt(2)) %confidence interval for cutting outliers
-disp_config.font_name = 'Times New Roman';%'cmr10';
-disp_config.font_size_global=14;
-disp_config.opts=statset('nlinfit');
-disp_config.colors_main = [[75,151,201];[193,114,66];[87,157,95]];
-disp_config.bin_tol=0.01;
-
 %% Generate data vectors
 to_val = [data.hwp.drift.to_val{1};data.qwp.drift.to_val{1};data.mix.drift.to_val{1}];%all our single scan tune-out values
 to_unc = [data.hwp.drift.to_val{2};data.qwp.drift.to_val{2};data.mix.drift.to_val{2}];%all corresponding uncertainties
@@ -124,7 +124,7 @@ full_mdl = @(b,x) b(1) + b(2).*x(:,2) + b(3).*(1+Q_fun(x(:,1),x(:,3),b(4)));%ful
 vars = [d_p,V,theta];
 to_val_fit = to_val;
 wlin_fit = wlin./sum(wlin);
-beta0 = [7.257355*1e14,6*1e9,3*1e9,0.2];
+beta0 = [7.257355*1e14,6*1e9,3*1e9,0.8];%0.2 or 0.8
 fit_mdl = fitnlm(vars,to_val_fit,full_mdl,beta0,...
     'Options',opts,'Weights',wlin_fit,'CoefficientNames' ,{'tune_out','vector','tensor','phase'});
 fit_vals = fit_mdl.Coefficients{:,1};
@@ -141,23 +141,23 @@ fit_vals = fit_mdl.Coefficients{:,1};
 fit_uncs = fit_mdl.Coefficients{:,2};
 
 %% Full 2D plot in stokes space
-sfigure(1234);
-clf
-[R, T] = meshgrid(linspace(0,1),linspace(0,2*pi));
-TO = fit_vals(1)+fit_vals(2).*R.*cos(T)+fit_vals(3).*R.*sin(T);
-h = surface(R.*cos(T),R.*sin(T),TO./1e6-fit_vals(1)./1e6);
-colormap(viridis)
-set(h, 'FaceAlpha', 0.7)
-shading interp
-hold on
-scatter3(V,Q,to_val./1e6-fit_vals(1)./1e6,'MarkerFaceColor',[0 .75 .75])
-grid on
-title('Full stokes space representation')
-xlabel('Fourth Stokes Parameter, V')
-ylabel('Second Stokes Parameter, Q')
-zlabel( sprintf('Tune out value-%.1f±%.1f (MHz)',fit_vals(1)./1e6,fit_uncs(1)./1e6) )
-set(gcf,'color','w')
-set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
+% sfigure(1234);
+% clf
+% [R, T] = meshgrid(linspace(0,1),linspace(0,2*pi));
+% TO = fit_vals(1)+fit_vals(2).*R.*cos(T)+fit_vals(3).*R.*sin(T);
+% h = surface(R.*cos(T),R.*sin(T),TO./1e6-fit_vals(1)./1e6);
+% colormap(viridis)
+% set(h, 'FaceAlpha', 0.7)
+% shading interp
+% hold on
+% scatter3(V,Q,to_val./1e6-fit_vals(1)./1e6,'MarkerFaceColor',[0 .75 .75])
+% grid on
+% title('Full stokes space representation')
+% xlabel('Fourth Stokes Parameter, V')
+% ylabel('Second Stokes Parameter, Q')
+% zlabel( sprintf('Tune out value-%.1f±%.1f (MHz)',fit_vals(1)./1e6,fit_uncs(1)./1e6) )
+% set(gcf,'color','w')
+% set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
 
 %% Plots of tune-out dependance on the individual stokes parameters
 modelfun = @(b,x) b(1) + b(2).*x(:,1);
@@ -174,14 +174,14 @@ fit_mdl_v = fitnlm(V,tens_corr_to./1e6,modelfun,beta0,...
 
 disp_config.plot_title = '';
 disp_config.x_label = 'Fourth Stokes Parameter, V';
-disp_config.fig_number=1235;
+disp_config.fig_number=11235;
 disp_config.plot_offset.val=fit_vals(1)./1e6;
 disp_config.plot_offset.unc=fit_uncs(1)./1e6;
 plot_sexy(disp_config,V,tens_corr_to./1e6,wlin,fit_mdl_v)
 
 disp_config.plot_title = '';
 disp_config.x_label = 'Second Stokes Parameter, Q';
-disp_config.fig_number=1236;
+disp_config.fig_number=11236;
 disp_config.plot_offset.val=fit_vals(1)./1e6;
 disp_config.plot_offset.unc=fit_uncs(1)./1e6;
 plot_sexy(disp_config,Q,vec_corr_to./1e6,wlin,fit_mdl_t)

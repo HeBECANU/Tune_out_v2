@@ -78,7 +78,7 @@ plot(qwp_data(qm,1), qwp_data(qm,4))
 hold on
 plot(qwp_data(qm,1), qwp_data(qm,3))
 subplot(2,1,2)
-plot(qwp_data(qm,1), contrast(qwp_data(qm,3:4)),'*')
+%plot(qwp_data(qm,1), contrast(qwp_data(qm,3:4)),'*')
 % title('Contrast 
     
     
@@ -99,8 +99,8 @@ contrast = @(x) abs(diff(x,1,2)./sum(x,2));
 ratio = @(x) min(x,[],2)./max(x,[],2);
 circmdl = @(p,x) abs(p(1)*cos(p(3)*x/180+p(2)))+p(4);
 beta0 = [1,deg2rad(140),5,0];
-fit1 = fitnlm(QWP_corr(HWmask),sqrt(1-contrast(P_1(HWmask,:)).^2),circmdl,beta0);
-fit2 = fitnlm(QWP_corr(HWmask),sqrt(1-contrast(P_2(HWmask,:)).^2),circmdl,beta0);
+fit1 = fitnlm(QWP(HWmask),sqrt(1-contrast(P_1(HWmask,:)).^2),circmdl,beta0);
+fit2 = fitnlm(QWP(HWmask),sqrt(1-contrast(P_2(HWmask,:)).^2),circmdl,beta0);
 
 
 th_test = mod(2.*[th_ref,th_1,th_2],180);
@@ -138,15 +138,15 @@ for ii = 1:size(th_test,1)
     end
     stokes_data(ii,:) = fit_vals;
     stokes_unc(ii,:) = fit_unc;
-    sfigure(55995959);
-    clf
-    scatter(th_test(ii,:)',p_contrast(ii,:)','*')
-    hold on
-    plot(t,contrast_mdl(fit_ratios.Coefficients.Estimate,t'))
-    title(['Control QWP =',num2str(QWP(ii))])
-    xlabel('Test HWP angle')
-    ylabel('contrast')
-    pause(3.5)
+%     sfigure(55995959);
+%     clf
+%     scatter(th_test(ii,:)',p_contrast(ii,:)','*')
+%     hold on
+%     plot(t,contrast_mdl(fit_ratios.Coefficients.Estimate,t'))
+%     title(['Control QWP =',num2str(QWP(ii))])
+%     xlabel('Test HWP angle')
+%     ylabel('contrast')
+%     pause(3.5)
 end
 
 
@@ -216,10 +216,10 @@ clf
 ci_size_disp = 1-erf(1/sqrt(2));
 x_samp_pad = linspace(0,360,1e5);
 [y_samp_val,y_samp_ci]=predict(contrast_fit,x_samp_pad','Alpha',ci_size_disp); %
-patch([x_samp_pad, fliplr(x_samp_pad)], ([y_samp_ci(:,1)', fliplr(y_samp_ci(:,2)')]), color_shaded,'EdgeColor','none');  %
+%patch([x_samp_pad, fliplr(x_samp_pad)], ([y_samp_ci(:,1)', fliplr(y_samp_ci(:,2)')]), color_shaded,'EdgeColor','none');  %
 hold on
 scatter(QWP_corr(HWmask),contrast_p,'*')
-plot(x_samp_pad,y_samp_val,'-','color',colors_main(3,:),'LineWidth',1.5)
+plot(x_samp_pad,y_samp_val,'-','LineWidth',1.5)
 errorbar(QWP_corr(HWmask),stokes_data(HWmask,1),stokes_unc(HWmask,1),'kx')
 ylim([0,1])
 xlabel('QWP angle')

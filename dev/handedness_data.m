@@ -19,7 +19,7 @@ mount_shift_pbs=-90; %the shift of the mount relative to hoz up
 %pol_min_data1 = [150,145,277,285,304,331,240,238,307,327,329,273,285,305,312,244,281,308]%*(pi/180);
 pbs_min_power=120; %without qwp as measured on scale
 qwp_data2=[120:2:132,118:-2:100]
-pol_min_data2=[198,218,230,237,242,248,252,185,177,174,167,162,165,156,154,148,150];
+pol_min_data2=[198,218,230,237,242,248,252,185,177,174,167,162,165,156,154,148,150]; 
 qwp_data3=[42:-2:-20];
 pol_min_data3=[90,88,92,96,108,125,133,142,150,148,145,143,140,142,138,137,130,136,133,125,124,125,124,122,122,118,116,114,112,110,108,106]
 qwp_data4=[(44:2:64),70,80,90,76];
@@ -75,6 +75,40 @@ hold on
 scatter(180+qwp,pol_min,'gx')
 hold off
 
-legend('308^\circ','5^\circ','334^\circ')
+%hwp before chamber=333°,%Qwp before chamber=180°, pbs min power 234°
+pbs_min_power=158; %without qwp as measured on scale
+qwp_data1=[50,52,54,56,58,58,60,62,64,68,72,76,74,78,80,82,86,90];
+pol_min_data1=[352,354,358,356,355,357,354,358,358,356,349,334,344,333,328,326,325,324];
+
+qwp=[qwp_data1];
+pol_min=[pol_min_data1];
+pol_min=mod(pol_min-180,360)
+qwp=(qwp-qwp_angle_fast-mount_shift_qwp)-(pbs_min_power-mount_shift_pbs);
+pol_min=pol_min+mount_shift_pbs;
+
+sfigure(1)
+hold on
+%scatter(qwp,unwrap(pol_min*8)/8)
+scatter(180+qwp,pol_min,'Mx')
+hold off
+
+%hwp before chamber=333°,%Qwp before chamber=200°, pbs min power XXX°
+pbs_min_power=175; %without qwp as measured on scale
+qwp_data1=[70,74,78,82,86,90,92,94,96,100,104,60,66,108,112];
+pol_min_data1=[221,228,237,245,258,266,275,284,284,293,299,208,215,310,316];
+
+qwp=[qwp_data1];
+pol_min=[pol_min_data1];
+pol_min=mod(pol_min-180,360)
+qwp=(qwp-qwp_angle_fast-mount_shift_qwp)-(pbs_min_power-mount_shift_pbs);
+pol_min=pol_min+mount_shift_pbs;
+
+sfigure(1)
+hold on
+%scatter(qwp,unwrap(pol_min*8)/8)
+scatter(180+qwp,pol_min,'kx')
+hold off
+
+legend('HWP 308^\circ','HWP 5^\circ','HWP 334^\circ','HWP 334^\circ QWP 180','HWP 334^\circ QWP 200')
 
 
