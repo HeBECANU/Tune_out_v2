@@ -83,8 +83,6 @@ loop_config.dir = {
     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output',
     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190227_qwp_270\',
     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190227_qwp_286',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190227_qwp_310',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190227_qwp_286_no_analog',
     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190226_qwp_254',
     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190226_qwp_246',
     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190226_qwp_234',
@@ -234,7 +232,7 @@ loop_config.set_pt = [1.4,1.4,1.5,1.5,1.5,1.5,1.5,1.5,1.0,1.0,1.0,1.0,1.0,1.0,1.
     5.0, 5.0, 8.0, 8.0, 3.0, 3, 3, 5, 5, 2,5,3,5 ,5,5,5];
 
 %selected_dirs = 1:numel(loop_config.dir); %which files to loop over (currently all)
-selected_dirs = 1;
+selected_dirs = 18;
 
 
 for dir_idx = selected_dirs
