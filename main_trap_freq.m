@@ -53,28 +53,24 @@
 % MAT-files required: none
 %
 % Known BUGS/ Possible Improvements
-%   - maybe process the analog logs into a output file for faster reading in??
-%   - weight the final TO fit by the trap freq fit unc
+%  - a better way of figuring out what the pd setpoint is, maybe write as a config file
+%  - harmonize the output
+%  - try different ways of fitting
+%    - AC mains waveform
+%    - harmonic component
 %	-make unique plot numbers
 %   -the fit error depends on wavelength indicating that the model does not
 %   have enough freedom
 %	-make plots more compact
 %   -harmonize the anal opts
-%	-place more sections into functions
-%	-clean up the fit section
-%	-write a in depth function cashing wrapper with hash lookup
-%		-alow partial updates
+
 %       
 %
 % Author: Bryce Henson
 % email: Bryce.Henson@live.com
-% Last revision:2018-10-09
+% Last revision:2019-04-16
 
 
-
-% JR To do:
-%   Wrapper function for TO scan analysis over many dirs
-%   scrolling average over scan range with smaller time steps (cheat for higher res scanwise anal)
 
 %close all
 clear all
