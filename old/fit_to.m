@@ -3,7 +3,10 @@ function to_res=fit_to(anal_opts_fit_to,data)
 %abandoned as of 20190213
 
 temp_cal=data.mcp_tdc.probe.calibration'; %because its used a lot make a temp var for calibration logic vector
-temp_cal(isnan(temp_cal))=1;    
+temp_cal(isnan(temp_cal))=1;   
+% if anal_opts_fit_to.cal_parity==1
+%     temp_cal = ~temp_cal;
+% end
 %manual bootstrap rand(size(data.osc_fit.ok.rmse))>0.9
 probe_dat_mask=data.osc_fit.ok.all & ~temp_cal &  ~isnan(data.wm_log.proc.probe.freq.act.mean)'...
     & ~isnan(data.osc_fit.trap_freq_recons);
@@ -37,7 +40,7 @@ if anal_opts_fit_to.plot_inital
     colormap(viridis(1000))
     c =colorbar;
     c.Label.String = 'time (H)';
-    caxis([0,range(shot_time)/(60*60)])
+%     caxis([0,range(shot_time)/(60*60)])
     xlabel('delta probe beam frequency (GHz)')
     ylabel('delta freq')
     subplot(2,1,2)
@@ -48,7 +51,7 @@ if anal_opts_fit_to.plot_inital
     colormap(viridis(1000))
     c =colorbar;
     c.Label.String = 'time (H)';
-    caxis([0,range(shot_time)/(60*60)])
+%     caxis([0,range(shot_time)/(60*60)])
 
     %set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
     plot_name='tuneout_time_graph'; 
