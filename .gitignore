@@ -4,3 +4,6 @@
 *.db
 # Data files
 *.mat
+# Data Archives
+*.zip
+*.7z

@@ -36,7 +36,7 @@ function ai_log_out=ai_log_import_core(anal_opts,data)
 %       anal_opts.force_load_save=false;
 %       anal_opts.log_name='log_analog_in_';
 %       anal_opts.aquire_time=3;
-%       anal_opts.pd.set - scalar or vector
+%       anal_opts.pd.set_vec - scalar or vector
 %       anal_opts.pd.diff_thresh=0.1;
 %       anal_opts.pd.std_thresh=0.1;
 %       anal_opts.pd.time_start=0.2;
@@ -85,6 +85,17 @@ if ~isfield(anal_opts,'cw_meth') || isnan(anal_opts.cw_meth)
 end
 
 
+%% use calibration(logical vec) and the pd setpd(for the probe shots)(scalar) to make a vector of the expected pd voltage 
+anal_opts.pd.set_vec=anal_opts.calibration;
+%nan compatable logical inverse
+anal_opts.pd.set_vec(~isnan(anal_opts.pd.set_vec))=~anal_opts.pd.set_vec(~isnan(anal_opts.pd.set_vec));
+anal_opts.pd.set_vec=anal_opts.pd.set_vec*anal_opts.pd.set_probe;
+
+
+%%
+
+
+
 dir_read=dir([anal_opts.dir,anal_opts.log_name,'*.txt']);
 ai_log_out.file_names={dir_read.name};
 
@@ -125,15 +136,15 @@ ai_log_out.pd.mean=nan(dld_files,1);
 ai_log_out.pd.std=nan(dld_files,1);
 ai_log_out.pd.median=nan(dld_files,1);
 %%%%
-ai_log_out.phos.max=nan(dld_files,1);
-ai_log_out.phos.min=nan(dld_files,1);
+%ai_log_out.phos.max=nan(dld_files,1);
+%ai_log_out.phos.min=nan(dld_files,1);
 %%%%
 ai_log_out.fname=cell(dld_files,1);
 ai_log_out.times.create_ai_log=nan(dld_files,2);
 %loop over all the ai_logs
 fprintf('processing ai log for files %04u:%04u',iimax,0)
 for ii=1:iimax
-    try
+    
     fprintf('\b\b\b\b%04i',ii)
     if ii==iimax || ii==1
         cache_opts.clean_cache=true; %clean cache at start and end
@@ -167,14 +178,15 @@ for ii=1:iimax
         ai_log_out.times.create_ai_log(idx_nearest_shot,:)=time_posix_ai_log_create_write(:); 
         ai_log_out.times.fname_ai_log(idx_nearest_shot)=time_posix_fname;
         %%%%
-        ai_log_out.phos(idx_nearest_shot)=ai_log_single_out.phos;
+        %bmh 20190429 q: what is phos?? 
+        %ai_log_out.phos(idx_nearest_shot)=ai_log_single_out.phos;
         %%%%
         ai_log_out.fname{idx_nearest_shot}=fname;
-        if numel(anal_opts.pd.set)==1
-            set_pt_single=anal_opts.pd.set;
+        if numel(anal_opts.pd.set_vec)==1
+            set_pt_single=anal_opts.pd.set_vec;
         else
-            if idx_nearest_shot<=numel(anal_opts.pd.set)
-                set_pt_single=anal_opts.pd.set(idx_nearest_shot);
+            if idx_nearest_shot<=numel(anal_opts.pd.set_vec)
+                set_pt_single=anal_opts.pd.set_vec(idx_nearest_shot);
             else
                 error('set index has been exceeded')
             end
@@ -206,8 +218,6 @@ for ii=1:iimax
         end
         
         
-    end
-    catch
     end
 end %loop over files
 fprintf('Done\n')
@@ -244,14 +254,13 @@ samples= size(ai_dat.Data,2);
 sr=ai_dat.sample_rate;
 aquire_time=samples/sr;
 
+ai_dat.time=(1:samples)/sr;%not sure if this is off by 1 sample in time
 
-sampl_start=max(1,ceil(args_single.pd.time_start*sr));
-sampl_stop=min(samples,ceil(args_single.pd.time_stop*sr));
-probe_pd_during_meas=ai_dat.Data(1,sampl_start:sampl_stop);
-
-phos_during_meas=ai_dat.Data(3,sampl_start:sampl_stop);
-
-ai_log_single_out.phos=phos_during_meas;
+probe_sampl_start=max(1,ceil(args_single.pd.time_start*sr));
+probe_sampl_stop=min(samples,ceil(args_single.pd.time_stop*sr));
+probe_pd_during_meas=ai_dat.Data(1,probe_sampl_start:probe_sampl_stop);
+%phos_during_meas=ai_dat.Data(3,probe_sampl_start:probe_sampl_stop);
+%ai_log_single_out.phos=phos_during_meas;
 
 ai_log_single_out.pd.mean=mean(probe_pd_during_meas);
 ai_log_single_out.pd.std=std(probe_pd_during_meas);
@@ -266,11 +275,11 @@ if args_single.plot.all || (args_single.plot.failed)
     set(gcf,'color','w')
     subplot(2,2,4)
     cla;
-    plot((1:numel(probe_pd_during_meas))/sr,probe_pd_during_meas,'b')
+    plot(ai_dat.time(probe_sampl_start:probe_sampl_stop),probe_pd_during_meas,'b')
     %yl=ylim;
     %xl=xlim;
 %     hold on
-%     line([xl(1),xl(2)],[args_single.pd.set,args_single.pd.set],'Color','k','LineWidth',3)
+%     line([xl(1),xl(2)],[args_single.pd.set_vec,args_single.pd.set_vec],'Color','k','LineWidth',3)
 %     hold off
     %ylim([yl(1),yl(2)])
     ylabel('probe voltage')
@@ -296,10 +305,10 @@ jj=0;
 while test_sm_while
     jj=jj+1;
     time_start=test_times(jj);
-    sampl_start=max(1,1+floor(time_start*sr));
-    sampl_stop=min(samples,sampl_start+ceil(args_single.window_time*sr));
-    if sampl_stop-sampl_start>=args_single.window_time*sr %check that we have enough points to work with
-        sub_ptz_raw=sfp_pzt_raw(sampl_start:sampl_stop)/pzt_division;
+    probe_sampl_start=max(1,1+floor(time_start*sr));
+    probe_sampl_stop=min(samples,probe_sampl_start+ceil(args_single.window_time*sr));
+    if probe_sampl_stop-probe_sampl_start>=args_single.window_time*sr %check that we have enough points to work with
+        sub_ptz_raw=sfp_pzt_raw(probe_sampl_start:probe_sampl_stop)/pzt_division;
         kernel=gausswin(ceil(4*args_single.pzt_volt_smothing_time*sr),4);
         kernel=kernel/sum(kernel(:));%normalize
         sub_dat_smooth=conv(sub_ptz_raw,kernel,'same');
@@ -317,8 +326,8 @@ while test_sm_while
         sweep{jj}.stop_idx=down(find(down>sweep{jj}.start_idx,1)); %fuck so elegant, fuck this is so much beter than LabView
         sweep{jj}.pzt_raw=sub_ptz_raw(sweep{jj}.start_idx:sweep{jj}.stop_idx);
         sweep{jj}.pzt_smooth=sub_dat_smooth(sweep{jj}.start_idx:sweep{jj}.stop_idx);
-        sweep{jj}.pd_full_raw=sfp_pd_raw(sampl_start+sweep{jj}.start_idx:sampl_start+sweep{jj}.stop_idx);
-        sweep{jj}.pd_cmp_raw=ai_dat.Data(4,sampl_start+sweep{jj}.start_idx:sampl_start+sweep{jj}.stop_idx);
+        sweep{jj}.pd_full_raw=sfp_pd_raw(probe_sampl_start+sweep{jj}.start_idx:probe_sampl_start+sweep{jj}.stop_idx);
+        sweep{jj}.pd_cmp_raw=ai_dat.Data(4,probe_sampl_start+sweep{jj}.start_idx:probe_sampl_start+sweep{jj}.stop_idx);
         sweep{jj}.pd_cmp_raw=sweep{jj}.pd_cmp_raw-median(sweep{jj}.pd_cmp_raw);
         %threshold out all data that is 7% the max value for the peak finding thresh
         thesh=0.07*max(sweep{jj}.pd_full_raw);
