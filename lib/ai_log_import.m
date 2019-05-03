@@ -75,6 +75,7 @@ args_single=[];
 args_single.cmp_multiplier_disp=50; %multiplier to display the compressed data better
 args_single.window_time=anal_opts.scan_time*2.1;
 args_single.pzt_volt_smothing_time=anal_opts.scan_time/100;
+args_single.pzt_attenuation_factor=0.2498; %set by the voltage divider box between pzt driver and daq
 %------------- END USER VAR --------------
 
 %------------- BEGIN CODE --------------
@@ -288,123 +289,33 @@ if args_single.plot.all || (args_single.plot.failed)
 
 end
 
-%%
-%%If the check if the laser is single mode
-test_times=linspace(0,min(aquire_time-args_single.window_time,args_single.pd.time_stop),args_single.sfp.num_checks); 
-pzt_division=0.2498; %set by the voltage divider box
-peak_distance_thresh_cmp_full_min=0.3;%volts difference full-cmp peak in order to be considered new peak
-
-test_sm_while=true; %intialize while loop flag, give up with one bad detection
-jj=0;
-jjmax=numel(test_times);
-sweep=[];
-single_mode_vec=false(1,jjmax);
-sfp_pzt_raw=ai_dat.Data(3,:);
+%% Test if laser is single mode
+% dev load('ai_log_state_before_is_sm.mat')
+ load('ai_log_state_before_is_sm.mat') %DEV DEV DEV REMOVE FOR USE
+sfp_pzt=ai_dat.Data(3,:);
 sfp_pd_raw=ai_dat.Data(2,:);
-jj=0;
-while test_sm_while
-    jj=jj+1;
-    time_start=test_times(jj);
-    probe_sampl_start=max(1,1+floor(time_start*sr));
-    probe_sampl_stop=min(samples,probe_sampl_start+ceil(args_single.window_time*sr));
-    if probe_sampl_stop-probe_sampl_start>=args_single.window_time*sr %check that we have enough points to work with
-        sub_ptz_raw=sfp_pzt_raw(probe_sampl_start:probe_sampl_stop)/pzt_division;
-        kernel=gausswin(ceil(4*args_single.pzt_volt_smothing_time*sr),4);
-        kernel=kernel/sum(kernel(:));%normalize
-        sub_dat_smooth=conv(sub_ptz_raw,kernel,'same');
-        sub_dat_grad_smooth=diff(sub_dat_smooth)*sr;
-        pos_slope_mask=sub_dat_grad_smooth>0;
-        %now we want to select the first positive going sgement that is long enough
-        x=pos_slope_mask';
-        % Find the transitions
-        down= strfind(x',[1 0]);
-        ups= strfind(x',[0 1]);
-        %we take the ramp to investigate as the between the first rising edge of the mask and the next
-        %falling edge
-        sweep{jj}.start_idx=ups(1);
-        %find the next falling edge
-        sweep{jj}.stop_idx=down(find(down>sweep{jj}.start_idx,1)); %fuck so elegant, fuck this is so much beter than LabView
-        sweep{jj}.pzt_raw=sub_ptz_raw(sweep{jj}.start_idx:sweep{jj}.stop_idx);
-        sweep{jj}.pzt_smooth=sub_dat_smooth(sweep{jj}.start_idx:sweep{jj}.stop_idx);
-        sweep{jj}.pd_full_raw=sfp_pd_raw(probe_sampl_start+sweep{jj}.start_idx:probe_sampl_start+sweep{jj}.stop_idx);
-        sweep{jj}.pd_cmp_raw=ai_dat.Data(4,probe_sampl_start+sweep{jj}.start_idx:probe_sampl_start+sweep{jj}.stop_idx);
-        sweep{jj}.pd_cmp_raw=sweep{jj}.pd_cmp_raw-median(sweep{jj}.pd_cmp_raw);
-        %threshold out all data that is 7% the max value for the peak finding thresh
-        thesh=0.07*max(sweep{jj}.pd_full_raw);
-        [pks_val,locs] = findpeaks(sweep{jj}.pd_full_raw,'MinPeakHeight',thesh);
-        sweep{jj}.pks.full.pd=pks_val;
-        sweep{jj}.pks.full.pzt=sweep{jj}.pzt_smooth(locs);
-        [pks_val,locs] = findpeaks(sweep{jj}.pd_cmp_raw,'MinPeakHeight',args_single.sfp.thresh_cmp_peak);
-        sweep{jj}.pks.cmp.pd=pks_val;
-        sweep{jj}.pks.cmp.pzt=sweep{jj}.pzt_smooth(locs);
-        %find the distance in pzt voltage to the nearest full peak
-        min_dist_cmp_to_full=arrayfun(@(x) min(abs(x-sweep{jj}.pks.full.pzt)),sweep{jj}.pks.cmp.pzt);
-        %peak_distance_thresh_cmp_full_min
-        sweep{jj}.pks.cmp.pzt=sweep{jj}.pks.cmp.pzt(min_dist_cmp_to_full>peak_distance_thresh_cmp_full_min);
-        sweep{jj}.pks.cmp.pd=sweep{jj}.pks.cmp.pd(min_dist_cmp_to_full>peak_distance_thresh_cmp_full_min);
-        sweep{jj}.pks.all.pzt=[sweep{jj}.pks.cmp.pzt,sweep{jj}.pks.full.pzt];
-        sweep{jj}.pks.all.pd=[sweep{jj}.pks.cmp.pd,sweep{jj}.pks.full.pd];
-        sweep{jj}.pks.all.min_pzt_v_diff=min_diff(sweep{jj}.pks.all.pzt);
+sfp_pd_cmp=ai_dat.Data(4,:);
 
-        if sweep{jj}.pks.all.min_pzt_v_diff<args_single.sfp.peak_dist_min_pass
-            fprintf('\nLASER IS NOT SINGLE MODE!!!\n%04i',0')
-            single_mode_vec(jj)=false;%give up if anything looks bad
-        else
-           single_mode_vec(jj)=true;
-
-        end
-
-        if args_single.plot.all || (args_single.plot.failed && ~single_mode_vec(jj))
-            title_strs={'Failed','OK'};
-            sfigure(1);
-            subplot(2,2,1)
-            cla;
-             set(gcf,'color','w')
-            title('smoothing pzt v')
-            time=(1:numel(sub_ptz_raw))/sr;
-            plot(time*1e3,sub_ptz_raw,'r')
-            hold on
-            plot(time*1e3,sub_dat_smooth,'k')
-            hold off
-            xlabel('time (ms)')
-            ylabel('volts (v)')
-
-            subplot(2,2,2)
-            cla;
-            %select a single scan
-            %to do this we will mask out the positive slope
-            diff_sub_raw=diff(sub_ptz_raw)*sr;
-            diff_time=time(1:end-1)+0.5*(time(2)-time(1));
-            plot(diff_time*1e3,diff_sub_raw)
-            hold on
-            plot(diff_time*1e3,sub_dat_grad_smooth)
-            plot(diff_time*1e3,pos_slope_mask*2e3)
-            hold off
-            ylim([min(diff_sub_raw),max(diff_sub_raw)])
-            xlabel('time (ms)')
-            ylabel('grad (v/s)')
+%correct for the attenuation of the pzt voltage that goes into the DAQ
+sfp_pzt=sfp_pzt/args_single.pzt_attenuation_factor;
 
 
-            subplot(2,2,3)
-            cla;
-            plot(sweep{jj}.pzt_smooth,sweep{jj}.pd_full_raw,'k')
-            xlabel('pzt(v)')
-            ylabel('pd (v)')
-            hold on
-            plot(sweep{jj}.pks.full.pzt,sweep{jj}.pks.full.pd,'xk','markersize',20)
-            plot(sweep{jj}.pzt_smooth,sweep{jj}.pd_cmp_raw*args_single.cmp_multiplier_disp,'r')
-            plot(sweep{jj}.pks.cmp.pzt,sweep{jj}.pks.cmp.pd*args_single.cmp_multiplier_disp,'rx','markersize',20);
-            hold off
-            title(title_strs(single_mode_vec(jj)+1))
+% set up input struct for is_laser_single_mode
+sm_in.pd_voltage=[sfp_pd_raw',sfp_pd_cmp'];
+sm_in.pzt_voltage=sfp_pzt';
+sm_in.times=ai_dat.time';
+sm_in.scan_type='sawtooth';
+sm_in.num_checks=inf;
+sm_in.thresh_cmp_peak=20e-3; %theshold on the compressed signal to be considered a peak
+sm_in.peak_disvt_min_pass=4.5;%minimum pzt voltage between peaks for the laser to be considered single mode
+sm_in.scan_time=14e-3;  %estimate of the sfp scan time,used to set the window and the smoothing
+sm_in.peak_distance_thresh_cmp_full_min=0.3;
+sm_in.plot.all=true;
+sm_in.plot.failed=true;
 
-            pause(1e-6)
-        end %end plots
-    end %enough points to work with
+sm_out=is_laser_single_mode(sm_in)
 
-if jj>=jjmax || ~single_mode_vec(jj) %if something is not single mode do not continue
-    test_sm_while=false;
-end 
-end%end while loop over checking mode
+
 if sum(~single_mode_vec)==0
     ai_log_single_out.single_mode=true;
 else
