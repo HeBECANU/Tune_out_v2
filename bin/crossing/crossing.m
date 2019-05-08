@@ -32,7 +32,12 @@ function [ind,t0,s0,t0close,s0close] = crossing(S,t,level,imeth)
 % brueckner@sbrs.net
 
 % check the number of input arguments
-error(nargchk(1,4,nargin));
+
+%BMH 2019-05-07:com: function needs a test script and to save time when optional output args are not used
+
+
+%BMH 2019-05-07:change: fix obselete warning as suggested https://au.mathworks.com/matlabcentral/fileexchange/2432-crossing
+narginchk(1,4);
 
 % check the time vector input for consistency
 if nargin < 2 || isempty(t)
@@ -93,11 +98,15 @@ if strcmp(imeth,'linear')
     end
 end
 
-% Addition:
-% Some people like to get the data points closest to the zero crossing,
-% so we return these as well
-[CC,II] = min(abs([S(ind-1) ; S(ind) ; S(ind+1)]),[],1); 
+%BMH 2019-05-07:change: fix to deal with crossing at first index as suggested at https://au.mathworks.com/matlabcentral/fileexchange/2432-crossing
+lower_ind = ind-1; 
+lower_ind(lower_ind < 1) = 1; 
+upper_ind = ind+1; 
+upper_ind(upper_ind > numel(S)) = numel(S); 
+[~,II] = min(abs([S(lower_ind) ; S(ind) ; S(upper_ind)]),[],1); 
 ind2 = ind + (II-2); %update indices 
+ind2(ind2 < 1) = 1; 
+ind2(ind2 > numel(S)) = numel(S); 
 
-t0close = t(ind2);
+t0close = t(ind2); 
 s0close = S(ind2);

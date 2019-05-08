@@ -26,7 +26,6 @@ function ai_log_out=ai_log_import_core(anal_opts,data)
 %the output is a well aranged structure to be added into the data structure
 %the data structure is not included in the save to prevent double saving of the data
 %at the end of the import or load cashe the approapriate feilds are added to data
-%Only checks if sm if pd is ok/all previous checks of sm are ok
 %
 % Syntax:  [data,import_opts]=import_data(import_opts)
 %
@@ -60,6 +59,7 @@ function ai_log_out=ai_log_import_core(anal_opts,data)
 
     
 % Known BUGS/ Possible Improvements
+%   -[ ] process mains reference waveform
 %   -need more dam speed!
 %       -reading and jsondecode are the main problems the rest is very fast
 %   - vector for setpt
@@ -255,7 +255,7 @@ samples= size(ai_dat.Data,2);
 sr=ai_dat.sample_rate;
 aquire_time=samples/sr;
 
-ai_dat.time=(1:samples)/sr;%not sure if this is off by 1 sample in time
+ai_dat.time=(0:(samples-1))/sr;%not sure if this is off by 1 sample in time
 
 probe_sampl_start=max(1,ceil(args_single.pd.time_start*sr));
 probe_sampl_stop=min(samples,ceil(args_single.pd.time_stop*sr));
@@ -269,9 +269,9 @@ ai_log_single_out.pd.median=median(probe_pd_during_meas);
 
 
 %% plot the anlog values
-%as this function is not passed what the pd value should be it cant decide if it is failed for the
+%as this function does not decide if this pd signal has failes it cant decide if it should plot or not
 %args_single.plot.failed option
-if args_single.plot.all || (args_single.plot.failed)      
+if args_single.plot.all    
     sfigure(1);
     set(gcf,'color','w')
     subplot(2,2,4)
@@ -291,7 +291,8 @@ end
 
 %% Test if laser is single mode
 % dev load('ai_log_state_before_is_sm.mat')
- load('ai_log_state_before_is_sm.mat') %DEV DEV DEV REMOVE FOR USE
+%load('ai_log_state_before_is_sm.mat') %DEV DEV DEV REMOVE FOR USE
+
 sfp_pzt=ai_dat.Data(3,:);
 sfp_pd_raw=ai_dat.Data(2,:);
 sfp_pd_cmp=ai_dat.Data(4,:);
@@ -302,26 +303,29 @@ sfp_pzt=sfp_pzt/args_single.pzt_attenuation_factor;
 
 % set up input struct for is_laser_single_mode
 sm_in.pd_voltage=[sfp_pd_raw',sfp_pd_cmp'];
-sm_in.pzt_voltage=sfp_pzt';
 sm_in.times=ai_dat.time';
+sm_in.pzt_voltage=sfp_pzt';
+
+%move the below options back to main trap freq
 sm_in.scan_type='sawtooth';
-sm_in.num_checks=inf;
-sm_in.thresh_cmp_peak=20e-3; %theshold on the compressed signal to be considered a peak
-sm_in.peak_disvt_min_pass=4.5;%minimum pzt voltage between peaks for the laser to be considered single mode
-sm_in.scan_time=14e-3;  %estimate of the sfp scan time,used to set the window and the smoothing
-sm_in.peak_distance_thresh_cmp_full_min=0.3;
+sm_in.num_checks=20; %how many places to check that the laser is single mode
+sm_in.peak_thresh=[0,0]*1e-3; %theshold on the [uncompressed,compressed] signal to be considered a peak
+sm_in.pzt_dist_sm=4.5;%minimum pzt voltage between peaks for the laser to be considered single mode
+sm_in.pzt_dist_pd_cmp=0.3;
+sm_in.scan_time=20e-3;  %estimate of the sfp scan time,used to set the window and the smoothing
+sm_in.pd_filt_factor=1e-3; %fraction of a scan to smooth the pd data by for peak detection
+sm_in.ptz_filt_factor_pks=1e-3;  %fraction of a scan to smooth the pzt data by for peak detection
+sm_in.pzt_filt_factor_deriv=1e-3; %fraction of a scan to smooth the data by for derivative detection
+sm_in.pd_amp_min=1; %minimum range of the pd signal to indicate the laser has sufficient power
 sm_in.plot.all=true;
 sm_in.plot.failed=true;
 
-sm_out=is_laser_single_mode(sm_in)
+[laser_sm,laser_sm_test_det]=is_laser_single_mode(sm_in);
+
+ai_log_single_out.single_mode=laser_sm;
+ 
 
 
-if sum(~single_mode_vec)==0
-    ai_log_single_out.single_mode=true;
-else
-    ai_log_single_out.single_mode=false;
-end
-
-    
+  
     
 end
