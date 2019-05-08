@@ -14,8 +14,8 @@ ac_mains_data_filt=gaussfilt(ai_dat.time,ac_mains_dat,5e-4);
 ac_mains_mean=mean(ac_mains_dat);
 ac_mains_std=std(ac_mains_dat);
 %% build a function to automate the process below
-fft_plot_freq_lims=[5,2000];
-make_harmonics_model(ai_dat.time,ac_mains_dat,4,fft_plot_freq_lims,5)
+fft_plot_freq_lims=[5,5000];
+make_harmonics_model(ai_dat.time,ac_mains_dat,[5,3],fft_plot_freq_lims,5)
 
 
 %%
@@ -166,3 +166,50 @@ str = {print_var(1),...
       print_var(2),...
        print_var(3)};
 annotation('textbox',dim,'String',str,'FitBoxToText','on');
+
+
+
+%%
+num_harm_fit=20;
+
+test_param=[0,50,1,0,1,0];
+test_harm=[1,3];
+plot(tdat,harmonic_sine_waves(tdat,test_param,test_harm))
+
+opts = statset('nlinfit');
+%opts.MaxIter=0;
+%opts.RobustWgtFun = 'welsch' ; %a bit of robust fitting
+%opts.Tune = 1;
+
+fit_fun=@(param,time) harmonic_sine_waves(time,param,fft_pks.harm_rounded(1:num_harm_fit));
+beta0 = [0,fft_pks.freq(1)]; %intial guesses
+param_tmp=[fft_pks.amp(1:num_harm_fit);fft_pks.phase(1:num_harm_fit)];
+beta0=[beta0,param_tmp(:)'];
+
+coef_names={'offset ','freq'};
+amp_names=arrayfun(@(harm) sprintf('amp%u',harm),rounded_harmonic(1:num_harm_fit),'UniformOutput',false);
+phase_names=arrayfun(@(harm) sprintf('phase%u',harm),rounded_harmonic(1:num_harm_fit),'UniformOutput',false);
+nametmp=[amp_names;phase_names];
+coef_names=[coef_names,nametmp(:)'];
+
+fit_mdl = fitnlm(tdat,xdat,fit_fun,beta0,'Options',opts,'CoefficientNames',coef_names);
+[y_fit_val,y_ci_fit]=predict(fit_mdl,tdat,'Prediction' ,'observation');
+sfigure(2);
+clf
+subplot(2,1,1)
+plot(tdat,xdat,'k')
+hold on
+plot(tdat,y_fit_val,'r')
+plot(tdat,y_ci_fit,'b')
+hold off
+
+subplot(2,1,2)
+plot(tdat,xdat-y_fit_val,'k')
+
+
+print_var=@(idx) sprintf('%s=%.2f±%.2f',...
+            fit_mdl.Coefficients.Row{idx},...
+            fit_mdl.Coefficients.Estimate(idx),...
+            fit_mdl.Coefficients.SE(idx) );
+
+
