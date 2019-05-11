@@ -1,10 +1,10 @@
-function [harmonic_data,model]=make_harmonics_model(tdat,xdat,num_harm_chirp_fit,freq_lims,verbose)
+function [harmonic_data,model]=complicated_harmonics_model(tdat,xdat,terms,freq_lims,verbose)
 xdat=xdat(:);
 tdat=tdat(:);
 %given a periodic waveform with lots of harmonics return 
 % - phase,amplitude,phase of those harmonics
 % - a model
-% this code calulates [harmoncis,freq chirp] terms with a stationary amplitude model
+% this code calulates [harmoncis,freq chirp,amp_chirp] terms with a chirped amplitude model for each harmonic
 
 min_peak_factor=1e-4; %amplitude of freq component relative to rms to be included
 
@@ -30,9 +30,9 @@ pks_freq=fft_dat(1,pks_idx);
 %amplitude sort the peaks from highest to smallest amplitude
 [~,sort_order]=sort(pks_unsorted,'descend');
 fft_pks=[];
-fft_pks.amp=pks_unsorted(sort_order);
-fft_pks.freq=pks_freq(sort_order);
-fft_pks.phase=angle(fft_dat(2,pks_idx))+pi/2;
+fft_pks.amp=pks_unsorted(sort_order)';
+fft_pks.freq=pks_freq(sort_order)';
+fft_pks.phase=2*pi-angle(fft_dat(2,pks_idx)'); %not sure about this offset
 
 
 %TODO: option to allow f_fund*1/2*N
@@ -46,8 +46,10 @@ is_harmonic=is_harmonic & fund_freq*abs(rounded_harmonic-multiple_of_fund)<0.2; 
 fft_pks.harm_rounded=rounded_harmonic;
 %mask  and the fft_pks strucutre
 
+
+harmonic_terms=terms(1);
 %mask out what we will fit
-is_harmonic=is_harmonic & (1:numel(is_harmonic))<=num_harm_chirp_fit(1);
+is_harmonic=is_harmonic & (1:numel(is_harmonic))'<=harmonic_terms;
 fft_pks_to_fit=struct_mask(fft_pks,is_harmonic);
 fft_pks_not_fit=struct_mask(fft_pks,~is_harmonic);
 
@@ -90,40 +92,44 @@ end
 % test_harm=[1,3];
 % plot(tdat,harmonic_sine_waves(tdat,test_param,test_harm))
 
-if numel(num_harm_chirp_fit)==1
-    opts = statset('nlinfit');
-    %opts.MaxIter=0;
-    fit_fun=@(param,time) harmonic_sine_waves(time,param,fft_pks_to_fit.harm_rounded);
-    beta0 = [0,fft_pks_to_fit.freq(1)]; %intial guesses
-    param_tmp=[fft_pks_to_fit.amp;fft_pks_to_fit.phase];
-    beta0=[beta0,param_tmp(:)'];
-    coef_names={'offset ','freq'};
-    amp_names=arrayfun(@(harm) sprintf('amp%u',harm),fft_pks_to_fit.harm_rounded,'UniformOutput',false);
-    phase_names=arrayfun(@(harm) sprintf('phase%u',harm),fft_pks_to_fit.harm_rounded,'UniformOutput',false);
-    nametmp=[amp_names;phase_names];
-    coef_names=[coef_names,nametmp(:)'];
-    fit_mdl = fitnlm(tdat,xdat,fit_fun,beta0,'Options',opts,'CoefficientNames',coef_names)
+
+freq_chirp_terms=terms(2);
+if numel(terms)<3
+    amp_chirp_terms=1; 
 else
-    num_freq_terms=num_harm_chirp_fit(2);
-    % test_param=[0,50,1,0,1,0];
-    % test_harm=[1,3];
-    % plot(tdat,harmonic_sine_waves(tdat,test_param,test_harm))
-    opts = statset('nlinfit');
-    %opts.MaxIter=0;
-    fit_fun=@(param,time) harmonic_sine_waves_chrip(time,param,fft_pks_to_fit.harm_rounded,num_freq_terms);
-    beta0 = [0,fft_pks_to_fit.freq(1),zeros(1,num_freq_terms-1)]; %set offset and the terms of the freq taylor series to zero
-    param_tmp=[fft_pks_to_fit.amp;fft_pks_to_fit.phase];
-    beta0=[beta0,param_tmp(:)'];
-    coef_names={'offset '};
-    freq_names=arrayfun(@(harm) sprintf('f^(%u)',harm),0:(num_freq_terms-1),'UniformOutput',false);
-    coef_names=[coef_names,freq_names];
-    amp_names=arrayfun(@(harm) sprintf('amp%u',harm),fft_pks_to_fit.harm_rounded,'UniformOutput',false);
-    phase_names=arrayfun(@(harm) sprintf('phase%u',harm),fft_pks_to_fit.harm_rounded,'UniformOutput',false);
-    nametmp=[amp_names;phase_names];
-    coef_names=[coef_names,nametmp(:)'];
-    fit_mdl = fitnlm(tdat,xdat,fit_fun,beta0,'Options',opts,'CoefficientNames',coef_names)
-    
+    amp_chirp_terms=terms(3);
 end
+% test_param=[0,50,1,0,1,0];
+% test_harm=[1,3];
+% plot(tdat,harmonic_sine_waves(tdat,test_param,test_harm))
+
+fit_fun=@(param,time) harmonic_sine_waves_amp_freq_chrip(time,param,fft_pks_to_fit.harm_rounded,freq_chirp_terms,amp_chirp_terms);
+beta0 = [0,fft_pks_to_fit.freq(1),zeros(1,freq_chirp_terms-1)]; %set offset and the terms of the freq taylor series to zero
+param_tmp=[fft_pks_to_fit.phase,fft_pks_to_fit.amp];
+%then add all higher order amp chirp terms to be zero
+param_tmp=cat(2,param_tmp,zeros(numel(fft_pks_to_fit.phase),amp_chirp_terms-1)+1e-4)';
+beta0=[beta0,param_tmp(:)'];
+
+
+%generate the parameter names, 
+coef_names={'offset '};
+freq_names=arrayfun(@(harm) sprintf('f_d%u',harm),0:(freq_chirp_terms-1),'UniformOutput',false);
+coef_names=[coef_names,freq_names];
+phase_names=arrayfun(@(harm) sprintf('phase_h%u',harm),fft_pks_to_fit.harm_rounded,'UniformOutput',false);
+
+make_amp_term_labels=@(harm) arrayfun(@(amp_deriv) sprintf('amp_h%u_d%u',harm,amp_deriv),...
+                                0:(amp_chirp_terms-1),'UniformOutput',false);
+
+amp_names=arrayfun((make_amp_term_labels),fft_pks_to_fit.harm_rounded,'UniformOutput',false)';
+
+
+nametmp=cat(2,phase_names,cat(1,amp_names{:}))';
+coef_names=cat(2,coef_names,nametmp(:)');
+
+opts = statset('nlinfit');
+%opts.MaxIter=0; %use for debuging the inital guess
+fit_mdl = fitnlm(tdat,xdat,fit_fun,beta0,'Options',opts,'CoefficientNames',coef_names)
+    
 
 
 [y_fit_val,y_ci_fit]=predict(fit_mdl,tdat,'Prediction' ,'observation');
@@ -132,9 +138,12 @@ clf
 subplot(2,1,1)
 plot(tdat,xdat,'k')
 hold on
+first_guess=fit_fun(beta0,tdat);
 plot(tdat,y_fit_val,'r')
+plot(tdat,first_guess,'g')
 plot(tdat,y_ci_fit,'b')
 hold off
+xlim([0,0.1])
 
 subplot(2,1,2)
 plot(tdat,xdat-y_fit_val,'k')
@@ -146,43 +155,34 @@ plot(tdat,xdat-y_fit_val,'k')
 end
 
 
-function out=harmonic_sine_waves(x,param,harmonic)
-%param offset,fund_freq,amp1,phase1,amp2,phase2,...,ampN,freqN,phaseN
-num_params=numel(param);
-if mod(num_params-2,2)~=0
-    error('params length must be 2+N*2')
-end
-if fix((num_params-2)/2)~=numel(harmonic)
-    error('number of elements in harmonic vector wrong')
-end
-amp_phase=reshape(param(3:end),2,[])';
-amp_freq_phase=[amp_phase(:,1),harmonic(:)*param(2),amp_phase(:,2)];
-out=sum_sine_waves(x,amp_freq_phase,param(1));
 
-end
-
-function out=harmonic_sine_waves_chrip(x,param,harmonic,num_freq_terms)
-%param offset,fund_freq,amp1,phase1,amp2,phase2,...,ampN,freqN,phaseN
+function out=harmonic_sine_waves_amp_freq_chrip(x,param,harmonic,num_freq_terms,num_amp_terms)
+%param = offset,fund_freq_d0,fund_freq_d1,...fund_freq_d(num_freq_terms-1),...
+%phase1,amp1_d0,amp1_d1,...,amp1_d(num_amp_terms-1),...
+%phase2,amp2_d0,amp2_d1,...,amp2_d(num_amp_terms-1),...
+%phaseN,ampN_d0,...,ampN_d(num_amp_terms-1)
+% where d0,d1,dj indicates jth derivative
 if num_freq_terms==0
     error('cant have no freq terms')
 end
 num_params=numel(param);
-if mod(num_params-1-num_freq_terms,2)~=0
-    error('params length must be 1+num_freq_terms+N*2')
+if mod(num_params-1-num_freq_terms,1+num_amp_terms)~=0
+    error('params length must be 1+num_freq_terms+N*(1+num_amp_terms)')
 end
-if fix((num_params-1-num_freq_terms)/2)~=numel(harmonic)
+if fix((num_params-1-num_freq_terms)/(1+num_amp_terms))~=numel(harmonic)
     error('number of elements in harmonic vector wrong')
 end
 
 %strip out the parts of the parameters
 offset=param(1);
-param=param(2:end);
+param=param(2:end); %strip this off
 freq_terms=param(1:num_freq_terms);
-param=param(num_freq_terms+1:end);
+param=param(num_freq_terms+1:end); %the phase,amp tay series
 
-amp_phase=reshape(param,2,[])';
-amp_freq_phase=[amp_phase(:,1),harmonic(:),amp_phase(:,2)];
-out=sum_sine_waves_chirped(x,amp_freq_phase,offset,freq_terms);
+amp_phase=reshape(param,1+num_amp_terms,[])';
+harm_freq_amp_chirp=[harmonic(:),amp_phase(:,1),amp_phase(:,2:end)];
+
+out=sum_sine_waves_amp_freq_chirped(x,harm_freq_amp_chirp,offset,freq_terms);
 
 end
 

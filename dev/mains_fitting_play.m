@@ -4,6 +4,10 @@
 load('ai_log_state_before_is_sm.mat')
 
 
+%Goals
+% - understand how mains harmonics works
+% - recover the 
+
 
 
 %%
@@ -15,8 +19,24 @@ ac_mains_mean=mean(ac_mains_dat);
 ac_mains_std=std(ac_mains_dat);
 %% build a function to automate the process below
 fft_plot_freq_lims=[5,5000];
-make_harmonics_model(ai_dat.time,ac_mains_dat,[5,3],fft_plot_freq_lims,5)
+make_harmonics_model(ai_dat.time,ac_mains_dat,[1,3],fft_plot_freq_lims,5)
 
+%% try with harmonics,freq chirp and amp chirp
+fft_plot_freq_lims=[5,5000];
+complicated_harmonics_model(ai_dat.time,ac_mains_dat,[20,2,2],fft_plot_freq_lims,5)
+%given 20 harmonics,3 freq terms how does the numer of amp terms change the RMSE
+% 1 0.00317
+% 2 0.00306
+% 3 0.00306
+
+% given 20 harmonics 2 amp terms how do the freq terms change things
+% 3 0.00306
+% 2 0.0031
+% 1 0.00906
+
+
+%% can we improve things by adding a time dependent amplitude
+% how do the harmonic amplidudes relate to the fundemental amplitude
 
 %%
 
