@@ -12,6 +12,8 @@ if size(freq_lims)~=[1,2]
     error('freq lims not the right size')
 end
 
+
+% migrate to dominant_freq_components
 mean_xdat=mean(xdat);
 std_xdat=std(xdat);
 

@@ -171,7 +171,9 @@ for ii=1:iimax
         args_single.fname=fname;
         cout=function_cache(cache_opts,@ai_log_single,{args_single});
         ai_log_single_out=cout{1};
-        ai_log_out.ok.sfp(idx_nearest_shot)=ai_log_single_out.single_mode;
+        ai_log_out.ok.sfp(idx_nearest_shot)=ai_log_single_out.single_mode_logic;
+        ai_log_out.ac_mains_fit(idx_nearest_shot)=ai_log_single_out.ac_mains_fit;
+        ai_log_out.sfp(idx_nearest_shot)=ai_log_single_out.single_mode_details;
         ai_log_out.pd.mean(idx_nearest_shot)=ai_log_single_out.pd.mean;
         ai_log_out.pd.std(idx_nearest_shot)=ai_log_single_out.pd.std;
         ai_log_out.pd.median(idx_nearest_shot)=ai_log_single_out.pd.median;
@@ -322,10 +324,15 @@ sm_in.plot.failed=true;
 
 [laser_sm,laser_sm_test_det]=is_laser_single_mode(sm_in);
 
-ai_log_single_out.single_mode=laser_sm;
- 
+ai_log_single_out.single_mode_logic=laser_sm;
+ai_log_single_out.single_mode_details=laser_sm_test_det;
 
+%% Fit the mains waveform
+ac_mains_dat=ai_dat.Data(5,:);
+harmonics_freq_lims=[5,5000]; %cant see much use case to change so will leave hardcoded
+harm_fit_out=chrip_sine_harmonics_model(ai_dat.time,ac_mains_dat,[5,3,1],harmonics_freq_lims,0);
 
+ai_log_single_out.ac_mains_fit=harm_fit_out;
   
     
 end

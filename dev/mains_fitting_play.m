@@ -23,7 +23,11 @@ make_harmonics_model(ai_dat.time,ac_mains_dat,[1,3],fft_plot_freq_lims,5)
 
 %% try with harmonics,freq chirp and amp chirp
 fft_plot_freq_lims=[5,5000];
-complicated_harmonics_model(ai_dat.time,ac_mains_dat,[20,2,2],fft_plot_freq_lims,5)
+%t_lims=[0,1];
+t_lims=[-inf,inf];
+lim_idx=fast_sorted_mask(ai_dat.time,t_lims(1),t_lims(2));
+
+harm_fit_out=chrip_sine_harmonics_model(ai_dat.time(lim_idx(1):lim_idx(2)),ac_mains_dat(lim_idx(1):lim_idx(2)),[5,3,1],fft_plot_freq_lims,5)
 %given 20 harmonics,3 freq terms how does the numer of amp terms change the RMSE
 % 1 0.00317
 % 2 0.00306

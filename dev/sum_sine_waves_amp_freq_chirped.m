@@ -11,7 +11,7 @@ if size(components,2)<3
 end
 x=x(:);
 sine_fun=@(params) taylor_series(x,params(3:end),0).*sin(x.*taylor_series(x,freq_series,0).*2.*pi*params(1)+params(2));
-component_amp=row_col_fun_mat(sine_fun,components,1);
+component_amp=col_row_fun_mat(sine_fun,components,2);
 out=sum(component_amp,1)+offset;
 out=out(:);
 end

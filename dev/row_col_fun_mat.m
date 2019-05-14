@@ -11,5 +11,5 @@ if dirn==2
 elseif dirn==1
     dirn=2;
 end
-out=col_row_fun_mat(funhandle,mat_in,dirn)
+out=col_row_fun_mat(funhandle,mat_in,dirn);
 end
