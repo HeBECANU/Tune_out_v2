@@ -294,24 +294,29 @@ anal_opts.ai_log.force_load_save=false;
 anal_opts.ai_log.log_name='log_analog_in_';
 anal_opts.ai_log.calibration=data.mcp_tdc.probe.calibration;
 anal_opts.ai_log.pd.set_probe=anal_opts.probe_set_pt;
-
-anal_opts.ai_log.aquire_time=4;
-anal_opts.ai_log.pd.diff_thresh=0.1;
-anal_opts.ai_log.pd.std_thresh=0.1;
-anal_opts.ai_log.pd.time_start=0.2;
-anal_opts.ai_log.pd.time_stop=2;
-anal_opts.ai_log.sfp.num_checks=20; %how many places to check that the laser is single mode
-anal_opts.ai_log.sfp.thresh_cmp_peak=20e-3; %theshold on the compressed signal to be considered a peak
-anal_opts.ai_log.sfp.peak_dist_min_pass=4.5;%minimum (min difference)between peaks for the laser to be considered single mode
-anal_opts.ai_log.plot.all=false;
-anal_opts.ai_log.plot.failed=false;
-anal_opts.ai_log.time_match_valid=8; %how close the predicted start of the shot is to the actual
-anal_opts.ai_log.scan_time=1/20; %fast setting 1/100hz %estimate of the sfp scan time,used to set the window and the smoothing
-%because im only passing the ai_log feild to aviod conflicts forcing a reimport i need to coppy these feilds
 anal_opts.ai_log.trig_dld=anal_opts.trig_dld;
 anal_opts.ai_log.dld_aquire=anal_opts.dld_aquire;
 anal_opts.ai_log.aquire_time=anal_opts.dld_aquire;
 anal_opts.ai_log.trig_ai_in=anal_opts.trig_ai_in;
+% set time mathcing info
+anal_opts.ai_log.aquire_time=4;
+anal_opts.ai_log.pd.diff_thresh=0.05;
+anal_opts.ai_log.pd.std_thresh=0.05;
+anal_opts.ai_log.pd.time_start=0.2;
+anal_opts.ai_log.pd.time_stop=2;
+anal_opts.ai_log.time_match_valid=8; %how close the predicted start of the shot is to the actual
+%sfp options
+anal_opts.ai_log.scan_time=1/20; %fast setting 1/100hz %estimate of the sfp scan time,used to set the window and the smoothing
+%because im only passing the ai_log feild to aviod conflicts forcing a reimport i need to coppy these feilds
+anal_opts.ai_log.sfp.num_checks=inf; %how many places to check that the laser is single mode
+anal_opts.ai_log.sfp.peak_thresh=[-0.005,-0.005];%[0,-0.008]*1e-3; %theshold on the compressed signal to be considered a peak
+anal_opts.ai_log.sfp.pzt_dist_sm=4.5;%minimum (min peak difference)between peaks for the laser to be considered single mode
+anal_opts.ai_log.sfp.pzt_peak_width=0.1; %peak with in pzt voltage used to check that peaks are acually different and not just noise
+anal_opts.ai_log.plot.all=false;
+anal_opts.ai_log.plot.failed=true;
+
+%do the ac waveform fit
+anal_opts.ai_log.do_ac_mains_fit=false;
 
 % Call the function
 data.ai_log=ai_log_import(anal_opts.ai_log,data);
@@ -373,8 +378,8 @@ anal_opts.wm_log.time_blue_padding=1; %check this many seconde each side of prob
 anal_opts.wm_log.time_probe=3;
 anal_opts.wm_log.ecd_volt_thresh=0.5;
 
-anal_opts.wm_log.red_sd_thresh=50; %allowable standard deviation in MHz
-anal_opts.wm_log.red_range_thresh=50; %allowable range deviation in MHz
+anal_opts.wm_log.red_sd_thresh=5; %allowable standard deviation in MHz
+anal_opts.wm_log.red_range_thresh=10; %allowable range deviation in MHz
 anal_opts.wm_log.rvb_thresh=20; %allowable value of abs(2*red-blue)
 
 data.wm_log.proc=wm_log_process(anal_opts,data);
@@ -617,13 +622,14 @@ to_freq_unc_quad=new_to_freq_unc{2}*2;
 to_wav_unc_quad=new_to_freq_unc{2}*const.c/((to_fit_trimed_val{2}*2)^2);
 time_run_start=data.mcp_tdc.time_create_write(1,2)-anal_opts.trig_dld-anal_opts.dld_aquire;
 time_run_stop=data.mcp_tdc.time_create_write(end,2)-anal_opts.trig_dld-anal_opts.dld_aquire;
+time_duration=data.mcp_tdc.time_create_write(end,2)-data.mcp_tdc.time_create_write(1,2);
 fprintf('run start time               %.1f        (posix)\n',time_run_start)
 fprintf('                             %s (ISO)\n',datestr(datetime(time_run_start,'ConvertFrom','posix'),'yyyy-mm-ddTHH:MM:SS'))
 fprintf('run stop time                %.1f        (posix)\n',time_run_stop)
 fprintf('                             %s (ISO)\n',datestr(datetime(time_run_stop,'ConvertFrom','posix'),'yyyy-mm-ddTHH:MM:SS'))
 
-fprintf('duration                     %.1f (s)\n',...
-    data.mcp_tdc.time_create_write(end,2)-data.mcp_tdc.time_create_write(1,2))
+fprintf('duration                     %.1f (s),%.1f (hc)\n',...
+    time_duration,time_duration/(60*60))
 fprintf('TO freq (Linear)             %.1f±(%.0f±%.0f) MHz\n',...
     to_freq_val_lin*1e-6,to_freq_unc_lin*1e-6,to_fit_unc_unc_boot_lin*1e-6*2)
 fprintf('TO wavelength (Linear)       %.6f±%f nm \n',to_wav_val_lin*1e9,to_wav_unc_lin*1e9)

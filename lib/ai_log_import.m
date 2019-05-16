@@ -120,6 +120,7 @@ args_single.plot=anal_opts.plot;
 args_single.sfp=anal_opts.sfp;
 args_single.pd.time_start=anal_opts.pd.time_start;
 args_single.pd.time_stop=anal_opts.pd.time_stop;
+args_single.do_ac_mains_fit=anal_opts.do_ac_mains_fit;
 
 cache_opts=[];
 cache_opts.verbose=0;
@@ -172,7 +173,9 @@ for ii=1:iimax
         cout=function_cache(cache_opts,@ai_log_single,{args_single});
         ai_log_single_out=cout{1};
         ai_log_out.ok.sfp(idx_nearest_shot)=ai_log_single_out.single_mode_logic;
-        ai_log_out.ac_mains_fit(idx_nearest_shot)=ai_log_single_out.ac_mains_fit;
+        if anal_opts.do_ac_mains_fit
+            ai_log_out.ac_mains_fit(idx_nearest_shot)=ai_log_single_out.ac_mains_fit;
+        end
         ai_log_out.sfp(idx_nearest_shot)=ai_log_single_out.single_mode_details;
         ai_log_out.pd.mean(idx_nearest_shot)=ai_log_single_out.pd.mean;
         ai_log_out.pd.std(idx_nearest_shot)=ai_log_single_out.pd.std;
@@ -310,29 +313,28 @@ sm_in.pzt_voltage=sfp_pzt';
 
 %move the below options back to main trap freq
 sm_in.scan_type='sawtooth';
-sm_in.num_checks=20; %how many places to check that the laser is single mode
-sm_in.peak_thresh=[0,0]*1e-3; %theshold on the [uncompressed,compressed] signal to be considered a peak
-sm_in.pzt_dist_sm=4.5;%minimum pzt voltage between peaks for the laser to be considered single mode
-sm_in.pzt_dist_pd_cmp=0.3;
+sm_in.num_checks=args_single.sfp.num_checks; %how many places to check that the laser is single mode
+sm_in.peak_thresh=args_single.sfp.peak_thresh; %theshold on the [uncompressed,compressed] signal to be considered a peak
+sm_in.pzt_dist_sm=args_single.sfp.pzt_dist_sm;%minimum pzt voltage between peaks for the laser to be considered single mode
+sm_in.pzt_peak_width=args_single.sfp.pzt_peak_width; %used to check that peaks are acually different and not just noise
 sm_in.scan_time=20e-3;  %estimate of the sfp scan time,used to set the window and the smoothing
 sm_in.pd_filt_factor=1e-3; %fraction of a scan to smooth the pd data by for peak detection
 sm_in.ptz_filt_factor_pks=1e-3;  %fraction of a scan to smooth the pzt data by for peak detection
 sm_in.pzt_filt_factor_deriv=1e-3; %fraction of a scan to smooth the data by for derivative detection
 sm_in.pd_amp_min=1; %minimum range of the pd signal to indicate the laser has sufficient power
-sm_in.plot.all=true;
-sm_in.plot.failed=true;
+sm_in.plot=args_single.plot;
 
 [laser_sm,laser_sm_test_det]=is_laser_single_mode(sm_in);
-
 ai_log_single_out.single_mode_logic=laser_sm;
 ai_log_single_out.single_mode_details=laser_sm_test_det;
 
 %% Fit the mains waveform
-ac_mains_dat=ai_dat.Data(5,:);
-harmonics_freq_lims=[5,5000]; %cant see much use case to change so will leave hardcoded
-harm_fit_out=chrip_sine_harmonics_model(ai_dat.time,ac_mains_dat,[5,3,1],harmonics_freq_lims,0);
+if args_single.do_ac_mains_fit
+    ac_mains_dat=ai_dat.Data(5,:);
+    harmonics_freq_lims=[5,5000]; %cant see much use case to change so will leave hardcoded
+    harm_fit_out=chrip_sine_harmonics_model(ai_dat.time,ac_mains_dat,[5,3,1],harmonics_freq_lims,0);
 
-ai_log_single_out.ac_mains_fit=harm_fit_out;
-  
-    
+    ai_log_single_out.ac_mains_fit=harm_fit_out;
+end
+
 end

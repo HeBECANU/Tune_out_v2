@@ -86,8 +86,9 @@ for ii=1:iimax
     wm_log_processed.probe.freq.act.mean(ii)=mean(red_freqs);
     wm_log_processed.probe.freq.act.std(ii)=std(red_freqs);
     wm_log_processed.probe.freq.error(ii)=false;
-    %             break
-    if numel(red_freqs)~=0 && std(red_freqs)<anal_opts.wm_log.red_sd_thresh && range(red_freqs)<anal_opts.wm_log.red_range_thresh
+    %BMH todo: if there 
+    if numel(red_freqs)>5 && ... %need more than 5 measurments to say anything about stability
+            std(red_freqs)<anal_opts.wm_log.red_sd_thresh && range(red_freqs)<anal_opts.wm_log.red_range_thresh
        wm_log_processed.ok.freq(ii)=true;
     end
     
