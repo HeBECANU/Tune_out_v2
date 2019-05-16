@@ -6,7 +6,10 @@ tdat=tdat(:);
 % - a model
 % this code calulates [harmoncis,freq chirp,amp_chirp] terms with a chirped amplitude model for each harmonic
 
-% migrate this code block to dominant_freq_components
+%TODO
+% -documentation
+
+
 
 if ~isequal(size(freq_lims),[1,2])
     error('freq lims not the right size')
@@ -39,7 +42,7 @@ fft_pks_not_fit=struct_mask(fft_pks,~is_harmonic);
 
 %plot the waveform and the fft and the identified peaks
 if verbose>2
-    sfigure(2);
+    stfig('ac waveform fft','add_stack',1);
     clf
     set(gcf,'color','w')
     subplot(2,1,1)
@@ -63,7 +66,6 @@ end
 if sum(diff(sort(fft_pks_to_fit.harm_rounded))==0)>0
     sort(fft_pks_to_fit.harm_rounded)
     error('nonunique harmonics found')
-    
 end
 
 
@@ -167,7 +169,8 @@ out_struct.fit_perf=fit_perf;
 
 if verbose>2
     %%plot the result
-    sfigure(3);
+    %sfigure(3);
+    stfig('ac waveform fit','add_stack',1);
     clf
     subplot(2,1,1)
     plot(tdat,xdat,'k')

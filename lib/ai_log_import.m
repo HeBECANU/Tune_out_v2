@@ -56,6 +56,11 @@ function ai_log_out=ai_log_import_core(anal_opts,data)
 %       ai_log_out.pd.mean
 %       ai_log_out.pd.std
 %       ai_log_out.pd.median
+%         
+% Other m-files required: stfig,is_laser_single_mode
+% Also See: 
+% Subfunctions: ai_log_single
+% MAT-files required: none
 
     
 % Known BUGS/ Possible Improvements
@@ -274,20 +279,20 @@ ai_log_single_out.pd.median=median(probe_pd_during_meas);
 
 
 %% plot the anlog values
-%as this function does not decide if this pd signal has failes it cant decide if it should plot or not
-%args_single.plot.failed option
+%as this function does not decide if this pd signal has failed it cant decide if it should plot or not
+%wit the args_single.plot.failed option
 if args_single.plot.all    
-    sfigure(1);
-    set(gcf,'color','w')
-    subplot(2,2,4)
-    cla;
+    stfig('probe pd','add_stack',1);
+    clf;
     plot(ai_dat.time(probe_sampl_start:probe_sampl_stop),probe_pd_during_meas,'b')
-    %yl=ylim;
-    %xl=xlim;
-%     hold on
-%     line([xl(1),xl(2)],[args_single.pd.set_vec,args_single.pd.set_vec],'Color','k','LineWidth',3)
-%     hold off
-    %ylim([yl(1),yl(2)])
+    yl=ylim;
+    xl=xlim;
+    hold on
+    line([xl(1),xl(2)],[1,1]*ai_log_single_out.pd.mean,'Color','k','LineWidth',3)
+    line([xl(1),xl(2)],[1,1]*(ai_log_single_out.pd.mean+ai_log_single_out.pd.std),'Color','r','LineWidth',3)
+    line([xl(1),xl(2)],[1,1]*(ai_log_single_out.pd.mean-ai_log_single_out.pd.std),'Color','r','LineWidth',3)
+    hold off
+    ylim([yl(1),yl(2)])
     ylabel('probe voltage')
     xlabel('time (s)')
     pause(1e-6)
@@ -330,9 +335,14 @@ ai_log_single_out.single_mode_details=laser_sm_test_det;
 
 %% Fit the mains waveform
 if args_single.do_ac_mains_fit
+    if args_single.plot.all
+        verbose=5;
+    else
+        verbose=0;
+    end
     ac_mains_dat=ai_dat.Data(5,:);
     harmonics_freq_lims=[5,5000]; %cant see much use case to change so will leave hardcoded
-    harm_fit_out=chrip_sine_harmonics_model(ai_dat.time,ac_mains_dat,[5,3,1],harmonics_freq_lims,0);
+    harm_fit_out=chrip_sine_harmonics_model(ai_dat.time,ac_mains_dat,[5,3,1],harmonics_freq_lims,verbose);
 
     ai_log_single_out.ac_mains_fit=harm_fit_out;
 end

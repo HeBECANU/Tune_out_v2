@@ -218,9 +218,8 @@ data.labview.calibration=lv_log.probe_calibration;
 
 %% CHECK ATOM NUMBER
 %total number of detected counts
-sfigure(1);
+stfig('diagnostics and veto','add_stack',1);
 clf
-set(gcf,'color','w')
 subplot(4,1,1)
 %create a list of indicies (of the mcp_tdc) that have an ok number of counts
 %exclude the very low and then set the thresh based on the sd of the remaining
@@ -232,7 +231,7 @@ fprintf('shots number ok %u out of %u \n',sum(data.mcp_tdc.num_ok),numel(data.mc
 drawnow
 %plot((data.mcp_tdc.time_create_write(:,2)-data.mcp_tdc.time_create_write(1,2))/(60*60),data.mcp_tdc.num_counts)
 %xlabel('time (h)')
-plot(data.mcp_tdc.num_counts)
+plot(data.mcp_tdc.shot_num,data.mcp_tdc.num_counts,'k')
 xlabel('shot number')
 ylabel('total counts')
 title('num count run trend')
@@ -256,10 +255,9 @@ time_diff=data.mcp_tdc.time_create_write(1:imax,2)'-anal_opts.dld_aquire-anal_op
     data.labview.time(1:imax);
 mean_delay_labview_tdc=0;%median(time_diff);
 
-sfigure(1);
-set(gcf,'color','w')
+stfig('diagnostics and veto','add_stack',1);
 subplot(4,1,2)
-plot(data.mcp_tdc.shot_num(1:imax),time_diff-mean_delay_labview_tdc)
+plot(data.mcp_tdc.shot_num(1:imax),time_diff-mean_delay_labview_tdc,'k')
 xlabel('shot number')
 ylabel('corrected time between labview and mcp tdc')
 title('raw time diff')
@@ -292,13 +290,14 @@ anal_opts.ai_log.dir=anal_opts.tdc_import.dir;
 anal_opts.ai_log.force_reimport=true;
 anal_opts.ai_log.force_load_save=false;
 anal_opts.ai_log.log_name='log_analog_in_';
+%because im only passing the ai_log feild to aviod conflicts forcing a reimport i need to coppy these feilds
 anal_opts.ai_log.calibration=data.mcp_tdc.probe.calibration;
 anal_opts.ai_log.pd.set_probe=anal_opts.probe_set_pt;
 anal_opts.ai_log.trig_dld=anal_opts.trig_dld;
 anal_opts.ai_log.dld_aquire=anal_opts.dld_aquire;
 anal_opts.ai_log.aquire_time=anal_opts.dld_aquire;
 anal_opts.ai_log.trig_ai_in=anal_opts.trig_ai_in;
-% set time mathcing info
+% set time matching conditions
 anal_opts.ai_log.aquire_time=4;
 anal_opts.ai_log.pd.diff_thresh=0.05;
 anal_opts.ai_log.pd.std_thresh=0.05;
@@ -307,21 +306,22 @@ anal_opts.ai_log.pd.time_stop=2;
 anal_opts.ai_log.time_match_valid=8; %how close the predicted start of the shot is to the actual
 %sfp options
 anal_opts.ai_log.scan_time=1/20; %fast setting 1/100hz %estimate of the sfp scan time,used to set the window and the smoothing
-%because im only passing the ai_log feild to aviod conflicts forcing a reimport i need to coppy these feilds
 anal_opts.ai_log.sfp.num_checks=inf; %how many places to check that the laser is single mode
 anal_opts.ai_log.sfp.peak_thresh=[-0.005,-0.005];%[0,-0.008]*1e-3; %theshold on the compressed signal to be considered a peak
 anal_opts.ai_log.sfp.pzt_dist_sm=4.5;%minimum (min peak difference)between peaks for the laser to be considered single mode
-anal_opts.ai_log.sfp.pzt_peak_width=0.1; %peak with in pzt voltage used to check that peaks are acually different and not just noise
+anal_opts.ai_log.sfp.pzt_peak_width=0.15; %peak with in pzt voltage used to check that peaks are acually different and not just noise
 anal_opts.ai_log.plot.all=false;
 anal_opts.ai_log.plot.failed=true;
 
 %do the ac waveform fit
-anal_opts.ai_log.do_ac_mains_fit=false;
+anal_opts.ai_log.do_ac_mains_fit=true;
 
 % Call the function
 data.ai_log=ai_log_import(anal_opts.ai_log,data);
 
 if isnan(anal_opts.probe_set_pt)
+    stfig('finding pd setpt','add_stack',1);
+    clf
     %plot the mean vs the pd std to determine what the setpt was
     plot(data.ai_log.pd.mean,data.ai_log.pd.std,'x')
     xlabel('mean pd voltage (v)')
@@ -333,8 +333,16 @@ if isnan(anal_opts.probe_set_pt)
     std_upper_lim_mask=std_upper_lim<data.ai_log.pd.std;
     %then find the median value
     estimated_pd_setpt=median(data.ai_log.pd.mean(std_upper_lim_mask));
+    yl=ylim;
+    xl=xlim;
+    hold on
+    line([1,1]*estimated_pd_setpt,yl,'Color','k','LineWidth',1)
+    %line([xl(1),xl(2)],[1,1]*(ai_log_single_out.pd.mean+ai_log_single_out.pd.std),'Color','r','LineWidth',3)
+    %line([xl(1),xl(2)],[1,1]*(ai_log_single_out.pd.mean-ai_log_single_out.pd.std),'Color','r','LineWidth',3)
+    
     anal_opts.ai_log.pd.set_probe=estimated_pd_setpt;
     data.ai_log=[];
+    drawnow
     data.ai_log=ai_log_import(anal_opts.ai_log,data);
     
     %%write this out to the cal file
@@ -354,7 +362,7 @@ end
 %% IMPORT WM LOG FILES
 
 anal_opts.wm_log.dir=anal_opts.tdc_import.dir;
-anal_opts.wm_log.force_reimport=true;
+anal_opts.wm_log.force_reimport=false;
 wm_log_name='log_wm_';
 wm_logs=dir([anal_opts.wm_log.dir,wm_log_name,'*.txt']);
 anal_opts.wm_log.names={wm_logs.name};
@@ -385,6 +393,13 @@ anal_opts.wm_log.rvb_thresh=20; %allowable value of abs(2*red-blue)
 data.wm_log.proc=wm_log_process(anal_opts,data);
 clear('sub_data')
 
+%TODO
+% doublecheck that setpoint agrees with wavemeter value and isnt out by one shot
+% clf
+% plot(data.labview.setpoint-data.labview.setpoint(1),'xb')
+% hold on
+% plot(data.wm_log.proc.probe.freq.act.mean*1e6-data.labview.setpoint(1),'rx')
+
 
 
 
@@ -401,8 +416,7 @@ clear('sub_data')
 %data.mcp_tdc.probe.ok.ecd_pd;  %ecd pd value
   
 
-sfigure(1);
-set(gcf,'color','w')
+stfig('diagnostics and veto','add_stack',1);
 subplot(4,1,3)
 %plot all the logics, dither it a bit to make it easier to figure out
 %culprits
@@ -457,14 +471,14 @@ tmp_num_shots=numel(data.mcp_tdc.shot_num);
 tmp_num_ok_shots=sum(tmp_all_ok);
 data.mcp_tdc.all_ok=tmp_all_ok;
 data.mcp_tdc.probe.ok.all=tmp_probe_ok;
-
-
+drawnow
 fprintf('ok logic gives %u / %u shots for yeild %04.1f %%\n',...
     tmp_num_ok_shots,tmp_num_shots,1e2*tmp_num_ok_shots/tmp_num_shots)
 % set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
 % plot_name='check_logics';
 % saveas(gcf,[anal_out.dir,plot_name,'.png'])
 % saveas(gcf,[anal_out.dir,plot_name,'.fig'])
+
 
 %% BINNING UP THE ATOM LASER PULSES
 %now find the mean position of each pulse of the atom laser in each shot
