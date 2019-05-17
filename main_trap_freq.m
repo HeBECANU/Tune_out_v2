@@ -111,20 +111,9 @@ tmp_xlim=[-30e-3, 30e-3];     %tight XY lims to eliminate hot spot from destroyi
 tmp_ylim=[-30e-3, 30e-3];
 tlim=[0,4];
 anal_opts.tdc_import.txylim=[tlim;tmp_xlim;tmp_ylim];
-
 anal_opts.max_runtime=inf;%inf%cut off the data run after some number of hours, should bin included as its own logic not applied to the atom number ok
-anal_opts.atom_laser.pulsedt=8.000e-3;
-anal_opts.atom_laser.t0=0.41784; %center i ntime of the first pulse
-anal_opts.atom_laser.start_pulse=1; %atom laser pulse to start with
-anal_opts.atom_laser.pulses=100;
-anal_opts.atom_laser.appr_osc_freq_guess=[52,40,40];
-anal_opts.atom_laser.pulse_twindow=anal_opts.atom_laser.pulsedt*0.9;
-anal_opts.atom_laser.xylim=anal_opts.tdc_import.txylim(2:3,:); %set same lims for pulses as import
 
 
-
-anal_opts.global.fall_time=0.417;
-anal_opts.global.qe=0.09;
 
 anal_opts.trig_dld=20.3;
 anal_opts.dld_aquire=4;
@@ -134,6 +123,19 @@ anal_opts.aom_freq=0;%190*1e6;%Hz %set to zero for comparison with previous data
 
 anal_opts.wm_log.plot_all=false;
 anal_opts.wm_log.plot_failed=false;
+
+
+anal_opts.atom_laser.pulsedt=8.000e-3;
+anal_opts.atom_laser.t0=0.41784; %center i ntime of the first pulse
+anal_opts.atom_laser.start_pulse=1; %atom laser pulse to start with
+anal_opts.atom_laser.pulses=100;
+anal_opts.atom_laser.appr_osc_freq_guess=[52,40,40];
+anal_opts.atom_laser.pulse_twindow=anal_opts.atom_laser.pulsedt*0.9;
+anal_opts.atom_laser.xylim=anal_opts.tdc_import.txylim(2:3,:); %set same lims for pulses as import
+
+anal_opts.global.fall_time=0.417;
+anal_opts.global.qe=0.09;
+anal_opts.global.atom_laser.t0=anal_opts.atom_laser.t0;
 
 
 anal_opts.osc_fit.binsx=1000;
@@ -287,7 +289,7 @@ clear('tmp_est_labview_start')
 % a two teired cache system is used one level for importing all 
 
 anal_opts.ai_log.dir=anal_opts.tdc_import.dir;
-anal_opts.ai_log.force_reimport=true;
+anal_opts.ai_log.force_reimport=false;
 anal_opts.ai_log.force_load_save=false;
 anal_opts.ai_log.log_name='log_analog_in_';
 %because im only passing the ai_log feild to aviod conflicts forcing a reimport i need to coppy these feilds
@@ -377,8 +379,11 @@ data.wm_log.raw=wm_log_import(anal_opts.wm_log);
 %compexity is that the time that the tdc file is wrote/reated is not relaible and depend on the flux rate and avaialble mem
 %to this end find the closest labview update time and go back one then fowards
 
-anal_opts.wm_log.plot_all=false;
-anal_opts.wm_log.plot_failed=false;
+
+%TODO: only pass anal_opts.wm_log
+
+anal_opts.wm_log.plot.all=false;
+anal_opts.wm_log.plot.failed=false;
 anal_opts.wm_log.force_reimport=false;
 
 anal_opts.wm_log.time_pd_padding=4; %check this many s each side of probe
@@ -389,6 +394,8 @@ anal_opts.wm_log.ecd_volt_thresh=0.5;
 anal_opts.wm_log.red_sd_thresh=5; %allowable standard deviation in MHz
 anal_opts.wm_log.red_range_thresh=10; %allowable range deviation in MHz
 anal_opts.wm_log.rvb_thresh=20; %allowable value of abs(2*red-blue)
+
+anal_opts.wm_log.global=anal_opts.global;
 
 data.wm_log.proc=wm_log_process(anal_opts,data);
 clear('sub_data')
@@ -482,6 +489,14 @@ fprintf('ok logic gives %u / %u shots for yeild %04.1f %%\n',...
 
 %% BINNING UP THE ATOM LASER PULSES
 %now find the mean position of each pulse of the atom laser in each shot
+
+%TODO: 
+% some kind of guard pulses
+% a check that the pulse time seems reasonable
+% convert the postions into velocity leaving the trap
+
+anal_opts.atom_laser.plot.all=false;
+anal_opts.atom_laser.t0=0.417770;
 data.mcp_tdc.al_pulses=bin_al_pulses(anal_opts.atom_laser,data);
 
 
