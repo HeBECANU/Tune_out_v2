@@ -53,28 +53,24 @@
 % MAT-files required: none
 %
 % Known BUGS/ Possible Improvements
-%   - maybe process the analog logs into a output file for faster reading in??
-%   - weight the final TO fit by the trap freq fit unc
+%  - a better way of figuring out what the pd setpoint is, maybe write as a config file
+%  - harmonize the output
+%  - try different ways of fitting
+%    - AC mains waveform
+%    - harmonic component
 %	-make unique plot numbers
 %   -the fit error depends on wavelength indicating that the model does not
 %   have enough freedom
 %	-make plots more compact
 %   -harmonize the anal opts
-%	-place more sections into functions
-%	-clean up the fit section
-%	-write a in depth function cashing wrapper with hash lookup
-%		-alow partial updates
+
 %       
 %
 % Author: Bryce Henson
 % email: Bryce.Henson@live.com
-% Last revision:2018-10-09
+% Last revision:2019-04-16
 
 
-
-% JR To do:
-%   Wrapper function for TO scan analysis over many dirs
-%   scrolling average over scan range with smaller time steps (cheat for higher res scanwise anal)
 
 %close all
 clear all
@@ -84,168 +80,25 @@ clear all
 %setup directories you wish to loop over
 % 
 loop_config.dir = {
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output',
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190227_qwp_270\',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190227_qwp_286',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190227_qwp_310',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190227_qwp_286_no_analog',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190226_qwp_254',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190226_qwp_246',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190226_qwp_234',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190225_qwp_226',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190225_qwp_220',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190225_qwp_202',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190225_qwp_187',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190225_qwp_177',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190225_qwp_162',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190225_qwp_154',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190224_qwp_130',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190224_qwp_134',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190224_qwp_138',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190224_qwp_142',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190224_qwp_146',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190223_qwp_150',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190221_to_amp_7',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190221_to_amp_3',
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190217_to_hwp_168.5_nuller_reconfig_new_fiber_pdset_1.0v_wide',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190216_to_hwp_168.5_nuller_reconfig_new_fiber_pdset_1.0v_short_run',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190216_to_hwp_168.5_nuller_reconfig_new_fiber_pdset_1.0v_bad_laser_2',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190216_to_hwp_168.5_nuller_reconfig_new_fiber_pdset_1.0v_bad_laser_1',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190214_to_hwp_168.5_nuller_reconfig_new_fiber_pdset_1.0v',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190214_to_hwp_168.5_nuller_reconfig_new_fiber_pdset_2.5v',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190214_to_hwp_168.5_nuller_reconfig_new_fiber_pdset_2.0v',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190214_to_hwp_168.5_nuller_reconfig_pdset_0.6v',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190213_to_hwp_168.5_nuller_reconfig_pdset_0.4v',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190213_to_hwp_168.5_nuller_reconfig_pdset_0.7v',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190213_to_hwp_168.5_nuller_reconfig_pdset_0.8v',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190211_to_hwp_168.5_nuller_reconfig_pdset_0.4v',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190211_to_hwp_168.5_nuller_reconfig_pdset_0.2v',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190211_to_hwp_250_nuller_reconfig_tenma_setpoint',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190211_to_hwp_240_nuller_reconfig',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190211_to_hwp_230_nuller_reconfig',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190211_to_hwp_217_nuller_reconfig',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190211_to_hwp_208_nuller_reconfig',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190211_to_hwp_199_nuller_reconfig',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190211_to_hwp_194_nuller_reconfig',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190210_to_hwp_187_nuller_reconfig',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190210_to_hwp_181_nuller_reconfig',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190210_to_hwp_177_nuller_reconfig_part_b',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190210_to_hwp_177_nuller_reconfig_part_a',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190210_to_hwp_171_nuller_reconfig',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190210_to_hwp_165_nuller_reconfig',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190210_to_hwp_160_nuller_reconfig',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190209_to_hwp_155_nuller_reconfig',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190209_to_hwp_145_nuller_reconfig',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190209_to_hwp_140_nuller_reconfig',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190208_to_hwp_120_nuller_reconfig_okish',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190208_to_hwp_99_nuller_reconfig',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190207_to_hwp_80_nuller_reconfig',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190204_to_hwp_121_nuller_reconfig',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190204_to_hwp_24_nuller_reconfig',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190204_to_hwp_46_nuller_reconfig',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190204_to_hwp_61_nuller_reconfig',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190204_to_hwp_92_nuller_reconfig',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190203_to_hwp_51_nuller_reconfig',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190203_to_hwp_151_nuller_reconfig',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190201_to_hwp_111_nuller_reconfig'
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190201_to_hwp_111_nuller_reconfig',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190201_to_hwp_89',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190201_to_hwp_89_low_pow_test',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190201_to_hwp_89_low_num_test',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190131_to_hwp_89',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190131_to_hwp_89_redo',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190131_to_hwp_89\',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190131_to_hwp_170',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190130_to_hwp_0',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190130_to_hwp_20\',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190130_to_hwp_37\',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190129_to_hwp_100',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190129_to_hwp_127\',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190127_to_hwp_157',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190127_to_hwp_75',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190124_to_hwp_105\',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190123_to_hwp_162\',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190123_to_hwp_137',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190123_to_hwp_68',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190122_to_hwp_27\',
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190115_baseline_to_1\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181203_filt_skew_pos50ghz_bad_setpt\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181124_3_filt_align_dep_34_um\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181122_filt_dep_none\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181205_baseline_nuller_on_always\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181204_baseline_1\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181201_filt_skew_neg111ghz\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181203_filt_skew_pos50ghz\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181202_filt_skew_pos110ghz\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_36.8um\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181122_alignment_dep_34_5\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181011_to_drift_2\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181120_filt_dep_3filt\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181202_filt_skew_neg50ghz\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_44.9_um\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181026_wp_out_stab\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181026_wp_out_stab2\',
-        'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181123_3_filt_align_dep_31um\'};
-% loop_config.dir = {
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_51_nuller_reconfig\',
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190203_to_hwp_29_nuller_reconfig\',
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190201_to_hwp_131_nuller_reconfig\',
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190203_to_hwp_171_nuller_reconfig\',
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190203_to_hwp_191_nuller_reconfig\',
-%     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190211_to_hwp_208_nuller_reconfig\',
-%     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190211_to_hwp_194_nuller_reconfig\',
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_187_nuller_reconfig\',
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_181_nuller_reconfig\',
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_177_nuller_reconfig_part_b\',
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_177_nuller_reconfig_part_a\',
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_171_nuller_reconfig\',
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_165_nuller_reconfig\',
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_160_nuller_reconfig\',
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190209_to_hwp_155_nuller_reconfig\',
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190209_to_hwp_145_nuller_reconfig\',
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190209_to_hwp_140_nuller_reconfig\',
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190208_to_hwp_120_nuller_reconfig_okish\',
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190208_to_hwp_99_nuller_reconfig\',
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190207_to_hwp_80_nuller_reconfig\',
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_121_nuller_reconfig\',
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_24_nuller_reconfig\',
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_46_nuller_reconfig\',
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_61_nuller_reconfig\',
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_92_nuller_reconfig\',
-%     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190211_to_hwp_230_nuller_reconfig\',
-%     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190211_to_hwp_217_nuller_reconfig\',
-%     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190211_to_hwp_199_nuller_reconfig\',
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190206_to_hwp_100_nuller_reconfig\',
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_141_nuller_reconfig\',
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_160_nuller_reconfig\',
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_180_nuller_reconfig\',
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_70_nuller_reconfig\',
-%     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190211_to_hwp_240_nuller_reconfig\',
-%     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190211_to_hwp_250_nuller_reconfig_tenma_setpoint\',
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190201_to_hwp_111_nuller_reconfig\',
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190203_to_hwp_151_nuller_reconfig\'
-%     };
-%loop_config.set_pt = [1.2500    1.2500    1.2500    1.2500    1.2500    1.0000    1.0000    1.0000    1.0000    1.0000    1.0000    1.0000    1.0000    1.0000    1.0000    1.0000    1.0000    1.0000    1.0000    1.2500   1.2500    1.2500    1.2500    1.2500    1.2500    1.0000    1.0000    1.0000    1.2500    1.2500   1.2500    1.2500    1.2500    1.0000    1.0000    1.2500    1.2500];
-%Vector of set points for each directory, has to be done manualy first, but is saved after data is analysed    
-% loop_config.dir = {
-%     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190221_to_amp_3\',
-%     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190221_to_amp_7\',
-%     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190221_to_amp_10\'
-%     };
-loop_config.set_pt = [1.4,1.4,1.5,1.5,1.5,1.5,1.5,1.5,1.0,1.0,1.0,1.0,1.0,1.0,1.0,... 
-    1.0,1.0,1.0,1.0,1.0,2.5,2.51,0.6,0.4,0.7,0.8,0.4,0.2,1.0,1.0,1.0,1.0,1.0,1.0,1.0,...
-    1.0,1.0,1.0,1.0,1.0,1.0,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,1.25,0....
-    5.0, 5.0, 8.0, 8.0, 3.0, 3, 3, 5, 5, 2,5,3,5 ,5,5,5];
+    'F:\to_copy\20190227_qwp_270',
+    'F:\to_copy\20190227_qwp_286',
+    'F:\to_copy\20190227_qwp_310',
+    };
+loop_config.set_pt = [nan,1.0,1.0];
 
 %selected_dirs = 1:numel(loop_config.dir); %which files to loop over (currently all)
-selected_dirs = 1;
+selected_dirs = [1];
 
 
 for dir_idx = selected_dirs
-try
+
 tic
 anal_opts=[]; %reset the options (would be good to clear all variables except the loop config
 anal_opts.tdc_import.dir = loop_config.dir{dir_idx};
+
+
+
+
 anal_opts.probe_set_pt=loop_config.set_pt(dir_idx);
  
 anal_opts.tdc_import.file_name='d';
@@ -258,20 +111,9 @@ tmp_xlim=[-30e-3, 30e-3];     %tight XY lims to eliminate hot spot from destroyi
 tmp_ylim=[-30e-3, 30e-3];
 tlim=[0,4];
 anal_opts.tdc_import.txylim=[tlim;tmp_xlim;tmp_ylim];
-
 anal_opts.max_runtime=inf;%inf%cut off the data run after some number of hours, should bin included as its own logic not applied to the atom number ok
-anal_opts.atom_laser.pulsedt=8.000e-3;
-anal_opts.atom_laser.t0=0.41784; %center i ntime of the first pulse
-anal_opts.atom_laser.start_pulse=1; %atom laser pulse to start with
-anal_opts.atom_laser.pulses=100;
-anal_opts.atom_laser.appr_osc_freq_guess=[52,40,40];
-anal_opts.atom_laser.pulse_twindow=anal_opts.atom_laser.pulsedt*0.9;
-anal_opts.atom_laser.xylim=anal_opts.tdc_import.txylim(2:3,:); %set same lims for pulses as import
 
 
-
-anal_opts.global.fall_time=0.417;
-anal_opts.global.qe=0.09;
 
 anal_opts.trig_dld=20.3;
 anal_opts.dld_aquire=4;
@@ -283,11 +125,27 @@ anal_opts.wm_log.plot_all=false;
 anal_opts.wm_log.plot_failed=false;
 
 
+anal_opts.atom_laser.pulsedt=8.000e-3;
+anal_opts.atom_laser.t0=0.41784; %center i ntime of the first pulse
+anal_opts.atom_laser.start_pulse=1; %atom laser pulse to start with
+anal_opts.atom_laser.pulses=100;
+anal_opts.atom_laser.appr_osc_freq_guess=[52,40,40];
+anal_opts.atom_laser.pulse_twindow=anal_opts.atom_laser.pulsedt*0.9;
+anal_opts.atom_laser.xylim=anal_opts.tdc_import.txylim(2:3,:); %set same lims for pulses as import
+
+anal_opts.global.fall_time=0.417;
+anal_opts.global.qe=0.09;
+anal_opts.global.atom_laser.t0=anal_opts.atom_laser.t0;
+
+
 anal_opts.osc_fit.binsx=1000;
 anal_opts.osc_fit.blur=1;
 anal_opts.osc_fit.xlim=[-20,20]*1e-3;
 anal_opts.osc_fit.tlim=[0.86,1.08];
 anal_opts.osc_fit.dimesion=2; %Select coordinate to bin. 1=X, 2=Y.
+
+
+%import the run config here
 
 % END USER VAR-----------------------------------------------------------
 %sets up the struct 'data' which will contain everything you could want incuding the txy data and
@@ -362,9 +220,8 @@ data.labview.calibration=lv_log.probe_calibration;
 
 %% CHECK ATOM NUMBER
 %total number of detected counts
-sfigure(1);
+stfig('diagnostics and veto','add_stack',1);
 clf
-set(gcf,'color','w')
 subplot(4,1,1)
 %create a list of indicies (of the mcp_tdc) that have an ok number of counts
 %exclude the very low and then set the thresh based on the sd of the remaining
@@ -376,7 +233,7 @@ fprintf('shots number ok %u out of %u \n',sum(data.mcp_tdc.num_ok),numel(data.mc
 drawnow
 %plot((data.mcp_tdc.time_create_write(:,2)-data.mcp_tdc.time_create_write(1,2))/(60*60),data.mcp_tdc.num_counts)
 %xlabel('time (h)')
-plot(data.mcp_tdc.num_counts)
+plot(data.mcp_tdc.shot_num,data.mcp_tdc.num_counts,'k')
 xlabel('shot number')
 ylabel('total counts')
 title('num count run trend')
@@ -400,10 +257,9 @@ time_diff=data.mcp_tdc.time_create_write(1:imax,2)'-anal_opts.dld_aquire-anal_op
     data.labview.time(1:imax);
 mean_delay_labview_tdc=0;%median(time_diff);
 
-sfigure(1);
-set(gcf,'color','w')
+stfig('diagnostics and veto','add_stack',1);
 subplot(4,1,2)
-plot(data.mcp_tdc.shot_num(1:imax),time_diff-mean_delay_labview_tdc)
+plot(data.mcp_tdc.shot_num(1:imax),time_diff-mean_delay_labview_tdc,'k')
 xlabel('shot number')
 ylabel('corrected time between labview and mcp tdc')
 title('raw time diff')
@@ -436,32 +292,63 @@ anal_opts.ai_log.dir=anal_opts.tdc_import.dir;
 anal_opts.ai_log.force_reimport=false;
 anal_opts.ai_log.force_load_save=false;
 anal_opts.ai_log.log_name='log_analog_in_';
-anal_opts.ai_log.pd.set=data.mcp_tdc.probe.calibration;
-%nan compatable logical inverse
-anal_opts.ai_log.pd.set(~isnan(anal_opts.ai_log.pd.set))=~anal_opts.ai_log.pd.set(~isnan(anal_opts.ai_log.pd.set));
-anal_opts.ai_log.pd.set=anal_opts.ai_log.pd.set*anal_opts.probe_set_pt;
-%anal_opts.ai_log.pd.set(isnan(anal_opts.ai_log.pd.set))=0;
-anal_opts.ai_log.aquire_time=4;
-
-anal_opts.ai_log.pd.diff_thresh=0.1;
-anal_opts.ai_log.pd.std_thresh=0.1;
-anal_opts.ai_log.pd.time_start=0.2;
-anal_opts.ai_log.pd.time_stop=2;
-anal_opts.ai_log.sfp.num_checks=20; %how many places to check that the laser is single mode
-anal_opts.ai_log.sfp.thresh_cmp_peak=20e-3; %theshold on the compressed signal to be considered a peak
-anal_opts.ai_log.sfp.peak_dist_min_pass=4.5;%minimum (min difference)between peaks for the laser to be considered single mode
-anal_opts.ai_log.plot.all=false;
-anal_opts.ai_log.plot.failed=false;
-anal_opts.ai_log.time_match_valid=8; %how close the predicted start of the shot is to the actual
-anal_opts.ai_log.scan_time=1/20; %fast setting 1/100hz %estimate of the sfp scan time,used to set the window and the smoothing
 %because im only passing the ai_log feild to aviod conflicts forcing a reimport i need to coppy these feilds
+anal_opts.ai_log.calibration=data.mcp_tdc.probe.calibration;
+anal_opts.ai_log.pd.set_probe=anal_opts.probe_set_pt;
 anal_opts.ai_log.trig_dld=anal_opts.trig_dld;
 anal_opts.ai_log.dld_aquire=anal_opts.dld_aquire;
 anal_opts.ai_log.aquire_time=anal_opts.dld_aquire;
 anal_opts.ai_log.trig_ai_in=anal_opts.trig_ai_in;
+% set time matching conditions
+anal_opts.ai_log.aquire_time=4;
+anal_opts.ai_log.pd.diff_thresh=0.05;
+anal_opts.ai_log.pd.std_thresh=0.05;
+anal_opts.ai_log.pd.time_start=0.2;
+anal_opts.ai_log.pd.time_stop=2;
+anal_opts.ai_log.time_match_valid=8; %how close the predicted start of the shot is to the actual
+%sfp options
+anal_opts.ai_log.scan_time=1/20; %fast setting 1/100hz %estimate of the sfp scan time,used to set the window and the smoothing
+anal_opts.ai_log.sfp.num_checks=inf; %how many places to check that the laser is single mode
+anal_opts.ai_log.sfp.peak_thresh=[-0.005,-0.005];%[0,-0.008]*1e-3; %theshold on the compressed signal to be considered a peak
+anal_opts.ai_log.sfp.pzt_dist_sm=4.5;%minimum (min peak difference)between peaks for the laser to be considered single mode
+anal_opts.ai_log.sfp.pzt_peak_width=0.15; %peak with in pzt voltage used to check that peaks are acually different and not just noise
+anal_opts.ai_log.plot.all=false;
+anal_opts.ai_log.plot.failed=true;
 
-%% Call the function
+%do the ac waveform fit
+anal_opts.ai_log.do_ac_mains_fit=true;
+
+% Call the function
 data.ai_log=ai_log_import(anal_opts.ai_log,data);
+
+if isnan(anal_opts.probe_set_pt)
+    stfig('finding pd setpt','add_stack',1);
+    clf
+    %plot the mean vs the pd std to determine what the setpt was
+    plot(data.ai_log.pd.mean,data.ai_log.pd.std,'x')
+    xlabel('mean pd voltage (v)')
+    ylabel('std pd voltage(v)')
+    %get some reasonable estimate for what the pd setpt was if it is unknown
+    is_non_zero_mask=data.ai_log.pd.mean>0.1;
+    %go one sd down from the mean pd variation during the probe
+    std_upper_lim=mean(data.ai_log.pd.std(is_non_zero_mask))-std(data.ai_log.pd.std(is_non_zero_mask));
+    std_upper_lim_mask=std_upper_lim<data.ai_log.pd.std;
+    %then find the median value
+    estimated_pd_setpt=median(data.ai_log.pd.mean(std_upper_lim_mask));
+    yl=ylim;
+    xl=xlim;
+    hold on
+    line([1,1]*estimated_pd_setpt,yl,'Color','k','LineWidth',1)
+    %line([xl(1),xl(2)],[1,1]*(ai_log_single_out.pd.mean+ai_log_single_out.pd.std),'Color','r','LineWidth',3)
+    %line([xl(1),xl(2)],[1,1]*(ai_log_single_out.pd.mean-ai_log_single_out.pd.std),'Color','r','LineWidth',3)
+    
+    anal_opts.ai_log.pd.set_probe=estimated_pd_setpt;
+    data.ai_log=[];
+    drawnow
+    data.ai_log=ai_log_import(anal_opts.ai_log,data);
+    
+    %%write this out to the cal file
+end
 
 %%
 %HACK IF SFP BROKEN
@@ -477,7 +364,7 @@ data.ai_log=ai_log_import(anal_opts.ai_log,data);
 %% IMPORT WM LOG FILES
 
 anal_opts.wm_log.dir=anal_opts.tdc_import.dir;
-anal_opts.wm_log.force_reimport=true;
+anal_opts.wm_log.force_reimport=false;
 wm_log_name='log_wm_';
 wm_logs=dir([anal_opts.wm_log.dir,wm_log_name,'*.txt']);
 anal_opts.wm_log.names={wm_logs.name};
@@ -492,8 +379,11 @@ data.wm_log.raw=wm_log_import(anal_opts.wm_log);
 %compexity is that the time that the tdc file is wrote/reated is not relaible and depend on the flux rate and avaialble mem
 %to this end find the closest labview update time and go back one then fowards
 
-anal_opts.wm_log.plot_all=false;
-anal_opts.wm_log.plot_failed=false;
+
+%TODO: only pass anal_opts.wm_log
+
+anal_opts.wm_log.plot.all=false;
+anal_opts.wm_log.plot.failed=false;
 anal_opts.wm_log.force_reimport=false;
 
 anal_opts.wm_log.time_pd_padding=4; %check this many s each side of probe
@@ -501,12 +391,21 @@ anal_opts.wm_log.time_blue_padding=1; %check this many seconde each side of prob
 anal_opts.wm_log.time_probe=3;
 anal_opts.wm_log.ecd_volt_thresh=0.5;
 
-anal_opts.wm_log.red_sd_thresh=50; %allowable standard deviation in MHz
-anal_opts.wm_log.red_range_thresh=50; %allowable range deviation in MHz
+anal_opts.wm_log.red_sd_thresh=5; %allowable standard deviation in MHz
+anal_opts.wm_log.red_range_thresh=10; %allowable range deviation in MHz
 anal_opts.wm_log.rvb_thresh=20; %allowable value of abs(2*red-blue)
+
+anal_opts.wm_log.global=anal_opts.global;
 
 data.wm_log.proc=wm_log_process(anal_opts,data);
 clear('sub_data')
+
+%TODO
+% doublecheck that setpoint agrees with wavemeter value and isnt out by one shot
+% clf
+% plot(data.labview.setpoint-data.labview.setpoint(1),'xb')
+% hold on
+% plot(data.wm_log.proc.probe.freq.act.mean*1e6-data.labview.setpoint(1),'rx')
 
 
 
@@ -524,8 +423,7 @@ clear('sub_data')
 %data.mcp_tdc.probe.ok.ecd_pd;  %ecd pd value
   
 
-sfigure(1);
-set(gcf,'color','w')
+stfig('diagnostics and veto','add_stack',1);
 subplot(4,1,3)
 %plot all the logics, dither it a bit to make it easier to figure out
 %culprits
@@ -580,8 +478,7 @@ tmp_num_shots=numel(data.mcp_tdc.shot_num);
 tmp_num_ok_shots=sum(tmp_all_ok);
 data.mcp_tdc.all_ok=tmp_all_ok;
 data.mcp_tdc.probe.ok.all=tmp_probe_ok;
-
-
+drawnow
 fprintf('ok logic gives %u / %u shots for yeild %04.1f %%\n',...
     tmp_num_ok_shots,tmp_num_shots,1e2*tmp_num_ok_shots/tmp_num_shots)
 % set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
@@ -589,8 +486,17 @@ fprintf('ok logic gives %u / %u shots for yeild %04.1f %%\n',...
 % saveas(gcf,[anal_out.dir,plot_name,'.png'])
 % saveas(gcf,[anal_out.dir,plot_name,'.fig'])
 
+
 %% BINNING UP THE ATOM LASER PULSES
 %now find the mean position of each pulse of the atom laser in each shot
+
+%TODO: 
+% some kind of guard pulses
+% a check that the pulse time seems reasonable
+% convert the postions into velocity leaving the trap
+
+anal_opts.atom_laser.plot.all=false;
+anal_opts.atom_laser.t0=0.417770;
 data.mcp_tdc.al_pulses=bin_al_pulses(anal_opts.atom_laser,data);
 
 
@@ -745,13 +651,14 @@ to_freq_unc_quad=new_to_freq_unc{2}*2;
 to_wav_unc_quad=new_to_freq_unc{2}*const.c/((to_fit_trimed_val{2}*2)^2);
 time_run_start=data.mcp_tdc.time_create_write(1,2)-anal_opts.trig_dld-anal_opts.dld_aquire;
 time_run_stop=data.mcp_tdc.time_create_write(end,2)-anal_opts.trig_dld-anal_opts.dld_aquire;
+time_duration=data.mcp_tdc.time_create_write(end,2)-data.mcp_tdc.time_create_write(1,2);
 fprintf('run start time               %.1f        (posix)\n',time_run_start)
 fprintf('                             %s (ISO)\n',datestr(datetime(time_run_start,'ConvertFrom','posix'),'yyyy-mm-ddTHH:MM:SS'))
 fprintf('run stop time                %.1f        (posix)\n',time_run_stop)
 fprintf('                             %s (ISO)\n',datestr(datetime(time_run_stop,'ConvertFrom','posix'),'yyyy-mm-ddTHH:MM:SS'))
 
-fprintf('duration                     %.1f (s)\n',...
-    data.mcp_tdc.time_create_write(end,2)-data.mcp_tdc.time_create_write(1,2))
+fprintf('duration                     %.1f (s),%.1f (hc)\n',...
+    time_duration,time_duration/(60*60))
 fprintf('TO freq (Linear)             %.1f±(%.0f±%.0f) MHz\n',...
     to_freq_val_lin*1e-6,to_freq_unc_lin*1e-6,to_fit_unc_unc_boot_lin*1e-6*2)
 fprintf('TO wavelength (Linear)       %.6f±%f nm \n',to_wav_val_lin*1e9,to_wav_unc_lin*1e9)
@@ -821,8 +728,8 @@ fclose(fid);
 toc
 fprintf('Done\n')
 
-catch err
-fprintf('Analysis on folder\n (%s) failed \n',anal_opts.tdc_import.dir) %Indicate if a directory couldn't be analysed properly
-msgText = getReport(err)
-end
+%catch err
+%fprintf('Analysis on folder\n (%s) failed \n',anal_opts.tdc_import.dir) %Indicate if a directory couldn't be analysed properly
+%msgText = getReport(err)
+%end
 end
