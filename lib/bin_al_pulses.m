@@ -8,7 +8,7 @@ al_pulses.window=nan(anal_opts.pulses,3,2); %initalize
 al_pulses.num_counts=nan(iimax,anal_opts.pulses);
 al_pulses.pos.mean=nan(iimax,anal_opts.pulses,3);
 al_pulses.pos.std=nan(iimax,anal_opts.pulses,3);
-
+global const %get gravity
 fprintf('binning pulses in files %04u:%04u',size(data.mcp_tdc.counts_txy,2),0)
 first_good_shot=true;
 for shot=1:iimax
@@ -46,14 +46,15 @@ for shot=1:iimax
                 al_pulses.num_counts(shot,pulse)=size(counts_pulse(:,3),1);
                 al_pulses.pos.mean(shot,pulse,:)=mean(counts_pulse,1);
                 al_pulses.pos.std(shot,pulse,:)=std(counts_pulse,1);
-%                 al_pulses.pos_stat(shot,pulse,:)=[...
-%                                            mean(counts_pulse(:,1)),...
-%                                            mean(counts_pulse(:,2)),...
-%                                            mean(counts_pulse(:,3)),...
-%                                            std(counts_pulse(:,1)),...
-%                                            std(counts_pulse(:,2)),...
-%                                            std(counts_pulse(:,3))]; 
-
+                %TODO: convert to velocity here and then take the mean,std
+                vzxy_out=txy_to_vel(counts_pulse,...
+                                    t_pulse_cen-anal_opts.global.fall_time,...
+                                    -const.g0,...
+                                    anal_opts.global.fall_dist);
+                al_pulses.vel.mean(shot,pulse,:)=mean(vzxy_out,1);
+                al_pulses.vel.std(shot,pulse,:)=std(vzxy_out,1);               
+                
+                
             end%pulse
             if first_good_shot,first_good_shot=false; end
         %check that the calculated t0 is close enough
@@ -79,6 +80,42 @@ if abs(mean_cen_time)>tol_t0_match
     est_t0=anal_opts.t0+mean_cen_time;
     fprintf('t0 should be %.6f',est_t0)
 end
+
+%convert the position data into velocity
+% initalize the output array
+al_pulses.vel_approx.mean=al_pulses.pos.mean*nan;
+% the z/time axis is slightly complicated because
+% z=z(0) + vz(0)t+1/2 g t^2
+% want to solve for v(0) given x(t_fall) the fall distance and gravity(in -ve x) , say bec pos is x=0 at t=0
+% -fall_dist=vz(0)t+1/2 g t^2
+% vz(0)=-fall_dist/t  -1/2 g t 
+% now we dont have the fall time directly, we can find the time difference to the expected pulse time 
+pulse_time_diff=al_pulses.pos.mean(:,:,1)-repmat(transpose(al_pulses.time_cen),size(al_pulses.vel_approx.mean,1),1);
+%isequal(col_vec(al_pulses.vel_approx.mean(1,:,1)),col_vec(al_pulses.pos.mean(1,:,1)'-al_pulses.time_cen))
+% then add add on the fall time
+pulse_fall_time=pulse_time_diff+anal_opts.global.fall_time;
+
+al_pulses.vel_approx.mean(:,:,1)=-anal_opts.global.fall_dist./pulse_fall_time-(1/2)*-const.g0*pulse_fall_time;
+
+% then we want to convert the x,y data into velocity using the fall time
+% bacause the TOF changes a little from the oscillation in z we can correct for this
+% lets see how big of a change this is
+% calc how much the TOF changes from the z osc
+%std(pulse_time_diff(1,:,1))/anal_opts.global.fall_time
+%this is a fraction of about 0.5 parts per thousand
+% the aprox method
+%al_pulses.vel_approx.mean(:,:,[2,3])=al_pulses.pos.mean(:,:,[2,3])/anal_opts.global.fall_time;
+% the precise method
+al_pulses.vel_approx.mean(:,:,[2,3])=al_pulses.pos.mean(:,:,[2,3])./repmat(pulse_fall_time,1,1,2);
+
+% this is still aprox. bc. if you use the 'time in the air'(AL pulse to detector) for each count and convert to velocity in x,y and
+% take the mean velocity you will get a slightly different answer than if you take the spatial mean and
+% divide by the mean time to get the velocity 
+% this should be a difference in weighting of ~ 2* mean(al_pulses.pos.std(1,:,1))/anal_opts.global.fall_time 
+% or about 0.7% 
+% to do this all perfectly i need to move this calculation into the loop
+
+
 
 fprintf('...Done\n') 
 
