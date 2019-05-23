@@ -258,7 +258,8 @@ hold off
 %% Plot
 % Could refactor so entire thing is in a loop over ii - needs a few things stored in to_seg_fits
 fprintf('Plotting\n',iimax,0)
-sfigure(602);
+stfig('TO segments','add_stack',1);
+
 %clear the plot
 if anal_opts_fit_to.clear_plot
     clf

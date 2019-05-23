@@ -80,27 +80,15 @@ clear all
 %setup directories you wish to loop over
 % 
 loop_config.dir = {
-    'F:\to_copy\20190227_qwp_270',
-    'F:\to_copy\20190227_qwp_286',
-    'F:\to_copy\20190227_qwp_310',
+    '.\scratch_data\20190227_qwp_270',
+    '.\scratch_data\20190227_qwp_286',
+    '.\scratch_data\20190227_qwp_310',
     };
 loop_config.set_pt = [nan,1.0,1.0];
-
 %selected_dirs = 1:numel(loop_config.dir); %which files to loop over (currently all)
 selected_dirs = [1];
 
-
-for dir_idx = selected_dirs
-
-tic
 anal_opts=[]; %reset the options (would be good to clear all variables except the loop config
-anal_opts.tdc_import.dir = loop_config.dir{dir_idx};
-
-
-
-
-anal_opts.probe_set_pt=loop_config.set_pt(dir_idx);
- 
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
 anal_opts.tdc_import.force_reimport=false;
@@ -113,8 +101,6 @@ tlim=[0,4];
 anal_opts.tdc_import.txylim=[tlim;tmp_xlim;tmp_ylim];
 anal_opts.max_runtime=inf;%inf%cut off the data run after some number of hours, should bin included as its own logic not applied to the atom number ok
 
-
-
 anal_opts.trig_dld=20.3;
 anal_opts.dld_aquire=4;
 anal_opts.aquire_time=4;
@@ -124,11 +110,10 @@ anal_opts.aom_freq=0;%190*1e6;%Hz %set to zero for comparison with previous data
 anal_opts.wm_log.plot_all=false;
 anal_opts.wm_log.plot_failed=false;
 
-
 anal_opts.atom_laser.pulsedt=8.000e-3;
-anal_opts.atom_laser.t0=0.41784; %center i ntime of the first pulse
+anal_opts.atom_laser.t0=0.417770; %center i ntime of the first pulse
 anal_opts.atom_laser.start_pulse=1; %atom laser pulse to start with
-anal_opts.atom_laser.pulses=100;
+anal_opts.atom_laser.pulses=150;
 anal_opts.atom_laser.appr_osc_freq_guess=[52,40,40];
 anal_opts.atom_laser.pulse_twindow=anal_opts.atom_laser.pulsedt*0.9;
 anal_opts.atom_laser.xylim=anal_opts.tdc_import.txylim(2:3,:); %set same lims for pulses as import
@@ -143,11 +128,14 @@ anal_opts.osc_fit.blur=1;
 anal_opts.osc_fit.xlim=[-20,20]*1e-3;
 anal_opts.osc_fit.tlim=[0.86,1.08];
 anal_opts.osc_fit.dimesion=2; %Select coordinate to bin. 1=X, 2=Y.
-
-
-%import the run config here
-
 % END USER VAR-----------------------------------------------------------
+
+% loop over the selected directories
+for dir_idx = selected_dirs
+main_trap_freq_timer=tic;
+
+anal_opts.tdc_import.dir = loop_config.dir{dir_idx};
+anal_opts.probe_set_pt=loop_config.set_pt(dir_idx);
 %sets up the struct 'data' which will contain everything you could want incuding the txy data and
 %the information from the logs
 data=[]; %CLEAR THE DATA
@@ -161,7 +149,11 @@ this_folder = fileparts(which(mfilename));
 addpath(genpath(this_folder));
 
 hebec_constants %call the constants function that makes some globals
-anal_opts.global.velocity=const.g0*anal_opts.global.fall_time;
+anal_opts.global.fall_velocity=const.g0*anal_opts.global.fall_time; %velocity when the atoms hit the detector
+% fall_dist=1/2 a t^2 
+%TODO get from engineering documents
+anal_opts.global.fall_dist=(1/2)*const.g0*anal_opts.global.fall_time^2;
+
 %% IMPORT TDC DATA to data.mcp_tdc
 anal_opts.tdc_import.shot_num=find_data_files(anal_opts.tdc_import);
 %anal_opts.tdc_import.shot_num= anal_opts.tdc_import.shot_num(1:10); %debuging
@@ -308,7 +300,7 @@ anal_opts.ai_log.pd.time_stop=2;
 anal_opts.ai_log.time_match_valid=8; %how close the predicted start of the shot is to the actual
 %sfp options
 anal_opts.ai_log.scan_time=1/20; %fast setting 1/100hz %estimate of the sfp scan time,used to set the window and the smoothing
-anal_opts.ai_log.sfp.num_checks=inf; %how many places to check that the laser is single mode
+anal_opts.ai_log.sfp.num_checks=inf; %how many places to check that the laser is single mode, inf=all scans
 anal_opts.ai_log.sfp.peak_thresh=[-0.005,-0.005];%[0,-0.008]*1e-3; %theshold on the compressed signal to be considered a peak
 anal_opts.ai_log.sfp.pzt_dist_sm=4.5;%minimum (min peak difference)between peaks for the laser to be considered single mode
 anal_opts.ai_log.sfp.pzt_peak_width=0.15; %peak with in pzt voltage used to check that peaks are acually different and not just noise
@@ -492,11 +484,12 @@ fprintf('ok logic gives %u / %u shots for yeild %04.1f %%\n',...
 
 %TODO: 
 % some kind of guard pulses
-% a check that the pulse time seems reasonable
+% [x] a check that the pulse time seems reasonable
 % convert the postions into velocity leaving the trap
 
 anal_opts.atom_laser.plot.all=false;
-anal_opts.atom_laser.t0=0.417770;
+%anal_opts.atom_laser.t0=0.417770;
+anal_opts.atom_laser.global=anal_opts.global; %coppy global into the options structure
 data.mcp_tdc.al_pulses=bin_al_pulses(anal_opts.atom_laser,data);
 
 
@@ -511,7 +504,12 @@ anal_opts.atom_num_fit.qe=anal_opts.global.qe;
 
 data.num_fit=fit_atom_number(anal_opts.atom_num_fit,data);
 
+
+%% Load saved state
+%save('before_fit.mat')
+%load('before_fit.mat') % DEV DEV DEV
 %% FITTING THE TRAP FREQUENCY
+
 anal_opts.osc_fit.adaptive_freq=true; %estimate the starting trap freq 
 anal_opts.osc_fit.appr_osc_freq_guess=[52,47.9,40];
 anal_opts.osc_fit.freq_fit_tolerance=2; %hz arround the median to cut away
@@ -521,6 +519,11 @@ anal_opts.osc_fit.plot_fit_corr=true;
 
 anal_opts.osc_fit.global=anal_opts.global;
 data.osc_fit=fit_trap_freq(anal_opts.osc_fit,data);
+
+%% Correlate AC mains
+
+%corr_ac_mains(data)
+
 
 %% undo the aliasing
 %this may need to change if the sampling freq changes
@@ -725,7 +728,7 @@ fprintf('saving full output...')
 fid = fopen(fullfile(anal_out.dir,'Done.txt'),'wt');
 fprintf(fid, 'Done');
 fclose(fid);
-toc
+toc(main_trap_freq_timer)
 fprintf('Done\n')
 
 %catch err
