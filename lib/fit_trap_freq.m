@@ -146,7 +146,7 @@ for ii=1:iimax
                        interp1(predictor(:,1),predictor(:,2),tplotvalues),...
                        interp1(predictor(:,1),predictor(:,3),tplotvalues)];
             [prediction,ci]=predict(fitobject,predictorplot);
-            stfig('osc fit','add_stack',1);
+            stfig('single osc fit','add_stack',1);
             clf;
             set(gca,'FontSize',font_size_global,'FontName',font_name)
             
@@ -233,7 +233,7 @@ osc_fit.ok.all=osc_fit.ok.freq & osc_fit.ok.rmse;
 
 
 if anal_opts_osc_fit.plot_err_history
-    figure(52)
+    stfig('fit error history','add_stack',1);
     clf
     set(gcf,'color','w')
     subplot(2,1,1)
@@ -245,7 +245,6 @@ if anal_opts_osc_fit.plot_err_history
     line([1,1]*mean_fit_rmse,yl,'Color','k')
     line([1,1]*median_fit_rmse,yl,'Color','m')
     line([1,1]*(mean_fit_rmse+std_cut_fac*std_fit_rmse),yl,'Color','r')
-    line([1,1]*(mean_fit_rmse-std_cut_fac*std_fit_rmse),yl,'Color','r')
     hold off
 
     subplot(2,1,2)
@@ -259,7 +258,7 @@ end
 
 if anal_opts_osc_fit.plot_fit_corr
     mask=osc_fit.ok.all;
-    sfigure(53);
+    stfig('fit param corr','add_stack',1);
     clf
     set(gcf,'color','w')
     %see if the fit error depends on the probe freq

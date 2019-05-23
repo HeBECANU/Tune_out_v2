@@ -504,14 +504,16 @@ anal_opts.atom_num_fit.qe=anal_opts.global.qe;
 
 data.num_fit=fit_atom_number(anal_opts.atom_num_fit,data);
 
-%% FITTING THE TRAP FREQUENCY
 
-save('before_fit.mat')
+%% Load saved state
+%save('before_fit.mat')
+%load('before_fit.mat') % DEV DEV DEV
+%% FITTING THE TRAP FREQUENCY
 
 anal_opts.osc_fit.adaptive_freq=true; %estimate the starting trap freq 
 anal_opts.osc_fit.appr_osc_freq_guess=[52,47.9,40];
 anal_opts.osc_fit.freq_fit_tolerance=2; %hz arround the median to cut away
-anal_opts.osc_fit.plot_fits=true;
+anal_opts.osc_fit.plot_fits=false;
 anal_opts.osc_fit.plot_err_history=true;
 anal_opts.osc_fit.plot_fit_corr=true;
 
@@ -520,9 +522,7 @@ data.osc_fit=fit_trap_freq(anal_opts.osc_fit,data);
 
 %% Correlate AC mains
 
-corr_ac_mains(data)
-
-
+%corr_ac_mains(data)
 
 
 %% undo the aliasing
