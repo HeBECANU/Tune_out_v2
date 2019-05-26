@@ -80,9 +80,9 @@ clear all
 %setup directories you wish to loop over
 % 
 loop_config.dir = {
-    '.\scratch_data\20190227_qwp_270',
-    '.\scratch_data\20190227_qwp_286',
-    '.\scratch_data\20190227_qwp_310',
+    '..\scratch_data\20190227_qwp_270',
+    '..\scratch_data\20190227_qwp_286',
+    '..\scratch_data\20190227_qwp_310',
     };
 loop_config.set_pt = [nan,1.0,1.0];
 %selected_dirs = 1:numel(loop_config.dir); %which files to loop over (currently all)
@@ -130,6 +130,25 @@ anal_opts.osc_fit.tlim=[0.86,1.08];
 anal_opts.osc_fit.dimesion=2; %Select coordinate to bin. 1=X, 2=Y.
 % END USER VAR-----------------------------------------------------------
 
+
+%% set up the path
+
+% find this .m file's path, this must be in the project root dir
+this_folder = fileparts(which(mfilename));
+% Add that folder plus all subfolders to the path.
+addpath(genpath(this_folder));%add all subfolders to the path to find genpath_exclude
+path_to_genpath=fileparts(which('genpath_exclude'));
+path(pathdef) %clean up the path back to the default state to remove all the .git that were added
+addpath(this_folder)
+addpath(path_to_genpath)
+addpath(genpath_exclude(fullfile(this_folder,'lib'),'\.')) %dont add hidden folders
+addpath(genpath_exclude(fullfile(this_folder,'dev'),'\.'))
+addpath(genpath_exclude(fullfile(this_folder,'bin'),'\.'))
+
+
+hebec_constants %call the constants function that makes some globals
+
+
 % loop over the selected directories
 for dir_idx = selected_dirs
 main_trap_freq_timer=tic;
@@ -143,12 +162,8 @@ anal_out=[];
 %add a file seperator to the end of the import path
 if anal_opts.tdc_import.dir(end) ~= filesep, anal_opts.tdc_import.dir = [anal_opts.tdc_import.dir filesep]; end
 
-%add all subfolders to the path
-this_folder = fileparts(which(mfilename));
-% Add that folder plus all subfolders to the path.
-addpath(genpath(this_folder));
 
-hebec_constants %call the constants function that makes some globals
+
 anal_opts.global.fall_velocity=const.g0*anal_opts.global.fall_time; %velocity when the atoms hit the detector
 % fall_dist=1/2 a t^2 
 %TODO get from engineering documents
@@ -527,10 +542,10 @@ data.osc_fit=fit_trap_freq(anal_opts.osc_fit,data);
 
 %% undo the aliasing
 %this may need to change if the sampling freq changes
-
+%initialize
 data.osc_fit.trap_freq_recons=nan*data.osc_fit.ok.did_fits;
 data.osc_fit.trap_freq_recons_unc=data.osc_fit.trap_freq_recons;
-mask=data.osc_fit.ok.all;
+mask=data.osc_fit.ok.all; %set the masked values
 data.osc_fit.trap_freq_recons(mask)=3*(1/anal_opts.atom_laser.pulsedt)+data.osc_fit.model_coefs(mask,2,1);
 data.osc_fit.trap_freq_recons_unc(mask)=data.osc_fit.model_coefs(mask,2,2);
 
@@ -553,14 +568,21 @@ data.osc_fit.trap_freq_recons_unc(mask)=data.osc_fit.model_coefs(mask,2,2);
 
 
 %% create a model of the underlying trap frequency from the calibrations
-anal_opts.cal_mdl.smooth_time=100;
+% TODO
+% - move signal calulation (trap freq difference) to this function
+% - try other smoothing approaches
+% - estimate error in difference/signal 
+anal_opts.cal_mdl.smooth_time=60;
 anal_opts.cal_mdl.plot=true;
 anal_opts.cal_mdl.global=anal_opts.global;
 data.cal=make_cal_model(anal_opts.cal_mdl,data);
 
-%this function should also be modified to calculated the difference between the cal and probe data (with unc) 
-% so its only done once
 
+%% calculae the probe beam trap frequency squared
+% TODO
+% - anharmonic correction
+anal_opts.calc_sig=[];
+data.signal=calculate_signal(anal_opts.calc_sig,data);
 
 %% segmented TO
 %look at the tune out when fit to short segments

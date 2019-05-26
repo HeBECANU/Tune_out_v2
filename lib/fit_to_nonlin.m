@@ -1,10 +1,10 @@
 function to_res=fit_to_nonlin(anal_opts_fit_to,data)
 
-temp_cal=data.mcp_tdc.probe.calibration'; %because its used a lot make a temp var for calibration logic vector
+temp_cal=col_vec(data.mcp_tdc.probe.calibration); %because its used a lot make a temp var for calibration logic vector
 temp_cal(isnan(temp_cal))=1;    
 %manual bootstrap rand(size(data.osc_fit.ok.rmse))>0.9
-probe_dat_mask=data.osc_fit.ok.all & ~temp_cal &  ~isnan(data.wm_log.proc.probe.freq.act.mean)'...
-    & ~isnan(data.osc_fit.trap_freq_recons);
+probe_dat_mask=col_vec(data.osc_fit.ok.all) & ~temp_cal &  ~isnan(col_vec(data.wm_log.proc.probe.freq.act.mean))...
+    & ~isnan(col_vec(data.osc_fit.trap_freq_recons));
 
 to_res.num_shots=sum(probe_dat_mask);
 to_res.fit_mask=probe_dat_mask;
@@ -12,7 +12,7 @@ to_res.fit_mask=probe_dat_mask;
 probe_freq= data.wm_log.proc.probe.freq.act.mean(probe_dat_mask')*1e6;
 trap_freq=data.osc_fit.trap_freq_recons(probe_dat_mask)';
 trap_freq_unc=data.osc_fit.trap_freq_recons_unc(probe_dat_mask)';
-cal_trap_freq=data.cal.freq_drift_model(data.mcp_tdc.time_create_write(probe_dat_mask,1));
+cal_trap_freq=data.cal.freq_drift_model(data.mcp_tdc.time_create_write(probe_dat_mask,2));
 cal_trap_freq_unc=data.cal.unc;
 delta_trap_freq=trap_freq-cal_trap_freq;
 square_trap_freq= (trap_freq).^2-(cal_trap_freq).^2;
@@ -29,7 +29,7 @@ cdat=[interp1(c_cord,cdat(:,1),shot_time_scaled),...
         
         
 if anal_opts_fit_to.plot_inital
-    figure(71)
+    stfig('TO fit','add_stack',1)
     clf
     set(gcf,'color','w')
     subplot(2,1,1)

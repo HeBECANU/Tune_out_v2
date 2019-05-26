@@ -198,7 +198,7 @@ for ii=1:iimax
         end% PLOTS
         %%
     end
-    if mod(ii,10)==0, fprintf('\b\b\b\b%04u',ii), end
+    if mod(ii,1)==0, fprintf('\b\b\b\b%04u',ii), end
 end
 fprintf('...Done\n')
 %if the above did a fit then set the element in the logic vector to true
