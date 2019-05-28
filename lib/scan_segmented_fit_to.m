@@ -109,7 +109,7 @@ to_seg_fits.atom_num = zeros(iimax,2);
 to_seg_fits.avg_osc_coefs_probe = cell(iimax,1);
 to_seg_fits.avg_osc_coefs_cal = cell(iimax,1);
 
-is_measument_not_outlier=1+0*probe_freq_all;
+is_measument_not_outlier=nan(numel(probe_dat_mask),1);
 
 
 %% Process
@@ -126,7 +126,7 @@ for ii=1:iimax
   
     % Select out data for scanwise fits
     seg_mask_temp=col_vec(1:num_shots);
-    seg_mask_temp=(seg_mask_temp>=seg_start & seg_mask_temp<=seg_end);
+    seg_mask_temp=(seg_mask_temp>=seg_start & seg_mask_temp<seg_end);
     %%seg_mask_temp = [zeros(seg_start-1,1);ones(seg_end-seg_start+1,1);zeros(num_shots-seg_end,1)]'==1;
     
     seg_mask = seg_mask_temp&probe_dat_mask;
@@ -164,14 +164,14 @@ for ii=1:iimax
         %%  Outlier removal
         % make a new prediction with the model but with the CI to cut out outliers
         [~,yci_cull_lim]=predict(mdl_all,xdat,'Prediction','observation','Alpha',ci_size_cut_outliers);
-        is_notoutlier_mask=ydat>yci_cull_lim(:,1) & ydat<yci_cull_lim(:,2);
-        culed_xywdat=xywdat(is_notoutlier_mask);
-        cdat_culled=cdat(is_notoutlier_mask,:);
+        is_not_outlier_mask=logical(ydat>yci_cull_lim(:,1) & ydat<yci_cull_lim(:,2));
+        culed_xywdat=xywdat(is_not_outlier_mask);
+        cdat_culled=cdat(is_not_outlier_mask,:);
         xydatmat=cell2mat(culed_xywdat);
         xdat_culled= xydatmat(:,1);
         ydat_culled= xydatmat(:,2);
         wdat_culled= xydatmat(:,3);
-        yunc_culled=yunc(is_notoutlier_mask);
+        yunc_culled=yunc(is_not_outlier_mask);
         
         fit_out=fit_poly_with_int(culed_xywdat,1,0,1);
         mdl_culled=fit_out.fit_mdl;
@@ -256,7 +256,7 @@ for ii=1:iimax
 %             plot_name='TO_fits';
         
         % Data to output/plot 
-        is_measument_not_outlier(seg_mask)=is_notoutlier_mask;
+        is_measument_not_outlier(seg_mask)=is_not_outlier_mask;
         to_seg_fits.seg_edges(ii,:) = [seg_start,seg_end];
         to_seg_fits.to_time(ii) = to_times(ii)/3600;
         to_seg_fits.set_sel{ii} = setpts_all(seg_mask);
@@ -269,7 +269,10 @@ for ii=1:iimax
     end %if min number of points in scan
 end %for each scan
 fprintf('\n')
-
+outlier_mask=is_measument_not_outlier;
+outlier_mask(~isnan(outlier_mask))=~outlier_mask(~isnan(outlier_mask));
+outlier_mask(isnan(outlier_mask))=false;
+outlier_mask=logical(outlier_mask); %nans removed can be logical
 
 %% mean TO val
 % find the weighted mean TO freq(and the uncert) across scans
@@ -279,7 +282,7 @@ to_seg_fits.fit_trimmed.to_freq.sewm=[];
 [to_seg_fits.fit_trimmed.to_freq.sewm.unc,to_seg_fits.fit_trimmed.to_freq.sewm.val]=sewm(to_seg_fits.fit_trimmed.to_freq.val,seg_weights);
 
 
-fprintf('total number of outliers %u\n',sum(~is_measument_not_outlier))
+fprintf('total number of outliers %u\n',nansum(outlier_mask))
 %% Plot
 % Could refactor so entire thing is in a loop over ii - needs a few things stored in to_seg_fits
 fprintf('Plotting\n',iimax,0)
@@ -301,8 +304,9 @@ for ii=1:iimax %Plots segmented data
 %   isequal(col_vec(seg_mask_temp),seg_mask_temp2)
     seg_start= to_seg_fits.scan_edges(ii)+1;
     seg_end = to_seg_fits.scan_edges(ii+1);     
+    
     seg_mask_temp=col_vec(1:num_shots);
-    seg_mask_temp=(seg_mask_temp>=seg_start & seg_mask_temp<=seg_end); 
+    seg_mask_temp=(seg_mask_temp>=seg_start & seg_mask_temp<seg_end);
     
         
     seg_mask = seg_mask_temp& probe_dat_mask;
@@ -321,6 +325,7 @@ for ii=1:iimax %Plots segmented data
 %             hold on
 
         subplot(4,4,[1 2])
+
         pl=plot(shot_time_rel(seg_mask)/(60*60),to_seg_fits.set_sel{ii}-mean_setpt,marker);
         pl.Color=cdat(ceil(800*ii/iimax),:);
         hold on
@@ -337,10 +342,12 @@ for ii=1:iimax %Plots segmented data
     end
 end
 subplot(4,4,[3 4])
-hold on
-plot(shot_time_rel(~is_measument_not_outlier)/(60*60),square_trap_freq_val(~is_measument_not_outlier),'or');
-hold off  
 
+if sum(outlier_mask)>0
+    hold on
+    plot(shot_time_rel(outlier_mask)/(60*60),square_trap_freq_val(outlier_mask),'or');
+    hold off  
+end
         %remove the dead row
 to_seg_fits.fit_all.to_freq.val(dead_rows,:)=[];
 to_seg_fits.fit_all.to_freq.unc(dead_rows,:)=[];
