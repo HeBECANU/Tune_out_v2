@@ -79,51 +79,51 @@ clear all
 % BEGIN USER VAR-------------------------------------------------
 
 %setup directories you wish to loop over
-% 
-% loop_config.dir = {
-%     '..\scratch_data\20190227_qwp_270',
-%     '..\scratch_data\20190227_qwp_286',
-%     '..\scratch_data\20190227_qwp_310',
-%     };
-% loop_config.set_pt = [nan,nan,nan];
-% selected_dirs = 1:numel(loop_config.dir); %which files to loop over (currently all)
-% selected_dirs = [2,3];
+%% for testing
+loop_config.dir = {
+    '..\scratch_data\20190227_qwp_270',
+    '..\scratch_data\20190227_qwp_286',
+    '..\scratch_data\20190227_qwp_310',
+    };
+loop_config.set_pt = [nan,nan,nan];
+selected_dirs = 1:numel(loop_config.dir); %which files to loop over (currently all)
+selected_dirs = [2,3];
 
 %% select the directories that have not been processed yet
-root_data_dir='G:\good_data';
-files = dir(root_data_dir);
-files=files(3:end);
-% Get a logical vector that tells which is a directory.
-dir_mask = [files.isdir];
-folders=files(dir_mask);
-folders=arrayfun(@(x) fullfile(root_data_dir,x.name),folders,'UniformOutput' ,false);
-%TODO mask out folders with out/something/done
-is_done=false(numel(folders),1);
-iimax=numel(folders);
-for ii=1:iimax
-    out_dir_folder=fullfile(folders{ii},'out');
-    if exist(out_dir_folder,'dir')
-        all_out_files=dir([out_dir_folder,filesep,'**\*.txt']);
-        all_out_files={all_out_files.name};
-        if sum(strcmp(all_out_files,'Done.txt'))>0 || sum(strcmp(all_out_files,'done.txt'))>0
-            is_done(ii)=true;
-        end
-    end
-end
-folders=folders(~is_done);
+% root_data_dir='G:\good_data';
+% files = dir(root_data_dir);
+% files=files(3:end);
+% % Get a logical vector that tells which is a directory.
+% dir_mask = [files.isdir];
+% folders=files(dir_mask);
+% folders=arrayfun(@(x) fullfile(root_data_dir,x.name),folders,'UniformOutput' ,false);
+% %TODO mask out folders with out/something/done
+% is_done=false(numel(folders),1);
+% iimax=numel(folders);
+% for ii=1:iimax
+%     out_dir_folder=fullfile(folders{ii},'out');
+%     if exist(out_dir_folder,'dir')
+%         all_out_files=dir([out_dir_folder,filesep,'**\*.txt']);
+%         all_out_files={all_out_files.name};
+%         if sum(strcmp(all_out_files,'Done.txt'))>0 || sum(strcmp(all_out_files,'done.txt'))>0
+%             is_done(ii)=true;
+%         end
+%     end
+% end
+% folders=folders(~is_done);
+% loop_config.dir = folders;
+% loop_config.set_pt=nan(1,numel(loop_config.dir));
+% selected_dirs=1:numel(loop_config.dir);
 
 %%
-loop_config.dir = folders;
-loop_config.set_pt=nan(1,numel(loop_config.dir));
-selected_dirs=1:numel(loop_config.dir);
-
-
 anal_opts=[]; %reset the options (would be good to clear all variables except the loop config
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
 anal_opts.tdc_import.force_reimport=false;
 anal_opts.tdc_import.force_forc=false;
 anal_opts.tdc_import.dld_xy_rot=0.61;
+anal_opts.tdc_import.save_cache_in_data_dir=true;
+
 %Should probably try optimizing these
 tmp_xlim=[-30e-3, 30e-3];     %tight XY lims to eliminate hot spot from destroying pulse widths
 tmp_ylim=[-30e-3, 30e-3];
@@ -191,8 +191,6 @@ data=[]; %CLEAR THE DATA
 anal_out=[];
 %add a file seperator to the end of the import path
 if anal_opts.tdc_import.dir(end) ~= filesep, anal_opts.tdc_import.dir = [anal_opts.tdc_import.dir filesep]; end
-
-
 
 anal_opts.global.fall_velocity=const.g0*anal_opts.global.fall_time; %velocity when the atoms hit the detector
 % fall_dist=1/2 a t^2 
