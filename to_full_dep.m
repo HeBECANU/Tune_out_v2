@@ -3,7 +3,21 @@ clear all
 to_freq_theory = 725736.480*1e9; %best theory guess in Hz
 to_wav_theory = 299792458./to_freq_theory;
 %% Exp parameters
-aom_freq = 189.*1e6; %aom offset in Hz
+aom_freq =0; %aom offset in Hz, as of 20190528 offset is calculated in main_trap_freq
+
+%%
+% find this .m file's path, this must be in the project root dir
+this_folder = fileparts(which(mfilename));
+% Add that folder plus all subfolders to the path.
+addpath(genpath(this_folder));%add all subfolders to the path to find genpath_exclude
+path_to_genpath=fileparts(which('genpath_exclude'));
+path(pathdef) %clean up the path back to the default state to remove all the .git that were added
+addpath(this_folder)
+addpath(path_to_genpath)
+addpath(genpath_exclude(fullfile(this_folder,'lib'),'\.')) %dont add hidden folders
+addpath(genpath_exclude(fullfile(this_folder,'dev'),'\.'))
+addpath(genpath_exclude(fullfile(this_folder,'bin'),'\.'))
+
 %% polarisation data options
 pol_opts.location = 'pre_right';%post, pre_cen, pre_left, pre_right
 pol_opts.predict = 'fit';%'interp'; %obs (obsovation) fit (pertial fit) full_fit (fit with all parameters free)
@@ -93,7 +107,7 @@ loop_config.dir = {
     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190307_hwp_10_qwp_280'
     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190307_hwp_06_qwp_290'
 };
-data.mix = to_data(loop_config);
+data.mix = load_pocessed_to_data(loop_config);
 %% Generate data vectors
 to_val = [data.hwp.drift.to_val{1};data.qwp.drift.to_val{1};data.mix.drift.to_val{1}];%all our single scan tune-out values
 to_unc = [data.hwp.drift.to_val{2};data.qwp.drift.to_val{2};data.mix.drift.to_val{2}];%all corresponding uncertainties
@@ -199,7 +213,7 @@ xlabel('residual (MHz)')
 ylabel('count')
 %% Write out the results
 
-to_freq_val=fit_vals(1)+aom_freq;
+to_freq_val=fit_vals(1);
 to_freq_unc=fit_uncs(1);
 to_wav_val=299792458/(to_freq_val);
 to_wav_unc=2*to_freq_unc*299792458/(to_freq_val^2);

@@ -23,9 +23,7 @@ osc_fit.fit_sample_limit=cell(1,iimax);
 fprintf('Fitting oscillations in shots %04i:%04i',iimax,0)
 
  if anal_opts_osc_fit.plot_fits
-            sfigure(51);
-            clf
-            set(gcf,'color','w')
+            fit_plot_handle=stfig('single osc fit','add_stack',1);
  end
 
 for ii=1:iimax
@@ -146,7 +144,7 @@ for ii=1:iimax
                        interp1(predictor(:,1),predictor(:,2),tplotvalues),...
                        interp1(predictor(:,1),predictor(:,3),tplotvalues)];
             [prediction,ci]=predict(fitobject,predictorplot);
-            stfig('single osc fit','add_stack',1);
+            stfig(fit_plot_handle);
             clf;
             set(gca,'FontSize',font_size_global,'FontName',font_name)
             

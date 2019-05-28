@@ -1,4 +1,4 @@
-function plot_sexy(disp_config,x_dat,y_dat,weights,fit_mdl)
+function plot_binned_nice(disp_config,x_dat,y_dat,weights,fit_mdl)
 
 % Plots "Spectacular Errorbar XY" by binning data in X and producing errorbars.
 % Inputs: [X,Y,Y_err] pairs If Y_err empty, defaults so zero
@@ -10,7 +10,7 @@ function plot_sexy(disp_config,x_dat,y_dat,weights,fit_mdl)
 % disp_config.font_size_global;
 % disp_config.beta0;
 % disp_config.opts;
-% disp_config.fig_number;
+% disp_config.fig_name;
 
 %Bryce comments
 % improved integration with code by removing fit functonality
@@ -25,19 +25,18 @@ plot_title=disp_config.plot_title;
 font_name=disp_config.font_name;
 font_size_global=disp_config.font_size_global;
 
-fig_number=disp_config.fig_number;
 
 %% Get data
 
 if isempty(weights)
-    weights = 0*y_dat;
+    weights = 1+0*y_dat;
 end
 weights = weights/sum(weights);
 
-if ~isfield(disp_config,'plot_offset') || (~isstruct(disp_config.plot_offset) && disp_config.plot_offset=='avg')
+if ~isfield(disp_config,'plot_offset') || (~isstruct(disp_config.plot_offset) && isequal(disp_config.plot_offset,'avg'))
     plot_offset.val=sum(y_dat.*weights)./sum(weights);%predict(fit_mdl,0);
 end 
-if isstruct(disp_config.plot_offset)
+if isfield(disp_config,'plot_offset')
     plot_offset=disp_config.plot_offset;
 end
 
@@ -87,7 +86,7 @@ color_shaded=colorspace('LCH->RGB',color_shaded);
 
 %% Plot the thing!
 
-sfigure(fig_number);
+stfig(disp_config.fig_name,'add_stack',1);
 clf
 padd_size=0.05*range(x_grouped);
 xlim_with_padd=[min(x_grouped)-padd_size,max(x_grouped)+padd_size];

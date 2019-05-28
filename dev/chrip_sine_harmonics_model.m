@@ -18,26 +18,26 @@ end
 options.components_min_amp=1e-4;
 options.freq_limits=freq_lims;
  options.components_diff_freq=5;
-[fft_pks,dom_freq_det]=dominant_freq_components(tdat,xdat,options);
+[fft_pks_sub,dom_freq_det]=dominant_freq_components(tdat,xdat,options);
 
 
 %TODO: option to allow f_fund*1/2*N
 % now see what componets are harmonics of the largest component
-fund_freq=fft_pks.freq(1);
-multiple_of_fund=fft_pks.freq(1:end)/fund_freq;
+fund_freq=fft_pks_sub.freq(1);
+multiple_of_fund=fft_pks_sub.freq(1:end)/fund_freq;
 is_harmonic=multiple_of_fund>1.6; %remove low freq subharmonics
 is_harmonic(1)=true; %allow the fundamental
 rounded_harmonic=round(multiple_of_fund);
 is_harmonic=is_harmonic & fund_freq*abs(rounded_harmonic-multiple_of_fund)<0.2; %difference in hz
-fft_pks.harm_rounded=rounded_harmonic;
+fft_pks_sub.harm_rounded=rounded_harmonic;
 %mask  and the fft_pks strucutre
 
 
 harmonic_terms=terms(1);
 %mask out what we will fit
 is_harmonic=is_harmonic & (1:numel(is_harmonic))'<=harmonic_terms;
-fft_pks_to_fit=struct_mask(fft_pks,is_harmonic);
-fft_pks_not_fit=struct_mask(fft_pks,~is_harmonic);
+fft_pks_to_fit=struct_mask(fft_pks_sub,is_harmonic);
+fft_pks_not_fit=struct_mask(fft_pks_sub,~is_harmonic);
 
 
 %plot the waveform and the fft and the identified peaks
@@ -88,11 +88,71 @@ end
 % test_harm=[1,3];
 % plot(tdat,harmonic_sine_waves(tdat,test_param,test_harm))
 meanx=dom_freq_det.mean_xdat;
+stdx=dom_freq_det.std_xdat;
+
+
+
+%% do a global fit to a small fraction of the data
+% before we call fitnlm we will try to get close to the desired fit parameters using a robust global
+% optimizer of a freq-amp chirped sine wave
+simple_fit_fun=@(param,time) harmonic_sine_waves_amp_freq_chrip(time,param,fft_pks_to_fit.harm_rounded(1),freq_chirp_terms,amp_chirp_terms);
+
+
+sub_tlim=[-inf,10/fft_pks_to_fit.freq(1)]; %select the first 10 cycles
+idx_sub=fast_sorted_mask(tdat,sub_tlim(1),sub_tlim(2));
+xdat_sub=xdat(idx_sub(1):idx_sub(2));
+tdat_sub=tdat(idx_sub(1):idx_sub(2));
+xstd_sub=std(xdat_sub);
+
+options.components_min_amp=xstd_sub*5e-2;
+options.freq_limits=freq_lims;
+ options.components_diff_freq=5;
+ options.num_components=1;
+fft_pks_sub=dominant_freq_components(tdat,xdat,options);
+
+beta0 = [mean(xdat_sub),fft_pks_sub.freq(1),zeros(1,freq_chirp_terms-1)]; %set offset and the terms of the freq taylor series to zero
+param_tmp=[fft_pks_sub.phase(1),fft_pks_sub.amp(1)];
+%then add all higher order amp chirp terms to be zero
+param_tmp=cat(2,param_tmp,zeros(1,amp_chirp_terms-1))';
+beta0=[beta0,param_tmp(:)'];
+
+gf_opt=[];
+domain_offset_freq_tmp=cat(1,[-1,1]*stdx,... %amp
+                [45,55]);         %freq
+domain_freq_chirp_tmp=repmat([-1,1],freq_chirp_terms-1,1);
+domain_phase_tmp=[-2,2]*pi;
+domain_amp_chirp_tmp=cat(1,[0.1,10]*fft_pks_to_fit.amp(1),...
+                        repmat([-1,1]*fft_pks_to_fit.amp(1),amp_chirp_terms-1,1));     
+gf_opt.domain=cat(1,domain_offset_freq_tmp,...
+                    domain_freq_chirp_tmp,...
+                    domain_phase_tmp,...
+                    domain_amp_chirp_tmp);
+gf_opt.start=beta0;
+gf_opt.rmse_thresh=stdx*5e-2;
+gf_opt.plot=false;
+gf_opt.level=2;
+gf_out=global_fit(tdat_sub,xdat_sub,simple_fit_fun,gf_opt);
+
+%% global fit with more cycles
+% TODO: this process of progressive fitting could be made into its own
+% function
+sub_tlim=[-inf,100/fft_pks_to_fit.freq(1)]; %select the first 10 cycles
+idx_sub=fast_sorted_mask(tdat,sub_tlim(1),sub_tlim(2));
+xdat_sub=xdat(idx_sub(1):idx_sub(2));
+tdat_sub=tdat(idx_sub(1):idx_sub(2));
+gf_opt.start=gf_out.params;
+gf_out=global_fit(tdat_sub,xdat_sub,simple_fit_fun,gf_opt);
+
+
+%% set up for the full fit
+
 fit_fun=@(param,time) harmonic_sine_waves_amp_freq_chrip(time,param,fft_pks_to_fit.harm_rounded,freq_chirp_terms,amp_chirp_terms);
-beta0 = [meanx,fft_pks_to_fit.freq(1),zeros(1,freq_chirp_terms-1)]; %set offset and the terms of the freq taylor series to zero
+beta0 = [gf_out.params(1),gf_out.params(2:1+freq_chirp_terms)]; %set offset and the terms of the freq taylor series to zero
 param_tmp=[fft_pks_to_fit.phase,fft_pks_to_fit.amp];
 %then add all higher order amp chirp terms to be zero
-param_tmp=cat(2,param_tmp,zeros(numel(fft_pks_to_fit.phase),amp_chirp_terms-1))';
+param_tmp=cat(2,param_tmp,zeros(numel(fft_pks_to_fit.phase),amp_chirp_terms-1));
+param_tmp(1,:)=gf_out.params(end-amp_chirp_terms:end);
+param_tmp=param_tmp';
 beta0=[beta0,param_tmp(:)'];
 
 
@@ -178,11 +238,12 @@ if verbose>2
     [y_fit_val,y_ci_fit]=predict(fit_mdl,tdat,'Prediction' ,'observation');
     plot(tdat,y_fit_val,'r')
     plot(tdat,y_ci_fit,'b')
-    first_guess=fit_fun(beta0,tdat);
     plot(tdat,models_out.fundamental(tdat),'m')
     plot(tdat,models_out.var_terms(tdat,3),'c')
-    plot(tdat,first_guess,'g')
     plot(tdat,models_out.all_terms(tdat),'g')
+    first_guess=fit_fun(beta0,tdat);
+    plot(tdat,first_guess,'g')
+    legend('data','fit','fit ci','fundemental model','3 freq model','all freq model','first guess')
     hold off
     xlim([0,0.1])
     ylabel('voltage');

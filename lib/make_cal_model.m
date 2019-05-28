@@ -22,14 +22,18 @@ trap_freq_cal=data.osc_fit.trap_freq_recons(cal_dat_mask)';
 
 %interpolate the input data to subsample by a factor of 100
 time_samp_interp=linspace(min(time_cal),max(time_cal),size(time_cal,1)*1e2);
-trap_freq_interp_raw=col_vec(interp1(time_cal,trap_freq_cal,time_samp_interp,'linear'));
+trap_freq_interp_raw=col_vec(interp1(time_cal,trap_freq_cal,time_samp_interp,'pchip'));
 
+%% do some filtering of the data
 %smooth the interpolated data
 %BMH 20190523 change - moved to using gausfilt
-yinterp_smooth=gaussfilt(time_samp_interp,trap_freq_interp_raw,anal_opts_cal.smooth_time);
+%yinterp_smooth=gaussfilt(time_samp_interp,trap_freq_interp_raw,anal_opts_cal.smooth_time);
 
-%create a model based on interpolating the smoothed interpolated data
-out.freq_drift_model=@(x) interp1(time_samp_interp,yinterp_smooth,x-time_start_cal,'linear');
+yinterp_smooth=smoothdata(trap_freq_interp_raw,'sgolay',round(5*anal_opts_cal.smooth_time/mean(diff(time_samp_interp))));
+
+
+%% create a model based on interpolating the smoothed/filtered interpolated data
+out.freq_drift_model=@(x) interp1(time_samp_interp,yinterp_smooth,x-time_start_cal,'pchip','extrap'); %'linear'
 out.num_shots=sum(cal_dat_mask);
 out.cal_mask=cal_dat_mask;
 
@@ -40,16 +44,16 @@ if mean(model_resid)>std(model_resid)
     error('error mean of residuals is not within 1sd')
 end
     
-out.unc=std(model_resid);
+out.unc=nanstd(model_resid);
 mean_cal_shot_unc=mean(col_vec(data.osc_fit.trap_freq_recons_unc(cal_dat_mask)));
 
 fprintf('%s:residual std %f vs model mean uncert %f \n',...
-     mfilename,std(model_resid),mean_cal_shot_unc)
+     mfilename,nanstd(model_resid),mean_cal_shot_unc)
 
 
 if anal_opts_cal.plot
     hour_in_s=60*60;
-    x_samp=linspace(min(time_cal),max(time_cal),size(time_cal,1)*1e2);
+    x_samp=linspace(min(time_cal)-30,max(time_cal)+30,size(time_cal,1)*1e2);
     stfig('osc cal model','add_stack',1);
     clf
     subplot(3,1,1)

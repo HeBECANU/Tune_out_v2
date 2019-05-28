@@ -3,27 +3,32 @@
 % using the measured change in trap frequency from the application of a probe beam.
 % application of the tune out probe beam.
 % The script:
-%	* defines the user controled options
-%   * Imports all the tdc data files 
-%	* Imports labview log file
-%   * Imports the wavemeter log file
-%   * Match upt the Labview data withthe tdc data
-%   * Imports the analog in log file , for each file the import:
-%       * checks that the pd voltage is ok
-%       * check that the laser is single mode using the scanning fabry perot signals
-%   * Check that the wavemeter readings are ok for each shot
-%       *checks that the wavelengths is stable during the probe intterogation
-%       *checks that the red wavelength is ~half the blue
-%       *checks that the double pd voltage is ok (now redundant beacuse of probe pd)
-%   * checks that the number of counts in the file is ok
-%   * combines all these checks into one master check
-%   * bins up each pulse of the AL
-%   * Fits the trap frequency
-%	* Investigate fit correlations
-%	* mask out only the (good)calibrations shots and make a model of how the (unpeturbed) trap freq changes in time
-%   * plot out (non calibration) (good) data and then fit the probe beam
-%       wavelength, identifying the tuneout wavelength and giving a
-%       stastistical uncertainty.
+% - defines the user controled options
+% - Imports all the tdc data files 
+% - Imports labview log file
+% - Imports the wavemeter log file
+% - Match up the Labview data withthe tdc data
+% - Imports the analog in log file , for each file the import:
+%   - checks that the pd voltage is ok
+%   - check that the laser is single mode using the scanning fabry perot signals
+%   - fits the measured AC mains waveform
+% - Check that the wavemeter readings are ok for each shot
+%   - checks that the wavelengths is stable during the probe intterogation
+%   - checks that the red wavelength is ~half the blue
+%   - checks that the double pd voltage is ok (now redundant beacuse of probe pd)
+% - checks that the number of counts in the file is ok
+% - combines all these checks into one master check
+% - bins up each pulse of the AL
+% - Fits the trap frequency
+%   - Investigate fit correlations
+% - mask out only the (good)calibrations shots and make a model of how the (unpeturbed) trap freq changes in time
+% - calculate the probe beam signal
+% - fit the relation of the probe beam signal to the probe optical frequency
+%   - determine the TO
+%   - bootstrap the output uncert 
+%   - fit with a linear and higher order model
+% - fit the relation of the probe bem signal to the probe optical frequency for each scan
+%   - investigate correlations
 
 %the data structure
 %   first level is instrument or anal method
@@ -55,10 +60,6 @@
 % Known BUGS/ Possible Improvements
 %  - a better way of figuring out what the pd setpoint is, maybe write as a config file
 %  - harmonize the output
-%  - try different ways of fitting
-%    - AC mains waveform
-%    - harmonic component
-%	-make unique plot numbers
 %   -the fit error depends on wavelength indicating that the model does not
 %   have enough freedom
 %	-make plots more compact
@@ -68,7 +69,7 @@
 %
 % Author: Bryce Henson
 % email: Bryce.Henson@live.com
-% Last revision:2019-04-16
+% Last revision:2019-05-26
 
 
 
@@ -79,14 +80,43 @@ clear all
 
 %setup directories you wish to loop over
 % 
-loop_config.dir = {
-    '..\scratch_data\20190227_qwp_270',
-    '..\scratch_data\20190227_qwp_286',
-    '..\scratch_data\20190227_qwp_310',
-    };
-loop_config.set_pt = [nan,1.0,1.0];
-%selected_dirs = 1:numel(loop_config.dir); %which files to loop over (currently all)
-selected_dirs = [1];
+% loop_config.dir = {
+%     '..\scratch_data\20190227_qwp_270',
+%     '..\scratch_data\20190227_qwp_286',
+%     '..\scratch_data\20190227_qwp_310',
+%     };
+% loop_config.set_pt = [nan,nan,nan];
+% selected_dirs = 1:numel(loop_config.dir); %which files to loop over (currently all)
+% selected_dirs = [2,3];
+
+%% select the directories that have not been processed yet
+root_data_dir='G:\good_data';
+files = dir(root_data_dir);
+files=files(3:end);
+% Get a logical vector that tells which is a directory.
+dir_mask = [files.isdir];
+folders=files(dir_mask);
+folders=arrayfun(@(x) fullfile(root_data_dir,x.name),folders,'UniformOutput' ,false);
+%TODO mask out folders with out/something/done
+is_done=false(numel(folders),1);
+iimax=numel(folders);
+for ii=1:iimax
+    out_dir_folder=fullfile(folders{ii},'out');
+    if exist(out_dir_folder,'dir')
+        all_out_files=dir([out_dir_folder,filesep,'**\*.txt']);
+        all_out_files={all_out_files.name};
+        if sum(strcmp(all_out_files,'Done.txt'))>0 || sum(strcmp(all_out_files,'done.txt'))>0
+            is_done(ii)=true;
+        end
+    end
+end
+folders=folders(~is_done);
+
+%%
+loop_config.dir = folders;
+loop_config.set_pt=nan(1,numel(loop_config.dir));
+selected_dirs=1:numel(loop_config.dir);
+
 
 anal_opts=[]; %reset the options (would be good to clear all variables except the loop config
 anal_opts.tdc_import.file_name='d';
@@ -105,7 +135,7 @@ anal_opts.trig_dld=20.3;
 anal_opts.dld_aquire=4;
 anal_opts.aquire_time=4;
 anal_opts.trig_ai_in=20;
-anal_opts.aom_freq=0;%190*1e6;%Hz %set to zero for comparison with previous data runs
+anal_opts.aom_freq= 189.*1e6;%Hz %set to zero for comparison with previous data runs
 
 anal_opts.wm_log.plot_all=false;
 anal_opts.wm_log.plot_failed=false;
@@ -227,9 +257,7 @@ data.labview.calibration=lv_log.probe_calibration;
 
 %% CHECK ATOM NUMBER
 %total number of detected counts
-stfig('diagnostics and veto','add_stack',1);
-clf
-subplot(4,1,1)
+
 %create a list of indicies (of the mcp_tdc) that have an ok number of counts
 %exclude the very low and then set the thresh based on the sd of the remaining
 not_zero_files=data.mcp_tdc.num_counts>1e3; 
@@ -240,6 +268,9 @@ fprintf('shots number ok %u out of %u \n',sum(data.mcp_tdc.num_ok),numel(data.mc
 drawnow
 %plot((data.mcp_tdc.time_create_write(:,2)-data.mcp_tdc.time_create_write(1,2))/(60*60),data.mcp_tdc.num_counts)
 %xlabel('time (h)')
+stfig('diagnostics and veto','add_stack',1);
+clf
+subplot(4,1,1)
 plot(data.mcp_tdc.shot_num,data.mcp_tdc.num_counts,'k')
 xlabel('shot number')
 ylabel('total counts')
@@ -582,128 +613,70 @@ data.cal=make_cal_model(anal_opts.cal_mdl,data);
 % TODO
 % - anharmonic correction
 anal_opts.calc_sig=[];
+
 data.signal=calculate_signal(anal_opts.calc_sig,data);
 
-%% segmented TO
-%look at the tune out when fit to short segments
-% TO DO, would be better if this called the fit_to script multiple times
-anal_opts.fit_to=[];
-anal_opts.fit_to.bootstrap=false;
-anal_opts.fit_to.plots=true;
-anal_opts.fit_to.clear_plot=true;
-%thresholds for CI
-%sd         CI
-%1          1.3174
-%2          0.05
-%3          2.699e-03
-anal_opts.fit_to.ci_size_disp=0.3174;%one sd %confidence interval to display
-anal_opts.fit_to.global=anal_opts.global;
-anal_opts.fit_to.ci_size_cut_outliers=0.05; %confidence interval for cutting outliers
-anal_opts.fit_to.scale_x=1e-9;
-anal_opts.fit_to.min_pts=7;
 
-anal_opts.fit_to.seg_time=60*30;
-anal_opts.fit_to.seg_shift=1*anal_opts.fit_to.seg_time;
-%to_seg_fits=segmentd_fit_to(anal_opts.fit_to,data);
-%curently broken
-to_seg_fits=scan_segmented_fit_to(anal_opts.fit_to,data);
+%% calculate blue probe freq
+% convert freq to blue in hz apply aom shift to probe beam
+data.blue_probe=calc_probe_blue(data.wm_log.proc,anal_opts.aom_freq);
+
+%% Fit the tune out uisng all the data points from this scan
+% fit using both a linear and quadratic polynomial
+% TODO: optional fit weighting
 
 
-%% Fit the Tune Out
-% anal_opts.fit_to=[];
-% anal_opts.fit_to.plot_inital=true;
-% anal_opts.fit_to.bootstrap=true;
-% %thresholds for CI
-% %sd         CI
-% %1          0.3174
-% %2          0.05
-% %3          2.699e-03
-% anal_opts.fit_to.ci_size_disp=0.3174;%one sd %confidence interval to display
-% anal_opts.fit_to.global=anal_opts.global;
-% anal_opts.fit_to.ci_size_cut_outliers=0.05; %confidence interval for cutting outliers
-% anal_opts.fit_to.scale_x=1e-9;
-% 
-% to_res=fit_to(anal_opts.fit_to,data);
-% data.to_fit=to_res;
-% 
-% to_fit_trimed_val=to_res.fit_trimmed.to_freq;
-% to_fit_unc_boot=to_res.fit_trimmed.to_unc_boot;
-% to_fit_unc_fit=to_res.fit_trimmed.to_unc_fit;
-% to_fit_unc_unc_boot=to_res.fit_trimmed.boot.se_se_opp/anal_opts.fit_to.scale_x;
-
-%% Analyse the effect of nonlinear terms on Tune out
-anal_opts.fit_to=[];
-anal_opts.fit_to.plot_inital=false;
-anal_opts.fit_to.bootstrap=true;
+anal_opts.fit_to_all=[];
+anal_opts.fit_to_all.plot_inital=true;
+anal_opts.fit_to_all.bootstrap=true;
 %thresholds for CI
 %sd         CI
 %1          0.3174
 %2          0.05
 %3          2.699e-03
-anal_opts.fit_to.ci_size_disp=1-erf(1/sqrt(2));%one sd %confidence interval to display
-anal_opts.fit_to.global=anal_opts.global;
-anal_opts.fit_to.ci_size_cut_outliers=1-erf(1.5/sqrt(2)); %confidence interval for cutting outliers
-anal_opts.fit_to.scale_x=1e-9;
+anal_opts.fit_to_all.sigma_disp=1;%one sd %confidence interval to display
+anal_opts.fit_to_all.global=anal_opts.global;
+anal_opts.fit_to_all.sigma_cut_outliers=3; %confidence interval for cutting outliers
+anal_opts.fit_to_all.scale_x=1e-9;
 
-to_res=fit_to_nonlin(anal_opts.fit_to,data);
-data.to_fit_nonlin=to_res;
+data.to_fit_all=fit_to_all(anal_opts.fit_to_all,data);
 
-to_fit_trimed_val=to_res.fit_trimmed.to_freq;
-to_fit_unc_boot=to_res.fit_trimmed.to_unc_boot;
-to_fit_unc_fit=to_res.fit_trimmed.to_unc_fit;
-to_fit_unc_unc_boot_lin=to_res.fit_trimmed.boot{1}.se_se_opp/anal_opts.fit_to.scale_x;
-to_fit_unc_unc_boot_quad=to_res.fit_trimmed.boot{2}.se_se_opp/anal_opts.fit_to.scale_x;
+
+%% segmented TO
+%look at the tune out when fit to short segments
+% TO DO, would be better if this called the fit_to script multiple times
+
+anal_opts.fit_to_seg=[];
+anal_opts.fit_to_seg.bootstrap=false;
+anal_opts.fit_to_seg.plots=true;
+anal_opts.fit_to_seg.clear_plot=true;
+%thresholds for CI
+%sd         CI
+%1          1.3174
+%2          0.05
+%3          2.699e-03
+anal_opts.fit_to_seg.sigma_disp=1;%one sd %confidence interval to display
+anal_opts.fit_to_seg.global=anal_opts.global;
+anal_opts.fit_to_seg.sigma_cut_outliers=3; %confidence interval for cutting outliers
+
+anal_opts.fit_to_seg.scale_x=1e-9;
+anal_opts.fit_to_seg.min_pts=7;
+
+data.to_fit_seg=scan_segmented_fit_to(anal_opts.fit_to_seg,data);
+
+
 
 %% write out the results
-%inverse scaled gradient to give the single shot uncert (with scaling factor to include calibration)
-tot_num_shots=to_res.num_shots+data.cal.num_shots;
-single_shot_uncert=2*to_res.fit_trimmed.single_shot_uncert_boot{1}...
-    *sqrt(tot_num_shots/to_res.num_shots);
-fprintf('\n====TO fit results==========\n')
-fprintf('dir =%s\n',anal_opts.tdc_import.dir)
-fprintf('median damping time %.2f\n',median(1./data.osc_fit.model_coefs(data.osc_fit.ok.rmse,7,1)))
-%calculate some statistics and convert the model parameter into zero crossing and error therin
-old_to_wav=413.0938e-9;
-new_to_freq_unc=to_fit_unc_boot;
-%to_res.fit_trimmed.to_unc_fit
-to_wav_val_lin=const.c/(to_fit_trimed_val{1}*2);
-to_freq_val_lin=to_fit_trimed_val{1}*2+anal_opts.aom_freq;
-to_freq_unc_lin=new_to_freq_unc{1}*2;
-to_wav_unc_lin=2*new_to_freq_unc{1}*const.c/((to_fit_trimed_val{1}*2)^2);
-to_wav_val_quad=const.c/(to_fit_trimed_val{2}*2);
-to_freq_val_quad=to_fit_trimed_val{2}*2+anal_opts.aom_freq;
-to_freq_unc_quad=new_to_freq_unc{2}*2;
-to_wav_unc_quad=new_to_freq_unc{2}*const.c/((to_fit_trimed_val{2}*2)^2);
-time_run_start=data.mcp_tdc.time_create_write(1,2)-anal_opts.trig_dld-anal_opts.dld_aquire;
-time_run_stop=data.mcp_tdc.time_create_write(end,2)-anal_opts.trig_dld-anal_opts.dld_aquire;
-time_duration=data.mcp_tdc.time_create_write(end,2)-data.mcp_tdc.time_create_write(1,2);
-fprintf('run start time               %.1f        (posix)\n',time_run_start)
-fprintf('                             %s (ISO)\n',datestr(datetime(time_run_start,'ConvertFrom','posix'),'yyyy-mm-ddTHH:MM:SS'))
-fprintf('run stop time                %.1f        (posix)\n',time_run_stop)
-fprintf('                             %s (ISO)\n',datestr(datetime(time_run_stop,'ConvertFrom','posix'),'yyyy-mm-ddTHH:MM:SS'))
 
-fprintf('duration                     %.1f (s),%.1f (hc)\n',...
-    time_duration,time_duration/(60*60))
-fprintf('TO freq (Linear)             %.1f±(%.0f±%.0f) MHz\n',...
-    to_freq_val_lin*1e-6,to_freq_unc_lin*1e-6,to_fit_unc_unc_boot_lin*1e-6*2)
-fprintf('TO wavelength (Linear)       %.6f±%f nm \n',to_wav_val_lin*1e9,to_wav_unc_lin*1e9)
-fprintf('TO freq (Quadratic)          %.1f±(%.0f±%.0f) MHz\n',...
-    to_freq_val_quad*1e-6,to_freq_unc_quad*1e-6,to_fit_unc_unc_boot_quad*1e-6*2)
-fprintf('TO wavelength (Quadratic)    %.6f±%f nm \n',to_wav_val_quad*1e9,to_wav_unc_quad*1e9)
-fprintf('diff between Lin and Quad    %e±%e nm \n',(to_wav_val_lin-to_wav_val_quad)*1e9,sqrt(to_wav_unc_lin^2+to_wav_unc_quad^2)*1e9)
-fprintf('diff from TOV1               %e±%e nm \n',(to_wav_val_lin-old_to_wav)*1e9,to_wav_unc_lin*1e9)
-%more logic needs to be included here
-fprintf('number of probe files        %u \n',to_res.num_shots)
-fprintf('number of calibration files  %u \n',data.cal.num_shots)
-fprintf('total used                   %u \n',tot_num_shots)
-fprintf('files with enough number     %u\n',sum(data.mcp_tdc.num_ok'))
-fprintf('shot uncert scaling @1SD %.1f MHz, %.2f fm /sqrt(shots)\n',single_shot_uncert*1e-6,...
-    single_shot_uncert*const.c/((to_fit_trimed_val{1}*2)^2)*10^15)
-%predicted uncert using this /sqrt(n), unless derived differently this is pointless
-%fprintf('predicted stat. uncert %.1f MHz, %.2f fm\n',single_shot_uncert/sqrt(tot_num_shots)*1e-6,...
-%    single_shot_uncert/sqrt(tot_num_shots)*const.c/((to_fit_trimed_val*2)^2)*10^15)
+disp_to_results(data,anal_opts)
 
 diary off
+
+%% what the output should have
+% the aom offset that was included
+% the directory that was used
+% the results of the fit to all the data
+% the results of the fit to each scan
 
 
 %% damping results
@@ -713,44 +686,23 @@ diary off
 % histogram(1./data.osc_fit.model_coefs(data.osc_fit.ok.rmse,7,1),linspace(0,3,1e2))
 
 
-
-%% Archive the analysed data
-
-clear drift_data main_data %To make sure there isn't any bleed through between directories
-
-%Scan segmented data
-drift_data.to_val{:,1}=to_seg_fits.fit_trimmed.freq.val.*2;
-drift_data.to_val{:,2}=to_seg_fits.fit_trimmed.freq.unc.*2;
-drift_data.to_time=to_seg_fits.to_time;
-drift_data.atom_num=to_seg_fits.atom_num(:,1);
-for kk=1:numel(to_seg_fits.fit_trimmed.model)
-    drift_data.grad{kk,1}=to_seg_fits.fit_trimmed.model{kk,1}.Coefficients{2,1};
-    drift_data.grad{kk,2}=to_seg_fits.fit_trimmed.model{kk,1}.Coefficients{2,2};
-end
-drift_data.model=to_seg_fits.fit_trimmed.model;
-drift_data.avg_coefs = to_seg_fits.avg_coefs;
-drift_data.avg_coefs_cal = to_seg_fits.avg_coefs_cal;
-
-%The analysis of the whole run
-main_data.set_pt = anal_opts.probe_set_pt;
-main_data.lin_fit{1} = to_freq_val_lin;
-main_data.lin_fit{2} = to_freq_unc_lin;
-main_data.quad_fit{1} = to_freq_val_quad;
-main_data.quad_fit{2} = to_freq_unc_quad;
-main_data.shots = tot_num_shots;
-save([anal_opts.global.out_dir,'main_data.mat'],'main_data')
-save([anal_opts.global.out_dir,'drift_data.mat'],'drift_data')
-
 %%
+to_fit_seg=data.to_fit_seg;
+to_fit_all=data.to_fit_all;
+
+fprintf('saving results\n')
+save(fullfile(anal_out.dir,'data_results.mat'),'to_fit_seg','to_fit_all','anal_opts','-nocompression','-v7.3')
+
 fprintf('saving full output...')
 %no compression bc its very slowwww
-%save(fullfile(anal_out.dir,'data_anal_full.mat'),'data','to_res','anal_opts','-nocompression','-v7.3')
+save(fullfile(anal_out.dir,'data_anal_full.mat'),'data','anal_opts','-nocompression','-v7.3')
 
 %write a file called done to the out directory
-fid = fopen(fullfile(anal_out.dir,'Done.txt'),'wt');
-fprintf(fid, 'Done');
+fid = fopen(fullfile(anal_out.dir,'done.txt'),'wt');
+fprintf(fid, 'done\n');
 fclose(fid);
 toc(main_trap_freq_timer)
+
 fprintf('Done\n')
 
 %catch err
