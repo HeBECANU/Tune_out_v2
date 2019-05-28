@@ -13,6 +13,6 @@ blue_probe.act.mean(~isnan(blue_probe.act.mean))=(blue_probe.act.mean(~isnan(blu
 
 
 blue_probe.act.std=wm_log_proc.probe.freq.act.std;
-blue_probe.act.std(~isnan(blue_probe.act.std))=blue_probe.act.std*1e6*2;
+blue_probe.act.std(~isnan(blue_probe.act.std))=blue_probe.act.std(~isnan(blue_probe.act.std))*1e6*2;
 
 end
