@@ -6,7 +6,7 @@ to_wav_theory = 299792458./to_freq_theory;
 aom_freq = 189.*1e6; %aom offset in Hz
 %% polarisation data options
 pol_opts.location = 'pre_right';%post, pre_cen, pre_left, pre_right
-pol_opts.predict = 'fit';%'interp'; %obs (obsovation) fit (pertial fit) full_fit (fit with all parameters free)
+pol_opts.predict = 'fit';%'interp'; %obs (obsovation) fit (pertial fit) full_fit explex(fit with all parameters free)
 %% Display options
 opts = statset('MaxIter',1e4);
 ci_size=1-erf(1/sqrt(2));%1-erf(zvalue/sqrt(2)) %confidence interval for cutting outliers

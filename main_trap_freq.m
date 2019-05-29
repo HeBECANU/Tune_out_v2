@@ -84,7 +84,7 @@ clear all
 %setup directories you wish to loop over
 % 
 loop_config.dir = {
-    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output',
+    'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190521_search_forbidden_6_trap_freq',
     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190227_qwp_270\',
     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190227_qwp_286',
     'Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20190227_qwp_310',
@@ -466,8 +466,8 @@ data.ai_log=ai_log_import(anal_opts.ai_log,data);
 %%
 %HACK IF SFP BROKEN
 % 
-% data.ai_log.ok.reg_pd=true(size(data.mcp_tdc.shot_num))';
-% data.ai_log.ok.sfp=true(size(data.mcp_tdc.shot_num))';
+data.ai_log.ok.reg_pd=true(size(data.mcp_tdc.shot_num))';
+data.ai_log.ok.sfp=true(size(data.mcp_tdc.shot_num))';
 
 % % Trying to automate setpoint correction
 

@@ -18,10 +18,14 @@ anal_opts.tdc_import.force_reimport=true;
 anal_opts.tdc_import.force_forc=false;
 anal_opts.tdc_import.dld_xy_rot=0.61;
 
+
+
 tmp_xlim=[-30e-3, 30e-3];     %tight XY lims to eliminate hot spot from destroying pulse widths
 tmp_ylim=[-30e-3, 30e-3];
-tlim=[0,4];
+tlim=[0,4.0];
 anal_opts.tdc_import.txylim=[tlim;tmp_xlim;tmp_ylim];
+anal_opts.tdc_import.mod_wait=2;
+anal_opts.tdc_import.force_reimport=true;
 
 
 anal_opts.atom_laser.pulsedt=8.000e-3;
@@ -43,9 +47,9 @@ anal_opts.trig_ai_in=20;
 
 
 anal_opts.osc_fit.binsx=1000;
-anal_opts.osc_fit.blur=1;
+anal_opts.osc_fit.blur=2;
 anal_opts.osc_fit.xlim=[-20,20]*1e-3;
-anal_opts.osc_fit.tlim=[0.86,1.08];
+anal_opts.osc_fit.tlim=[0.0,1.08];
 anal_opts.osc_fit.dimesion=2; %Sel ect coordinate to bin. 1=X, 2=Y.
 
 anal_opts.history.shots=50;
@@ -88,7 +92,7 @@ clf;
 
 loop_num=0;
 while true
-    pause(0.1)
+    pause(0.3)
     batch_data=[];
     batch_data.shot_num=[];
     anal_opts.tdc_import.shot_num=find_data_files(anal_opts.tdc_import);
@@ -103,11 +107,11 @@ while true
 
     if numel(anal_opts.tdc_import.shot_num)==0
             if mod(loop_num,4)==0
-                pause(.2)
+                pause(.4)
                 fprintf('\b\b\b')
                 loop_num=1;
             else
-                pause(.1) %little wait animation
+                pause(.3) %little wait animation
                 fprintf('.')
                 loop_num=loop_num+1;
             end
@@ -115,17 +119,16 @@ while true
         batch_data.mcp_tdc=import_mcp_tdc_data(anal_opts.tdc_import);
         %data.mcp_tdc=mcp_tdc_data;
         %just to give me a logical vector
-        batch_data.mcp_tdc.all_ok=batch_data.mcp_tdc.num_counts>4e3;
+        batch_data.mcp_tdc.all_ok=batch_data.mcp_tdc.num_counts>5e3;
         batch_data.mcp_tdc.all_ok(batch_data.mcp_tdc.all_ok)=...
             cellfun(@(x) x(end,1),batch_data.mcp_tdc.counts_txy(batch_data.mcp_tdc.all_ok))>anal_opts.dld_aquire*0.8;
         if sum(batch_data.mcp_tdc.all_ok)==0
             fprintf('waiting for file to be writen\n')
-            pause(0.1)
         else
             batch_data.mcp_tdc.al_pulses=bin_al_pulses(anal_opts.atom_laser,batch_data);
             %%
             anal_opts.osc_fit.adaptive_freq=true; %estimate the starting trap freq 
-            anal_opts.osc_fit.appr_osc_freq_guess=[52,44,40];
+            anal_opts.osc_fit.appr_osc_freq_guess=[52,52,52];
             anal_opts.osc_fit.freq_fit_tolerance=5;
             if sum(batch_data.mcp_tdc.all_ok)>2
                 anal_opts.osc_fit.plot_fits=false;
