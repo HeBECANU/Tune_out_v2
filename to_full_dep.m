@@ -31,83 +31,92 @@ disp_config.colors_main = [[75,151,201];[193,114,66];[87,157,95]];
 disp_config.bin_tol=0.01;
 %% HWP
 loop_config.dir = {
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_51_nuller_reconfig\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190203_to_hwp_29_nuller_reconfig\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190201_to_hwp_131_nuller_reconfig\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190203_to_hwp_171_nuller_reconfig\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190203_to_hwp_191_nuller_reconfig\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190211_to_hwp_208_nuller_reconfig\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\\20190211_to_hwp_194_nuller_reconfig\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_187_nuller_reconfig\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_181_nuller_reconfig\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_177_nuller_reconfig_part_b\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_177_nuller_reconfig_part_a\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_171_nuller_reconfig\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_165_nuller_reconfig\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_160_nuller_reconfig\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190209_to_hwp_155_nuller_reconfig\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190209_to_hwp_145_nuller_reconfig\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190209_to_hwp_140_nuller_reconfig\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190208_to_hwp_120_nuller_reconfig_okish\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190208_to_hwp_99_nuller_reconfig\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190207_to_hwp_80_nuller_reconfig\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_121_nuller_reconfig\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_24_nuller_reconfig\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_46_nuller_reconfig\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_61_nuller_reconfig\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_92_nuller_reconfig\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190211_to_hwp_230_nuller_reconfig\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190211_to_hwp_217_nuller_reconfig\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190211_to_hwp_199_nuller_reconfig\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190206_to_hwp_100_nuller_reconfig\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_141_nuller_reconfig\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_160_nuller_reconfig\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_180_nuller_reconfig\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_70_nuller_reconfig\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190211_to_hwp_240_nuller_reconfig\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190211_to_hwp_250_nuller_reconfig_tenma_setpoint\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190201_to_hwp_111_nuller_reconfig\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190203_to_hwp_151_nuller_reconfig\'
-};
-data.hwp = to_data(loop_config);
-%% QWP
-loop_config.dir = {
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190304_qwp_280_pure'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190302_qwp_283_pure_long'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190301_qwp_283_pure_run'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190301_qwp_246_2'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190227_qwp_270'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190227_qwp_286'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190227_qwp_310'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190227_qwp_286_no_analog'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190226_qwp_254'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190226_qwp_246'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190226_qwp_234'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190225_qwp_226'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190225_qwp_220'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190225_qwp_202'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190225_qwp_187'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190225_qwp_177'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190225_qwp_162'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190225_qwp_154'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190224_qwp_130'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190224_qwp_134'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190224_qwp_138'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190224_qwp_142'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190224_qwp_146'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190223_qwp_150'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190226_qwp_260'
-};
-data.qwp = to_data(loop_config);
-%% MIX
-loop_config.dir = {
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190305_hwp_340_qwp_270'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190306_hwp_350_qwp_274'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190306_overnight_hwp_354_qwp_268'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190307_hwp_10_qwp_280'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190307_hwp_06_qwp_290'
-};
-data.mix = load_pocessed_to_data(loop_config);
+    '..\scratch_data\20190227_qwp_270',
+    '..\scratch_data\20190227_qwp_286',
+    '..\scratch_data\20190227_qwp_310',
+    };
+
+data.hwp = load_pocessed_to_data(loop_config);
+%%
+% %%%
+% loop_config.dir = {
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_51_nuller_reconfig\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190203_to_hwp_29_nuller_reconfig\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190201_to_hwp_131_nuller_reconfig\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190203_to_hwp_171_nuller_reconfig\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190203_to_hwp_191_nuller_reconfig\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190211_to_hwp_208_nuller_reconfig\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\\20190211_to_hwp_194_nuller_reconfig\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_187_nuller_reconfig\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_181_nuller_reconfig\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_177_nuller_reconfig_part_b\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_177_nuller_reconfig_part_a\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_171_nuller_reconfig\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_165_nuller_reconfig\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_160_nuller_reconfig\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190209_to_hwp_155_nuller_reconfig\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190209_to_hwp_145_nuller_reconfig\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190209_to_hwp_140_nuller_reconfig\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190208_to_hwp_120_nuller_reconfig_okish\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190208_to_hwp_99_nuller_reconfig\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190207_to_hwp_80_nuller_reconfig\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_121_nuller_reconfig\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_24_nuller_reconfig\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_46_nuller_reconfig\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_61_nuller_reconfig\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_92_nuller_reconfig\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190211_to_hwp_230_nuller_reconfig\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190211_to_hwp_217_nuller_reconfig\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190211_to_hwp_199_nuller_reconfig\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190206_to_hwp_100_nuller_reconfig\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_141_nuller_reconfig\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_160_nuller_reconfig\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_180_nuller_reconfig\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_70_nuller_reconfig\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190211_to_hwp_240_nuller_reconfig\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190211_to_hwp_250_nuller_reconfig_tenma_setpoint\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190201_to_hwp_111_nuller_reconfig\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190203_to_hwp_151_nuller_reconfig\'
+% };
+% data.hwp = load_pocessed_to_data(loop_config);
+% %% QWP
+% loop_config.dir = {
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190304_qwp_280_pure'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190302_qwp_283_pure_long'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190301_qwp_283_pure_run'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190301_qwp_246_2'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190227_qwp_270'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190227_qwp_286'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190227_qwp_310'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190227_qwp_286_no_analog'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190226_qwp_254'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190226_qwp_246'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190226_qwp_234'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190225_qwp_226'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190225_qwp_220'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190225_qwp_202'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190225_qwp_187'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190225_qwp_177'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190225_qwp_162'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190225_qwp_154'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190224_qwp_130'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190224_qwp_134'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190224_qwp_138'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190224_qwp_142'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190224_qwp_146'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190223_qwp_150'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190226_qwp_260'
+% };
+% data.qwp = load_pocessed_to_data(loop_config);
+% %% MIX
+% loop_config.dir = {
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190305_hwp_340_qwp_270'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190306_hwp_350_qwp_274'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190306_overnight_hwp_354_qwp_268'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190307_hwp_10_qwp_280'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190307_hwp_06_qwp_290'
+% };
+% data.mix = load_pocessed_to_data(loop_config);
 %% Generate data vectors
 to_val = [data.hwp.drift.to_val{1};data.qwp.drift.to_val{1};data.mix.drift.to_val{1}];%all our single scan tune-out values
 to_unc = [data.hwp.drift.to_val{2};data.qwp.drift.to_val{2};data.mix.drift.to_val{2}];%all corresponding uncertainties

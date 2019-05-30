@@ -80,40 +80,29 @@ clear all
 
 %setup directories you wish to loop over
 %% for testing
-loop_config.dir = {
-    '..\scratch_data\20190227_qwp_270',
-    '..\scratch_data\20190227_qwp_286',
-    '..\scratch_data\20190227_qwp_310',
-    };
-loop_config.set_pt = [nan,nan,nan];
-selected_dirs = 1:numel(loop_config.dir); %which files to loop over (currently all)
-selected_dirs = [2,3];
+% loop_config.dir = {
+%     '..\scratch_data\20190227_qwp_270',
+%     '..\scratch_data\20190227_qwp_286',
+%     '..\scratch_data\20190227_qwp_310',
+%     };
+% loop_config.set_pt = [nan,nan,nan];
+% selected_dirs = 1:numel(loop_config.dir); %which files to loop over (currently all)
+% selected_dirs = [1,2,3];
 
-%% select the directories that have not been processed yet
-% root_data_dir='G:\good_data';
-% files = dir(root_data_dir);
-% files=files(3:end);
-% % Get a logical vector that tells which is a directory.
-% dir_mask = [files.isdir];
-% folders=files(dir_mask);
-% folders=arrayfun(@(x) fullfile(root_data_dir,x.name),folders,'UniformOutput' ,false);
-% %TODO mask out folders with out/something/done
-% is_done=false(numel(folders),1);
-% iimax=numel(folders);
-% for ii=1:iimax
-%     out_dir_folder=fullfile(folders{ii},'out');
-%     if exist(out_dir_folder,'dir')
-%         all_out_files=dir([out_dir_folder,filesep,'**\*.txt']);
-%         all_out_files={all_out_files.name};
-%         if sum(strcmp(all_out_files,'Done.txt'))>0 || sum(strcmp(all_out_files,'done.txt'))>0
-%             is_done(ii)=true;
-%         end
-%     end
-% end
-% folders=folders(~is_done);
-% loop_config.dir = folders;
-% loop_config.set_pt=nan(1,numel(loop_config.dir));
-% selected_dirs=1:numel(loop_config.dir);
+%% for deployment
+% select the directories in a folder
+%root_data_dir='G:\good_data';
+root_data_dir='..\scratch_data';
+files = dir(root_data_dir);
+files=files(3:end);
+% Get a logical vector that tells which is a directory.
+dir_mask = [files.isdir];
+folders=files(dir_mask);
+%convert to the full path
+folders=arrayfun(@(x) fullfile(root_data_dir,x.name),folders,'UniformOutput' ,false);
+loop_config.dir = folders;
+loop_config.set_pt=nan(1,numel(loop_config.dir));
+selected_dirs=1:numel(loop_config.dir);
 
 %%
 anal_opts=[]; %reset the options (would be good to clear all variables except the loop config
@@ -153,11 +142,15 @@ anal_opts.global.qe=0.09;
 anal_opts.global.atom_laser.t0=anal_opts.atom_laser.t0;
 
 
-anal_opts.osc_fit.binsx=1000;
-anal_opts.osc_fit.blur=1;
-anal_opts.osc_fit.xlim=[-20,20]*1e-3;
-anal_opts.osc_fit.tlim=[0.86,1.08];
-anal_opts.osc_fit.dimesion=2; %Select coordinate to bin. 1=X, 2=Y.
+%anal_opts.osc_fit.binsx=1000;
+%anal_opts.osc_fit.blur=1;
+%anal_opts.osc_fit.xlim=[-20,20]*1e-3;
+%anal_opts.osc_fit.tlim=[0.86,1.08];
+
+
+reprocess_folder_if_older_than=posixtime(datetime(datenum('20190529T000000','yyyymmddTHHMMSS'),'TimeZone','local','ConvertFrom','datenum'));%posix date
+active_process_mod_time=60*30;
+
 % END USER VAR-----------------------------------------------------------
 
 
@@ -175,15 +168,17 @@ addpath(genpath_exclude(fullfile(this_folder,'lib'),'\.')) %dont add hidden fold
 addpath(genpath_exclude(fullfile(this_folder,'dev'),'\.'))
 addpath(genpath_exclude(fullfile(this_folder,'bin'),'\.'))
 
-
 hebec_constants %call the constants function that makes some globals
-
 
 % loop over the selected directories
 for dir_idx = selected_dirs
-main_trap_freq_timer=tic;
-
 anal_opts.tdc_import.dir = loop_config.dir{dir_idx};
+%check that this folder is not being processed by another matlab instance
+if should_process_folder(anal_opts.tdc_import.dir,reprocess_folder_if_older_than,active_process_mod_time)  
+try
+    
+fprintf('processing data dir %s \n',anal_opts.tdc_import.dir)
+main_trap_freq_timer=tic;
 anal_opts.probe_set_pt=loop_config.set_pt(dir_idx);
 %sets up the struct 'data' which will contain everything you could want incuding the txy data and
 %the information from the logs
@@ -352,7 +347,7 @@ anal_opts.ai_log.plot.all=false;
 anal_opts.ai_log.plot.failed=true;
 
 %do the ac waveform fit
-anal_opts.ai_log.do_ac_mains_fit=true;
+anal_opts.ai_log.do_ac_mains_fit=false;
 
 % Call the function
 data.ai_log=ai_log_import(anal_opts.ai_log,data);
@@ -552,21 +547,28 @@ data.num_fit=fit_atom_number(anal_opts.atom_num_fit,data);
 %% Load saved state
 %save('before_fit.mat')
 %load('before_fit.mat') % DEV DEV DEV
+
+%% Correlate AC mains
+% anal_opts.cancel_mains_corr.do=true;
+% %anal_opts.cancel_mains_corr.tlim=[-3,2];
+% %anal_opts.cancel_mains_corr.tsamp=1e-3;
+% anal_opts.cancel_mains_corr.tlim=[-4,-1];
+% anal_opts.cancel_mains_corr.tsamp=5e-4;
+% data.corr_cancel=corr_ac_mains(data,anal_opts.cancel_mains_corr)
+
 %% FITTING THE TRAP FREQUENCY
 
 anal_opts.osc_fit.adaptive_freq=true; %estimate the starting trap freq 
+anal_opts.osc_fit.dimesion=2; %Select coordinate to bin. 1=X, 2=Y.
 anal_opts.osc_fit.appr_osc_freq_guess=[52,47.9,40];
 anal_opts.osc_fit.freq_fit_tolerance=2; %hz arround the median to cut away
-anal_opts.osc_fit.plot_fits=false;
+anal_opts.osc_fit.plot_fits=true;
 anal_opts.osc_fit.plot_err_history=true;
 anal_opts.osc_fit.plot_fit_corr=true;
 
 anal_opts.osc_fit.global=anal_opts.global;
 data.osc_fit=fit_trap_freq(anal_opts.osc_fit,data);
 
-%% Correlate AC mains
-
-%corr_ac_mains(data)
 
 
 %% undo the aliasing
@@ -662,8 +664,6 @@ anal_opts.fit_to_seg.min_pts=7;
 
 data.to_fit_seg=scan_segmented_fit_to(anal_opts.fit_to_seg,data);
 
-
-
 %% write out the results
 
 disp_to_results(data,anal_opts)
@@ -707,4 +707,9 @@ fprintf('Done\n')
 %fprintf('Analysis on folder\n (%s) failed \n',anal_opts.tdc_import.dir) %Indicate if a directory couldn't be analysed properly
 %msgText = getReport(err)
 %end
-end
+catch e
+    fprintf('caught error:%s',getReport(e))
+    diary off
+end %error catchign
+end %process folder ?
+end %loop over folders

@@ -23,10 +23,11 @@ osc_fit.fit_sample_limit=cell(1,iimax);
 fprintf('Fitting oscillations in shots %04i:%04i',iimax,0)
 
  if anal_opts_osc_fit.plot_fits
-            fit_plot_handle=stfig('single osc fit','add_stack',1);
+            fit__osc_plot_handle=stfig('single osc fit','add_stack',1);
+            fit_resid_plot_handle=stfig('fir resid','add_stack',1);
  end
 
-for ii=1:iimax
+for ii=1:1%iimax DEV DEV DEV
     %position that data appears in data.mcp_tdc, not ness shot number
     %specified because we will remove any elements of osc_fit that did not
     %fit because of all_ok condition
@@ -37,16 +38,23 @@ for ii=1:iimax
     if data.mcp_tdc.all_ok(ii)
         osc_fit.dld_shot_num(ii)=dld_shot_num;
         %construct a more convinent temp variable txyz_tmp wich is the position in mm for use in the fit
-        x_tmp=col_vec(squeeze(data.mcp_tdc.al_pulses.vel.mean(ii,:,2)));
-        x_tmp=x_tmp-nanmean(x_tmp);
-        y_tmp=col_vec(squeeze(data.mcp_tdc.al_pulses.vel.mean(ii,:,3)));
-        y_tmp=y_tmp-nanmean(y_tmp);
-        z_tmp=col_vec(squeeze(data.mcp_tdc.al_pulses.vel.mean(ii,:,1)));
-        z_tmp=z_tmp-nanmean(z_tmp);
         
-        txyz_tmp=cat(2,col_vec(data.mcp_tdc.al_pulses.time_cen),x_tmp,y_tmp,z_tmp);
+        
+        x_tmp=col_vec(squeeze(data.mcp_tdc.al_pulses.vel_zxy.mean(ii,:,2)));
+        x_tmp=x_tmp-nanmean(x_tmp);
+        %y_tmp=col_vec(data.corr_cancel.vel_zxy_corr_cancel(ii,:,2));
+        y_tmp=col_vec(squeeze(data.mcp_tdc.al_pulses.vel_zxy.mean(ii,:,3)));
+        y_tmp=y_tmp-nanmean(y_tmp);
+        z_tmp=col_vec(squeeze(data.mcp_tdc.al_pulses.vel_zxy.mean(ii,:,1)));
+        z_tmp=z_tmp-nanmean(z_tmp);
+        t_tmp=col_vec(data.mcp_tdc.al_pulses.time_cen);
+%         ac_tmp=data.ai_log.ac_mains_fit(ii).models.var_terms(t_tmp-1+15e-3,1);
+%         ac_tmp=ac_tmp-mean(ac_tmp);
+%         y_tmp=y_tmp-ac_tmp*0;%3e-4;
+        
+        txyz_tmp=cat(2,t_tmp,x_tmp,y_tmp,z_tmp);
         sqrtn=sqrt(col_vec(data.mcp_tdc.al_pulses.num_counts(ii,:))); %find the statistical uncert in a single shot
-        xyzerr_tmp=squeeze(data.mcp_tdc.al_pulses.vel.std(ii,:,[2,3,1]))./sqrtn;
+        xyzerr_tmp=squeeze(data.mcp_tdc.al_pulses.vel_zxy.std(ii,:,[2,3,1]))./sqrtn;
         xyzerr_tmp(:,sqrtn<2)=nan;
 
         %remove any data pts with nan position
@@ -76,7 +84,8 @@ for ii=1:iimax
         idx=1:4;
         idx(anal_opts_osc_fit.dimesion+1)=[];
         predictor=txyz_tmp(:,idx);
-        weights=1./(xyzerr_tmp(:,anal_opts_osc_fit.dimesion).^2);
+        err_fit_dim=xyzerr_tmp(:,anal_opts_osc_fit.dimesion);
+        weights=1./(err_fit_dim.^2);
         weights(isnan(weights))=1e-20; %if nan then set to smallest value you can
         weights=weights/sum(weights);
         %predictor=[tvalues,xvalues,zvalues];
@@ -84,27 +93,32 @@ for ii=1:iimax
         %% do a global fit to get a good place to start the fit routine
         % before we call fitnlm we will try to get close to the desired fit parameters using a robust global
         % optimizer
-        modelfun_simple = @(b,x) exp(-x(:,1).*max(0,b(6))).*b(1).*sin(b(2)*x(:,1)*pi*2+b(3)*pi*2)+b(4)+b(5)*x(:,1);
+        modelfun = @(b,x) exp(-x(:,1).*max(0,b(7))).*b(1).*sin(b(2)*x(:,1)*pi*2+b(3)*pi*2)+b(4)+b(5)*x(:,2)+b(8)*x(:,1)+b(6)*x(:,3);
+        % simple model
+        %modelfun_simple = @(b,x) exp(-x(:,1).*max(0,b(6))).*b(1).*sin(b(2)*x(:,1)*pi*2+b(3)*pi*2)+b(4)+b(5)*x(:,1);
         gf_opt=[];
-        gf_opt.domain=[[1,50]*1e-3;...
-                       [20,60];...
-                       [-2,2];...
-                       [-50,50]*1e-3;...
-                       [-10,10]*1e-3;...
-                       [-1e-2,10]];
-        gf_opt.start=[fit_amp, fit_freq, fit_phase, fit_offset,0,2];
+        gf_opt.domain=[[1,50]*1e-3;...   %amp
+                       [20,60];...       %freq
+                       [-2,2];...        %phase
+                       [-50,50]*1e-3;... %offset
+                       [-1,1]*1e-2;...   %xcpl
+                       [-1,1]*1e-2;...   %zcpl
+                       [-1e-2,10];...    %damp
+                       [-10,10]*1e-3;... % gradient
+                       ];        
+        gf_opt.start=[fit_amp, fit_freq, fit_phase, fit_offset,0,0,2,0];
         gf_opt.rmse_thresh=2e-3;
         gf_opt.plot=false;
-        gf_out=global_fit(predictor(:,1),response,modelfun_simple,gf_opt);
+        gf_out=global_fit(predictor,response,modelfun,gf_opt);
 %       
         %% set up the complex model with xterms
-        modelfun = @(b,x) exp(-x(:,1).*max(0,b(7))).*b(1).*sin(b(2)*x(:,1)*pi*2+b(3)*pi*2)+b(4)+b(8)*x(:,1)+b(5)*x(:,2)+b(6)*x(:,3);
+
        
-        cof_names={'amp','freq','phase','offset','ycpl','zcpl','damp','grad'};
+        cof_names={'amp','freq','phase','offset','xcpl','zcpl','damp','grad'};
         opt = statset('TolFun',1e-10,'TolX',1e-10,...
             'MaxIter',1e4,... %1e4
             'UseParallel',1);
-        beta0=[gf_out.params(1), gf_out.params(2), gf_out.params(3), gf_out.params(4),0,0,gf_out.params(6),gf_out.params(5)];
+        beta0=gf_out.params;
          
         %%
         fitobject=fitnlm(predictor,response,modelfun,beta0,...
@@ -117,7 +131,7 @@ for ii=1:iimax
         
         
         %limiting frequnecy prediction from http://adsabs.harvard.edu/full/1999DSSN...13...28M
-        meanwidth=sqrt(mean(squeeze(data.mcp_tdc.al_pulses.vel.std(ii,:,anal_opts_osc_fit.dimesion)).^2))*1e3;
+        meanwidth=sqrt(mean(squeeze(data.mcp_tdc.al_pulses.vel_zxy.std(ii,:,anal_opts_osc_fit.dimesion)).^2))*1e3;
         frequnclim=sqrt(6/sum(data.mcp_tdc.al_pulses.num_counts(ii,:)))*...
             (1/(pi*range(data.mcp_tdc.al_pulses.time_cen)))*...
             (meanwidth/fitparam{2,1});
@@ -143,12 +157,12 @@ for ii=1:iimax
             predictorplot=[tplotvalues,...
                        interp1(predictor(:,1),predictor(:,2),tplotvalues),...
                        interp1(predictor(:,1),predictor(:,3),tplotvalues)];
-            [prediction,ci]=predict(fitobject,predictorplot);
-            stfig(fit_plot_handle);
+            [prediction,ci]=predict(fitobject,predictorplot,'Alpha',1-erf(1/sqrt(2)));
+            stfig(fit__osc_plot_handle);
             clf;
             set(gca,'FontSize',font_size_global,'FontName',font_name)
             
-            subplot(4,1,1)
+            subplot(2,1,1)
             plot(txyz_tmp(:,1),txyz_tmp(:,2)*1e3,'kx-')
             hold on
             plot(txyz_tmp(:,1),txyz_tmp(:,3)*1e3,'rx-')
@@ -160,11 +174,11 @@ for ii=1:iimax
             set(gcf,'Color',[1 1 1]);
             legend('x','y','z')
 
-            subplot(4,1,2)
+            subplot(2,1,2)
             shaded_ci_lines=false;
             hold on
             if shaded_ci_lines
-                patch([predictorplot(:,1)', fliplr(predictorplot(:,1)')], [ci(:,1)', fliplr(ci(:,2)')], color_shaded,'EdgeColor','none');  %[1,1,1]*0.80
+                patch([predictorplot(:,1)', fliplr(predictorplot(:,1)')], [ci(:,1)', fliplr(ci(:,2)')], color_shaded,'EdgeColor','none')  %[1,1,1]*0.80
             else
                 plot(predictorplot(:,1),ci(:,1)*1e3,'-','LineWidth',1.5,'Color',color_shaded)
                 plot(predictorplot(:,1),ci(:,2)*1e3,'-','LineWidth',1.5,'Color',color_shaded)
@@ -184,15 +198,29 @@ for ii=1:iimax
             ax = gca;
             set(ax, {'XColor', 'YColor'}, {'k', 'k'});
             set(gca,'linewidth',1.0)
-            subplot(4,1,3)
-            resid=predict(fitobject,predictor)-response;
-            plot(predictor(:,1),resid)
-            subplot(4,1,4)
-            fft_resid=fft_tx(predictor(:,1),resid);
-            plot(fft_resid(1,:),abs(fft_resid(2,:)))
-            
             saveas(gca,sprintf('%sfit_dld_shot_num%04u.png',anal_opts_osc_fit.global.out_dir,dld_shot_num))
-            drawnow
+            
+            stfig(fit_resid_plot_handle);
+            subplot(4,1,1)
+            [fit_model_vals,fit_model_ci]=predict(fitobject,predictor,'Alpha',1-erf(1/sqrt(2)));
+            fit_model_ci=range(fit_model_ci,2)./2;
+            fit_resid=response-fit_model_vals;
+            fit_resid_sig=fit_resid./(sqrt(err_fit_dim.^2+fit_model_ci.^2));
+            plot(predictor(:,1),fit_resid,'k')
+            ylabel('residuals')
+            subplot(4,1,2)
+            plot(predictor(:,1),fit_resid_sig,'k')
+            ylabel('residuals sigma')
+            subplot(4,1,3)
+            fft_resid=fft_tx(predictor(:,1),fit_resid,'padding',10);
+            plot(fft_resid(1,:),abs(fft_resid(2,:)),'k')
+            hold on
+            plot(fft_resid(1,:),imag(fft_resid(2,:)),'b')
+            plot(fft_resid(1,:),real(fft_resid(2,:)),'r')
+            hold off
+            ylabel('residual spectral amplitude')
+            
+            pause(0.1)
         end% PLOTS
         %%
     end
@@ -209,8 +237,15 @@ osc_fit.ok.did_fits=~cellfun(@(x) isequal(x,[]),osc_fit.model);
 mean_fit_rmse=nanmean(osc_fit.fit_rmse(osc_fit.ok.did_fits));
 median_fit_rmse=nanmedian(osc_fit.fit_rmse(osc_fit.ok.did_fits));
 std_fit_rmse=nanstd(osc_fit.fit_rmse(osc_fit.ok.did_fits));
-fprintf('fit error: median %f mean %f std %f\n',...
+fprintf('fit statisitics \n')
+fprintf('RMSE: median %e mean %e std %e\n',...
    median_fit_rmse,mean_fit_rmse,std_fit_rmse)
+
+
+freq_unc=cellfun(@(x) x.Coefficients.SE(2),osc_fit.model(data.mcp_tdc.all_ok& col_vec(~cellfun(@isempty,osc_fit.model))));
+fprintf('Freq: mean unc %e std unc %e\n',...
+  mean(freq_unc),std(freq_unc))
+
 
 %label anything std_cut_fac*std away from the median as a bad fit
 std_cut_fac=4;

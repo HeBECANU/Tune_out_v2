@@ -8,6 +8,9 @@ al_pulses.window=nan(anal_opts.pulses,3,2); %initalize
 al_pulses.num_counts=nan(iimax,anal_opts.pulses);
 al_pulses.pos.mean=nan(iimax,anal_opts.pulses,3);
 al_pulses.pos.std=nan(iimax,anal_opts.pulses,3);
+al_pulses.vel.mean=nan(iimax,anal_opts.pulses,3);
+al_pulses.vel.std=nan(iimax,anal_opts.pulses,3);
+
 global const %get gravity
 fprintf('binning pulses in files %04u:%04u',size(data.mcp_tdc.counts_txy,2),0)
 first_good_shot=true;
@@ -51,8 +54,8 @@ for shot=1:iimax
                                     t_pulse_cen-anal_opts.global.fall_time,...
                                     -const.g0,...
                                     anal_opts.global.fall_dist);
-                al_pulses.vel.mean(shot,pulse,:)=mean(vzxy_out,1);
-                al_pulses.vel.std(shot,pulse,:)=std(vzxy_out,1);               
+                al_pulses.vel_zxy.mean(shot,pulse,:)=mean(vzxy_out,1);
+                al_pulses.vel_zxy.std(shot,pulse,:)=std(vzxy_out,1);               
                 
                 
             end%pulse
