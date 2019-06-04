@@ -129,13 +129,8 @@ anal_opts.aom_freq= 189.*1e6;%Hz %set to zero for comparison with previous data 
 anal_opts.wm_log.plot_all=false;
 anal_opts.wm_log.plot_failed=false;
 
-anal_opts.atom_laser.pulsedt=8.000e-3;
+
 anal_opts.atom_laser.t0=0.417770; %center i ntime of the first pulse
-anal_opts.atom_laser.start_pulse=1; %atom laser pulse to start with
-anal_opts.atom_laser.pulses=150;
-anal_opts.atom_laser.appr_osc_freq_guess=[52,40,40];
-anal_opts.atom_laser.pulse_twindow=anal_opts.atom_laser.pulsedt*0.9;
-anal_opts.atom_laser.xylim=anal_opts.tdc_import.txylim(2:3,:); %set same lims for pulses as import
 
 anal_opts.global.fall_time=0.417;
 anal_opts.global.qe=0.09;
@@ -525,6 +520,12 @@ fprintf('ok logic gives %u / %u shots for yeild %04.1f %%\n',...
 % some kind of guard pulses
 % [x] a check that the pulse time seems reasonable
 % convert the postions into velocity leaving the trap
+anal_opts.atom_laser.pulsedt=8.000e-3;
+anal_opts.atom_laser.start_pulse=1; %atom laser pulse to start with
+anal_opts.atom_laser.pulses=136;
+anal_opts.atom_laser.appr_osc_freq_guess=[52,40,40];
+anal_opts.atom_laser.pulse_twindow=anal_opts.atom_laser.pulsedt*0.9;
+anal_opts.atom_laser.xylim=anal_opts.tdc_import.txylim(2:3,:); %set same lims for pulses as import
 
 anal_opts.atom_laser.plot.all=false;
 %anal_opts.atom_laser.t0=0.417770;
@@ -567,9 +568,11 @@ anal_opts.osc_fit.plot_err_history=true;
 anal_opts.osc_fit.plot_fit_corr=true;
 
 anal_opts.osc_fit.global=anal_opts.global;
+%%
 data.osc_fit=fit_trap_freq(anal_opts.osc_fit,data);
+%%
 
-
+data.osc_fit=fit_trap_freq_dev(anal_opts.osc_fit,data);
 
 %% undo the aliasing
 %this may need to change if the sampling freq changes
