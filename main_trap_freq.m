@@ -663,7 +663,7 @@ anal_opts.fit_to_seg.global=anal_opts.global;
 anal_opts.fit_to_seg.sigma_cut_outliers=3; %confidence interval for cutting outliers
 
 anal_opts.fit_to_seg.scale_x=1e-9;
-anal_opts.fit_to_seg.min_pts=7;
+anal_opts.fit_to_seg.min_pts=5;
 
 data.to_fit_seg=scan_segmented_fit_to(anal_opts.fit_to_seg,data);
 
