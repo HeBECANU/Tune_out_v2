@@ -312,7 +312,7 @@ end
 % hold on
 % scatter(HWP,V_hwp)
 %this next bit is tricky, have to spit it up into the qwp and hwp sections
-if strcmp(pol_opts.predict,'full_fit') %the interpolation method
+if strcmp(pol_opts.predict,'full_fit') 
     beta0 = [-1.0002,2.0139,-0.41317,-0.023839];
     fit_V_qwp = fitnlm(qwp_ang,V(38:62),sin_mdl,beta0);
     beta0 = [-0.18297,4.0,1.5186,-0.033813];

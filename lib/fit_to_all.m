@@ -9,14 +9,16 @@ function to_res=fit_to_all(anal_opts_fit_to,data)
 %get the mask from the output of calculate_signal 
 probe_dat_mask=col_vec(data.signal.dat_mask);
 to_res.fit_mask=probe_dat_mask;
-
 to_res.num_shots=sum(probe_dat_mask);
+to_res.atom_num.mean=nanmean(data.mcp_tdc.num_counts(probe_dat_mask));
+to_res.atom_num.std=nanstd(data.mcp_tdc.num_counts(probe_dat_mask));
+to_res.start_time=data.mcp_tdc.time_create_write(1,2);
 
 %% get the optical frequency and the square probe trap freq
 probe_freq= data.blue_probe.act.mean(probe_dat_mask');
 square_trap_freq_val= data.signal.square_probe_trap_freq.val(data.signal.dat_mask);
 square_trap_freq_unc=data.signal.square_probe_trap_freq.unc(data.signal.dat_mask);
-
+%
 
 %% define the color for each shot on the plot
 cdat=viridis(1e4);
@@ -120,8 +122,10 @@ for ii=1:2 %iterate over linear and quadratic fits
     to_res.fit_trimmed.to_freq(ii).val=fit_out.x_intercept.val/anal_opts_fit_to.scale_x+probe_freq_offset; %give the result back in hz
     to_res.fit_trimmed.to_freq(ii).unc=fit_out.x_intercept.unc.with_cov/anal_opts_fit_to.scale_x;%give the unc back in hz
     mdl_culled=fit_out.fit_mdl;
+    to_res.fit_trimmed.slope.val(ii)=mdl_culled.Coefficients.Estimate(2)*anal_opts_fit_to.scale_x;
+    to_res.fit_trimmed.slope.unc(ii)=mdl_culled.Coefficients.SE(2)*anal_opts_fit_to.scale_x;
     
-    
+
     mdl_coef=fit_out.fit_mdl.Coefficients;
     covm=fit_out.fit_mdl.CoefficientCovariance;
     if abs((covm(1,2)-covm(2,1))/mean([covm(1,2),covm(2,1)]))>1e-9
@@ -181,6 +185,8 @@ for ii=1:2 %iterate over linear and quadratic fits
         'plot_fig_name','TO fit bootstrap',...
         'save_multi_out',0);
 
+     to_res.fit_trimmed.to_freq(ii).unc
+     
     to_res.fit_trimmed.boot{ii}=boot;
     to_res.fit_trimmed.to_unc_boot{ii}=boot.results.se_fun_whole;
     to_res.fit_trimmed.single_shot_unc{ii}=to_res.fit_trimmed.to_unc_boot{ii}*sqrt(numel(xdat_culled));
@@ -309,7 +315,9 @@ set(gca,'ylim',first_plot_lims(2,:))
 set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
 set(gcf,'color','w')
 set(gca,'FontSize',font_size_global,'FontName',font_name)
-
+plot_name='nice_to_fig';
+saveas(gcf,[anal_opts_fit_to.global.out_dir,plot_name,'.png'])
+saveas(gcf,[anal_opts_fit_to.global.out_dir,plot_name,'.fig'])
 
 end
 

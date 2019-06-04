@@ -326,12 +326,12 @@ for ii=1:iimax %Plots segmented data
 
         subplot(4,4,[1 2])
 
-        pl=plot(shot_time_rel(seg_mask)/(60*60),to_seg_fits.set_sel{ii}-mean_setpt,marker);
+        pl=plot(shot_time_rel(seg_mask)/(60*60),(to_seg_fits.set_sel{ii}-mean_setpt)*1e-9,marker);
         pl.Color=cdat(ceil(800*ii/iimax),:);
         hold on
-        title('Setpts of good shots')
+        title('Setpts of good shots (GHz)')
         xlabel('Time (h)')
-        ylabel(sprintf('\\omega-%f.0',mean_setpt))
+        ylabel(sprintf('\\omega-%.3f',mean_setpt*1e-9))
 
         subplot(4,4,[3 4])
         pl=plot(shot_time_rel(seg_mask)/(60*60),to_seg_fits.delta_sig{ii},marker);
@@ -379,8 +379,14 @@ to_val_ref = to_val(1);
 to_val_ref_trim = to_val_trim(1);
 
 
-slopes = cellfun(@(x) x.Coefficients.Estimate(2),to_seg_fits.fit_all.model);
-slopes_err = cellfun(@(x) x.Coefficients.SE(2),to_seg_fits.fit_all.model);
+% get the slope out
+slopes = cellfun(@(x) x.Coefficients.Estimate(2),to_seg_fits.fit_all.model)*scale_freq;
+slopes_err = cellfun(@(x) x.Coefficients.SE(2),to_seg_fits.fit_all.model)*scale_freq;
+
+to_seg_fits.fit_trimmed.slope.val=slopes;
+to_seg_fits.fit_trimmed.slope.unc=slopes_err;
+
+
 num_val = to_seg_fits.atom_num(:,1);
 num_unc = to_seg_fits.atom_num(:,2);
 
@@ -445,7 +451,7 @@ subplot(4,4,[14])
 errorbar(to_time,slopes,slopes_err)
 title('Fit gradient')
 xlabel('time (h)')
-ylabel('Gradient (a.u.)')
+ylabel('Gradient (Hz(trap)^2/Hz(opt))')
 
 subplot(4,4,[15])
 num_TO = normalize(num_val).*normalize(to_val);

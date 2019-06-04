@@ -32,12 +32,14 @@ if isempty(weights)
     weights = 1+0*y_dat;
 end
 weights = weights/sum(weights);
-
 if ~isfield(disp_config,'plot_offset') || (~isstruct(disp_config.plot_offset) && isequal(disp_config.plot_offset,'avg'))
     plot_offset.val=sum(y_dat.*weights)./sum(weights);%predict(fit_mdl,0);
 end 
 if isfield(disp_config,'plot_offset')
     plot_offset=disp_config.plot_offset;
+end
+if ~isfield(disp_config,'fig_name')
+    disp_config.fig_name='blank';
 end
 
 

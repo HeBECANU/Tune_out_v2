@@ -32,13 +32,23 @@ disp_config.opts=statset('nlinfit');
 disp_config.colors_main = [[75,151,201];[193,114,66];[87,157,95]];
 disp_config.bin_tol=0.01;
 %% HWP
-loop_config.dir = {
-    '..\scratch_data\20190227_qwp_270',
-    '..\scratch_data\20190227_qwp_286',
-    '..\scratch_data\20190227_qwp_310',
-    };
+% loop_config.dir = {
+%     '..\scratch_data\20190227_qwp_270',
+%     '..\scratch_data\20190227_qwp_286',
+%     '..\scratch_data\20190227_qwp_310',
+%     };
+root_data_dir='..\scratch_data';
+files = dir(root_data_dir);
+files=files(3:end);
+% Get a logical vector that tells which is a directory.
+dir_mask = [files.isdir];
+folders=files(dir_mask);
+folders=arrayfun(@(x) fullfile(root_data_dir,x.name),folders,'UniformOutput' ,false);
+folders
+loop_config.dir=folders;
+%%
 
-data.hwp = load_pocessed_to_data(loop_config);
+data = load_pocessed_to_data(loop_config);
 %%
 % %%%
 % loop_config.dir = {
@@ -120,33 +130,45 @@ data.hwp = load_pocessed_to_data(loop_config);
 % };
 % data.mix = load_pocessed_to_data(loop_config);
 %% Generate data vectors
-to_val = [data.hwp.drift.to_val{1};data.qwp.drift.to_val{1};data.mix.drift.to_val{1}];%all our single scan tune-out values
-to_unc = [data.hwp.drift.to_val{2};data.qwp.drift.to_val{2};data.mix.drift.to_val{2}];%all corresponding uncertainties
+%to_val = [data.hwp.drift.to_val{1};data.qwp.drift.to_val{1};data.mix.drift.to_val{1}];%all our single scan tune-out values
+%to_unc = [data.hwp.drift.to_val{2};data.qwp.drift.to_val{2};data.mix.drift.to_val{2}];%all corresponding uncertainties
+to_val=data.drift.to.val;
+to_unc=data.drift.to.unc;
 wlin=1./(to_unc.^2);
 
-to_val_run = [data.hwp.main.lin_fit{1};data.qwp.main.lin_fit{1};data.mix.main.lin_fit{1}];%the to val for a particular run
+%%
+pol_opts.hwp=data.drift.wp.hwp;
+pol_opts.qwp=data.drift.wp.qwp;
+pol_opts.predict='full_fit';
+pol_model=pol_data_query(pol_opts);
 
-V = zeros(numel(to_val),1);%fourth stokes parameter
-d_p = zeros(numel(to_val),1);%power diffrence between min and max transmition
-theta = zeros(numel(to_val),1);%min angle
+polz_theta=pol_model.theta.val;
+polz_v=pol_model.v.val;
+polz_cont=pol_model.cont.val;
+%%
+%to_val_run = [data.hwp.main.lin_fit{1};data.qwp.main.lin_fit{1};data.mix.main.lin_fit{1}];%the to val for a particular run
 
-[V_run,d_p_run,theta_run] = pol_data_import(pol_opts);
+%V = zeros(numel(to_val),1);%fourth stokes parameter
+%d_p = zeros(numel(to_val),1);%power diffrence between min and max transmition
+%theta = zeros(numel(to_val),1);%min angle
 
-shot_idx = 1;
-scan_num_vec = [data.hwp.main.scan_num;data.qwp.main.scan_num;data.mix.main.scan_num];
+%[V_run,d_p_run,theta_run] = pol_data_import(pol_opts);
 
-for loop_idx=1:size(V_run,1)
-    scan_num = scan_num_vec(loop_idx);
-    V(shot_idx:(shot_idx+scan_num-1),1) = ones(scan_num,1).*V_run(loop_idx);
-    d_p(shot_idx:(shot_idx+scan_num-1),1) = ones(scan_num,1).*d_p_run(loop_idx);
-    theta(shot_idx:(shot_idx+scan_num-1),1) = ones(scan_num,1).*theta_run(loop_idx);
-    shot_idx = shot_idx+scan_num;
-end
+% shot_idx = 1;
+% scan_num_vec = [data.hwp.main.scan_num;data.qwp.main.scan_num;data.mix.main.scan_num];
+% 
+% for loop_idx=1:size(V_run,1)
+%     scan_num = scan_num_vec(loop_idx);
+%     V(shot_idx:(shot_idx+scan_num-1),1) = ones(scan_num,1).*V_run(loop_idx);
+%     d_p(shot_idx:(shot_idx+scan_num-1),1) = ones(scan_num,1).*d_p_run(loop_idx);
+%     theta(shot_idx:(shot_idx+scan_num-1),1) = ones(scan_num,1).*theta_run(loop_idx);
+%     shot_idx = shot_idx+scan_num;
+% end
 
 %% Fit the full model to all of our data
 Q_fun = @(d_p,theta,phi) d_p.*cos(2.*(theta+phi.*pi));%function to calculate second stokes parameter
 full_mdl = @(b,x) b(1) + b(2).*x(:,2) + b(3).*(1+Q_fun(x(:,1),x(:,3),b(4)));%full model for how the tune out behaves
-vars = [d_p,V,theta];
+vars = [polz_cont,polz_v,polz_theta];
 to_val_fit = to_val;
 wlin_fit = wlin./sum(wlin);
 beta0 = [7.257355*1e14,6*1e9,3*1e9,0.8];%0.2 or 0.8
@@ -154,11 +176,12 @@ fit_mdl = fitnlm(vars,to_val_fit,full_mdl,beta0,...
     'Options',opts,'Weights',wlin_fit,'CoefficientNames' ,{'tune_out','vector','tensor','phase'});
 fit_vals = fit_mdl.Coefficients{:,1};
 
+%%
 %second fit with phase fixed
-Q = Q_fun(d_p,theta,fit_vals(4));%second stokes parameter
-Q_run = Q_fun(d_p_run,theta_run,fit_vals(4));%second stokes parameter for each run
+polz_q = Q_fun(polz_cont,polz_theta,fit_vals(4));%second stokes parameter
+%Q_run = Q_fun(polz_cont,polz_theta,fit_vals(4));%second stokes parameter for each run
 full_mdl = @(b,x) b(1) + b(2).*x(:,2) + b(3).*(1+x(:,1));%full model for how the tune out behaves
-vars = [Q,V];
+vars = [polz_q,polz_v];
 beta0 = fit_vals(1:3);
 fit_mdl = fitnlm(vars,to_val_fit,full_mdl,beta0,...
     'Options',opts,'Weights',wlin_fit,'CoefficientNames' ,{'tune_out','vector','tensor'});
@@ -187,14 +210,14 @@ fit_uncs = fit_mdl.Coefficients{:,2};
 %% Plots of tune-out dependance on the individual stokes parameters
 modelfun = @(b,x) b(1) + b(2).*x(:,1);
 
-vec_corr_to = to_val-V.*fit_vals(2);
+vec_corr_to = to_val-polz_v.*fit_vals(2);
 beta0 = [fit_vals(1),fit_vals(3)];
-fit_mdl_t = fitnlm(Q,vec_corr_to./1e6,modelfun,beta0,...
+fit_mdl_t = fitnlm(polz_q,vec_corr_to./1e6,modelfun,beta0,...
     'Options',opts,'Weights',wlin,'CoefficientNames' ,{'tune_out','tensor'});
 
-tens_corr_to = to_val-Q.*fit_vals(3);
+tens_corr_to = to_val-polz_q.*fit_vals(3);
 beta0 = [fit_vals(1),fit_vals(2)];
-fit_mdl_v = fitnlm(V,tens_corr_to./1e6,modelfun,beta0,...
+fit_mdl_v = fitnlm(polz_v,tens_corr_to./1e6,modelfun,beta0,...
     'Options',opts,'Weights',wlin,'CoefficientNames' ,{'tune_out','vector'});
 
 disp_config.plot_title = '';
@@ -202,18 +225,19 @@ disp_config.x_label = 'Fourth Stokes Parameter, V';
 disp_config.fig_number=11235;
 disp_config.plot_offset.val=fit_vals(1)./1e6;
 disp_config.plot_offset.unc=fit_uncs(1)./1e6;
-plot_sexy(disp_config,V,tens_corr_to./1e6,wlin,fit_mdl_v)
+%plot_binned_nice(disp_config,x_dat,y_dat,weights,fit_mdl)
+plot_binned_nice(disp_config,polz_v,tens_corr_to./1e6,wlin,fit_mdl_v)
 
 disp_config.plot_title = '';
 disp_config.x_label = 'Second Stokes Parameter, Q';
 disp_config.fig_number=11236;
 disp_config.plot_offset.val=fit_vals(1)./1e6;
 disp_config.plot_offset.unc=fit_uncs(1)./1e6;
-plot_sexy(disp_config,Q,vec_corr_to./1e6,wlin,fit_mdl_t)
+plot_binned_nice(disp_config,polz_q,vec_corr_to./1e6,wlin,fit_mdl_t)
 
 %% Residuals
-to_res_run = to_val_run-predict(fit_mdl,[Q_run,V_run]);
-to_res = to_val-predict(fit_mdl,[Q,V]);
+to_res_run = to_val-predict(fit_mdl,[polz_q,polz_v]);
+to_res = to_val-predict(fit_mdl,[polz_q,V]);
 sfigure(33099);
 plot(to_res_run./1e6)
 xlabel('index')
