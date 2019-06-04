@@ -67,7 +67,7 @@ num_shots = length(data.mcp_tdc.shot_num);
 
 %get the mean time of the segment by averaging the edge times
 time_seg_edges=data.mcp_tdc.time_create_write(to_seg_fits.scan_edges,2);
-to_times = ((time_seg_edges(2:end)+time_seg_edges(1:end-1))/2) - first_shot_time; 
+to_times = ((time_seg_edges(2:end)+time_seg_edges(1:end-1))/2); 
 %alt. could use the time at the start of the seg...
 
 % Mask lists
@@ -258,7 +258,7 @@ for ii=1:iimax
         % Data to output/plot 
         is_measument_not_outlier(seg_mask)=is_not_outlier_mask;
         to_seg_fits.seg_edges(ii,:) = [seg_start,seg_end];
-        to_seg_fits.to_time(ii) = to_times(ii)/3600;
+        to_seg_fits.to_time(ii) = to_times(ii);
         to_seg_fits.set_sel{ii} = setpts_all(seg_mask);
         to_seg_fits.delta_sig{ii} = delta_sig;
         to_seg_fits.xdat{ii}=xdat*scale_freq;

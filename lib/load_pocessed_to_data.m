@@ -2,8 +2,8 @@ function data = load_pocessed_to_data(loop_config)
 selected_dirs = 1:numel(loop_config.dir); %which files to loop over (currently all)
 
 % this script will combine the analysed data from multiple folders 
-drift_data_compiled.to.val{:,1}=[];
-drift_data_compiled.to.unc{:,2}=[];
+drift_data_compiled.to.val=[];
+drift_data_compiled.to.unc=[];
 drift_data_compiled.to_time=[];
 drift_data_compiled.atom_num=[];
 drift_data_compiled.grad{:,1}=[];
@@ -31,7 +31,7 @@ for loop_idx=selected_dirs
     %if exist('Z:\EXPERIMENT-DATA\2018_Tune_Out_V2','file')~=7, error(sprintf('dir \n %s \n does not exist',current_dir)) ,end
     out_dirs=dir(fullfile(current_dir,'out'));
     out_dirs=out_dirs(3:end);
-    out_dirs=out_dirs(out_dirs.isdir);
+    out_dirs=out_dirs(cat(1,out_dirs.isdir));
     if size(out_dirs,1)==0, error(sprintf('dir \n %s \n does not contain any out dirs',current_dir)), end 
     % convert the folder name (iso time) to posix time
     time_posix=cellfun(@(x) posixtime(datetime(datenum(x,'yyyymmddTHHMMSS'),'ConvertFrom','datenum')),{out_dirs.name});
@@ -43,9 +43,10 @@ for loop_idx=selected_dirs
     %skips that data dir
     while looking_for_data_dir
         try
-            if (exist(fullfile(current_dir,'out',out_dirs(folder_index).name,'done.txt'),'file') || ...
-                exist(fullfile(current_dir,'out',out_dirs(folder_index).name,'Done.txt'),'file')) && ...
-                exist(fullfile(current_dir,'out',out_dirs(folder_index).name,'data_results.mat'),'file')
+            out_instance_folder_path=fullfile(current_dir,'out',out_dirs(folder_index).name,'done.txt')
+            if (exist(out_instance_folder_path,'file') || ...
+                exist(out_instance_folder_path,'file')) && ...
+                exist(out_instance_folder_path,'file')
                 looking_for_data_dir=0;
             else
                 folder_index=folder_index+1;
@@ -72,15 +73,15 @@ for loop_idx=selected_dirs
         %scrapes set points if you want to redo some analysis
         try
             %fprintf('\n dir: %s , st pt = %u \n',current_dir,main_data.set_pt)
-            main_data_compiled.set_pt = [main_data_compiled.set_pt,main_data.set_pt];
+            main_data_compiled.set_pt = cat(1,main_data_compiled.set_pt,anal_opts.ai_log.pd.set_probe);
         catch
             fprintf('\n dir: %s , no st pt record \n',current_dir)
         end
 
         %append to main structure
-        drift_data_compiled.to_val{:,1}=[drift_data_compiled.to_val{:,1};drift_data.to_val{:,1}];
-        drift_data_compiled.to_val{:,2}=[drift_data_compiled.to_val{:,2};drift_data.to_val{:,2};];
-        drift_data_compiled.to_time=[drift_data_compiled.to_time;drift_data.to_time];
+        drift_data_compiled.to.val{end+1}=to_fit_seg.fit_trimmed.to_freq.val;
+        drift_data_compiled.to.unc{end+1}=to_fit_seg.fit_trimmed.to_freq.unc;
+        drift_data_compiled.to_time(end+1)=to_fit_seg.to_time;
         drift_data_compiled.atom_num=[drift_data_compiled.atom_num;drift_data.atom_num];
         grad_temp=cell2mat(drift_data.grad);
         drift_data_compiled.grad{:,1}=[drift_data_compiled.grad{:,1};grad_temp(:,1)];
