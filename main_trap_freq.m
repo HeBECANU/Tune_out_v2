@@ -91,7 +91,7 @@ clear all
 
 %% for deployment
 % select the directories in a folder
-root_data_dir='Z:';
+root_data_dir='G:\good_data';
 %root_data_dir='..\scratch_data';
 files = dir(root_data_dir);
 files=files(3:end);
@@ -355,10 +355,10 @@ if isnan(anal_opts.probe_set_pt)
     xlabel('mean pd voltage (v)')
     ylabel('std pd voltage(v)')
     %get some reasonable estimate for what the pd setpt was if it is unknown
-    is_reasonable_mean_std=data.ai_log.pd.mean>0.2 & data.ai_log.pd.std<0.5;
+    is_reasonable_mean_std=data.ai_log.pd.mean>0.15 & data.ai_log.pd.std<0.5;
     
     %go one sd down from the mean pd variation during the probe
-    std_upper_lim=prctile(data.ai_log.pd.std(is_non_zero_mask),0.2);
+    std_upper_lim=prctile(data.ai_log.pd.std(is_reasonable_mean_std),0.2);
     std_upper_lim_mask=std_upper_lim<data.ai_log.pd.std;
     %then find the median value
     estimated_pd_setpt=median(data.ai_log.pd.mean(std_upper_lim_mask));
