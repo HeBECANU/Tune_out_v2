@@ -142,7 +142,7 @@ anal_opts.global.atom_laser.t0=anal_opts.atom_laser.t0;
 %anal_opts.osc_fit.xlim=[-20,20]*1e-3;
 %anal_opts.osc_fit.tlim=[0.86,1.08];
 
-date_str='20190601T000000';
+date_str='20190604T210000';
 reprocess_folder_if_older_than=posixtime(datetime(datenum(date_str,'yyyymmddTHHMMSS'),'TimeZone','local','ConvertFrom','datenum'));%posix date
 active_process_mod_time=60*5;
 
