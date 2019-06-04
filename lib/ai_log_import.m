@@ -176,7 +176,7 @@ for ii=1:iimax
     else
         args_single.fname=fname;
         try
-        cout=function_cache(cache_opts,@ai_log_single,{args_single});
+            cout=function_cache(cache_opts,@ai_log_single,{args_single});
         catch err_obj
             fun_stack_obj=dbstack;
             fun_stack_obj=flipud(fun_stack_obj);
