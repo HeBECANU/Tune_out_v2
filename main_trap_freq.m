@@ -563,7 +563,7 @@ anal_opts.osc_fit.adaptive_freq=true; %estimate the starting trap freq
 anal_opts.osc_fit.dimesion=2; %Select coordinate to bin. 1=X, 2=Y.
 anal_opts.osc_fit.appr_osc_freq_guess=[52,47.9,40];
 anal_opts.osc_fit.freq_fit_tolerance=2; %hz arround the median to cut away
-anal_opts.osc_fit.plot_fits=true;
+anal_opts.osc_fit.plot_fits=false;
 anal_opts.osc_fit.plot_err_history=true;
 anal_opts.osc_fit.plot_fit_corr=true;
 
@@ -670,7 +670,7 @@ data.to_fit_seg=scan_segmented_fit_to(anal_opts.fit_to_seg,data);
 
 disp_to_results(data,anal_opts)
 
-diary off
+diary off 
 
 %% what the output should have
 % the aom offset that was included
