@@ -180,7 +180,7 @@ for ii=1:iimax
         catch err_obj
             fun_stack_obj=dbstack;
             fun_stack_obj=flipud(fun_stack_obj);
-            fun_stack_txt=sprintf(['%s\n',sep_str],fun_stack_obj(1:end-2).name);
+            fun_stack_txt=sprintf('%s\n',fun_stack_obj(1:end-2).name);
             warning('caught error \n ====stack=====\n %s \n err msg \n %s \n',fun_stack_txt,getReport(err_obj))
             continue %skip setting the output
         end
