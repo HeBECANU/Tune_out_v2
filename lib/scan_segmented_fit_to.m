@@ -276,10 +276,12 @@ outlier_mask=logical(outlier_mask); %nans removed can be logical
 
 %% mean TO val
 % find the weighted mean TO freq(and the uncert) across scans
-seg_unc=to_seg_fits.fit_trimmed.to_freq.unc;
+
+good_scan_mask=~isnan(to_seg_fits.fit_trimmed.to_freq.val) & ~isnan(to_seg_fits.fit_trimmed.to_freq.unc);
+seg_unc=to_seg_fits.fit_trimmed.to_freq.unc(good_scan_mask);
 seg_weights=seg_unc.^(-2);
 to_seg_fits.fit_trimmed.to_freq.sewm=[];
-[to_seg_fits.fit_trimmed.to_freq.sewm.unc,to_seg_fits.fit_trimmed.to_freq.sewm.val]=sewm(to_seg_fits.fit_trimmed.to_freq.val,seg_weights);
+[to_seg_fits.fit_trimmed.to_freq.sewm.unc,to_seg_fits.fit_trimmed.to_freq.sewm.val]=sewm(to_seg_fits.fit_trimmed.to_freq.val(good_scan_mask),seg_weights);
 
 
 fprintf('total number of outliers %u\n',nansum(outlier_mask))
