@@ -83,7 +83,7 @@ clear all
 % loop_config.dir = {
 %     '..\scratch_data\20190227_qwp_270',
 %     '..\scratch_data\20190227_qwp_286',
-%     '..\scratch_data\20190227_qwp_310',
+%     '..\scratch_data\20190227_qwp_310',g
 %     };
 % loop_config.set_pt = [nan,nan,nan];
 % selected_dirs = 1:numel(loop_config.dir); %which files to loop over (currently all)
@@ -91,8 +91,8 @@ clear all
 
 %% for deployment
 % select the directories in a folder
-%root_data_dir='G:\good_data';
-root_data_dir='..\scratch_data';
+root_data_dir='G:\good_data';
+%root_data_dir='..\scratch_data';
 files = dir(root_data_dir);
 files=files(3:end);
 % Get a logical vector that tells which is a directory.
@@ -144,7 +144,7 @@ anal_opts.global.atom_laser.t0=anal_opts.atom_laser.t0;
 
 date_str='20190601T000000';
 reprocess_folder_if_older_than=posixtime(datetime(datenum(date_str,'yyyymmddTHHMMSS'),'TimeZone','local','ConvertFrom','datenum'));%posix date
-active_process_mod_time=60*30;
+active_process_mod_time=60*5;
 
 % END USER VAR-----------------------------------------------------------
 
