@@ -18,6 +18,8 @@ addpath(genpath_exclude(fullfile(this_folder,'lib'),'\.')) %dont add hidden fold
 addpath(genpath_exclude(fullfile(this_folder,'dev'),'\.'))
 addpath(genpath_exclude(fullfile(this_folder,'bin'),'\.'))
 
+%%
+hebec_constants %call the constants function that makes some globals
 %% polarisation data options
 pol_opts.location = 'pre_right';%post, pre_cen, pre_left, pre_right
 pol_opts.predict = 'fit';%'interp'; %obs (obsovation) fit (pertial fit) full_fit (fit with all parameters free)

@@ -25,7 +25,23 @@ gf_opt.start=col_vec(gf_opt.start); %srarting parameters
 lb=col_vec(min(gf_opt.domain,[],2));
 ub=col_vec(max(gf_opt.domain,[],2));
 
+if ~isequal(size(lb),size(ub),size(gf_opt.start))
+    error('bounds and start are not the same size')
+end
+
 if sum(gf_opt.start>ub | gf_opt.start<lb)>0
+    fprintf(2,'start is not in bounds\n') %red text
+    if sum(gf_opt.start>ub)>0
+        elm_idx=1:numel(gf_opt.start);
+        elm_idx=elm_idx(gf_opt.start>ub);
+        fprintf('indices exceeding upper bound %s\n',sprintf('%u,',elm_idx))
+        fprintf('values %s\n',sprintf('%f,',gf_opt.start(elm_idx)))
+    elseif sum(gf_opt.start<lb)>0
+        elm_idx=1:numel(gf_opt.start);
+        elm_idx=elm_idx(gf_opt.start<lb);
+        fprintf('indices exceeding lower  bound %s\n',sprintf('%u,',elm_idx))
+        fprintf('values %s\n',sprintf('%f,',gf_opt.start(elm_idx)))
+    end
     error('start is not in bounds')
 end
 

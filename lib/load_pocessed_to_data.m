@@ -1,8 +1,9 @@
 function data = load_pocessed_to_data(loop_config)
 selected_dirs = 1:numel(loop_config.dir); %which files to loop over (currently all)
 
-drift_data_compiled.to_val{:,1}=[];
-drift_data_compiled.to_val{:,2}=[];
+% this script will combine the analysed data from multiple folders 
+drift_data_compiled.to.val{:,1}=[];
+drift_data_compiled.to.unc{:,2}=[];
 drift_data_compiled.to_time=[];
 drift_data_compiled.atom_num=[];
 drift_data_compiled.grad{:,1}=[];

@@ -27,7 +27,7 @@ fprintf('Fitting oscillations in shots %04i:%04i',iimax,0)
             fit_resid_plot_handle=stfig('fir resid','add_stack',1);
  end
 
-for ii=1:1%iimax DEV DEV DEV
+for ii=1:iimax
     %position that data appears in data.mcp_tdc, not ness shot number
     %specified because we will remove any elements of osc_fit that did not
     %fit because of all_ok condition
@@ -99,7 +99,7 @@ for ii=1:1%iimax DEV DEV DEV
         gf_opt=[];
         gf_opt.domain=[[1,50]*1e-3;...   %amp
                        [20,60];...       %freq
-                       [-2,2];...        %phase
+                       [-2,2]*pi;...        %phase
                        [-50,50]*1e-3;... %offset
                        [-1,1]*1e-2;...   %xcpl
                        [-1,1]*1e-2;...   %zcpl
