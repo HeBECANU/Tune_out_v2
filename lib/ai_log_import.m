@@ -335,7 +335,7 @@ sm_in.pd_filt_factor=1e-3; %fraction of a scan to smooth the pd data by for peak
 sm_in.ptz_filt_factor_pks=1e-3;  %fraction of a scan to smooth the pzt data by for peak detection
 sm_in.pzt_filt_factor_deriv=1e-3; %fraction of a scan to smooth the data by for derivative detection
 sm_in.pd_amp_min=1; %minimum range of the pd signal to indicate the laser has sufficient power
-sm_in.skip_wf_check=1;
+sm_in.skip_wf_check=0;
 sm_in.plot=args_single.plot;
 
 [laser_sm,laser_sm_test_det]=is_laser_single_mode(sm_in);

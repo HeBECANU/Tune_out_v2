@@ -24,7 +24,7 @@ if exist(out_dir_folder,'dir')
             out_sub_folder_contents=dir(fullfile(out_dir_folder,up_to_date_subfolders(ii).name));
             out_sub_folder_contents=out_sub_folder_contents(3:end);
             file_mod_posix=posixtime(datetime(max([out_sub_folder_contents.datenum]),'TimeZone','local','ConvertFrom','datenum'));
-            if file_mod_posix>posixtime(datetime('now','TimeZone','local'))-active_process_mod_time
+            if abs(file_mod_posix-posixtime(datetime('now','TimeZone','local')))<active_process_mod_time
                 currently_processing=true;
             end
             %check each dir thats new enough if it has a done file

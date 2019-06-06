@@ -142,7 +142,7 @@ anal_opts.global.atom_laser.t0=anal_opts.atom_laser.t0;
 %anal_opts.osc_fit.xlim=[-20,20]*1e-3;
 %anal_opts.osc_fit.tlim=[0.86,1.08];
 
-date_str='20190601T000000';
+date_str='20190604T210000';
 reprocess_folder_if_older_than=posixtime(datetime(datenum(date_str,'yyyymmddTHHMMSS'),'TimeZone','local','ConvertFrom','datenum'));%posix date
 active_process_mod_time=60*5;
 
@@ -355,9 +355,10 @@ if isnan(anal_opts.probe_set_pt)
     xlabel('mean pd voltage (v)')
     ylabel('std pd voltage(v)')
     %get some reasonable estimate for what the pd setpt was if it is unknown
-    is_non_zero_mask=data.ai_log.pd.mean>0.1;
+    is_reasonable_mean_std=data.ai_log.pd.mean>0.15 & data.ai_log.pd.std<0.5;
+    
     %go one sd down from the mean pd variation during the probe
-    std_upper_lim=mean(data.ai_log.pd.std(is_non_zero_mask))-std(data.ai_log.pd.std(is_non_zero_mask));
+    std_upper_lim=prctile(data.ai_log.pd.std(is_reasonable_mean_std),0.2);
     std_upper_lim_mask=std_upper_lim<data.ai_log.pd.std;
     %then find the median value
     estimated_pd_setpt=median(data.ai_log.pd.mean(std_upper_lim_mask));
@@ -662,7 +663,7 @@ anal_opts.fit_to_seg.global=anal_opts.global;
 anal_opts.fit_to_seg.sigma_cut_outliers=3; %confidence interval for cutting outliers
 
 anal_opts.fit_to_seg.scale_x=1e-9;
-anal_opts.fit_to_seg.min_pts=7;
+anal_opts.fit_to_seg.min_pts=5;
 
 data.to_fit_seg=scan_segmented_fit_to(anal_opts.fit_to_seg,data);
 
