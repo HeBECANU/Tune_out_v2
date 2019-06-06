@@ -26,7 +26,7 @@ f23p2_33s1=f23s1_33s1-f23s1_23p2;
 recoil_vel1=freq_to_recoil_vel_he(f23s1_33s1); %absorb 427nm photon
 recoil_vel2=freq_to_recoil_vel_he(f23p2_33s1); %emit 706nm photon
 recoil_vel3=freq_to_recoil_vel_he(f23s1_23p2);%emit 1083nm photon
-knife_vel=recoil_vel1*1.0;
+knife_vel=recoil_vel1*1;
 det_radius=70e-3/2;
 
 %in the limit of a infinitesimal size detector then you want the recoil velocity at the peak of the radial count density
@@ -191,7 +191,8 @@ end
 if  ~spatial_blur==0
     counts=imgaussfilt(counts,spatial_blur);
 end
-subplot(2,2,2)
+%subplot(2,2,2)
+clf
 stfig('detector dist. after knife');
 imagesc(10^3*centers{1},10^3*centers{2},transpose(counts))
 colormap(viridis)
