@@ -27,7 +27,7 @@ sin_mdl_abs = @(b,x) abs(b(1).*sin(b(2).*x.*pi/180+b(3))+b(4));
 lin_mdl = @(b,x) b(1).*x+b(2);
 
 
-
+if strcmp(pol_opts.location,'post')
 %%      QWP    HWP      Pmax     Phi max     Pmin     Phi min   hand
     pol_data_val = [
                        NaN    6.0000   75.0000  146.0000    0.9600   50.5000   -1.0000
@@ -103,43 +103,306 @@ lin_mdl = @(b,x) b(1).*x+b(2);
         ./(pol_data_val(:,3)+pol_data_val(:,5));%the V parameter for each run
     pol_cont = (pol_data_val(:,3)-pol_data_val(:,5))./(pol_data_val(:,3)+pol_data_val(:,5));%contrast
     pol_theta = pol_data_val(:,6).*pi/180; %using min pow angle
+elseif strcmp(pol_opts.location,'pre_cen')
+     pol_data_val = [23,120,0,62,45,0.63,91,38.2,136;
+                     40,126,323,60,8,0.43,48,63,103;
+                     50,115,307,52.4,352,0.14,35,53,80;
+                     60,100,289,44.8,334,0.03,17,47,62;
+                     70,120,266,65,311,0.3,358,48,43;
+                     80,114,76,44,121,1,158,60,203;
+                     90,120,232,55,277,0.87,320,68,5;
+                     100,121,208,61,253,0.5,298,50.7,343;
+                     10,100,22,60,67,0.58,118,48,163;
+                     0,91,49,61,97,0.8,140,50.5,185;
+                     350,120,60,72,105,0.75,158,59,203;
+                     340,112,84,69,129,0.8,178,64,223;
+                     330,90,111,43,156,0.65,200,63,245;
+                     320,117,128,61,173,0.6,218,60,263;
+                     310,120,146,60,191,0,238,45,283;
+                     300,91,169,53,214,0.2,260,62,305;
+                     290,120,183,55,228,0.1,279,51,324;
+                     280,91,208,46,253,0.2,299,65,344;
+                     270,113,222,74,267,0.3,319,50,4;
+                     260,89,247,49,292,0.1,338,44.2,23;
+                     250,95,271,38,316,0.2,356,50,41;
+                     305,100,160,42,205,0.2,249,65,294;
+                     295,90,180,46,225,0.13,270,61,315;
+                    315,116,139,56,184,0.4,228,26.7,273;
+                    355,88,102,42,147,0.75,188,45.8,233;
+                    80,110,249,50,294,0.51,340,64,25;
+                     315,120,134,68,179,0.43,228,60,273;
+                     325,120,122,58,167,0.78,210,51,255;
+                     345,122,84,40.4,129,0.77,169,54,214;
+                     355,92,48,61.5,93,0.65,149,47.2,194;
+                     5,91,39,50.1,84,0.68,128,63,173;
+                     120,90,167,46.2,212,0.12,259,51,304;
+                     140,85,131,53,176,0.26,219,57,264;
+                     160,108,85,60,130,0.63,179,61,224;
+                     190,112,26,56,71,0.25,118,58,136;
+                     220,110,328,54,13,1.4,58,55,103];
 
+    pol_v = pol_data_val(:,7).*2.*sqrt(pol_data_val(:,3).*pol_data_val(:,5))...
+        ./(pol_data_val(:,3)+pol_data_val(:,5));%the V parameter for each run
+    pol_cont = (pol_data_val(:,3)-pol_data_val(:,5))./(pol_data_val(:,3)+pol_data_val(:,5));%contrast
+    pol_theta = pol_data_val(:,6).*pi/180; %using min pow angle
+end
     
 if strcmp(pol_opts.predict,'full_fit') 
     % make a model for the case of having qwp+hwp, and just qwp
     
-    idx_qwp_and_hwp=~isnan(pol_data_val(:,1)) & ~isnan(pol_data_val(:,2));
+    mask_qwp_and_hwp=~isnan(pol_data_val(:,1)) & ~isnan(pol_data_val(:,2));
     hwp_const_val= mode(pol_data_val(~isnan(pol_data_val(:,1)),2))
-    idx_qwp_and_hwp_const=~isnan(pol_data_val(:,1)) & pol_data_val(:,2)==hwp_const_val;
-    idx_hwp=~isnan(pol_data_val(:,2)) & isnan(pol_data_val(:,1));
-    idx_qwp=isnan(pol_data_val(:,2)) & ~isnan(pol_data_val(:,1));
-    if sum(idx_qwp)>0
-        error('not set up to deal with just qwp')
-    end
+    mask_qwp_and_hwp_const=~isnan(pol_data_val(:,1)) & pol_data_val(:,2)==hwp_const_val;
+    mask_hwp_only=~isnan(pol_data_val(:,2)) & isnan(pol_data_val(:,1));
+    mask_qwp_only=isnan(pol_data_val(:,2)) & ~isnan(pol_data_val(:,1));
     stfig('polz fits');
     clf
+    if sum(mask_qwp_only)>0
+        warning('not set up to deal with just qwp')
+    end
     
     %% fit the 4th stokes parameter for the hwp data
     beta0 = [-0.18297,1.5186,-0.033813];
-    fit_V_hwp_only = fitnlm(pol_data_val(idx_hwp,2),pol_v(idx_hwp),sin_mdl_fixed_freq4,beta0);
+    fit_V_hwp_only = fitnlm(pol_data_val(mask_hwp_only,2),pol_v(mask_hwp_only),sin_mdl_fixed_freq4,beta0);
     subplot(2,3,1)
-    plot(pol_data_val(idx_hwp,2),pol_v(idx_hwp),'x')
+    plot(pol_data_val(mask_hwp_only,2),pol_v(mask_hwp_only),'x')
     hold on
-    hwp_samp_vec=col_vec(linspace(min(pol_data_val(idx_hwp,2)),max(pol_data_val(idx_hwp,2)),1e3));
+    hwp_samp_vec=col_vec(linspace(min(pol_data_val(mask_hwp_only,2)),max(pol_data_val(mask_hwp_only,2)),1e3));
     [v_samp_fit_val,V_samp_fit_ci]=predict(fit_V_hwp_only,hwp_samp_vec);
     plot(hwp_samp_vec,v_samp_fit_val,'-k')
     plot(hwp_samp_vec,V_samp_fit_ci,'-b')
     plot(hwp_samp_vec,sin_mdl_fixed_freq4(beta0,hwp_samp_vec),'-r')
     hold off
-    
+    xlabel('hwp angle')
+    ylabel('4th stokes')
         
     %fit_theta_hwp = fitnlm(mod(hwp_ang+21,90),mod(theta(1:37),pi),lin_mdl,beta0);
     %beta0 = [1.0,2.0139,-0.41317,-0.023839];
     %fit_d_p_qwp = fitnlm(qwp_ang,d_p(38:63),sin_mdl_abs,beta0);
     
     %% fit the theta 2nd,3rd stokes parameter angle for the hwp data
-    hwp_wraped=mod(pol_data_val(idx_hwp,2),90);
-    theta_wraped=mod(pol_theta(idx_hwp),pi);
+    hwp_wraped=mod(pol_data_val(mask_hwp_only,2),90);
+    theta_wraped=mod(pol_theta(mask_hwp_only),pi);
+    [~,sort_idx]=sort(hwp_wraped);
+    theta_wraped(sort_idx)=unwrap(theta_wraped(sort_idx)*2)/2;
+    
+    beta0=[0.034,0.5];
+    fit_theta_hwp_only = fitnlm(hwp_wraped,theta_wraped,lin_mdl,beta0);
+    subplot(2,3,2)
+    plot(hwp_wraped,theta_wraped,'x')
+    hold on
+    hwp_samp_vec=col_vec(linspace(min(hwp_wraped),max(hwp_wraped),1e3));
+    [theta_samp_fit_val,theta_samp_fit_ci]=predict(fit_theta_hwp_only,hwp_samp_vec);
+    plot(hwp_samp_vec,theta_samp_fit_val,'-k')
+    plot(hwp_samp_vec,theta_samp_fit_ci,'-b')
+    plot(hwp_samp_vec,lin_mdl(beta0,hwp_samp_vec),'-r')
+    hold off
+    xlabel('hwp angle')
+    ylabel('theta')
+    
+    %% fit the theta 2nd,3rd stokes parameter contrast for the hwp data
+
+    poly_mdl=@(b,x) taylor_series(x,b,90/2);
+    %beta0 = [1,0,-0.001,0.001,1e-6,1e-6,1e-7,1e-8];
+    beta0=[9.923421e-01,3.107072e-04,5.344973e-05,-8.093548e-06,-1.188569e-06,1.759216e-07,1.218760e-08,-2.301748e-09];
+     opt = statset('TolFun',1e-10,'TolX',1e-10,...
+            'MaxIter',1e4,... %1e4
+            'UseParallel',1);
+    %coef_names={'amp','phase','offset'};
+    fit_cont_hwp_only = fitnlm(hwp_wraped,pol_cont(mask_hwp_only),poly_mdl,beta0,...
+        'options',opt);         %'CoefficientNames',coef_names,...
+    subplot(2,3,3)
+    plot(hwp_wraped,pol_cont(mask_hwp_only),'x')
+    hold on
+    hwp_samp_vec=col_vec(linspace(min(hwp_wraped),max(hwp_wraped),1e3));
+    [theta_samp_fit_val,theta_samp_fit_ci]=predict(fit_cont_hwp_only,hwp_samp_vec);
+    plot(hwp_samp_vec,theta_samp_fit_val,'-k')
+    plot(hwp_samp_vec,theta_samp_fit_ci,'-b')
+    %plot(hwp_samp_vec,poly_mdl(beta0,hwp_samp_vec),'-r')
+    hold off
+    xlabel('hwp angle')
+    ylabel('contrast')
+    
+    %% fit the 4th stokes parameter for the qwp data (with hwp=333)
+     
+    % fit only the dominant hwp angle here
+    %idx_qwp_and_hwp_333
+    beta0 = [-1.0002,-0.41317,-0.023839];
+    fit_V_qwp_and_hwp_const = fitnlm(pol_data_val(mask_qwp_and_hwp_const,1),pol_v(mask_qwp_and_hwp_const),sin_mdl_fixed_freq2,beta0);
+    subplot(2,3,4)
+    plot(pol_data_val(mask_qwp_and_hwp_const,1),pol_v(mask_qwp_and_hwp_const),'x')
+    hold on
+    qwp_angle_samp_fit_hwp_const=col_vec(linspace(min(pol_data_val(mask_qwp_and_hwp_const,1)),max(pol_data_val(mask_qwp_and_hwp_const,1)),1e3));
+    [v_samp_fit_val,V_samp_fit_ci]=predict(fit_V_qwp_and_hwp_const,qwp_angle_samp_fit_hwp_const);
+    plot(qwp_angle_samp_fit_hwp_const,v_samp_fit_val,'-k')
+    plot(qwp_angle_samp_fit_hwp_const,V_samp_fit_ci,'-b')
+    plot(qwp_angle_samp_fit_hwp_const,sin_mdl_fixed_freq2(beta0,qwp_angle_samp_fit_hwp_const),'-r')
+    hold off
+    xlabel('qwp angle')
+    ylabel('4th stokes')
+    
+    %% fit the theta 2nd,3rd stokes angle parameter for the qwp data (with hwp=333)
+    qwp_wraped=mod(pol_data_val(mask_qwp_and_hwp_const,1),90);
+    theta_wraped=mod(pol_theta(mask_qwp_and_hwp_const),pi);
+    [~,sort_idx]=sort(qwp_wraped);
+    theta_wraped(sort_idx)=unwrap(theta_wraped(sort_idx)*8)/8;
+    
+    beta0=[0.5,-1,2.5];
+    opt = statset('TolFun',1e-10,'TolX',1e-10,...
+            'MaxIter',1e4,... %1e4
+            'UseParallel',1);
+    %sin_mdl = @(b,x) b(1).*sin(b(2).*x.*pi/180+b(3))+b(4);
+    coef_names={'amp','phase','offset'};
+    fit_theta_qwp_and_hwp_const = fitnlm(pol_data_val(mask_qwp_and_hwp_const,1),theta_wraped,sin_mdl_fixed_freq4,beta0,...
+        'CoefficientNames',coef_names,...
+        'options',opt);
+    subplot(2,3,5)
+    plot(pol_data_val(mask_qwp_and_hwp_const,1),theta_wraped,'x')
+    hold on
+    v_hwp_angle_samp_fit_hwp_const=col_vec(linspace(min(pol_data_val(mask_qwp_and_hwp_const,1)),max(pol_data_val(mask_qwp_and_hwp_const,1)),1e3));
+    [v_samp_fit_val,V_samp_fit_ci]=predict(fit_theta_qwp_and_hwp_const,v_hwp_angle_samp_fit_hwp_const);
+    plot(v_hwp_angle_samp_fit_hwp_const,v_samp_fit_val,'-k')
+    plot(v_hwp_angle_samp_fit_hwp_const,V_samp_fit_ci,'-b')
+    plot(v_hwp_angle_samp_fit_hwp_const,sin_mdl_fixed_freq4(beta0,v_hwp_angle_samp_fit_hwp_const),'-r')
+    hold off
+    title('theta')
+    
+    %% fit the theta 2nd,3rd stokes parameter contrast for the qwp data (with hwp=333)
+    
+    beta0 = [0.3,1.5186,0.5];
+     opt = statset('TolFun',1e-10,'TolX',1e-10,...
+            'MaxIter',1e4,... %1e4
+            'UseParallel',1);
+    coef_names={'amp','phase','offset'};
+    fit_cont_qwp_const_hwp = fitnlm(pol_data_val(mask_qwp_and_hwp_const,1),pol_cont(mask_qwp_and_hwp_const),sin_mdl_fixed_freq4,beta0,...
+        'CoefficientNames',coef_names,...
+        'options',opt);
+    subplot(2,3,6)
+    plot(pol_data_val(mask_qwp_and_hwp_const,1),pol_cont(mask_qwp_and_hwp_const),'x')
+    hold on
+    hwp_samp_vec=col_vec(linspace(min(pol_data_val(mask_qwp_and_hwp_const,1)),max(pol_data_val(mask_qwp_and_hwp_const,1)),1e3));
+    [theta_samp_fit_val,theta_samp_fit_ci]=predict(fit_cont_qwp_const_hwp,hwp_samp_vec);
+    plot(hwp_samp_vec,theta_samp_fit_val,'-k')
+    plot(hwp_samp_vec,theta_samp_fit_ci,'-b')
+    plot(hwp_samp_vec,sin_mdl_fixed_freq4(beta0,hwp_samp_vec),'-r')
+    hold off
+    
+    %% now calulate at the query points
+    only_qwp=isnan(pol_opts.hwp) & ~isnan( pol_opts.qwp);
+    if sum( only_qwp)>0
+        warning('not set up to query quater wp by itself')
+        out_theta_v(only_qwp,1)=nan;
+        out_theta_v(only_qwp,2)=nan;
+    end
+    
+    
+    mask_query_no_qwp=~isnan(pol_opts.hwp) & isnan(pol_opts.qwp);
+    query_hwp_wraped=mod(pol_opts.hwp(mask_query_no_qwp),90);
+    
+    [a,b]=predict(fit_V_hwp_only,pol_opts.hwp(mask_query_no_qwp),'Alpha',1-erf(1/sqrt(2)));
+    out_polz_state.v.val(mask_query_no_qwp)=a;
+    out_polz_state.v.unc(mask_query_no_qwp)=range(b,2)/2;
+    
+    [a,b]=predict(fit_theta_hwp_only,query_hwp_wraped,'Alpha',1-erf(1/sqrt(2)));
+    out_polz_state.theta.val(mask_query_no_qwp)=a;
+    out_polz_state.theta.unc(mask_query_no_qwp)=range(b,2)/2;
+    
+    [a,b]=predict(fit_cont_hwp_only,query_hwp_wraped,'Alpha',1-erf(1/sqrt(2)));
+    out_polz_state.cont.val(mask_query_no_qwp)=a;
+    out_polz_state.cont.unc(mask_query_no_qwp)=range(b,2)/2;
+    
+    subplot(2,3,1)
+    hold on
+    plot(pol_opts.hwp(mask_query_no_qwp), out_polz_state.v.val(mask_query_no_qwp),'ko')
+    hold off
+    subplot(2,3,2)
+    hold on
+    plot(query_hwp_wraped,out_polz_state.theta.val(mask_query_no_qwp),'ko')
+    hold off
+    subplot(2,3,3)
+    hold on
+    plot(query_hwp_wraped,out_polz_state.cont.val(mask_query_no_qwp),'ko')
+    hold off
+    %%
+
+    mask_query_both_with_hwp_const=pol_opts.hwp==hwp_const_val & ~isnan(pol_opts.qwp);
+    [a,b]=predict(fit_V_qwp_and_hwp_const,pol_opts.qwp(mask_query_both_with_hwp_const),'Alpha',1-erf(1/sqrt(2)));
+    out_polz_state.v.val(mask_query_both_with_hwp_const)=a;
+    out_polz_state.v.unc(mask_query_both_with_hwp_const)=range(b,2)/2;
+    [a,b]=predict(fit_theta_qwp_and_hwp_const,pol_opts.qwp(mask_query_both_with_hwp_const),'Alpha',1-erf(1/sqrt(2)));
+    out_polz_state.theta.val(mask_query_both_with_hwp_const)=a;
+    out_polz_state.theta.unc(mask_query_both_with_hwp_const)=range(b,2)/2;
+    
+    [a,b]=predict(fit_cont_qwp_const_hwp,pol_opts.qwp(mask_query_both_with_hwp_const),'Alpha',1-erf(1/sqrt(2)));
+    out_polz_state.cont.val(mask_query_both_with_hwp_const)=a;
+    out_polz_state.cont.unc(mask_query_both_with_hwp_const)=range(b,2)/2;
+    
+    subplot(2,3,4)
+    hold on
+    plot(pol_opts.qwp(mask_query_both_with_hwp_const),  out_polz_state.v.val(mask_query_both_with_hwp_const),'ko')
+    hold off
+    subplot(2,3,5)
+    hold on
+    plot(pol_opts.qwp(mask_query_both_with_hwp_const), out_polz_state.theta.val(mask_query_both_with_hwp_const),'ko')
+    hold off
+    subplot(2,3,6)
+    hold on
+    plot(pol_opts.qwp(mask_query_both_with_hwp_const),out_polz_state.cont.val(mask_query_both_with_hwp_const),'ko')
+    hold off
+
+    %% try to see if the rest of the query points can just be extracted from the data
+    
+    %mask_both_with_hwp_notconst=pol_opts.hwp~=hwp_const_val & ~isnan(pol_opts.hwp) & ~isnan(pol_opts.qwp);
+    mask_unmatched=~mask_query_both_with_hwp_const & ~mask_query_no_qwp;
+    idxs_unmatched=find(mask_unmatched);
+    iimax=sum(mask_unmatched);
+    for ii=1:iimax
+        query_idx=idxs_unmatched(ii);
+        query_match_data= isequaln(pol_data_val(:,1),pol_opts.qwp(query_idx)) & isequaln(pol_data_val(:,2),pol_opts.hwp(query_idx));
+        if sum(query_match_data)>0
+            warning('using direct data for unmodeled points, may be missing modulo')
+            data_match_idx=find(query_match_data);
+            out_polz_state.cont.val(query_idx)=pol_theta(data_match_idx);
+            out_polz_state.theta.val(query_idx)=pol_cont(data_match_idx);
+            out_polz_state.v.val(query_idx)=pol_v(data_match_idx);
+            
+            out_polz_state.v.unc(query_idx)=nan;
+            out_polz_state.theta.unc(query_idx)=nan;
+            out_polz_state.cont.unc(query_idx)=nan;
+        end
+    end
+elseif strcmp(pol_opts.predict,'interp') 
+    % make a model for the case of having qwp+hwp, and just qwp
+    
+    mask_qwp_and_hwp=~isnan(pol_data_val(:,1)) & ~isnan(pol_data_val(:,2));
+    hwp_const_val= mode(pol_data_val(~isnan(pol_data_val(:,1)),2))
+    mask_qwp_and_hwp_const=~isnan(pol_data_val(:,1)) & pol_data_val(:,2)==hwp_const_val;
+    mask_hwp_only=~isnan(pol_data_val(:,2)) & isnan(pol_data_val(:,1));
+    mask_qwp_only=isnan(pol_data_val(:,2)) & ~isnan(pol_data_val(:,1));
+    stfig('polz fits');
+    clf
+    if sum(mask_qwp_only)>0
+        warning('not set up to deal with just qwp')
+    end
+    
+    %% fit the 4th stokes parameter for the hwp data
+    fit_V_hwp_only=fit(pol_data_val(mask_hwp_only,2),pol_v(mask_hwp_only),'smoothingspline','SmoothingParam',0.0001);
+    subplot(2,3,1)
+    plot(pol_data_val(mask_hwp_only,2),pol_v(mask_hwp_only),'x')
+    hold on
+    hwp_samp_vec=col_vec(linspace(min(pol_data_val(mask_hwp_only,2)),max(pol_data_val(mask_hwp_only,2)),1e3));
+    v_samp_fit_val=fit_V_hwp_only(hwp_samp_vec);
+    plot(hwp_samp_vec,v_samp_fit_val,'-k')
+    hold off
+    error('method not finished yet')
+        
+    %fit_theta_hwp = fitnlm(mod(hwp_ang+21,90),mod(theta(1:37),pi),lin_mdl,beta0);
+    %beta0 = [1.0,2.0139,-0.41317,-0.023839];
+    %fit_d_p_qwp = fitnlm(qwp_ang,d_p(38:63),sin_mdl_abs,beta0);
+    
+    %% fit the theta 2nd,3rd stokes parameter angle for the hwp data
+    hwp_wraped=mod(pol_data_val(mask_hwp_only,2),90);
+    theta_wraped=mod(pol_theta(mask_hwp_only),pi);
     [~,sort_idx]=sort(hwp_wraped);
     theta_wraped(sort_idx)=unwrap(theta_wraped(sort_idx)*2)/2;
     
@@ -164,10 +427,10 @@ if strcmp(pol_opts.predict,'full_fit')
             'MaxIter',1e4,... %1e4
             'UseParallel',1);
     %coef_names={'amp','phase','offset'};
-    fit_cont_hwp_only = fitnlm(hwp_wraped,pol_cont(idx_hwp),poly_mdl,beta0,...
+    fit_cont_hwp_only = fitnlm(hwp_wraped,pol_cont(mask_hwp_only),poly_mdl,beta0,...
         'options',opt);         %'CoefficientNames',coef_names,...
     subplot(2,3,3)
-    plot(hwp_wraped,pol_cont(idx_hwp),'x')
+    plot(hwp_wraped,pol_cont(mask_hwp_only),'x')
     hold on
     hwp_samp_vec=col_vec(linspace(min(hwp_wraped),max(hwp_wraped),1e3));
     [theta_samp_fit_val,theta_samp_fit_ci]=predict(fit_cont_hwp_only,hwp_samp_vec);
@@ -182,11 +445,11 @@ if strcmp(pol_opts.predict,'full_fit')
     % fit only the dominant hwp angle here
     %idx_qwp_and_hwp_333
     beta0 = [-1.0002,-0.41317,-0.023839];
-    fit_V_qwp_and_hwp_const = fitnlm(pol_data_val(idx_qwp_and_hwp_const,1),pol_v(idx_qwp_and_hwp_const),sin_mdl_fixed_freq2,beta0);
+    fit_V_qwp_and_hwp_const = fitnlm(pol_data_val(mask_qwp_and_hwp_const,1),pol_v(mask_qwp_and_hwp_const),sin_mdl_fixed_freq2,beta0);
     subplot(2,3,4)
-    plot(pol_data_val(idx_qwp_and_hwp_const,1),pol_v(idx_qwp_and_hwp_const),'x')
+    plot(pol_data_val(mask_qwp_and_hwp_const,1),pol_v(mask_qwp_and_hwp_const),'x')
     hold on
-    qwp_angle_samp_fit_hwp_const=col_vec(linspace(min(pol_data_val(idx_qwp_and_hwp_const,1)),max(pol_data_val(idx_qwp_and_hwp_const,1)),1e3));
+    qwp_angle_samp_fit_hwp_const=col_vec(linspace(min(pol_data_val(mask_qwp_and_hwp_const,1)),max(pol_data_val(mask_qwp_and_hwp_const,1)),1e3));
     [v_samp_fit_val,V_samp_fit_ci]=predict(fit_V_qwp_and_hwp_const,qwp_angle_samp_fit_hwp_const);
     plot(qwp_angle_samp_fit_hwp_const,v_samp_fit_val,'-k')
     plot(qwp_angle_samp_fit_hwp_const,V_samp_fit_ci,'-b')
@@ -196,8 +459,8 @@ if strcmp(pol_opts.predict,'full_fit')
     ylabel('4th stokes')
     
     %% fit the theta 2nd,3rd stokes angle parameter for the qwp data (with hwp=333)
-    qwp_wraped=mod(pol_data_val(idx_qwp_and_hwp_const,1),90);
-    theta_wraped=mod(pol_theta(idx_qwp_and_hwp_const),pi);
+    qwp_wraped=mod(pol_data_val(mask_qwp_and_hwp_const,1),90);
+    theta_wraped=mod(pol_theta(mask_qwp_and_hwp_const),pi);
     [~,sort_idx]=sort(qwp_wraped);
     theta_wraped(sort_idx)=unwrap(theta_wraped(sort_idx)*8)/8;
     
@@ -207,13 +470,13 @@ if strcmp(pol_opts.predict,'full_fit')
             'UseParallel',1);
     %sin_mdl = @(b,x) b(1).*sin(b(2).*x.*pi/180+b(3))+b(4);
     coef_names={'amp','phase','offset'};
-    fit_theta_qwp_and_hwp_const = fitnlm(pol_data_val(idx_qwp_and_hwp_const,1),theta_wraped,sin_mdl_fixed_freq4,beta0,...
+    fit_theta_qwp_and_hwp_const = fitnlm(pol_data_val(mask_qwp_and_hwp_const,1),theta_wraped,sin_mdl_fixed_freq4,beta0,...
         'CoefficientNames',coef_names,...
         'options',opt);
     subplot(2,3,5)
-    plot(pol_data_val(idx_qwp_and_hwp_const,1),theta_wraped,'x')
+    plot(pol_data_val(mask_qwp_and_hwp_const,1),theta_wraped,'x')
     hold on
-    v_hwp_angle_samp_fit_hwp_const=col_vec(linspace(min(pol_data_val(idx_qwp_and_hwp_const,1)),max(pol_data_val(idx_qwp_and_hwp_const,1)),1e3));
+    v_hwp_angle_samp_fit_hwp_const=col_vec(linspace(min(pol_data_val(mask_qwp_and_hwp_const,1)),max(pol_data_val(mask_qwp_and_hwp_const,1)),1e3));
     [v_samp_fit_val,V_samp_fit_ci]=predict(fit_theta_qwp_and_hwp_const,v_hwp_angle_samp_fit_hwp_const);
     plot(v_hwp_angle_samp_fit_hwp_const,v_samp_fit_val,'-k')
     plot(v_hwp_angle_samp_fit_hwp_const,V_samp_fit_ci,'-b')
@@ -228,13 +491,13 @@ if strcmp(pol_opts.predict,'full_fit')
             'MaxIter',1e4,... %1e4
             'UseParallel',1);
     coef_names={'amp','phase','offset'};
-    fit_cont_qwp_const_hwp = fitnlm(pol_data_val(idx_qwp_and_hwp_const,1),pol_cont(idx_qwp_and_hwp_const),sin_mdl_fixed_freq4,beta0,...
+    fit_cont_qwp_const_hwp = fitnlm(pol_data_val(mask_qwp_and_hwp_const,1),pol_cont(mask_qwp_and_hwp_const),sin_mdl_fixed_freq4,beta0,...
         'CoefficientNames',coef_names,...
         'options',opt);
     subplot(2,3,6)
-    plot(pol_data_val(idx_qwp_and_hwp_const,1),pol_cont(idx_qwp_and_hwp_const),'x')
+    plot(pol_data_val(mask_qwp_and_hwp_const,1),pol_cont(mask_qwp_and_hwp_const),'x')
     hold on
-    hwp_samp_vec=col_vec(linspace(min(pol_data_val(idx_qwp_and_hwp_const,1)),max(pol_data_val(idx_qwp_and_hwp_const,1)),1e3));
+    hwp_samp_vec=col_vec(linspace(min(pol_data_val(mask_qwp_and_hwp_const,1)),max(pol_data_val(mask_qwp_and_hwp_const,1)),1e3));
     [theta_samp_fit_val,theta_samp_fit_ci]=predict(fit_cont_qwp_const_hwp,hwp_samp_vec);
     plot(hwp_samp_vec,theta_samp_fit_val,'-k')
     plot(hwp_samp_vec,theta_samp_fit_ci,'-b')
@@ -250,73 +513,90 @@ if strcmp(pol_opts.predict,'full_fit')
     end
     
     
-    idx_no_qwp=~isnan(pol_opts.hwp) & isnan(pol_opts.qwp);
-    query_hwp_wraped=mod(pol_opts.hwp(idx_no_qwp),90);
+    mask_query_no_qwp=~isnan(pol_opts.hwp) & isnan(pol_opts.qwp);
+    query_hwp_wraped=mod(pol_opts.hwp(mask_query_no_qwp),90);
     
     
-    [a,b]=predict(fit_theta_hwp_only,pol_opts.hwp(idx_no_qwp),'Alpha',1-erf(1/sqrt(2)));
-    out_polz_state.theta.val(idx_no_qwp)=a;
-    out_polz_state.theta.unc(idx_no_qwp)=range(b,2)/2;
+    [a,b]=predict(fit_theta_hwp_only,pol_opts.hwp(mask_query_no_qwp),'Alpha',1-erf(1/sqrt(2)));
+    out_polz_state.theta.val(mask_query_no_qwp)=a;
+    out_polz_state.theta.unc(mask_query_no_qwp)=range(b,2)/2;
     
     
     [a,b]=predict(fit_V_hwp_only,query_hwp_wraped,'Alpha',1-erf(1/sqrt(2)));
-    out_polz_state.v.val(idx_no_qwp)=a;
-    out_polz_state.v.unc(idx_no_qwp)=range(b,2)/2;
+    out_polz_state.v.val(mask_query_no_qwp)=a;
+    out_polz_state.v.unc(mask_query_no_qwp)=range(b,2)/2;
     
     [a,b]=predict(fit_cont_hwp_only,query_hwp_wraped,'Alpha',1-erf(1/sqrt(2)));
-    out_polz_state.cont.val(idx_no_qwp)=a;
-    out_polz_state.cont.unc(idx_no_qwp)=range(b,2)/2;
+    out_polz_state.cont.val(mask_query_no_qwp)=a;
+    out_polz_state.cont.unc(mask_query_no_qwp)=range(b,2)/2;
     
     subplot(2,3,1)
     hold on
-    plot(pol_opts.hwp(idx_no_qwp),out_polz_state.theta.val(idx_no_qwp),'ko')
+    plot(pol_opts.hwp(mask_query_no_qwp),out_polz_state.theta.val(mask_query_no_qwp),'ko')
     hold off
     subplot(2,3,2)
     hold on
-    plot(query_hwp_wraped, out_polz_state.v.val(idx_no_qwp),'ko')
+    plot(query_hwp_wraped, out_polz_state.v.val(mask_query_no_qwp),'ko')
     hold off
     subplot(2,3,3)
     hold on
-    plot(query_hwp_wraped,out_polz_state.cont.val(idx_no_qwp),'ko')
+    plot(query_hwp_wraped,out_polz_state.cont.val(mask_query_no_qwp),'ko')
     hold off
     %%
 
-
-    idx_both_with_hwp_const=pol_opts.hwp==hwp_const_val & ~isnan(pol_opts.qwp);
-
-
-    [a,b]=predict(fit_V_qwp_and_hwp_const,pol_opts.qwp(idx_both_with_hwp_const),'Alpha',1-erf(1/sqrt(2)));
-    out_polz_state.v.val(idx_both_with_hwp_const)=a;
-    out_polz_state.v.unc(idx_both_with_hwp_const)=range(b,2)/2;
-    [a,b]=predict(fit_theta_qwp_and_hwp_const,pol_opts.qwp(idx_both_with_hwp_const),'Alpha',1-erf(1/sqrt(2)));
-    out_polz_state.theta.val(idx_both_with_hwp_const)=a;
-    out_polz_state.theta.unc(idx_both_with_hwp_const)=range(b,2)/2;
+    mask_query_both_with_hwp_const=pol_opts.hwp==hwp_const_val & ~isnan(pol_opts.qwp);
+    [a,b]=predict(fit_V_qwp_and_hwp_const,pol_opts.qwp(mask_query_both_with_hwp_const),'Alpha',1-erf(1/sqrt(2)));
+    out_polz_state.v.val(mask_query_both_with_hwp_const)=a;
+    out_polz_state.v.unc(mask_query_both_with_hwp_const)=range(b,2)/2;
+    [a,b]=predict(fit_theta_qwp_and_hwp_const,pol_opts.qwp(mask_query_both_with_hwp_const),'Alpha',1-erf(1/sqrt(2)));
+    out_polz_state.theta.val(mask_query_both_with_hwp_const)=a;
+    out_polz_state.theta.unc(mask_query_both_with_hwp_const)=range(b,2)/2;
     
-    [a,b]=predict(fit_cont_qwp_const_hwp,pol_opts.qwp(idx_both_with_hwp_const),'Alpha',1-erf(1/sqrt(2)));
-    out_polz_state.cont.val(idx_both_with_hwp_const)=a;
-    out_polz_state.cont.unc(idx_both_with_hwp_const)=range(b,2)/2;
+    [a,b]=predict(fit_cont_qwp_const_hwp,pol_opts.qwp(mask_query_both_with_hwp_const),'Alpha',1-erf(1/sqrt(2)));
+    out_polz_state.cont.val(mask_query_both_with_hwp_const)=a;
+    out_polz_state.cont.unc(mask_query_both_with_hwp_const)=range(b,2)/2;
     
     subplot(2,3,4)
     hold on
-    plot(pol_opts.qwp(idx_both_with_hwp_const),  out_polz_state.v.val(idx_both_with_hwp_const),'ko')
+    plot(pol_opts.qwp(mask_query_both_with_hwp_const),  out_polz_state.v.val(mask_query_both_with_hwp_const),'ko')
     hold off
     subplot(2,3,5)
     hold on
-    plot(pol_opts.qwp(idx_both_with_hwp_const), out_polz_state.theta.val(idx_both_with_hwp_const),'ko')
+    plot(pol_opts.qwp(mask_query_both_with_hwp_const), out_polz_state.theta.val(mask_query_both_with_hwp_const),'ko')
     hold off
     subplot(2,3,6)
     hold on
-    plot(pol_opts.qwp(idx_both_with_hwp_const),out_polz_state.cont.val(idx_both_with_hwp_const),'ko')
+    plot(pol_opts.qwp(mask_query_both_with_hwp_const),out_polz_state.cont.val(mask_query_both_with_hwp_const),'ko')
     hold off
 
+    %% try to see if the rest of the query points can just be extracted from the data
     
-    idx_both_with_hwp_notconst=pol_opts.hwp~=hwp_const_val & ~isnan(pol_opts.hwp) & ~isnan(pol_opts.qwp);
-    iimax=sum(idx_both_with_hwp_notconst);
-    if iimax>1
-        error('havent done this yet')
+    %mask_both_with_hwp_notconst=pol_opts.hwp~=hwp_const_val & ~isnan(pol_opts.hwp) & ~isnan(pol_opts.qwp);
+    mask_unmatched=~mask_query_both_with_hwp_const & ~mask_query_no_qwp;
+    idxs_unmatched=find(mask_unmatched);
+    iimax=sum(mask_unmatched);
+    for ii=1:iimax
+        query_idx=idxs_unmatched(ii);
+        query_match_data= isequaln(pol_data_val(:,1),pol_opts.qwp(query_idx)) & isequaln(pol_data_val(:,2),pol_opts.hwp(query_idx));
+        if sum(query_match_data)>0
+            warning('using direct data for unmodeled points, may be missing modulo')
+            data_match_idx=find(query_match_data);
+            out_polz_state.cont.val(query_idx)=pol_theta(data_match_idx);
+            out_polz_state.theta.val(query_idx)=pol_cont(data_match_idx);
+            out_polz_state.v.val(query_idx)=pol_v(data_match_idx);
+            
+            out_polz_state.v.unc(query_idx)=nan;
+            out_polz_state.theta.unc(query_idx)=nan;
+            out_polz_state.cont.unc(query_idx)=nan;
+        end
     end
     
+
+    
 end
+
+
+
 
 
 

@@ -21,8 +21,8 @@ addpath(genpath_exclude(fullfile(this_folder,'bin'),'\.'))
 %%
 hebec_constants %call the constants function that makes some globals
 %% polarisation data options
-pol_opts.location = 'pre_right';%post, pre_cen, pre_left, pre_right
-pol_opts.predict = 'fit';%'interp'; %obs (obsovation) fit (pertial fit) full_fit (fit with all parameters free)
+pol_opts.location = 'post';%post, pre_cen, pre_left, pre_right
+pol_opts.predict = 'full_fit';%'full_fit';%'interp'; %obs (obsovation) fit (pertial fit) full_fit (fit with all parameters free)
 %% Display options
 opts = statset('MaxIter',1e4);
 ci_size=1-erf(1/sqrt(2));%1-erf(zvalue/sqrt(2)) %confidence interval for cutting outliers
@@ -38,6 +38,7 @@ disp_config.bin_tol=0.01;
 %     '..\scratch_data\20190227_qwp_310',
 %     };
 root_data_dir='..\scratch_data';
+root_data_dir='G:\good_data';
 files = dir(root_data_dir);
 files=files(3:end);
 % Get a logical vector that tells which is a directory.
@@ -49,86 +50,6 @@ loop_config.dir=folders;
 %%
 
 data = load_pocessed_to_data(loop_config);
-%%
-% %%%
-% loop_config.dir = {
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_51_nuller_reconfig\'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190203_to_hwp_29_nuller_reconfig\'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190201_to_hwp_131_nuller_reconfig\'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190203_to_hwp_171_nuller_reconfig\'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190203_to_hwp_191_nuller_reconfig\'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190211_to_hwp_208_nuller_reconfig\'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\\20190211_to_hwp_194_nuller_reconfig\'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_187_nuller_reconfig\'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_181_nuller_reconfig\'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_177_nuller_reconfig_part_b\'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_177_nuller_reconfig_part_a\'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_171_nuller_reconfig\'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_165_nuller_reconfig\'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_160_nuller_reconfig\'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190209_to_hwp_155_nuller_reconfig\'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190209_to_hwp_145_nuller_reconfig\'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190209_to_hwp_140_nuller_reconfig\'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190208_to_hwp_120_nuller_reconfig_okish\'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190208_to_hwp_99_nuller_reconfig\'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190207_to_hwp_80_nuller_reconfig\'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_121_nuller_reconfig\'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_24_nuller_reconfig\'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_46_nuller_reconfig\'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_61_nuller_reconfig\'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_92_nuller_reconfig\'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190211_to_hwp_230_nuller_reconfig\'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190211_to_hwp_217_nuller_reconfig\'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190211_to_hwp_199_nuller_reconfig\'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190206_to_hwp_100_nuller_reconfig\'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_141_nuller_reconfig\'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_160_nuller_reconfig\'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_180_nuller_reconfig\'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190204_to_hwp_70_nuller_reconfig\'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190211_to_hwp_240_nuller_reconfig\'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190211_to_hwp_250_nuller_reconfig_tenma_setpoint\'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190201_to_hwp_111_nuller_reconfig\'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190203_to_hwp_151_nuller_reconfig\'
-% };
-% data.hwp = load_pocessed_to_data(loop_config);
-% %% QWP
-% loop_config.dir = {
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190304_qwp_280_pure'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190302_qwp_283_pure_long'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190301_qwp_283_pure_run'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190301_qwp_246_2'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190227_qwp_270'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190227_qwp_286'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190227_qwp_310'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190227_qwp_286_no_analog'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190226_qwp_254'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190226_qwp_246'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190226_qwp_234'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190225_qwp_226'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190225_qwp_220'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190225_qwp_202'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190225_qwp_187'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190225_qwp_177'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190225_qwp_162'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190225_qwp_154'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190224_qwp_130'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190224_qwp_134'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190224_qwp_138'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190224_qwp_142'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190224_qwp_146'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190223_qwp_150'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190226_qwp_260'
-% };
-% data.qwp = load_pocessed_to_data(loop_config);
-% %% MIX
-% loop_config.dir = {
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190305_hwp_340_qwp_270'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190306_hwp_350_qwp_274'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190306_overnight_hwp_354_qwp_268'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190307_hwp_10_qwp_280'
-%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190307_hwp_06_qwp_290'
-% };
-% data.mix = load_pocessed_to_data(loop_config);
 %% Generate data vectors
 %to_val = [data.hwp.drift.to_val{1};data.qwp.drift.to_val{1};data.mix.drift.to_val{1}];%all our single scan tune-out values
 %to_unc = [data.hwp.drift.to_val{2};data.qwp.drift.to_val{2};data.mix.drift.to_val{2}];%all corresponding uncertainties
@@ -139,7 +60,6 @@ wlin=1./(to_unc.^2);
 %%
 pol_opts.hwp=data.drift.wp.hwp;
 pol_opts.qwp=data.drift.wp.qwp;
-pol_opts.predict='full_fit';
 pol_model=pol_data_query(pol_opts);
 
 polz_theta=pol_model.theta.val;
@@ -220,7 +140,8 @@ beta0 = [fit_vals(1),fit_vals(2)];
 fit_mdl_v = fitnlm(polz_v,tens_corr_to./1e6,modelfun,beta0,...
     'Options',opts,'Weights',wlin,'CoefficientNames' ,{'tune_out','vector'});
 
-disp_config.plot_title = '';
+disp_config.fig_name = 'TO fit stokes 4';
+disp_config.plot_title='';
 disp_config.x_label = 'Fourth Stokes Parameter, V';
 disp_config.fig_number=11235;
 disp_config.plot_offset.val=fit_vals(1)./1e6;
@@ -228,7 +149,7 @@ disp_config.plot_offset.unc=fit_uncs(1)./1e6;
 %plot_binned_nice(disp_config,x_dat,y_dat,weights,fit_mdl)
 plot_binned_nice(disp_config,polz_v,tens_corr_to./1e6,wlin,fit_mdl_v)
 
-disp_config.plot_title = '';
+disp_config.fig_name = 'TO fit stokes 2';
 disp_config.x_label = 'Second Stokes Parameter, Q';
 disp_config.fig_number=11236;
 disp_config.plot_offset.val=fit_vals(1)./1e6;
@@ -237,7 +158,7 @@ plot_binned_nice(disp_config,polz_q,vec_corr_to./1e6,wlin,fit_mdl_t)
 
 %% Residuals
 to_res_run = to_val-predict(fit_mdl,[polz_q,polz_v]);
-to_res = to_val-predict(fit_mdl,[polz_q,V]);
+to_res = to_val-predict(fit_mdl,[polz_q,polz_v]);
 sfigure(33099);
 plot(to_res_run./1e6)
 xlabel('index')

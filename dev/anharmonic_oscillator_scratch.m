@@ -159,7 +159,7 @@ fit_mask=fast_sorted_mask(txvdata(:,1),fit_tlims(1),fit_tlims(2));
         
 beta0  =gf_out.params;
 
-fit_opt = statset('MaxIter',1e3,...,
+fit_opt = statset('MaxIter',1e3c,...,
             'TolFun',1e-5,...%1e4
             'TolX',1e-5,...
             'UseParallel',1);
