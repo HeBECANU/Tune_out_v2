@@ -147,7 +147,7 @@ anal_opts.global.atom_laser.t0=anal_opts.atom_laser.t0;
 
 date_str='20190604T210000';
 reprocess_folder_if_older_than=posixtime(datetime(datenum(date_str,'yyyymmddTHHMMSS'),'TimeZone','local','ConvertFrom','datenum'));%posix date
-active_process_mod_time=60*10;
+active_process_mod_time=60*0;
 
 % END USER VAR-----------------------------------------------------------
 
