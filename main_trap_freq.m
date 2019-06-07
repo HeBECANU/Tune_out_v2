@@ -100,6 +100,7 @@ dir_mask = [files.isdir];
 folders=files(dir_mask);
 %convert to the full path
 folders=arrayfun(@(x) fullfile(root_data_dir,x.name),folders,'UniformOutput' ,false);
+%folders=folders(randperm(numel(folders)));%randomize the ordering
 loop_config.dir = folders;
 loop_config.set_pt=nan(1,numel(loop_config.dir));
 selected_dirs=1:numel(loop_config.dir);
@@ -144,7 +145,7 @@ anal_opts.global.atom_laser.t0=anal_opts.atom_laser.t0;
 
 date_str='20190604T210000';
 reprocess_folder_if_older_than=posixtime(datetime(datenum(date_str,'yyyymmddTHHMMSS'),'TimeZone','local','ConvertFrom','datenum'));%posix date
-active_process_mod_time=60*5;
+active_process_mod_time=60*10;
 
 % END USER VAR-----------------------------------------------------------
 
@@ -186,6 +187,7 @@ anal_opts.global.fall_velocity=const.g0*anal_opts.global.fall_time; %velocity wh
 % fall_dist=1/2 a t^2 
 %TODO get from engineering documents
 anal_opts.global.fall_dist=(1/2)*const.g0*anal_opts.global.fall_time^2;
+
 
 %% IMPORT TDC DATA to data.mcp_tdc
 anal_opts.tdc_import.shot_num=find_data_files(anal_opts.tdc_import);
@@ -711,8 +713,11 @@ fprintf('Done\n')
 %msgText = getReport(err)
 %end
 catch e
-    fprintf('caught error:%s',getReport(e))
+    fprintf(2,'caught error:\n%s\n',getReport(e,'extended'))
+    stack_trace_report=arrayfun(@(x) sprintf('line %u: %s \n(%s)\n',x.line,x.name,x.file),e.stack,'UniformOutput',false);
+    fprintf(2,'stack:\n%s',[stack_trace_report{:}])
     diary off
+    %error('stop')
 end %error catchign
 end %process folder ?
 end %loop over folders

@@ -185,8 +185,7 @@ for ii=1:2 %iterate over linear and quadratic fits
         'plot_fig_name','TO fit bootstrap',...
         'save_multi_out',0);
 
-     to_res.fit_trimmed.to_freq(ii).unc
-     
+    %to_res.fit_trimmed.to_freq(ii).unc
     to_res.fit_trimmed.boot{ii}=boot;
     to_res.fit_trimmed.to_unc_boot{ii}=boot.results.se_fun_whole;
     to_res.fit_trimmed.single_shot_unc{ii}=to_res.fit_trimmed.to_unc_boot{ii}*sqrt(numel(xdat_culled));

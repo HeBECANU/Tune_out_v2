@@ -36,15 +36,14 @@ end
 %fzero(@(x) predict(fit_mdl,x),0)
 mdl_zeros = roots(fliplr(fit_mdl.Coefficients.Estimate(:)'));
 mdl_zeros=mdl_zeros(imag(mdl_zeros)==0);
-% if numel(mdl_zeros)>1
-%     warning('fit has found multiple roots of polynomial expression')
-% end
-
-
-linear_xintercept=-fit_mdl.Coefficients.Estimate(1)/fit_mdl.Coefficients.Estimate(2);
-[~, indx] = min(abs(mdl_zeros-linear_xintercept));
-x_intercept = mdl_zeros(indx);
-
+if numel(mdl_zeros)<1
+    warning('fit has found no roots of polynomial expression')
+    x_intercept=nan;
+else
+    linear_xintercept=-fit_mdl.Coefficients.Estimate(1)/fit_mdl.Coefficients.Estimate(2);
+    [~, indx] = min(abs(mdl_zeros-linear_xintercept));
+    x_intercept = mdl_zeros(indx);
+end
 mdl_coef=fit_mdl.Coefficients;
 covm=fit_mdl.CoefficientCovariance;
  
