@@ -105,6 +105,8 @@ loop_config.dir = folders;
 loop_config.set_pt=nan(1,numel(loop_config.dir));
 selected_dirs=1:numel(loop_config.dir);
 
+
+
 %%
 anal_opts=[]; %reset the options (would be good to clear all variables except the loop config
 anal_opts.tdc_import.file_name='d';
@@ -150,6 +152,7 @@ active_process_mod_time=60*10;
 % END USER VAR-----------------------------------------------------------
 
 
+
 %% set up the path
 
 % find this .m file's path, this must be in the project root dir
@@ -165,6 +168,9 @@ addpath(genpath_exclude(fullfile(this_folder,'dev'),'\.'))
 addpath(genpath_exclude(fullfile(this_folder,'bin'),'\.'))
 
 hebec_constants %call the constants function that makes some globals
+
+fprintf('approx remaining folders to be processed %u \n',...
+sum(cellfun(@(x) should_process_folder(x,reprocess_folder_if_older_than,0),folders)))
 
 % loop over the selected directories
 for dir_idx = selected_dirs
