@@ -44,6 +44,7 @@ main_data_compiled.scan_num = [];
 main_data_compiled.set_pt = [];
 for loop_idx=selected_dirs
     current_dir = loop_config.dir{loop_idx};
+    fprintf('importing data from \n %s \n',current_dir)
     if ~strcmp(current_dir(end),'\')
         current_dir = [current_dir,'\'];
     end
@@ -51,99 +52,107 @@ for loop_idx=selected_dirs
     out_dirs=dir(fullfile(current_dir,'out'));
     out_dirs=out_dirs(3:end);
     out_dirs=out_dirs(cat(1,out_dirs.isdir));
-    if size(out_dirs,1)==0, error(sprintf('dir \n %s \n does not contain any out dirs',current_dir)), end 
-    % convert the folder name (iso time) to posix time
-    time_posix=cellfun(@(x) posixtime(datetime(datenum(x,'yyyymmddTHHMMSS'),'ConvertFrom','datenum')),{out_dirs.name});
-    [~,sort_idx]=sort(time_posix,'descend');
-    out_dirs=out_dirs(sort_idx);
-    looking_for_data_dir=1;
-    folder_index=1;
-    %runs through all the out put dirs for a given run and looks for saved data, if none is there
-    %skips that data dir
-    while looking_for_data_dir
-        try
-            out_instance_folder_path=fullfile(current_dir,'out',out_dirs(folder_index).name,'done.txt');
-            if (exist(out_instance_folder_path,'file') || ...
-                exist(out_instance_folder_path,'file')) && ...
-                exist(out_instance_folder_path,'file')
-                looking_for_data_dir=0;
-            else
-                folder_index=folder_index+1;
-                if folder_index>numel(out_dirs) %if beyon the end of the folder list return nan;
-                     looking_for_data_dir=0;
-                     folder_index=nan;
-                     warning('did not find a valid output direcory for folder %s',current_dir)
+    if size(out_dirs,1)==0
+        warning(sprintf('dir \n %s \n does not contain any out dirs',current_dir)), 
+    else 
+        % convert the folder name (iso time) to posix time
+        time_posix=cellfun(@(x) posixtime(datetime(datenum(x,'yyyymmddTHHMMSS'),'ConvertFrom','datenum')),{out_dirs.name});
+        [~,sort_idx]=sort(time_posix,'descend');
+        out_dirs=out_dirs(sort_idx);
+        looking_for_data_dir=1;
+        folder_index=1;
+        %runs through all the out put dirs for a given run and looks for saved data, if none is there
+        %skips that data dir
+        while looking_for_data_dir
+            try
+                out_instance_folder_path=fullfile(current_dir,'out',out_dirs(folder_index).name,'done.txt');
+                if (exist(out_instance_folder_path,'file') || ...
+                    exist(out_instance_folder_path,'file')) && ...
+                    exist(out_instance_folder_path,'file')
+                    looking_for_data_dir=0;
+                else
+                    folder_index=folder_index+1;
+                    if folder_index>numel(out_dirs) %if beyon the end of the folder list return nan;
+                         looking_for_data_dir=0;
+                         folder_index=nan;
+                         warning('did not find a valid output direcory for folder %s',current_dir)
+                    end
                 end
+                %~and(isfile([current_dir,'out\',most_recent_dir.name,'\main_data.mat']),isfile([current_dir,'out\',most_recent_dir.name,'\drift_data.mat']))
+                %offset = offset + 1;
+                %most_recent_dir=out_dirs(end-offset,1);
+                %check = drift_data.avg_coef; %check if it has the avg coefs update
+
+            catch e
+                fprintf('\n dir: %s didnt work \n',current_dir)
+                msgText = getReport(e)
+                continue
             end
-            %~and(isfile([current_dir,'out\',most_recent_dir.name,'\main_data.mat']),isfile([current_dir,'out\',most_recent_dir.name,'\drift_data.mat']))
-            %offset = offset + 1;
-            %most_recent_dir=out_dirs(end-offset,1);
-            %check = drift_data.avg_coef; %check if it has the avg coefs update
-        
-        catch e
-            fprintf('\n dir: %s didnt work \n',current_dir)
-            msgText = getReport(e)
-            continue
+        end
+        if ~isnan(folder_index)
+
+            %parse the folder name into qwp hwp angles
+            wp_angles=parse_folder_name_into_wp_angles(current_dir);
+
+            load(fullfile(current_dir,'out',out_dirs(folder_index).name,'data_results.mat'),'to_fit_seg','to_fit_all','anal_opts')
+            % now do some serious data plumbing
+            %scrapes set points if you want to redo some analysis
+            try
+                %fprintf('\n dir: %s , st pt = %u \n',current_dir,main_data.set_pt)
+                main_data_compiled.set_pt = cat(1,main_data_compiled.set_pt,anal_opts.ai_log.pd.set_probe);
+            catch
+                fprintf('\n dir: %s , no st pt record \n',current_dir)
+            end
+            %append to main structure
+
+            drift_data_compiled.to.val=cat(1,drift_data_compiled.to.val,to_fit_seg.fit_trimmed.to_freq.val);
+            drift_data_compiled.to.unc=cat(1,drift_data_compiled.to.unc,to_fit_seg.fit_trimmed.to_freq.unc);
+            %hacky way to get the same size in the qwp,hwp data
+            drift_data_compiled.wp.qwp=cat(1,drift_data_compiled.wp.qwp,wp_angles.qwp_ang*(1+0*to_fit_seg.fit_trimmed.to_freq.val));
+            drift_data_compiled.wp.hwp=cat(1,drift_data_compiled.wp.hwp,wp_angles.hwp_ang.*(1+0*to_fit_seg.fit_trimmed.to_freq.val));
+
+            drift_data_compiled.to_time=cat(1,drift_data_compiled.to_time,to_fit_seg.to_time);
+            drift_data_compiled.atom_num.val=cat(1,drift_data_compiled.atom_num.val,to_fit_seg.atom_num(:,1));
+            drift_data_compiled.atom_num.std=cat(1,drift_data_compiled.atom_num.std,to_fit_seg.atom_num(:,2));
+            drift_data_compiled.grad.val=cat(1,drift_data_compiled.grad.val,to_fit_seg.fit_trimmed.slope.val);
+            drift_data_compiled.grad.unc=cat(1,drift_data_compiled.grad.unc,to_fit_seg.fit_trimmed.slope.unc);
+
+            main_data_compiled.wp.qwp=cat(1,wp_angles.qwp_ang,main_data_compiled.wp.qwp);
+            main_data_compiled.wp.hwp=cat(1,wp_angles.hwp_ang,main_data_compiled.wp.hwp);
+
+            main_data_compiled.lin.to.val=cat(1, main_data_compiled.lin.to.val,to_fit_all.fit_trimmed.to_freq(1).val);
+            main_data_compiled.lin.to.unc=cat(1, main_data_compiled.lin.to.val,to_fit_all.fit_trimmed.to_freq(1).unc);
+            main_data_compiled.lin.grad.val=cat(1,main_data_compiled.lin.grad.val,to_fit_all.fit_trimmed.slope.val(1));
+            main_data_compiled.lin.grad.unc=cat(1,main_data_compiled.lin.grad.unc,to_fit_all.fit_trimmed.slope.unc(1));
+
+            main_data_compiled.quad.to.val=cat(1, main_data_compiled.quad.to.val,to_fit_all.fit_trimmed.to_freq(2).val);
+            main_data_compiled.quad.to.unc=cat(1, main_data_compiled.quad.to.val,to_fit_all.fit_trimmed.to_freq(2).unc);
+            main_data_compiled.quad.grad.val=cat(1,main_data_compiled.quad.grad.val,to_fit_all.fit_trimmed.slope.val(2));
+            main_data_compiled.quad.grad.unc=cat(1,main_data_compiled.quad.grad.unc,to_fit_all.fit_trimmed.slope.unc(2));
+
+            main_data_compiled.shots_probe = cat(1,main_data_compiled.shots_probe,to_fit_all.num_shots);
+            main_data_compiled.shots_all = cat(1,main_data_compiled.shots_probe,numel(to_fit_all.fit_mask));
+            main_data_compiled.shots_all = cat(1,main_data_compiled.shots_probe,numel(to_fit_all.fit_mask));
+
+            main_data_compiled.start_time = cat(1,main_data_compiled.start_time,to_fit_all.start_time);
+            main_data_compiled.atom_num.mean = cat(1,main_data_compiled.atom_num.mean,to_fit_all.atom_num.mean);
+            main_data_compiled.atom_num.std = cat(1, main_data_compiled.atom_num.std,to_fit_all.atom_num.std);
+
+
+            if ~isequal(size(drift_data_compiled.to.val),size(drift_data_compiled.wp.qwp))
+                error('things are not the same size') 
+            end
+
         end
     end
-    if ~isnan(folder_index)
-        
-        %parse the folder name into qwp hwp angles
-        wp_angles=parse_folder_name_into_wp_angles(current_dir);
-        
-        load(fullfile(current_dir,'out',out_dirs(folder_index).name,'data_results.mat'),'to_fit_seg','to_fit_all','anal_opts')
-        % now do some serious data plumbing
-        %scrapes set points if you want to redo some analysis
-        try
-            %fprintf('\n dir: %s , st pt = %u \n',current_dir,main_data.set_pt)
-            main_data_compiled.set_pt = cat(1,main_data_compiled.set_pt,anal_opts.ai_log.pd.set_probe);
-        catch
-            fprintf('\n dir: %s , no st pt record \n',current_dir)
-        end
-        %append to main structure
 
-        drift_data_compiled.to.val=cat(1,drift_data_compiled.to.val,to_fit_seg.fit_trimmed.to_freq.val);
-        drift_data_compiled.to.unc=cat(1,drift_data_compiled.to.unc,to_fit_seg.fit_trimmed.to_freq.unc);
-        %hacky way to get the same size in the qwp,hwp data
-        drift_data_compiled.wp.qwp=cat(1,drift_data_compiled.wp.qwp,wp_angles.qwp_ang*(1+0*to_fit_seg.fit_trimmed.to_freq.val));
-        drift_data_compiled.wp.hwp=cat(1,drift_data_compiled.wp.hwp,wp_angles.hwp_ang.*(1+0*to_fit_seg.fit_trimmed.to_freq.val));
 
-        drift_data_compiled.to_time=cat(1,drift_data_compiled.to_time,to_fit_seg.to_time);
-        drift_data_compiled.atom_num.val=cat(1,drift_data_compiled.atom_num.val,to_fit_seg.atom_num(:,1));
-        drift_data_compiled.atom_num.std=cat(1,drift_data_compiled.atom_num.std,to_fit_seg.atom_num(:,2));
-        drift_data_compiled.grad.val=cat(1,drift_data_compiled.grad.val,to_fit_seg.fit_trimmed.slope.val);
-        drift_data_compiled.grad.unc=cat(1,drift_data_compiled.grad.unc,to_fit_seg.fit_trimmed.slope.unc);
 
-        main_data_compiled.wp.qwp=cat(1,wp_angles.qwp_ang,main_data_compiled.wp.qwp);
-        main_data_compiled.wp.hwp=cat(1,wp_angles.hwp_ang,main_data_compiled.wp.hwp);
-
-        main_data_compiled.lin.to.val=cat(1, main_data_compiled.lin.to.val,to_fit_all.fit_trimmed.to_freq(1).val);
-        main_data_compiled.lin.to.unc=cat(1, main_data_compiled.lin.to.val,to_fit_all.fit_trimmed.to_freq(1).unc);
-        main_data_compiled.lin.grad.val=cat(1,main_data_compiled.lin.grad.val,to_fit_all.fit_trimmed.slope.val(1));
-        main_data_compiled.lin.grad.unc=cat(1,main_data_compiled.lin.grad.unc,to_fit_all.fit_trimmed.slope.unc(1));
-        
-        main_data_compiled.quad.to.val=cat(1, main_data_compiled.quad.to.val,to_fit_all.fit_trimmed.to_freq(2).val);
-        main_data_compiled.quad.to.unc=cat(1, main_data_compiled.quad.to.val,to_fit_all.fit_trimmed.to_freq(2).unc);
-        main_data_compiled.quad.grad.val=cat(1,main_data_compiled.quad.grad.val,to_fit_all.fit_trimmed.slope.val(2));
-        main_data_compiled.quad.grad.unc=cat(1,main_data_compiled.quad.grad.unc,to_fit_all.fit_trimmed.slope.unc(2));
-        
-        main_data_compiled.shots_probe = cat(1,main_data_compiled.shots_probe,to_fit_all.num_shots);
-        main_data_compiled.shots_all = cat(1,main_data_compiled.shots_probe,numel(to_fit_all.fit_mask));
-        main_data_compiled.shots_all = cat(1,main_data_compiled.shots_probe,numel(to_fit_all.fit_mask));
-        
-        main_data_compiled.start_time = cat(1,main_data_compiled.start_time,to_fit_all.start_time);
-        main_data_compiled.atom_num.mean = cat(1,main_data_compiled.atom_num.mean,to_fit_all.atom_num.mean);
-        main_data_compiled.atom_num.std = cat(1, main_data_compiled.atom_num.std,to_fit_all.atom_num.std);
-
-        
-        if ~isequal(size(drift_data_compiled.to.val),size(drift_data_compiled.wp.qwp))
-            error('things are not the same size') 
-        end
-        
-    end
 end
+
 data.drift = drift_data_compiled;
 data.main = main_data_compiled;
+
 end
 
 %%break_idx = [break_idx;numel(drift_data.to_time)];
