@@ -1,6 +1,6 @@
 function out_st=global_fit_new(predictor,response,modelfun,gf_opt)
 
-cost_fun=@(x) sqrt(sum((modelfun(col_vec(x),predictor)-response).^2)/(numel(response)-numel(x)));
+cost_fun=@(x) sqrt(nansum((modelfun(col_vec(x),predictor)-response).^2)/(numel(response)-numel(x)));
 
 %inital start rmse
 %cost_fun(rf_opt.start)

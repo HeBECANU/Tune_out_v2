@@ -88,7 +88,8 @@ color_shaded=colorspace('LCH->RGB',color_shaded);
 
 %% Plot the thing!
 
-stfig(disp_config.fig_name,'add_stack',1);
+%stfig(disp_config.fig_name,'add_stack',1);
+stfig(disp_config.fig_name);
 clf
 padd_size=0.05*range(x_grouped);
 xlim_with_padd=[min(x_grouped)-padd_size,max(x_grouped)+padd_size];
