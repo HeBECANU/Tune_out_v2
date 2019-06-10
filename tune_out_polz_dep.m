@@ -74,30 +74,32 @@ polz_cont=pol_model.cont.val;
 
 %% Fit the full model to all of our data
 Q_fun = @(d_p,theta,phi) d_p.*cos(2.*(theta+phi.*pi));%function to calculate second stokes parameter, in a rotated frame
-full_mdl = @(b,x) b(1) + b(2).*x(:,2) + b(3).*(1+Q_fun(x(:,1),x(:,3),b(4)));%full model for how the tune out behaves
-vars = [polz_cont,polz_v,polz_theta];
+full_mdl = @(b,x) b(1) + (1/2)*b(2).*x(:,2) + b(3).*((1/2)+Q_fun(x(:,1),x(:,3),b(4)));%full model for how the tune out behaves
+predictor = [polz_cont,polz_v,polz_theta];
 to_val_fit = to_val_for_polz;
 wlin_fit = wlin./sum(wlin);
 to_fit_val_offset=wmean(to_val_fit,wlin_fit);
 
  gf_opt=[];
-gf_opt.domain=[[-1,1]*1e5;...   %offset
-               [-1,1]*1e4;...  %vector
-               [-1,1]*1e4;...  %tensor
-               [-1,1]*4*pi;...  %phase
+gf_opt.domain=[[-1,1]*1e5;...   %tune_out_scalar
+               [-1,1]*1e4;...  %reduced_vector_cos_theta_k
+               [-1,1]*1e4;...  %reduce_tensor
+               [-1,1]*4*pi;...  %angle between polz measurment basis and B cross k
                ];        
 gf_opt.start=[0, 1e3, 1*1e3, (rand(1)-0.5)*2*pi];
 gf_opt.rmse_thresh=2e-3;
 gf_opt.plot=false;
 gf_opt.level=2;
-gf_out=global_fit(vars,(to_val_fit-to_fit_val_offset)*1e-6,full_mdl,gf_opt);
+gf_out=global_fit(predictor,(to_val_fit-to_fit_val_offset)*1e-6,full_mdl,gf_opt);
+
+%% so here we will use a single peice of information from the atomic theory
 
 
 %
 opts = statset('MaxIter',1e4);
 beta0 = gf_out.params%0.2 or 0.8
-fit_mdl_full = fitnlm(vars,(to_val_fit-to_fit_val_offset)*1e-6,full_mdl,beta0,...
-    'Options',opts,'Weights',wlin_fit,'CoefficientNames' ,{'tune_out','vector','tensor','phase'})
+fit_mdl_full = fitnlm(predictor,(to_val_fit-to_fit_val_offset)*1e-6,full_mdl,beta0,...
+    'Options',opts,'Weights',wlin_fit,'CoefficientNames' ,{'tune_out_scalar','reduced_vector','reduce_tensor','phase'})
 fit_vals_full = fit_mdl_full.Coefficients.Estimate;
 %
 %second fit with phase fixed
@@ -105,11 +107,11 @@ polz_q = Q_fun(polz_cont,polz_theta,fit_vals_full(4));%second stokes parameter, 
 % TO CHECK
 %Q_run = Q_fun(polz_cont,polz_theta,fit_vals(4));%second stokes parameter for each run
 full_mdl = @(b,x) b(1) + b(2).*x(:,2) + b(3).*(1+x(:,1));%full model for how the tune out behaves
-vars = [polz_q,polz_v];
+predictor = [polz_q,polz_v];
 beta0 = fit_vals_full(1:3);
 opts = statset('MaxIter',1e4);
-fit_mdl = fitnlm(vars,(to_val_fit-to_fit_val_offset)*1e-6,full_mdl,beta0,...
-    'Options',opts,'Weights',wlin_fit,'CoefficientNames' ,{'tune_out','vector','tensor'})
+fit_mdl = fitnlm(predictor,(to_val_fit-to_fit_val_offset)*1e-6,full_mdl,beta0,...
+    'Options',opts,'Weights',wlin_fit,'CoefficientNames' ,{'tune_out_scalar','reduced_vector','reduce_tensor'})
 fit_coefs_fixed_phase.val = fit_mdl.Coefficients.Estimate;
 fit_coefs_fixed_phase.unc = fit_mdl.Coefficients.SE;
 
