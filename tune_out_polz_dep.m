@@ -49,7 +49,7 @@ folders
 loop_config.dir=folders;
 %%
 
-data = load_pocessed_to_data(loop_config);
+%data = load_pocessed_to_data(loop_config);
 
 %%
 %save('20190608_imported_data_for_tune_out_polz_dep.mat')
@@ -73,91 +73,71 @@ polz_v=pol_model.v.val;
 polz_cont=pol_model.cont.val;
 
 %% Fit the full model to all of our data
-Q_fun = @(d_p,theta,phi) d_p.*cos(2.*(theta+phi));%function to calculate second stokes parameter, in a rotated frame
-%full_mdl = @(b,x) b(1) + (1/2)*b(2).*x(:,2) - b(3).*(1/2)*(1+Q_fun(x(:,1),x(:,3),b(4)));%full model for how the tune out behaves
-D_fun=@(theta_k,Q) 3*(sin(theta_k)^2)*((1/2)+(Q/2))-1;
-full_mdl = @(b,x) b(1) + (1/2).*x(:,2).*cos(b(4)).*b(2) - (1/2)*D_fun(b(4),Q_fun(x(:,1),x(:,3),b(4))).*b(3);%full model for how the tune out behaves
+
+%P_fun=@(Q) ((1/2)+(Q/2));
+%full_mdl = @(b,x) b(1) + (1/2).*x(:,2).*b(2) +(1/2 - (3/2)*P_fun(Q_fun(x(:,1),x(:,3),b(4))).*b(3);%full model for how the tune out behaves
 
 predictor = [polz_cont,polz_v,polz_theta];
 to_val_fit = to_val_for_polz;
 wlin_fit = wlin./sum(wlin);
 to_fit_val_offset=wmean(to_val_fit,wlin_fit);
 
- gf_opt=[];
+% so here we will use a single peice of information from the atomic theory, namely the gradient of the reduced tensor
+% term, from Li-Yan Tang's document "Response to Bryce's questions" \lambda_to (theta_p=0)>\lambda_to (theta_p=90)
+% & as the polarizability decreased with increasing wavelength d \alpha^Scalar(\lambda)/ d \lambda <0 
+% ? a increase in angle theta_p decreases the polarizability
+% & as the prefactor in front of the tensor term decreases with increasing theta_p 
+% ? \alpha^Tensor(\omega?\omega_TO)>0
+% as \alpha^Scalar(\omega)/ d \omega >0
+%  ? the reduced tensor term is positive
+
+
+gf_opt=[];
 gf_opt.domain=[[-1,1]*1e5;...   %tune_out_scalar
-               [-1,1]*1e5;...  %reduced_vector_cos_theta_k
-               [-1,1]*1e5;...  %reduce_tensor_3*(sin(theta_k))^2
-               [-1,1]*pi;...  %angle between polz measurment basis and B cross k
-               [-1,1]*pi;... % theta k
+               [-1,1]*1e5;...  %reduced_vector*cos_theta_k
+               [0,1]*1e5;...  %reduce_tensor
+               [-1,1]*pi/2;...  %angle between polz measurment basis and B cross k
+               pi+[-1,1]*pi/4;... % theta k
                ];        
-gf_opt.start=[0, 1e3, 1*1e3, (rand(1)-0.5)*2*pi,(rand(1)-0.5)*2*pi];
+gf_opt.start=[0, 1e3, 1e4, (rand(1)-0.5)*pi/4,pi+(rand(1)-0.5)*pi/4];
 gf_opt.rmse_thresh=2e-3;
 gf_opt.plot=false;
-gf_opt.level=3;
-gf_out=global_fit(predictor,(to_val_fit-to_fit_val_offset)*1e-6,full_mdl,gf_opt);
-
-% so here we will use a single peice of information from the atomic theory
-
+gf_opt.level=2;
+gf_out=global_fit(predictor,(to_val_fit-to_fit_val_offset)*1e-6,@full_tune_out_polz_model,gf_opt);
 
 %
 opts = statset('MaxIter',1e4);
 beta0 = gf_out.params%0.2 or 0.8
 %beta0=[0, 1e3, 1*1e3, (rand(1)-0.5)*2*pi]
-fit_mdl_full = fitnlm(predictor,(to_val_fit-to_fit_val_offset)*1e-6,full_mdl,beta0,...
+fit_mdl_full = fitnlm(predictor,(to_val_fit-to_fit_val_offset)*1e-6,@full_tune_out_polz_model,beta0,...
     'Options',opts,'Weights',wlin_fit,'CoefficientNames' ,{'tune_out_scalar','reduced_vector','reduce_tensor','phase','thetak'})
 fit_vals_full = fit_mdl_full.Coefficients.Estimate;
+fit_uncs_full = fit_mdl_full.Coefficients.SE;
 %
-fprintf('%.1f\n',((predict(fit_mdl_full,[1,0,-fit_vals_full(4)])*1e6+to_fit_val_offset)*1e-6-725735000))
 
 
-%%
-%second fit with phase fixed
-polz_q = Q_fun(polz_cont,polz_theta,fit_vals_full(4));%second stokes parameter, relative to the vector that is otrhogonal to the B feild and beam axis
-% TO CHECK
-%Q_run = Q_fun(polz_cont,polz_theta,fit_vals(4));%second stokes parameter for each run
-full_mdl = @(b,x) b(1) + b(2).*x(:,2) + b(3).*(1+x(:,1));%full model for how the tune out behaves
-predictor = [polz_q,polz_v];
-beta0 = fit_vals_full(1:3);
-opts = statset('MaxIter',1e4);
-fit_mdl = fitnlm(predictor,(to_val_fit-to_fit_val_offset)*1e-6,full_mdl,beta0,...
-    'Options',opts,'Weights',wlin_fit,'CoefficientNames' ,{'tune_out_scalar','reduced_vector','reduce_tensor'})
-fit_coefs_fixed_phase.val = fit_mdl.Coefficients.Estimate;
-fit_coefs_fixed_phase.unc = fit_mdl.Coefficients.SE;
+if fit_vals_full(3)<0
+    error('fit reduced tensor term is less than zero')
+end
 
-to_scalar_minus_half_tensor=[];
-to_scalar_minus_half_tensor.val=(fit_coefs_fixed_phase.val(1)-0*fit_coefs_fixed_phase.val(3))*1e6+to_fit_val_offset;
-to_scalar_minus_half_tensor.unc=fit_coefs_fixed_phase.unc(1)*1e6;
-%to_scalar_minus_half_tensor.val=(fit_coefs_fixed_phase.val(1)+1*fit_coefs_fixed_phase.val(3))*1e6+to_fit_val_offset;
-%to_scalar_minus_half_tensor.unc=sqrt(fit_coefs_fixed_phase.unc(1)^2+(0.5*fit_coefs_fixed_phase.unc(3))^2)*1e6;
-fprintf('%.1f\n',(to_scalar_minus_half_tensor.val*1e-6-725735000))
+%
+[to_scalar_minus_half_tensor.val_predict,to_scalar_minus_half_tensor.unc_predict]=...
+    predict(fit_mdl_full,[1,0,-fit_vals_full(4)+pi/2],'Alpha',1-erf(1/sqrt(2)),'Prediction','Curve');
+to_scalar_minus_half_tensor.val_predict=to_scalar_minus_half_tensor.val_predict*1e6+to_fit_val_offset;
+to_scalar_minus_half_tensor.unc_predict=1/2*range(to_scalar_minus_half_tensor.unc_predict)*1e6;
 
+to_scalar_minus_half_tensor.val=fit_vals_full(1)+(1/2)*fit_vals_full(3);
+to_scalar_minus_half_tensor.val=to_scalar_minus_half_tensor.val*1e6+to_fit_val_offset;
+to_scalar_minus_half_tensor.unc=sqrt(fit_uncs_full(1)^2 + (fit_uncs_full(3)/2)^2);
+to_scalar_minus_half_tensor.unc=to_scalar_minus_half_tensor.unc*1e6;
 
-% 2   2000
-% 0.5 1000
-% 2/3 700
-% Write out the results
-%%
-full_data_set=[polz_cont,polz_v,polz_theta,to_val_for_polz,to_unc];
-full_data_set=num2cell(full_data_set,2);
-% check that function gives the same answer as the above procedure
-fprintf('%.1f\n',(two_stage_two_dim_to_fit(full_data_set)*1e-6-725735000))
+fprintf('to val model predict %.1f\n',(to_scalar_minus_half_tensor.val_predict*1e-6-725735000))
+fprintf('to val model vals    %.1f\n',(to_scalar_minus_half_tensor.val*1e-6-725735000))
 
-%%
+fprintf('to unc model predict %.1f\n',(to_scalar_minus_half_tensor.unc_predict*1e-6))
+fprintf('to unc model vals    %.1f\n',(to_scalar_minus_half_tensor.unc*1e-6))
+fprintf('theta_k %.1f\n',mod(fit_vals_full(5),pi/2))
 
-
-boot=bootstrap_se(@two_stage_two_dim_to_fit,full_data_set,...
-    'plots',true,...
-    'replace',true,...
-    'samp_frac_lims',[0.01,1],...%[0.005,0.9]
-    'num_samp_frac',100,... %20
-    'num_samp_rep',100,... %1e2
-    'plot_fig_name','TO fit bootstrap',...
-    'save_multi_out',0,...
-    'verbose',3);
-
-
-to_scalar_minus_half_tensor.unc_boot=boot.results.se_fun_whole*1e6;
-to_scalar_minus_half_tensor.unc_unc_boot=boot.results.se_se_fun_whole*1e6;
 
 %%
 
@@ -175,7 +155,7 @@ fprintf('diff from TOV1      %.1f±%.1f MHz \n',(to_scalar_minus_half_tensor.val-
 fprintf('diff from Theory    %e±%e MHz \n',(to_scalar_minus_half_tensor.val-to_freq_theory)*1e-6,to_scalar_minus_half_tensor.unc*1e-6)
 fprintf('TO wavelength       %.6f±%f nm \n',to_wav_val*1e9,to_wav_unc*1e9)
 
-%% Full 2D plot in stokes space
+%% Full 2D plot of the fit in 2d stokes space
 stfig('2d TO fit');
 clf
 [surf_polz_q, surf_polz_v] = meshgrid(linspace(-1,1),linspace(-1,1));
@@ -260,6 +240,35 @@ xlabel('residual (MHz)')
 ylabel('count')
 
 
+
+%% TO DO: BOOTSTRAP THE TO VALUE
+
+
+%%
+full_data_set=[polz_cont,polz_v,polz_theta,to_val_for_polz,to_unc];
+full_data_set=num2cell(full_data_set,2);
+% check that function gives the same answer as the above procedure
+fprintf('%.1f\n',(two_stage_two_dim_to_fit(full_data_set)*1e-6-725735000))
+
+%%
+
+
+boot=bootstrap_se(@two_stage_two_dim_to_fit,full_data_set,...
+    'plots',true,...
+    'replace',true,...
+    'samp_frac_lims',[0.01,1],...%[0.005,0.9]
+    'num_samp_frac',100,... %20
+    'num_samp_rep',100,... %1e2
+    'plot_fig_name','TO fit bootstrap',...
+    'save_multi_out',0,...
+    'verbose',3);
+
+
+to_scalar_minus_half_tensor.unc_boot=boot.results.se_fun_whole*1e6;
+to_scalar_minus_half_tensor.unc_unc_boot=boot.results.se_se_fun_whole*1e6;
+
+
+
 %%
 %to_val_run = [data.hwp.main.lin_fit{1};data.qwp.main.lin_fit{1};data.mix.main.lin_fit{1}];%the to val for a particular run
 
@@ -280,6 +289,59 @@ ylabel('count')
 %     shot_idx = shot_idx+scan_num;
 % end
 
+% %%
+% %second fit with phase fixed
+% polz_q = Q_fun(polz_cont,polz_theta,fit_vals_full(4));%second stokes parameter, relative to the vector that is otrhogonal to the B feild and beam axis
+% % TO CHECK
+% %Q_run = Q_fun(polz_cont,polz_theta,fit_vals(4));%second stokes parameter for each run
+% fixed_phase_model = @(b,x) b(1) + (1/2).*x(:,2).*cos(fit_vals_full(4)).*b(2) - (1/2)*D_fun(b(4),Q_fun(x(:,1),x(:,3),fit_vals_full(4))).*b(3);%full model for how the tune out behaves
+% predictor = [polz_q,polz_v];
+% beta0 = fit_vals_full(1:3);
+% opts = statset('MaxIter',1e4);
+% fit_mdl = fitnlm(predictor,(to_val_fit-to_fit_val_offset)*1e-6,fixed_phase_model,beta0,...
+%     'Options',opts,'Weights',wlin_fit,'CoefficientNames' ,{'tune_out_scalar','reduced_vector','reduce_tensor'})
+% fit_coefs_fixed_phase.val = fit_mdl.Coefficients.Estimate;
+% fit_coefs_fixed_phase.unc = fit_mdl.Coefficients.SE;
+% 
+% to_scalar_minus_half_tensor=[];
+% to_scalar_minus_half_tensor.val=(fit_coefs_fixed_phase.val(1)-0*fit_coefs_fixed_phase.val(3))*1e6+to_fit_val_offset;
+% to_scalar_minus_half_tensor.unc=fit_coefs_fixed_phase.unc(1)*1e6;
+% %to_scalar_minus_half_tensor.val=(fit_coefs_fixed_phase.val(1)+1*fit_coefs_fixed_phase.val(3))*1e6+to_fit_val_offset;
+% %to_scalar_minus_half_tensor.unc=sqrt(fit_coefs_fixed_phase.unc(1)^2+(0.5*fit_coefs_fixed_phase.unc(3))^2)*1e6;
+% fprintf('%.1f\n',(to_scalar_minus_half_tensor.val*1e-6-725735000))
+% 
+% 
+% % 2   2000
+% % 0.5 1000
+% % 2/3 700
+% % Write out the results
+
+
+function result=Q_fun(d_p,theta,phi)
+result=d_p.*cos(2.*(theta+phi));
+%fprintf('Q val %f\n',result);
+end
+
+function result=D_fun(theta_k,Q)
+result=3*(sin(theta_k)^2)*((1/2)+(Q/2))-1;
+%fprintf('D val %f\n',result);
+end
+
+
+function result=full_tune_out_polz_model(b,x)
+%tune_out_scalar
+%reduced_vector
+%reduce_tensor
+%angle between polz measurment basis and B cross k
+% theta k
+
+result=b(1) + (1/2).*x(:,2).*cos(b(5)).*b(2) - (1/2)*D_fun(b(5),Q_fun(x(:,1),x(:,3),b(4))).*b(3);
+end
+
+
+
+
+
 
 function to_scalar_minus_half_tensor=two_stage_two_dim_to_fit(full_data)
 
@@ -292,10 +354,6 @@ to_val_for_polz=full_data(:,4);
 to_unc=full_data(:,5);
 wlin=1./(to_unc.^2);
 
-
-
-
-Q_fun = @(d_p,theta,phi) d_p.*cos(2.*(theta+phi.*pi));%function to calculate second stokes parameter, in a rotated frame
 full_mdl = @(b,x) b(1) + b(2).*x(:,2) + b(3).*(1+Q_fun(x(:,1),x(:,3),b(4)));%full model for how the tune out behaves
 vars = [polz_cont,polz_v,polz_theta];
 to_val_fit = to_val_for_polz;

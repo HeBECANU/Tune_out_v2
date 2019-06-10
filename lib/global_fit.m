@@ -128,7 +128,9 @@ if out_st.rmse>gf_opt.rmse_thresh
     warning('global_fit could not find a solution with rmse less than thresh(%f) min solution %f\n  ',gf_opt.rmse_thresh,out_st.rmse)
 end
 
-
+if sum(out_st.params>ub | out_st.params<lb)>0
+    warning('found optima is not in bounds')
+end
 
 if  gf_opt.plot
     stfig('solution','add_stack',1);
@@ -144,8 +146,6 @@ if  gf_opt.plot
     plot(predictor,modelfun(out_st.params,predictor)-response,'r')
     drawnow
 end
-
-
 
 
 end
