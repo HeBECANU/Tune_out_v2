@@ -52,8 +52,9 @@ loop_config.dir=folders;
 data = load_pocessed_to_data(loop_config);
 
 %%
-save('20190608_imported_data_for_to_full_dep.mat')
-%load('20190607_imported_data_for_to_full_dep.mat')
+%save('20190608_imported_data_for_to_full_dep.mat')
+load('20190608_imported_data_for_to_full_dep.mat')
+
 
 %% Generate data vectors
 %to_val = [data.hwp.drift.to_val{1};data.qwp.drift.to_val{1};data.mix.drift.to_val{1}];%all our single scan tune-out values
@@ -136,25 +137,29 @@ fprintf('%.1f\n',(two_stage_two_dim_to_fit(full_data_set)*1e-6-725735000))
 boot=bootstrap_se(@two_stage_two_dim_to_fit,full_data_set,...
     'plots',true,...
     'replace',true,...
-    'samp_frac_lims',[0.05,1],...%[0.005,0.9]
-    'num_samp_frac',10,... %20
-    'num_samp_rep',3e1,... %1e2
+    'samp_frac_lims',[0.01,1],...%[0.005,0.9]
+    'num_samp_frac',100,... %20
+    'num_samp_rep',100,... %1e2
     'plot_fig_name','TO fit bootstrap',...
-    'save_multi_out',0);
+    'save_multi_out',0,...
+    'verbose',3);
 
 
 to_scalar_minus_half_tensor.unc_boot=boot.results.se_fun_whole*1e6;
+to_scalar_minus_half_tensor.unc_unc_boot=boot.results.se_se_fun_whole*1e6;
 
 %%
 
-to_freq_unc=fit_uncs(1);
-to_wav_val=299792458/(to_freq_val);
-to_wav_unc=2*to_freq_unc*const.c/(to_freq_val^2);
+to_wav_val=f2wl(to_scalar_minus_half_tensor.val);
+to_wav_unc=2*to_scalar_minus_half_tensor.unc*const.c/(to_scalar_minus_half_tensor.val^2);
 old_to_wav=413.0938e-9;
 
 fprintf('\n====TO full fit results==========\n')
-fprintf('TO freq             %.1f±(%.0f) MHz\n',...
-    to_scalar_minus_half_tensor.val*1e-6,to_scalar_minus_half_tensor.unc*1e-6)
+fprintf('TO freq             %.1f±(%.0f(fit),%.0f±%.0f(boot)) MHz\n',...
+    to_scalar_minus_half_tensor.val*1e-6,...
+    to_scalar_minus_half_tensor.unc*1e-6,...
+    to_scalar_minus_half_tensor.unc_boot*1e-6,...
+    to_scalar_minus_half_tensor.unc_unc_boot*1e-6)
 fprintf('diff from TOV1      %.1f±%.1f MHz \n',(to_scalar_minus_half_tensor.val-f2wl(old_to_wav))*1e-6,to_scalar_minus_half_tensor.unc*1e-6)
 fprintf('diff from Theory    %e±%e MHz \n',(to_scalar_minus_half_tensor.val-to_freq_theory)*1e-6,to_scalar_minus_half_tensor.unc*1e-6)
 fprintf('TO wavelength       %.6f±%f nm \n',to_wav_val*1e9,to_wav_unc*1e9)
@@ -278,17 +283,33 @@ to_val_for_polz=full_data(:,4);
 to_unc=full_data(:,5);
 wlin=1./(to_unc.^2);
 
-opts = statset('MaxIter',1e4);
+
+
+
 Q_fun = @(d_p,theta,phi) d_p.*cos(2.*(theta+phi.*pi));%function to calculate second stokes parameter, in a rotated frame
 full_mdl = @(b,x) b(1) + b(2).*x(:,2) + b(3).*(1+Q_fun(x(:,1),x(:,3),b(4)));%full model for how the tune out behaves
 vars = [polz_cont,polz_v,polz_theta];
 to_val_fit = to_val_for_polz;
 wlin_fit = wlin./sum(wlin);
+to_fit_val_offset=wmean(to_val_fit,wlin_fit);
+
+ gf_opt=[];
+gf_opt.domain=[[-1,1]*1e5;...   %offset
+               [-1,1]*1e4;...  %vector
+               [-1,1]*1e4;...  %tensor
+               [-1,1]*4*pi;...  %phase
+               ];        
+gf_opt.start=[0, 1e3, 1*1e3, (rand(1)-0.5)*2*pi];
+gf_opt.rmse_thresh=500;
+gf_opt.plot=false;
+gf_opt.level=2;
+gf_out=global_fit(vars,(to_val_fit-to_fit_val_offset)*1e-6,full_mdl,gf_opt);
+
+
+%
 opts = statset('MaxIter',1e4);
-
-
-beta0 = [7.257355*1e14,6*1e9,3*1e9,(rand(1)-0.5)*2*pi];%0.2 or 0.8
-fit_mdl_full = fitnlm(vars,to_val_fit,full_mdl,beta0,...
+beta0 = gf_out.params;%0.2 or 0.8
+fit_mdl_full = fitnlm(vars,(to_val_fit-to_fit_val_offset)*1e-6,full_mdl,beta0,...
     'Options',opts,'Weights',wlin_fit,'CoefficientNames' ,{'tune_out','vector','tensor','phase'});
 fit_vals_full = fit_mdl_full.Coefficients.Estimate;
 %
@@ -300,12 +321,12 @@ full_mdl = @(b,x) b(1) + b(2).*x(:,2) + b(3).*(1+x(:,1));%full model for how the
 vars = [polz_q,polz_v];
 beta0 = fit_vals_full(1:3);
 opts = statset('MaxIter',1e4);
-fit_mdl = fitnlm(vars,to_val_fit,full_mdl,beta0,...
+fit_mdl = fitnlm(vars,(to_val_fit-to_fit_val_offset)*1e-6,full_mdl,beta0,...
     'Options',opts,'Weights',wlin_fit,'CoefficientNames' ,{'tune_out','vector','tensor'});
 fit_coefs_fixed_phase.val = fit_mdl.Coefficients.Estimate;
 fit_coefs_fixed_phase.unc = fit_mdl.Coefficients.SE;
 
-to_scalar_minus_half_tensor=fit_coefs_fixed_phase.val(1)+1*fit_coefs_fixed_phase.val(3);
-to_scalar_minus_half_tensor=to_scalar_minus_half_tensor*1e-6-725735000;
+to_scalar_minus_half_tensor=[];
+to_scalar_minus_half_tensor=(fit_coefs_fixed_phase.val(1)-0*fit_coefs_fixed_phase.val(3))*1e6+to_fit_val_offset;
 
 end
