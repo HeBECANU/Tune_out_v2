@@ -10,3 +10,6 @@
 [submodule "lib/is_laser_single_mode"]
 	path = lib/is_laser_single_mode
 	url = https://github.com/brycehenson/is_laser_single_mode.git
+[submodule "bin/godlike"]
+	path = bin/godlike
+	url = https://github.com/rodyo/FEX-GODLIKE.git

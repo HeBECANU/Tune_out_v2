@@ -175,7 +175,15 @@ for ii=1:iimax
          fprintf(2,'\nnearest tdc file is too far away at %.2f s\n%04u',time_nearest_tdc_start-time_start_bec_comp,0)
     else
         args_single.fname=fname;
-        cout=function_cache(cache_opts,@ai_log_single,{args_single});
+        try
+            cout=function_cache(cache_opts,@ai_log_single,{args_single});
+        catch err_obj
+            fun_stack_obj=dbstack;
+            fun_stack_obj=flipud(fun_stack_obj);
+            fun_stack_txt=sprintf('%s\n',fun_stack_obj(1:end-2).name);
+            warning('caught error \n ====stack=====\n %s \n err msg \n %s \n',fun_stack_txt,getReport(err_obj))
+            continue %skip setting the output
+        end
         ai_log_single_out=cout{1};
         ai_log_out.ok.sfp(idx_nearest_shot)=ai_log_single_out.single_mode_logic;
         if anal_opts.do_ac_mains_fit
@@ -327,6 +335,7 @@ sm_in.pd_filt_factor=1e-3; %fraction of a scan to smooth the pd data by for peak
 sm_in.ptz_filt_factor_pks=1e-3;  %fraction of a scan to smooth the pzt data by for peak detection
 sm_in.pzt_filt_factor_deriv=1e-3; %fraction of a scan to smooth the data by for derivative detection
 sm_in.pd_amp_min=1; %minimum range of the pd signal to indicate the laser has sufficient power
+sm_in.skip_wf_check=0;
 sm_in.plot=args_single.plot;
 
 [laser_sm,laser_sm_test_det]=is_laser_single_mode(sm_in);
