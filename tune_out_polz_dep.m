@@ -28,29 +28,30 @@ disp_config.font_size_global=14;
 disp_config.opts=statset('nlinfit');
 disp_config.colors_main = [[75,151,201];[193,114,66];[87,157,95]];
 disp_config.bin_tol=0.01;
-%% HWP
-% loop_config.dir = {
-%     '..\scratch_data\20190227_qwp_270',
-%     '..\scratch_data\20190227_qwp_286',
-%     '..\scratch_data\20190227_qwp_310',
-%     };
-%root_data_dir='..\scratch_data';
-root_data_dir='E:\scratch\good_data';
-files = dir(root_data_dir);
-files=files(3:end);
-% Get a logical vector that tells which is a directory.
-dir_mask = [files.isdir];
-folders=files(dir_mask);
-folders=arrayfun(@(x) fullfile(root_data_dir,x.name),folders,'UniformOutput' ,false);
-folders
-loop_config.dir=folders;
-%%
 
-data = load_pocessed_to_data(loop_config);
+% %% HWP
+% % loop_config.dir = {
+% %     '..\scratch_data\20190227_qwp_270',
+% %     '..\scratch_data\20190227_qwp_286',
+% %     '..\scratch_data\20190227_qwp_310',
+% %     };
+% %root_data_dir='..\scratch_data';
+% root_data_dir='E:\scratch\good_data';
+% files = dir(root_data_dir);
+% files=files(3:end);
+% % Get a logical vector that tells which is a directory.
+% dir_mask = [files.isdir];
+% folders=files(dir_mask);
+% folders=arrayfun(@(x) fullfile(root_data_dir,x.name),folders,'UniformOutput' ,false);
+% folders
+% loop_config.dir=folders;
+% %%
+% 
+% data = load_pocessed_to_data(loop_config);
 
 %%
-save('./data/20190611_imported_data_for_tune_out_polz_dep.mat')
-%load('./data/20190611_imported_data_for_tune_out_polz_dep.mat')
+%save('./data/20190611_imported_data_for_tune_out_polz_dep.mat')
+load('./data/20190611_imported_data_for_tune_out_polz_dep.mat')
 
 
 %% Generate data vectors
@@ -62,7 +63,7 @@ wlin=1./(to_unc.^2);
 
 %% polarisation model/data options
 pol_opts.location = 'post';%post, pre_cen, pre_left, pre_right
-pol_opts.predict = 'full_fit_pref_fit';%'full_fit_pref_fit','full_fit_pref_data','full_fit_only_fit','only_data'; %obs (obsovation) fit (pertial fit) full_fit (fit with all parameters free)
+pol_opts.predict = 'only_data';%'full_fit_pref_fit','full_fit_pref_data','full_fit_only_fit','only_data'; %obs (obsovation) fit (pertial fit) full_fit (fit with all parameters free)
 
 pol_opts.hwp=data.drift.wp.hwp;
 pol_opts.qwp=data.drift.wp.qwp;
@@ -205,7 +206,7 @@ fprintf('diff from TOV1      %.0f±%.0f MHz \n',(to_scalar_minus_half_tensor.val-
 fprintf('diff from Theory    %e±%e MHz \n',(to_scalar_minus_half_tensor.val-to_freq_theory)*1e-6,to_scalar_minus_half_tensor.unc*1e-6)
 fprintf('TO wavelength       %.6f±%f nm \n',to_wav_val*1e9,to_wav_unc*1e9)
 
-%% Full 2D plot of the fit in 2d stokes space, with each scan shown
+% Full 2D plot of the fit in 2d stokes space, with each scan shown
 % we will plot in the second (Q) and fourth (v) stokes parameters, 
 % we rotate the measured stokes parameters into the convinent basis found from the above fit
 
@@ -291,7 +292,7 @@ xlabel('Fourth Stokes Parameter, V')
 ylabel('Second Stokes Parameter, Q')
 zlabel('Measurments-model (MHz)')
 
-%% Full 2D plot of the fit in 2d stokes space, with each run binned into a single point
+% Full 2D plot of the fit in 2d stokes space, with each run binned into a single point
 % we will plot in the second (Q) and fourth (v) stokes parameters
 
 stfig('2d TO fit, binned');
@@ -384,7 +385,7 @@ zlabel('Measurments-model (MHz)')
 
 
 
-%% Plots of tune-out dependance on the individual stokes parameters
+% Plots of tune-out dependance on the individual stokes parameters
 
 % plot with Q, stokes 2nd
 samp_q=col_vec(linspace(-1.1,1.1,1e4));
@@ -443,8 +444,7 @@ ylim([-1,0.8].*1e4)
 xlim([-1.1,1.1])
  
 
-%% Plot the V,Q plots with binned data
-
+% Plot the V,Q plots with binned data
 
 % plot with Q, stokes 2nd
 samp_q=col_vec(linspace(-1.1,1.1,1e4));
@@ -461,7 +461,7 @@ patch([samp_q', fliplr(samp_q')],...
     [1,1,1].*0.7,'EdgeColor','none')
 hold on
 plot(samp_q,(fit_mdl_val-to_scalar_minus_half_tensor.val)*1e-6,'k')
-xlabel('Q value')
+xlabel('2^{nd} stokes parameter Q')
 ylabel('Tune out -TOSMHT (MHz)')
 title('V=0 extrapolation')
 % now I want to plot every scan with its error bar that has been corrected onto V=0
@@ -500,8 +500,8 @@ subplot(2,1,2)
 residuals_num_ste=shifted_scaled_to_vals./(polz_vq_to_val_unc(:,4)*1e-6);
 plot(samp_q,residuals_num_ste,'ok')
 fprintf('sd of (residuals/ste) in Q dep %.1f \n',std(residuals_num_ste))
-
-
+xlabel('2^{nd} stokes parameter,Q')
+ylabel('Error From Model (MHz)')
 
 % do the same for V, stokes 4th
 samp_v=col_vec(linspace(-1.1,1.1,1e4));
@@ -517,8 +517,8 @@ patch([samp_v', fliplr(samp_v')],...
     [1,1,1].*0.7,'EdgeColor','none')
 hold on
 plot(samp_v,(fit_mdl_val-to_scalar_minus_half_tensor.val)*1e-6,'k')
-xlabel('V value')
-ylabel('Tune out -TOSMHT (MHz)')
+xlabel('4^{th} stokes parameter,V')
+ylabel('Error From Model (MHz)')
 title('Q=-1 extrapolation')
 
 shifted_scaled_to_vals=(polz_vq_to_val_unc(:,3)-to_scalar_minus_half_tensor.val+shift_vq(:,2)*1e6)*1e-6;

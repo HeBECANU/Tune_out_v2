@@ -11,3 +11,24 @@ only polz data, with theta wrapping applied
 725736812.5±(28(fit vals),35(fit predict),39±3(boot)) MHz
 
 
+725736022.9
+
+use convention of polarizaer roation along beam is +ve 
+
+%data
+TO freq             725736812.5±(27(fit vals),35(fit predict),104±43(boot)) MHz
+diff from TOV1      -2601±27 MHz 
+diff from Theory    3.324646e+02±2.728912e+01 MHz 
+TO wavelength       413.095280±0.000031 nm 
+
+
+====TO full fit results==========
+TO freq             725736982.1±(26(fit vals),33(fit predict),143±44(boot)) MHz
+diff from TOV1      -2431±26 MHz 
+diff from Theory    5.020543e+02±2.636584e+01 MHz 
+TO wavelength       413.095184±0.000030 nm 
+
+
+
+
+725735731.7
