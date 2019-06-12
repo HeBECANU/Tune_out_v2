@@ -20,9 +20,6 @@ addpath(genpath_exclude(fullfile(this_folder,'bin'),'\.'))
 
 %%
 hebec_constants %call the constants function that makes some globals
-%% polarisation data options
-pol_opts.location = 'post';%post, pre_cen, pre_left, pre_right
-pol_opts.predict = 'full_fit';%'full_fit';%'interp'; %obs (obsovation) fit (pertial fit) full_fit (fit with all parameters free)
 %% Display options
 opts = statset('MaxIter',1e4);
 ci_size=1-erf(1/sqrt(2));%1-erf(zvalue/sqrt(2)) %confidence interval for cutting outliers
@@ -38,7 +35,7 @@ disp_config.bin_tol=0.01;
 %     '..\scratch_data\20190227_qwp_310',
 %     };
 %root_data_dir='..\scratch_data';
-root_data_dir='G:\good_data';
+root_data_dir='E:\scratch\good_data';
 files = dir(root_data_dir);
 files=files(3:end);
 % Get a logical vector that tells which is a directory.
@@ -49,11 +46,11 @@ folders
 loop_config.dir=folders;
 %%
 
-%data = load_pocessed_to_data(loop_config);
+data = load_pocessed_to_data(loop_config);
 
 %%
-%save('20190608_imported_data_for_tune_out_polz_dep.mat')
-load('./data/20190608_imported_data_for_tune_out_polz_dep.mat')
+save('./data/20190611_imported_data_for_tune_out_polz_dep.mat')
+%load('./data/20190611_imported_data_for_tune_out_polz_dep.mat')
 
 
 %% Generate data vectors
@@ -63,6 +60,9 @@ to_val_for_polz=data.drift.to.val;
 to_unc=data.drift.to.unc;
 wlin=1./(to_unc.^2);
 
+%% polarisation model/data options
+pol_opts.location = 'post';%post, pre_cen, pre_left, pre_right
+pol_opts.predict = 'full_fit_pref_fit';%'full_fit_pref_fit','full_fit_pref_data','full_fit_only_fit','only_data'; %obs (obsovation) fit (pertial fit) full_fit (fit with all parameters free)
 
 pol_opts.hwp=data.drift.wp.hwp;
 pol_opts.qwp=data.drift.wp.qwp;
@@ -71,6 +71,7 @@ pol_model=pol_data_query(pol_opts);
 polz_theta=pol_model.theta.val;
 polz_v=pol_model.v.val;
 polz_cont=pol_model.cont.val;
+
 
 %% Fit the full model to all of our data
 
@@ -100,7 +101,7 @@ gf_opt.domain=[[-1,1]*1e5;...   %tune_out_scalar
                pi+[-1,1]*pi/4;... % theta k
                ];        
 gf_opt.start=[0, 1e3, 1e4, (rand(1)-0.5)*pi/4,pi+(rand(1)-0.5)*pi/4];
-gf_opt.rmse_thresh=2e-3;
+gf_opt.rmse_thresh=2e3;
 gf_opt.plot=false;
 gf_opt.level=2;
 gf_out=global_fit(predictor,(to_val_fit-to_fit_val_offset)*1e-6,@full_tune_out_polz_model,gf_opt);
@@ -110,7 +111,10 @@ opts = statset('MaxIter',1e4);
 beta0 = gf_out.params%0.2 or 0.8
 %beta0=[0, 1e3, 1*1e3, (rand(1)-0.5)*2*pi]
 fit_mdl_full = fitnlm(predictor,(to_val_fit-to_fit_val_offset)*1e-6,@full_tune_out_polz_model,beta0,...
-    'Options',opts,'Weights',wlin_fit,'CoefficientNames' ,{'tune_out_scalar','reduced_vector','reduce_tensor','phase','thetak'})
+   'Weights',wlin_fit,...
+    'CoefficientNames' ,{'tune_out_scalar','reduced_vector','reduce_tensor','phase','thetak'},...
+    'Options',opts)
+
 fit_vals_full = fit_mdl_full.Coefficients.Estimate;
 fit_uncs_full = fit_mdl_full.Coefficients.SE;
 %
@@ -131,45 +135,133 @@ to_scalar_minus_half_tensor.val=to_scalar_minus_half_tensor.val*1e6+to_fit_val_o
 to_scalar_minus_half_tensor.unc=sqrt(fit_uncs_full(1)^2 + (fit_uncs_full(3)/2)^2);
 to_scalar_minus_half_tensor.unc=to_scalar_minus_half_tensor.unc*1e6;
 
-fprintf('to val model predict %.1f\n',(to_scalar_minus_half_tensor.val_predict*1e-6-725735000))
-fprintf('to val model vals    %.1f\n',(to_scalar_minus_half_tensor.val*1e-6-725735000))
+fprintf('to val model predict %.1f\n',(to_scalar_minus_half_tensor.val_predict*1e-6-725730000))
+fprintf('to val model vals    %.1f\n',(to_scalar_minus_half_tensor.val*1e-6-725730000))
 
 fprintf('to unc model predict %.1f\n',(to_scalar_minus_half_tensor.unc_predict*1e-6))
 fprintf('to unc model vals    %.1f\n',(to_scalar_minus_half_tensor.unc*1e-6))
 fprintf('theta_k %.1f\n',mod(fit_vals_full(5),pi/2))
+fprintf('angle offset %.3f\n',mod(fit_vals_full(4),pi))
 
 
-%%
+% Set up for the bootstrap
+
+full_data_set=[polz_cont,polz_v,polz_theta,to_val_for_polz,to_unc];
+full_data_set=num2cell(full_data_set,2);
+% check that function gives the same answer as the above procedure
+wrap_fun_ans=two_stage_two_dim_to_fit(full_data_set,to_fit_val_offset)*1e6+to_fit_val_offset;
+if abs(diff([to_scalar_minus_half_tensor.val,wrap_fun_ans]))>1e6
+    warning('tune out calc wraper gave a different answer')
+    fprintf('to fit wrapper answer %.1f\n',((wrap_fun_ans)*1e-6-725730000))
+end
+
+
+
+% Do the bootstrap
+
+% %detailed bootstrap
+% boot=bootstrap_se(@two_stage_two_dim_to_fit,full_data_set,...
+%     'opp_arguments',{to_fit_val_offset},...
+%     'plots',true,...
+%     'replace',true,...
+%     'samp_frac_lims',[0.01,1],...%[0.005,0.9]
+%     'num_samp_frac',20,... %20
+%     'num_samp_rep',100,... %1e2
+%     'plot_fig_name','TO fit bootstrap',...
+%     'save_multi_out',0,...
+%     'verbose',3);
+
+%
+boot=bootstrap_se(@two_stage_two_dim_to_fit,full_data_set,...
+    'opp_arguments',{to_fit_val_offset},...
+    'plots',true,...
+    'replace',true,...
+    'samp_frac_lims',1,...%[0.005,0.9]
+    'num_samp_frac',1,... %20
+    'num_samp_rep',100,... %1e2
+    'plot_fig_name','TO fit bootstrap',...
+    'save_multi_out',0,...
+    'verbose',3);
+
+to_scalar_minus_half_tensor.unc_boot=boot.results.se_fun_whole*1e6;
+to_scalar_minus_half_tensor.unc_unc_boot=boot.results.se_se_fun_whole*1e6;
+
+
+
+%
 
 to_wav_val=f2wl(to_scalar_minus_half_tensor.val);
 to_wav_unc=2*to_scalar_minus_half_tensor.unc*const.c/(to_scalar_minus_half_tensor.val^2);
 old_to_wav=413.0938e-9;
 
 fprintf('\n====TO full fit results==========\n')
-fprintf('TO freq             %.1f±(%.0f(fit),%.0f±%.0f(boot)) MHz\n',...
+fprintf('TO freq             %.1f±(%.0f(fit vals),%.0f(fit predict),%.0f±%.0f(boot)) MHz\n',...
     to_scalar_minus_half_tensor.val*1e-6,...
     to_scalar_minus_half_tensor.unc*1e-6,...
+    to_scalar_minus_half_tensor.unc_predict*1e-6,...
     to_scalar_minus_half_tensor.unc_boot*1e-6,...
     to_scalar_minus_half_tensor.unc_unc_boot*1e-6)
-fprintf('diff from TOV1      %.1f±%.1f MHz \n',(to_scalar_minus_half_tensor.val-f2wl(old_to_wav))*1e-6,to_scalar_minus_half_tensor.unc*1e-6)
+fprintf('diff from TOV1      %.0f±%.0f MHz \n',(to_scalar_minus_half_tensor.val-f2wl(old_to_wav))*1e-6,to_scalar_minus_half_tensor.unc*1e-6)
 fprintf('diff from Theory    %e±%e MHz \n',(to_scalar_minus_half_tensor.val-to_freq_theory)*1e-6,to_scalar_minus_half_tensor.unc*1e-6)
 fprintf('TO wavelength       %.6f±%f nm \n',to_wav_val*1e9,to_wav_unc*1e9)
 
-%% Full 2D plot of the fit in 2d stokes space
+%% Full 2D plot of the fit in 2d stokes space, with each scan shown
+% we will plot in the second (Q) and fourth (v) stokes parameters, 
+% we rotate the measured stokes parameters into the convinent basis found from the above fit
+
+%we will compute the second stokes parameter for the data
+polz_q=Q_fun(polz_cont,polz_theta,fit_vals_full(4));
+
 stfig('2d TO fit');
 clf
 [surf_polz_q, surf_polz_v] = meshgrid(linspace(-1,1),linspace(-1,1));
-%full_mdl = @(b,x) b(1) + b(2).*x(:,2) + b(3).*(1+Q_fun(x(:,1),x(:,3),b(4)));%full model for how the tune out behaves
-%TO = fit_vals(1)+fit_vals(2).*R.*cos(T)+fit_vals(3).*R.*sin(T);
-%h = surface(R.*cos(T),R.*sin(T),TO./1e6-fit_vals(1)./1e6);
-
-surf_samp_to=full_mdl(fit_mdl_full.Coefficients.Estimate,[reshape(surf_polz_q,[],1),reshape(surf_polz_v,[],1)])*1e6+to_fit_val_offset;
+surf_mdl_fun = @(b,x) b(1) + (1/2).*x(:,2).*cos(b(5)).*b(2) - (1/2)*D_fun(b(5),x(:,1)).*b(3);%full model for how the tune out behaves
+surf_samp_to=surf_mdl_fun(fit_mdl_full.Coefficients.Estimate,[reshape(surf_polz_q,[],1),reshape(surf_polz_v,[],1)]);
+surf_samp_to=surf_samp_to*1e6+to_fit_val_offset;
 surf_samp_to=reshape(surf_samp_to,size(surf_polz_q,1),size(surf_polz_q,2));
 h=surface(surf_polz_v,surf_polz_q,(surf_samp_to-to_scalar_minus_half_tensor.val)*1e-6);
 colormap(viridis)
 set(h, 'FaceAlpha', 0.7)
 shading interp
 hold on
+
+% try using the fit model directly
+% keep in mind what we fit looks like this
+%result=b(1) + (1/2).*x(:,2).*cos(b(5)).*b(2) - (1/2)*D_fun(b(5),Q_fun(x(:,1),x(:,3),b(4))).*b(3);
+% where Q fun
+% Q_fun(d_p,theta,phi)=d_p.*cos(2.*(theta+phi));
+% i want to pass x to evaluate the model for some target value of V,Q, a slightly hacky approach
+% if we pass in -1*fit_vals_full(4) as 3rd precictor which
+% becomes the 2nd input of Q_fun and will give d_p*cos(0),the first argument of Q_fun is the value it returns
+predict_predictor_input=cat(2,reshape(surf_polz_q,[],1),reshape(surf_polz_v,[],1),repmat(-fit_vals_full(4),numel(surf_polz_v),1));
+[surf_mdl_val,surf_mdl_ci]=predict(fit_mdl_full,predict_predictor_input,'Alpha',1-erf(1/sqrt(2)),'Prediction','Curve');
+%'Prediction','Curve','Prediction','observation'
+surf_mdl_val=surf_mdl_val*1e6+to_fit_val_offset;
+surf_mdl_val=reshape(surf_mdl_val,size(surf_polz_q,1),size(surf_polz_q,2));
+
+if max(reshape(surf_mdl_val-surf_samp_to,[],1))>eps(1)
+    error('model values from prediction and manual method do not agree')
+end
+% hold on
+% h=surface(surf_polz_v,surf_polz_q,(surf_mdl_val-to_scalar_minus_half_tensor.val)*1e-6);
+% colormap(viridis)
+% set(h, 'FaceAlpha', 0.7)
+% shading interp
+
+surf_mdl_ci=surf_mdl_ci*1e6+to_fit_val_offset;
+surf_mdl_ci=reshape(surf_mdl_ci,size(surf_polz_q,1),size(surf_polz_q,2),2);
+
+h=surface(surf_polz_v,surf_polz_q,(surf_mdl_ci(:,:,1)-to_scalar_minus_half_tensor.val)*1e-6);
+colormap(viridis)
+set(h, 'FaceAlpha', 0.7)
+shading interp
+
+h=surface(surf_polz_v,surf_polz_q,(surf_mdl_ci(:,:,2)-to_scalar_minus_half_tensor.val)*1e-6);
+colormap(viridis)
+set(h, 'FaceAlpha', 0.7)
+shading interp
+
+
 scatter3(polz_v,polz_q,(to_val_for_polz-to_scalar_minus_half_tensor.val)*1e-6,'MarkerFaceColor',[0 .75 .75])
 scatter3(0,-1,0*1e-6,'MarkerFaceColor','r')
 grid on
@@ -183,7 +275,8 @@ zlim([-8,10]*1e3)
 view(-25,45)
 
 stfig('2d TO residuals');
-to_mdl_val=surf_mdl(fit_mdl_full.Coefficients.Estimate,[polz_q,polz_v]);
+to_mdl_val=surf_mdl_fun(fit_mdl_full.Coefficients.Estimate,[polz_q,polz_v]);
+to_mdl_val=to_mdl_val*1e6+to_fit_val_offset;
 to_fit_resid=to_val_for_polz-to_mdl_val;
 scatter3(polz_v,polz_q,to_fit_resid*1e-6,'MarkerFaceColor',[0 .75 .75])
 hold on
@@ -198,74 +291,382 @@ xlabel('Fourth Stokes Parameter, V')
 ylabel('Second Stokes Parameter, Q')
 zlabel('Measurments-model (MHz)')
 
+%% Full 2D plot of the fit in 2d stokes space, with each run binned into a single point
+% we will plot in the second (Q) and fourth (v) stokes parameters
+
+stfig('2d TO fit, binned');
+clf
+surf_mdl=surface(surf_polz_v,surf_polz_q,(surf_samp_to-to_scalar_minus_half_tensor.val)*1e-6);
+set(surf_mdl,'linestyle','none')
+%set(surf_mdl,'FaceColor',[255 127 42]./255)
+colormap(viridis)
+set(surf_mdl, 'FaceAlpha', 0.5)
+hold on
+% plot the CI surfaces
+% surf_ci=surface(surf_polz_v,surf_polz_q,(surf_mdl_ci(:,:,1)-to_scalar_minus_half_tensor.val)*1e-6);
+% set(surf_ci,'linestyle','none')
+% set(surf_ci,'FaceColor',[0 0 0])
+% set(surf_ci, 'FaceAlpha', 0.3)
+% surf_ci=surface(surf_polz_v,surf_polz_q,(surf_mdl_ci(:,:,2)-to_scalar_minus_half_tensor.val)*1e-6);
+% set(surf_ci,'linestyle','none')
+% set(surf_ci,'FaceColor',[0 0 0])
+% set(surf_ci, 'FaceAlpha', 0.3)
+
+%bin the measured data
+
+polz_vq=[polz_v,polz_q];
+unique_polz_vq = unique(polz_vq, 'rows');
+unique_polz_vq=unique_polz_vq(sum(isnan(unique_polz_vq),2)==0,:);
+
+% ok this line is very dense
+% use col_row_fun_mat to run the operation on rows of the matrix unique_polz_vq
+% i select the elements of to_val_for_polz that corespond to matching the polz_vq matrix rows and then
+% compute the unc_wmean which returns a vector of weighted mean,weighted unc & unweighted std
+polz_vq_to_val_unc=col_row_fun_mat(@(x) unc_wmean_vec(to_val_for_polz(all(x'==polz_vq,2)),to_unc(all(x'==polz_vq,2))),...
+                unique_polz_vq,2);
+polz_vq_to_val_unc(:,3:5)=polz_vq_to_val_unc;         
+polz_vq_to_val_unc(:,1:2)=unique_polz_vq; 
+%scale
+polz_vq_to_val_unc_scaled=polz_vq_to_val_unc;
+polz_vq_to_val_unc_scaled(:,3)=(polz_vq_to_val_unc(:,3)-to_scalar_minus_half_tensor.val)*1e-6;
+polz_vq_to_val_unc_scaled(:,4)=polz_vq_to_val_unc(:,4)*1e-6; %scale the unc
+polz_vq_to_val_unc_scaled(:,5)=polz_vq_to_val_unc(:,5)*1e-6; %scale the std
+
+plot3d_errorbars(polz_vq_to_val_unc_scaled(:,1), polz_vq_to_val_unc_scaled(:,2), polz_vq_to_val_unc_scaled(:,3), [], [], polz_vq_to_val_unc_scaled(:,4))
+
+scatter3(polz_vq_to_val_unc_scaled(:,1), polz_vq_to_val_unc_scaled(:,2), polz_vq_to_val_unc_scaled(:,3),'MarkerFaceColor',[0 .75 .75])
+scatter3(0,-1,0*1e-6,'MarkerFaceColor','r')
+grid on
+title('Full stokes space representation')
+xlabel('Fourth Stokes Parameter, V')
+ylabel('Second Stokes Parameter, Q')
+zlabel( sprintf('Tune out value-%.1f±%.1f (MHz)',to_scalar_minus_half_tensor.val*1e-6,to_scalar_minus_half_tensor.unc*1e-6))
+set(gcf,'color','w')
+set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
+zlim([-8,10]*1e3)
+view(-25,45)
+hold off
+
+stfig('2d TO residuals, binned');
+polz_vq_to_resid_unc=polz_vq_to_val_unc;
+to_mdl_val=surf_mdl_fun(fit_mdl_full.Coefficients.Estimate,polz_vq_to_resid_unc(:,[2,1]));
+to_mdl_val=to_mdl_val*1e6+to_fit_val_offset;
+
+polz_vq_to_resid_unc(:,3)=polz_vq_to_resid_unc(:,3)-to_mdl_val;
+
+polz_vq_to_resid_unc_scaled=polz_vq_to_resid_unc;
+polz_vq_to_resid_unc_scaled(:,[3,4])=polz_vq_to_resid_unc_scaled(:,[3,4])*1e-6;
+
+scatter3(polz_vq_to_resid_unc_scaled(:,1), polz_vq_to_resid_unc_scaled(:,2), polz_vq_to_resid_unc_scaled(:,3),'MarkerFaceColor',[0 .75 .75])
+hold on
+plot3d_errorbars(polz_vq_to_resid_unc_scaled(:,1), polz_vq_to_resid_unc_scaled(:,2), polz_vq_to_resid_unc_scaled(:,3), [], [], polz_vq_to_resid_unc_scaled(:,4))
+surf_mdl=surface(surf_polz_v,surf_polz_q,surf_polz_q.*0);
+set(surf_mdl,'linestyle','none')
+set(surf_mdl,'FaceColor',[255 127 42]./255)
+set(surf_mdl, 'FaceAlpha', 0.5)
+
+surf_ci=surface(surf_polz_v,surf_polz_q,(surf_mdl_ci(:,:,1)-surf_samp_to)*1e-6);
+set(surf_ci,'linestyle','none')
+set(surf_ci,'FaceColor',[0 0 0])
+set(surf_ci, 'FaceAlpha', 0.3)
+surf_ci=surface(surf_polz_v,surf_polz_q,(surf_mdl_ci(:,:,2)-surf_samp_to)*1e-6);
+set(surf_ci,'linestyle','none')
+set(surf_ci,'FaceColor',[0 0 0])
+set(surf_ci, 'FaceAlpha', 0.3)
+
+
+hold off
+zlim([-1,1]*1e3)
+view(-25,45)
+xlabel('Fourth Stokes Parameter, V')
+ylabel('Second Stokes Parameter, Q')
+zlabel('Measurments-model (MHz)')
+
+
+
 %% Plots of tune-out dependance on the individual stokes parameters
-modelfun = @(b,x) b(1) + b(2).*x(:,1);
 
-vec_corr_to = to_val_for_polz-polz_v.*fit_vals(2);
-beta0 = [fit_vals(1),fit_vals(3)];
-% fit_mdl_t = fitnlm(polz_q,vec_corr_to./1e6,modelfun,beta0,...
-%     'Options',opts,'Weights',wlin,'CoefficientNames' ,{'tune_out','tensor'});
-fit_mdl_t=full_mdl
+% plot with Q, stokes 2nd
+samp_q=col_vec(linspace(-1.1,1.1,1e4));
+predict_predictor_input=cat(2,samp_q,samp_q*0,repmat(-fit_vals_full(4),numel(samp_q),1));
+[fit_mdl_val,fit_mdl_ci]=predict(fit_mdl_full,predict_predictor_input,'Alpha',1-erf(1/sqrt(2)),'Prediction','Curve');
+%'Prediction','Curve','Prediction','observation'
+fit_mdl_val=fit_mdl_val*1e6+to_fit_val_offset;
 
-tens_corr_to = to_val_for_polz-polz_q.*fit_vals(3);
-beta0 = [fit_vals(1),fit_vals(2)];
-fit_mdl_v = fitnlm(polz_v,tens_corr_to./1e6,modelfun,beta0,...
-    'Options',opts,'Weights',wlin,'CoefficientNames' ,{'tune_out','vector'});
+fit_mdl_ci=fit_mdl_ci*1e6+to_fit_val_offset;
+stfig('Q dep');
+clf
+patch([samp_q', fliplr(samp_q')],...
+    ([fit_mdl_ci(:,1)', fliplr(fit_mdl_ci(:,2)')]-to_scalar_minus_half_tensor.val).*1e-6,...
+    [1,1,1].*0.7,'EdgeColor','none')
+hold on
+plot(samp_q,(fit_mdl_val-to_scalar_minus_half_tensor.val)*1e-6,'k')
+xlabel('Q value')
+ylabel('Tune out -TOSMHT (MHz)')
+title('V=0 extrapolation')
+% now I want to plot every scan with its error bar that has been corrected onto V=0
 
-disp_config.fig_name = 'TO fit stokes 4';
-disp_config.plot_title='';
-disp_config.x_label = 'Fourth Stokes Parameter, V';
-disp_config.plot_offset.val=fit_vals(1)./1e6;
-disp_config.plot_offset.unc=fit_uncs(1)./1e6;
-%plot_binned_nice(disp_config,x_dat,y_dat,weights,fit_mdl)
-plot_binned_nice(disp_config,polz_v,tens_corr_to./1e6,wlin,fit_mdl_v)
+shift_vq=v_correcting_shift(polz_v,polz_q,fit_mdl_full);
 
-disp_config.fig_name = 'TO fit stokes 2';
-disp_config.x_label = 'Second Stokes Parameter, Q';
-disp_config.plot_offset.val=fit_vals(1)./1e6;
-disp_config.plot_offset.unc=fit_uncs(1)./1e6;
-plot_binned_nice(disp_config,polz_q,vec_corr_to./1e6,wlin,fit_mdl_t)
+shifted_scaled_to_vals=(to_val_for_polz-to_scalar_minus_half_tensor.val+shift_vq(:,1)*1e6)*1e-6;
+errorbar(polz_q,shifted_scaled_to_vals,to_unc*1e-6...
+     ,'o','CapSize',0,'MarkerSize',5,'Color','r',...
+     'LineWidth',1.5);
+%ylim([min(shifted_scaled_to_vals),max(shifted_scaled_to_vals)])
+ylim([-0.5,0.5]*1e4)
+xlim([-1.1,1.1])
 
-%% Residuals
-to_res_run = to_val_for_polz-predict(fit_mdl,[polz_q,polz_v]);
-to_res = to_val_for_polz-predict(fit_mdl,[polz_q,polz_v]);
-stfig('residuals')
-sfigure(33099);
-plot(to_res_run./1e6)
-xlabel('index')
-ylabel('residual (Mhz)')
-sfigure(4445005);
-histfit(to_res./1e6,50)
-xlabel('residual (MHz)')
-ylabel('count')
+% do the same for V, stokes 4th
+samp_v=col_vec(linspace(-1.1,1.1,1e4));
+predict_predictor_input=cat(2,samp_v*0-1,samp_v,repmat(-fit_vals_full(4),numel(samp_v),1));
+[fit_mdl_val,fit_mdl_ci]=predict(fit_mdl_full,predict_predictor_input,'Alpha',1-erf(1/sqrt(2)),'Prediction','Curve');
+%'Prediction','Curve','Prediction','observation'
+fit_mdl_val=fit_mdl_val*1e6+to_fit_val_offset;
+fit_mdl_ci=fit_mdl_ci*1e6+to_fit_val_offset;
+stfig('V dep');
+clf
+patch([samp_v', fliplr(samp_v')],...
+    ([fit_mdl_ci(:,1)', fliplr(fit_mdl_ci(:,2)')]-to_scalar_minus_half_tensor.val).*1e-6,...
+    [1,1,1].*0.7,'EdgeColor','none')
+hold on
+plot(samp_v,(fit_mdl_val-to_scalar_minus_half_tensor.val)*1e-6,'k')
+xlabel('V value')
+ylabel('Tune out -TOSMHT(MHz)')
+title('Q=-1 extrapolation')
+shifted_scaled_to_vals=(to_val_for_polz-to_scalar_minus_half_tensor.val+shift_vq(:,2)*1e6)*1e-6;
+
+errorbar(polz_v,shifted_scaled_to_vals,to_unc*1e-6...
+     ,'o','CapSize',0,'MarkerSize',5,'Color','r',...
+     'LineWidth',1.5);
+%ylim([min(shifted_scaled_to_vals),max(shifted_scaled_to_vals)]) 
+ylim([-1,0.8].*1e4) 
+xlim([-1.1,1.1])
+ 
+
+%% Plot the V,Q plots with binned data
+
+
+% plot with Q, stokes 2nd
+samp_q=col_vec(linspace(-1.1,1.1,1e4));
+predict_predictor_input=cat(2,samp_q,samp_q*0,repmat(-fit_vals_full(4),numel(samp_q),1));
+[fit_mdl_val,fit_mdl_ci]=predict(fit_mdl_full,predict_predictor_input,'Alpha',1-erf(1/sqrt(2)),'Prediction','Curve');
+%'Prediction','Curve','Prediction','observation'
+fit_mdl_val=fit_mdl_val*1e6+to_fit_val_offset;
+
+fit_mdl_ci=fit_mdl_ci*1e6+to_fit_val_offset;
+stfig('Q dep,binned');
+clf
+patch([samp_q', fliplr(samp_q')],...
+    ([fit_mdl_ci(:,1)', fliplr(fit_mdl_ci(:,2)')]-to_scalar_minus_half_tensor.val).*1e-6,...
+    [1,1,1].*0.7,'EdgeColor','none')
+hold on
+plot(samp_q,(fit_mdl_val-to_scalar_minus_half_tensor.val)*1e-6,'k')
+xlabel('Q value')
+ylabel('Tune out -TOSMHT (MHz)')
+title('V=0 extrapolation')
+% now I want to plot every scan with its error bar that has been corrected onto V=0
+
+shift_vq=v_correcting_shift(polz_vq_to_val_unc(:,1),polz_vq_to_val_unc(:,2),fit_mdl_full);
+
+shifted_scaled_to_vals=(polz_vq_to_val_unc(:,3)-to_scalar_minus_half_tensor.val+shift_vq(:,1)*1e6)*1e-6;
+errorbar(polz_vq_to_val_unc(:,2),shifted_scaled_to_vals,polz_vq_to_val_unc(:,5)*1e-6...
+     ,'o','CapSize',0,'Marker','none','Color','g',...
+     'LineWidth',1.5);
+errorbar(polz_vq_to_val_unc(:,2),shifted_scaled_to_vals,polz_vq_to_val_unc(:,4)*1e-6...
+     ,'o','CapSize',0,'MarkerSize',5,'Color','r',...
+     'LineWidth',1.5);
+%ylim([min(shifted_scaled_to_vals),max(shifted_scaled_to_vals)])
+ylim([-2.5,1.2]*1e3)
+xlim([-1.1,1.1])
+hold off
+
+stfig('Q dep,binned,residuals');
+subplot(2,1,1)
+samp_q=polz_vq_to_val_unc(:,2);
+predict_predictor_input=cat(2,samp_q,samp_q*0,repmat(-fit_vals_full(4),numel(samp_q),1));
+fit_mdl_val=predict(fit_mdl_full,predict_predictor_input,'Alpha',1-erf(1/sqrt(2)),'Prediction','Curve');
+%'Prediction','Curve','Prediction','observation'
+fit_mdl_val=fit_mdl_val*1e6+to_fit_val_offset;
+shifted_scaled_to_vals=(polz_vq_to_val_unc(:,3)+shift_vq(:,1)*1e6-fit_mdl_val)*1e-6;
+errorbar(samp_q,shifted_scaled_to_vals,polz_vq_to_val_unc(:,5)*1e-6...
+     ,'o','CapSize',0,'Marker','none','Color','g',...
+     'LineWidth',1.5);
+hold on
+errorbar(samp_q,shifted_scaled_to_vals,polz_vq_to_val_unc(:,4)*1e-6...
+     ,'o','CapSize',0,'MarkerSize',5,'Color','r',...
+     'LineWidth',1.5);
+hold off
+subplot(2,1,2)
+residuals_num_ste=shifted_scaled_to_vals./(polz_vq_to_val_unc(:,4)*1e-6);
+plot(samp_q,residuals_num_ste,'ok')
+fprintf('sd of (residuals/ste) in Q dep %.1f \n',std(residuals_num_ste))
 
 
 
-%% TO DO: BOOTSTRAP THE TO VALUE
+% do the same for V, stokes 4th
+samp_v=col_vec(linspace(-1.1,1.1,1e4));
+predict_predictor_input=cat(2,samp_v*0-1,samp_v,repmat(-fit_vals_full(4),numel(samp_v),1));
+[fit_mdl_val,fit_mdl_ci]=predict(fit_mdl_full,predict_predictor_input,'Alpha',1-erf(1/sqrt(2)),'Prediction','Curve');
+%'Prediction','Curve','Prediction','observation'
+fit_mdl_val=fit_mdl_val*1e6+to_fit_val_offset;
+fit_mdl_ci=fit_mdl_ci*1e6+to_fit_val_offset;
+stfig('V dep,binned');
+clf
+patch([samp_v', fliplr(samp_v')],...
+    ([fit_mdl_ci(:,1)', fliplr(fit_mdl_ci(:,2)')]-to_scalar_minus_half_tensor.val).*1e-6,...
+    [1,1,1].*0.7,'EdgeColor','none')
+hold on
+plot(samp_v,(fit_mdl_val-to_scalar_minus_half_tensor.val)*1e-6,'k')
+xlabel('V value')
+ylabel('Tune out -TOSMHT (MHz)')
+title('Q=-1 extrapolation')
+
+shifted_scaled_to_vals=(polz_vq_to_val_unc(:,3)-to_scalar_minus_half_tensor.val+shift_vq(:,2)*1e6)*1e-6;
+errorbar(polz_vq_to_val_unc(:,1),shifted_scaled_to_vals,polz_vq_to_val_unc(:,5)*1e-6...
+     ,'o','CapSize',0,'Marker','none','Color','g',...
+     'LineWidth',1.0);
+errorbar(polz_vq_to_val_unc(:,1),shifted_scaled_to_vals,polz_vq_to_val_unc(:,4)*1e-6...
+     ,'o','CapSize',0,'MarkerSize',5,'Color','r',...
+     'LineWidth',2);
+%ylim([min(shifted_scaled_to_vals),max(shifted_scaled_to_vals)]) 
+ylim([-8,8].*1e3) 
+xlim([-1.1,1.1])
+
+stfig('V dep,binned,residuals');
+subplot(2,1,1)
+samp_v=polz_vq_to_val_unc(:,1);
+predict_predictor_input=cat(2,samp_v*0-1,samp_v,repmat(-fit_vals_full(4),numel(samp_v),1));
+fit_mdl_val=predict(fit_mdl_full,predict_predictor_input,'Alpha',1-erf(1/sqrt(2)),'Prediction','Curve');
+%'Prediction','Curve','Prediction','observation'
+fit_mdl_val=fit_mdl_val*1e6+to_fit_val_offset;
+shifted_scaled_to_vals=(polz_vq_to_val_unc(:,3)+shift_vq(:,2)*1e6-fit_mdl_val)*1e-6;
+errorbar(samp_v,shifted_scaled_to_vals,polz_vq_to_val_unc(:,5)*1e-6...
+     ,'o','CapSize',0,'Marker','none','Color','g',...
+     'LineWidth',1.5);
+hold on
+errorbar(samp_v,shifted_scaled_to_vals,polz_vq_to_val_unc(:,4)*1e-6...
+     ,'o','CapSize',0,'MarkerSize',5,'Color','r',...
+     'LineWidth',1.5);
+hold off
+subplot(2,1,2)
+residuals_num_ste=shifted_scaled_to_vals./(polz_vq_to_val_unc(:,4)*1e-6);
+plot(polz_vq_to_val_unc(:,2),residuals_num_ste,'ok')
+fprintf('sd of (residuals/ste) in V dep %.1f \n',std(residuals_num_ste))
+
 
 
 %%
-full_data_set=[polz_cont,polz_v,polz_theta,to_val_for_polz,to_unc];
-full_data_set=num2cell(full_data_set,2);
-% check that function gives the same answer as the above procedure
-fprintf('%.1f\n',(two_stage_two_dim_to_fit(full_data_set)*1e-6-725735000))
 
-%%
+function result=Q_fun(d_p,theta,phi)
+result=d_p.*cos(2.*(theta+phi));
+%fprintf('Q val %f\n',result);
+end
 
-
-boot=bootstrap_se(@two_stage_two_dim_to_fit,full_data_set,...
-    'plots',true,...
-    'replace',true,...
-    'samp_frac_lims',[0.01,1],...%[0.005,0.9]
-    'num_samp_frac',100,... %20
-    'num_samp_rep',100,... %1e2
-    'plot_fig_name','TO fit bootstrap',...
-    'save_multi_out',0,...
-    'verbose',3);
+function result=D_fun(theta_k,Q)
+result=3*(sin(theta_k)^2)*((1/2)+(Q/2))-1;
+%fprintf('D val %f\n',result);
+end
 
 
-to_scalar_minus_half_tensor.unc_boot=boot.results.se_fun_whole*1e6;
-to_scalar_minus_half_tensor.unc_unc_boot=boot.results.se_se_fun_whole*1e6;
+function result=full_tune_out_polz_model(b,x)
+%tune_out_scalar
+%reduced_vector
+%reduce_tensor
+%angle between polz measurment basis and B cross k
+% theta k
+
+result=b(1) + (1/2).*x(:,2).*cos(b(5)).*b(2) - (1/2)*D_fun(b(5),Q_fun(x(:,1),x(:,3),b(4))).*b(3);
+end
+
+
+function shift_vq=v_correcting_shift(v_in,q_in,mdl)
+
+q_in=col_vec(q_in);
+v_in=col_vec(v_in);
+if numel(v_in)~=numel(q_in)
+    error('v,q must be same size')
+end
+
+predict_predictor_input=cat(2,q_in,v_in,repmat(-mdl.Coefficients.Estimate(4),numel(v_in),1));
+fit_mdl_val=predict(mdl,predict_predictor_input);
+
+predict_predictor_input=cat(2,q_in,v_in*0,repmat(-mdl.Coefficients.Estimate(4),numel(v_in),1));
+fit_mdl_v_zero=predict(mdl,predict_predictor_input);
+
+predict_predictor_input=cat(2,q_in*0-1,v_in,repmat(-mdl.Coefficients.Estimate(4),numel(v_in),1));
+fit_mdl_q_zero=predict(mdl,predict_predictor_input);
+
+shift_vq=[fit_mdl_v_zero-fit_mdl_val,fit_mdl_q_zero-fit_mdl_val];
+
+end
+
+function to_scalar_minus_half_tensor=two_stage_two_dim_to_fit(full_data,fit_offset)
+%return the value in MHZ away from fit_offset
+
+full_data=cell2mat(full_data);
+
+polz_cont=full_data(:,1);
+polz_v=full_data(:,2);
+polz_theta=full_data(:,3);
+to_val_for_polz=full_data(:,4);
+to_unc=full_data(:,5);
+wlin=1./(to_unc.^2);
+
+predictor = [polz_cont,polz_v,polz_theta];
+to_val_fit = to_val_for_polz;
+wlin_fit = wlin./sum(wlin);
+
+% so here we will use a single peice of information from the atomic theory, namely the gradient of the reduced tensor
+% term, from Li-Yan Tang's document "Response to Bryce's questions" \lambda_to (theta_p=0)>\lambda_to (theta_p=90)
+% & as the polarizability decreased with increasing wavelength d \alpha^Scalar(\lambda)/ d \lambda <0 
+% ? a increase in angle theta_p decreases the polarizability
+% & as the prefactor in front of the tensor term decreases with increasing theta_p 
+% ? \alpha^Tensor(\omega?\omega_TO)>0
+% as \alpha^Scalar(\omega)/ d \omega >0
+%  ? the reduced tensor term is positive
+tune_out_vals_scaled=(to_val_fit-fit_offset)*1e-6;
+
+gf_opt=[];
+gf_opt.domain=[[-1,1]*1e5;...   %tune_out_scalar
+               [-1,1]*1e5;...  %reduced_vector*cos_theta_k
+               [0,1]*1e5;...  %reduce_tensor
+               [-1,1]*pi/2;...  %angle between polz measurment basis and B cross k
+               pi+[-1,1]*pi/4;... % theta k
+               ];        
+gf_opt.start=[0, 1e3, 1e4, (rand(1)-0.5)*pi/4,pi+(rand(1)-0.5)*pi/4];
+gf_opt.rmse_thresh=2e3;
+gf_opt.plot=false;
+gf_opt.level=2;
+gf_out=global_fit(predictor,tune_out_vals_scaled,@full_tune_out_polz_model,gf_opt);
+
+%
+opts = statset('MaxIter',1e4);
+beta0 = gf_out.params;%0.2 or 0.8
+%beta0=[0, 1e3, 1*1e3, (rand(1)-0.5)*2*pi]
+fit_mdl_full = fitnlm(predictor,tune_out_vals_scaled,@full_tune_out_polz_model,beta0,...
+   'Weights',wlin_fit,...
+    'CoefficientNames' ,{'tune_out_scalar','reduced_vector','reduce_tensor','phase','thetak'},...
+    'Options',opts);
+
+fit_vals_full = fit_mdl_full.Coefficients.Estimate;
+fit_uncs_full = fit_mdl_full.Coefficients.SE;
+%
+
+
+if fit_vals_full(3)<0
+    warning('fit has returned a reduced tensor term is less than zero')
+    to_scalar_minus_half_tensor=nan;
+else
+    to_scalar_minus_half_tensor=predict(fit_mdl_full,[1,0,-fit_vals_full(4)+pi/2]);
+    to_scalar_minus_half_tensor=to_scalar_minus_half_tensor;
+end
+
+end
+
+
+
+
+
 
 
 
@@ -317,83 +718,43 @@ to_scalar_minus_half_tensor.unc_unc_boot=boot.results.se_se_fun_whole*1e6;
 % % Write out the results
 
 
-function result=Q_fun(d_p,theta,phi)
-result=d_p.*cos(2.*(theta+phi));
-%fprintf('Q val %f\n',result);
-end
-
-function result=D_fun(theta_k,Q)
-result=3*(sin(theta_k)^2)*((1/2)+(Q/2))-1;
-%fprintf('D val %f\n',result);
-end
-
-
-function result=full_tune_out_polz_model(b,x)
-%tune_out_scalar
-%reduced_vector
-%reduce_tensor
-%angle between polz measurment basis and B cross k
-% theta k
-
-result=b(1) + (1/2).*x(:,2).*cos(b(5)).*b(2) - (1/2)*D_fun(b(5),Q_fun(x(:,1),x(:,3),b(4))).*b(3);
-end
-
-
-
-
-
-
-function to_scalar_minus_half_tensor=two_stage_two_dim_to_fit(full_data)
-
-full_data=cell2mat(full_data);
-
-polz_cont=full_data(:,1);
-polz_v=full_data(:,2);
-polz_theta=full_data(:,3);
-to_val_for_polz=full_data(:,4);
-to_unc=full_data(:,5);
-wlin=1./(to_unc.^2);
-
-full_mdl = @(b,x) b(1) + b(2).*x(:,2) + b(3).*(1+Q_fun(x(:,1),x(:,3),b(4)));%full model for how the tune out behaves
-vars = [polz_cont,polz_v,polz_theta];
-to_val_fit = to_val_for_polz;
-wlin_fit = wlin./sum(wlin);
-to_fit_val_offset=wmean(to_val_fit,wlin_fit);
-
- gf_opt=[];
-gf_opt.domain=[[-1,1]*1e5;...   %offset
-               [-1,1]*1e4;...  %vector
-               [-1,1]*1e4;...  %tensor
-               [-1,1]*4*pi;...  %phase
-               ];        
-gf_opt.start=[0, 1e3, 1*1e3, (rand(1)-0.5)*2*pi];
-gf_opt.rmse_thresh=500;
-gf_opt.plot=false;
-gf_opt.level=2;
-gf_out=global_fit(vars,(to_val_fit-to_fit_val_offset)*1e-6,full_mdl,gf_opt);
-
-
-%
-opts = statset('MaxIter',1e4);
-beta0 = gf_out.params;%0.2 or 0.8
-fit_mdl_full = fitnlm(vars,(to_val_fit-to_fit_val_offset)*1e-6,full_mdl,beta0,...
-    'Options',opts,'Weights',wlin_fit,'CoefficientNames' ,{'tune_out','vector','tensor','phase'});
-fit_vals_full = fit_mdl_full.Coefficients.Estimate;
-%
-%second fit with phase fixed
-polz_q = Q_fun(polz_cont,polz_theta,fit_vals_full(4));%second stokes parameter, relative to the vector that is otrhogonal to the B feild and beam axis
-% TO CHECK
-%Q_run = Q_fun(polz_cont,polz_theta,fit_vals(4));%second stokes parameter for each run
-full_mdl = @(b,x) b(1) + b(2).*x(:,2) + b(3).*(1+x(:,1));%full model for how the tune out behaves
-vars = [polz_q,polz_v];
-beta0 = fit_vals_full(1:3);
-opts = statset('MaxIter',1e4);
-fit_mdl = fitnlm(vars,(to_val_fit-to_fit_val_offset)*1e-6,full_mdl,beta0,...
-    'Options',opts,'Weights',wlin_fit,'CoefficientNames' ,{'tune_out','vector','tensor'});
-fit_coefs_fixed_phase.val = fit_mdl.Coefficients.Estimate;
-fit_coefs_fixed_phase.unc = fit_mdl.Coefficients.SE;
-
-to_scalar_minus_half_tensor=[];
-to_scalar_minus_half_tensor=(fit_coefs_fixed_phase.val(1)-0*fit_coefs_fixed_phase.val(3))*1e6+to_fit_val_offset;
-
-end
+% %% OLD WAY
+% modelfun = @(b,x) b(1) + b(2).*x(:,1);
+% 
+% vec_corr_to = to_val_for_polz-polz_v.*fit_vals(2);
+% beta0 = [fit_vals(1),fit_vals(3)];
+% % fit_mdl_t = fitnlm(polz_q,vec_corr_to./1e6,modelfun,beta0,...
+% %     'Options',opts,'Weights',wlin,'CoefficientNames' ,{'tune_out','tensor'});
+% fit_mdl_t=full_mdl
+% 
+% tens_corr_to = to_val_for_polz-polz_q.*fit_vals(3);
+% beta0 = [fit_vals(1),fit_vals(2)];
+% fit_mdl_v = fitnlm(polz_v,tens_corr_to./1e6,modelfun,beta0,...
+%     'Options',opts,'Weights',wlin,'CoefficientNames' ,{'tune_out','vector'});
+% 
+% disp_config.fig_name = 'TO fit stokes 4';
+% disp_config.plot_title='';
+% disp_config.x_label = 'Fourth Stokes Parameter, V';
+% disp_config.plot_offset.val=fit_vals(1)./1e6;
+% disp_config.plot_offset.unc=fit_uncs(1)./1e6;
+% %plot_binned_nice(disp_config,x_dat,y_dat,weights,fit_mdl)
+% plot_binned_nice(disp_config,polz_v,tens_corr_to./1e6,wlin,fit_mdl_v)
+% 
+% disp_config.fig_name = 'TO fit stokes 2';
+% disp_config.x_label = 'Second Stokes Parameter, Q';
+% disp_config.plot_offset.val=fit_vals(1)./1e6;
+% disp_config.plot_offset.unc=fit_uncs(1)./1e6;
+% plot_binned_nice(disp_config,polz_q,vec_corr_to./1e6,wlin,fit_mdl_t)
+% 
+% %% Residuals
+% to_res_run = to_val_for_polz-predict(fit_mdl,[polz_q,polz_v]);
+% to_res = to_val_for_polz-predict(fit_mdl,[polz_q,polz_v]);
+% stfig('residuals')
+% sfigure(33099);
+% plot(to_res_run./1e6)
+% xlabel('index')
+% ylabel('residual (Mhz)')
+% sfigure(4445005);
+% histfit(to_res./1e6,50)
+% xlabel('residual (MHz)')
+% ylabel('count')

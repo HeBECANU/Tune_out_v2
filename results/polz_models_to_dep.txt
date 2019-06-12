@@ -1,0 +1,13 @@
+polz model (no cliping of contrast)
+725736982.4±(27(fit vals),33(fit predict),36±3(boot)) MHz
+polz model (with cliping of contrast)
+725736982.1±(26(fit vals),33(fit predict),140±45(boot)) MHz
+only the polz data
+725736812.5±(43(fit vals),35(fit predict),36±2(boot)) MHz
+
+
+20190612T1045
+only polz data, with theta wrapping applied
+725736812.5±(28(fit vals),35(fit predict),39±3(boot)) MHz
+
+

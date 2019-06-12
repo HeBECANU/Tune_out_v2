@@ -191,9 +191,9 @@ end
 if  ~spatial_blur==0
     counts=imgaussfilt(counts,spatial_blur);
 end
-%subplot(2,2,2)
-clf
+
 stfig('detector dist. after knife');
+subplot(2,2,2)
 imagesc(10^3*centers{1},10^3*centers{2},transpose(counts))
 colormap(viridis)
 set(gca,'Ydir','normal')
