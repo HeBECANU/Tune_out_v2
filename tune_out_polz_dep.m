@@ -20,15 +20,7 @@ addpath(genpath_exclude(fullfile(this_folder,'bin'),'\.'))
 
 %%
 hebec_constants %call the constants function that makes some globals
-%% Display options
-opts = statset('MaxIter',1e4);
-ci_size=1-erf(1/sqrt(2));%1-erf(zvalue/sqrt(2)) %confidence interval for cutting outliers
-disp_config.font_name = 'Times New Roman';%'cmr10';
-disp_config.font_size_global=14;
-disp_config.opts=statset('nlinfit');
-disp_config.colors_main = [[75,151,201];[193,114,66];[87,157,95]];
-disp_config.bin_tol=0.01;
-
+%% import data
 % %% HWP
 % % loop_config.dir = {
 % %     '..\scratch_data\20190227_qwp_270',
@@ -63,7 +55,10 @@ wlin=1./(to_unc.^2);
 
 %% polarisation model/data options
 pol_opts.location = 'post';%post, pre_cen, pre_left, pre_right
-pol_opts.predict = 'only_data';%'full_fit_pref_fit','full_fit_pref_data','full_fit_only_fit','only_data'; %obs (obsovation) fit (pertial fit) full_fit (fit with all parameters free)
+pol_opts.predict_method = 'only_data';%'full_fit_pref_fit','full_fit_pref_data','full_fit_only','only_data'; %obs (obsovation) fit (pertial fit) full_fit (fit with all parameters free)
+                                        %'interp_only','interp_pref_data','interp_pref_interp'
+                                        %'gauss_only','gauss_pref_data','gauss_pref_interp'
+pol_opts.smoothing=8; %deg
 
 pol_opts.hwp=data.drift.wp.hwp;
 pol_opts.qwp=data.drift.wp.qwp;
@@ -74,7 +69,7 @@ polz_v=pol_model.v.val;
 polz_cont=pol_model.cont.val;
 
 
-%% Fit the full model to all of our data
+% Fit the full model to all of our data
 
 %P_fun=@(Q) ((1/2)+(Q/2));
 %full_mdl = @(b,x) b(1) + (1/2).*x(:,2).*b(2) +(1/2 - (3/2)*P_fun(Q_fun(x(:,1),x(:,3),b(4))).*b(3);%full model for how the tune out behaves
@@ -138,13 +133,13 @@ to_scalar_minus_half_tensor.unc=to_scalar_minus_half_tensor.unc*1e6;
 
 fprintf('to val model predict %.1f\n',(to_scalar_minus_half_tensor.val_predict*1e-6-725730000))
 fprintf('to val model vals    %.1f\n',(to_scalar_minus_half_tensor.val*1e-6-725730000))
-
 fprintf('to unc model predict %.1f\n',(to_scalar_minus_half_tensor.unc_predict*1e-6))
 fprintf('to unc model vals    %.1f\n',(to_scalar_minus_half_tensor.unc*1e-6))
 fprintf('theta_k %.1f\n',mod(fit_vals_full(5),pi/2))
 fprintf('angle offset %.3f\n',mod(fit_vals_full(4),pi))
+fprintf('fit rmse %f\n',fit_mdl_full.RMSE)
 
-
+%
 % Set up for the bootstrap
 
 full_data_set=[polz_cont,polz_v,polz_theta,to_val_for_polz,to_unc];
@@ -206,7 +201,7 @@ fprintf('diff from TOV1      %.0f±%.0f MHz \n',(to_scalar_minus_half_tensor.val-
 fprintf('diff from Theory    %e±%e MHz \n',(to_scalar_minus_half_tensor.val-to_freq_theory)*1e-6,to_scalar_minus_half_tensor.unc*1e-6)
 fprintf('TO wavelength       %.6f±%f nm \n',to_wav_val*1e9,to_wav_unc*1e9)
 
-% Full 2D plot of the fit in 2d stokes space, with each scan shown
+%% Full 2D plot of the fit in 2d stokes space, with each scan shown
 % we will plot in the second (Q) and fourth (v) stokes parameters, 
 % we rotate the measured stokes parameters into the convinent basis found from the above fit
 

@@ -1,7 +1,9 @@
 polz model (no cliping of contrast)
 725736982.4±(27(fit vals),33(fit predict),36±3(boot)) MHz
+
 polz model (with cliping of contrast)
 725736982.1±(26(fit vals),33(fit predict),140±45(boot)) MHz
+
 only the polz data
 725736812.5±(43(fit vals),35(fit predict),36±2(boot)) MHz
 
@@ -22,13 +24,83 @@ diff from Theory    3.324646e+02±2.728912e+01 MHz
 TO wavelength       413.095280±0.000031 nm 
 
 
-====TO full fit results==========
-TO freq             725736982.1±(26(fit vals),33(fit predict),143±44(boot)) MHz
-diff from TOV1      -2431±26 MHz 
-diff from Theory    5.020543e+02±2.636584e+01 MHz 
-TO wavelength       413.095184±0.000030 nm 
 
 
 
+using post data with gauss interpolation (only interp data),3 deg
+TO freq             725736822.8±(30(fit vals),38(fit predict),46±3(boot)) MHz
 
-725735731.7
+using post data with gauss interpolation (only interp data),8 deg
+TO freq             725736802.1±(31(fit vals),39(fit predict),49±3(boot)) MHz
+
+using post data with gauss interpolation(only interp data),10 deg
+TO freq             725736818.6±(29(fit vals),38(fit predict),48±3(boot)) MHz
+
+using post data with gauss interpolation(only interp data),20 deg
+TO freq             725736933.1±(48(fit vals),60(fit predict),62±3(boot)) MHz
+
+
+20190612T1937
+found bug with how the method was chosing what data was returned
+
+using post data with gauss interpolation (only interp data),8 deg
+TO freq             725736794.9±(33(fit vals),41(fit predict),89±33(boot)) MHz
+
+using post data with fit (only fit data)
+TO freq             725737008.1±(28(fit vals),35(fit predict),43±4(boot)) MHz
+
+raw post data
+TO freq             725736812.5±(29(fit vals),35(fit predict),37±2(boot)) MHz
+
+changeing handedness
+fliping 
+NaN,339.5,93,89,0.19,180,1 to +ve gives a minor impovement
+
+20190612T2001
+Only data
+TO freq             725736812.5±(28(fit vals),35(fit predict),33±3(boot)) MHz
+
+interp_only_interp
+TO freq             725736861.0±(30(fit vals),37(fit predict),42±3(boot)) MHz
+delt only data 		-48
+
+gauss_only_interp,smothing=8deg
+TO freq             725736794.9±(33(fit vals),41(fit predict),53±4(boot)) MHz
+delt only data 		17
+
+gauss_only_interp,smothing=16deg (clearly too much)
+TO freq             725736747.0±(34(fit vals),43(fit predict),50±4(boot)) MHz
+delt only data 		65.5000
+
+full_fit_only
+TO freq             725737008.1±(28(fit vals),35(fit predict),103±42(boot)) MHz
+delt only data 		-195.6000
+
+
+
+20190612T2030
+adding pi/2 to the theta that full_fit gives bings value to 725736745.1
+a=a+pi/2; %HACK HACK HACK, DEV DEV DEV REMOVE FOR DEPLOY
+maybe its to do with how i wrap theta for the qwp
+i think i may have found it for the qwp i was using unwrap with pi/4 which was adding a shift
+i have changed this for all the methods
+
+Only data
+TO freq             725736812.5±(28(fit vals),35(fit predict),33±3(boot)) MHz
+
+full_fit_only
+TO freq             725736844.1±(27(fit vals),34(fit predict),94±34(boot)) MHz
+
+full_fit_pref_fit
+TO freq             725736835.0±(25(fit vals),32(fit predict),130±40(boot)) MHz
+
+
+interp_only
+TO freq             725736821.9±(28(fit vals),35(fit predict),175±39(boot)) MHz
+
+gauss_only,smothing=8deg
+TO freq             725736708.6±(31(fit vals),39(fit predict),47±3(boot)) MHz
+
+
+
+		
