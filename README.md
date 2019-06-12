@@ -66,6 +66,7 @@ DAC master trig ---------->		Digital output cards
 ```
 
 ## Install
+The best way is to install using git, however this can be complicated by the submodule branch requirements (most need to be on dev branch as of 2019-06-13)
 ``` 
 git clone --recurse-submodules -j8 https://github.com/brycehenson/Tune_out_v2.git 
 ```
@@ -73,6 +74,7 @@ then to update
 ```
 git submodule update --init --recursive --remote --merge
 ```
+If this does not work for you I have uploaded a archive of my code here [tune out code 20190613T0831 7z (33MB)](https://cloudstor.aarnet.edu.au/plus/s/UZQ7xuOe3z9Yg6S) keep in mind this will almost certianly be out of date.
 
 
 ![An example TO](/figs/to_fit.png)
