@@ -102,5 +102,47 @@ gauss_only,smothing=8deg
 TO freq             725736708.6±(31(fit vals),39(fit predict),47±3(boot)) MHz
 
 
+20190618
+post,interp_only
+725736821.9±(28(fit vals),35(fit predict),40±2(boot)) MHz
+
+post,interp_only,no weights
+725736891.6±(104(fit vals),129(fit predict),94±39(boot)) MHz
+
+pre_cen,interp_only, mean power 107.1uw
+725736614.0±(26(fit vals),33(fit predict),53±4(boot)) MHz
+
+pre_left,interp_only, mean power 23.50uw
+725736855.0±(31(fit vals),38(fit predict),42±3(boot)) MHz
+
+pre right ,interp_only,15.155uw
+725737157.9±(36(fit vals),46(fit predict),51±4(boot)) MHz
+
+power weighted pre data
+w=[107.1,23.50,15.15]
+val=wmean([725736614.0,725736855.0,725737157.9],w)
+unc=sqrt(sum(([53,42,51].*w/sum(w)).^2))
+
+
+725736709±40
+
+ore if we weight by sqrt(power)
+
+725736786±32
+
+
+theory value 
+725747547
+
+theory-post,interp_only
+10726 MHz
+
+
+
+% if we flip the sign of the tensor term
+725735122
+which is worse
+
+
 
 		

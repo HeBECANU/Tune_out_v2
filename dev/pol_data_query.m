@@ -26,6 +26,11 @@ sin_mdl_fixed_freq2 = @(b,x) b(1).*sin(2.*x.*pi/180+b(2))+b(3);
 sin_mdl_abs = @(b,x) abs(b(1).*sin(b(2).*x.*pi/180+b(3))+b(4));
 lin_mdl = @(b,x) b(1).*x+b(2);
 
+post_rotation_angle=90;
+pre_rotation_angle=-90;
+pre_angle_flip=-1;
+pre_hand_flip=1;
+
 
 if strcmp(pol_opts.location,'post')
     pol_data_table=readtable('.\data\polz_data_post_window.csv');
@@ -34,7 +39,7 @@ if strcmp(pol_opts.location,'post')
     %if we want to use the observation method
     
     %to keep things in a consistent reference frame rotate the angles so that they are relative to up
-    pol_data_table.min_power_angle_deg=pol_data_table.min_power_angle_deg-90;
+    pol_data_table.min_power_angle_deg=pol_data_table.min_power_angle_deg+post_rotation_angle;
     
     pol_v =pol_data_table.handedness.*2.*sqrt(pol_data_table.max_power_uw.*pol_data_table.min_power_uw)...
         ./(pol_data_table.max_power_uw+pol_data_table.min_power_uw);%the V parameter for each run
@@ -45,23 +50,27 @@ if strcmp(pol_opts.location,'post')
     
 elseif strcmp(pol_opts.location,'pre_cen')
     % data 2019-03-20 in lab book
-    pol_data_table_pre_cen=readtable('.\data\polz_data_pre_window_cen.csv');
+    pol_data_table_pre=readtable('.\data\polz_data_pre_window_cen.csv');
     %pol_data_val.Properties.VariableNames
     %'qwp_angle_deg,hwp_angle_deg,max_power_uw,max_power_angle_deg,min_power_uw,min_power_angle_deg,handedness,'
-
+    pol_data_table_pre.min_power_angle_deg=pre_angle_flip*(pol_data_table_pre.min_power_angle_deg+pre_rotation_angle);
+    pol_data_table_pre.handedness=pol_data_table_pre.handedness*pre_hand_flip;
+    mean_power=mean(pol_data_table_pre.max_power_uw+pol_data_table_pre.min_power_uw);
+    fprintf('mean power in pre_cen %f\n',mean_power)
+    
+    
     pol_data_table_post=readtable('.\data\polz_data_post_window.csv');
+    pol_data_table_post.min_power_angle_deg=pol_data_table_post.min_power_angle_deg+post_rotation_angle;
     %to keep things in a consistent reference frame rotate the angles so that they are relative to up
     %todo, do for all the other angles
-    pol_data_table_post.min_power_angle_deg=-(pol_data_table_post.min_power_angle_deg-90);
-    
     % use the qwp data from this
     mask_post_data_to_use=~isnan(pol_data_table_post.qwp_angle_deg);
     pol_data_table_post=pol_data_table_post(mask_post_data_to_use,:);
     
     commom_var_names=intersect(pol_data_table_post.Properties.VariableNames,...
-                                pol_data_table_pre_cen.Properties.VariableNames);
+                                pol_data_table_pre.Properties.VariableNames);
     
-    pol_data_table=[pol_data_table_pre_cen(:,commom_var_names);pol_data_table_post(:,commom_var_names)];
+    pol_data_table=[pol_data_table_pre(:,commom_var_names);pol_data_table_post(:,commom_var_names)];
     
     
     %if we want to use the observation method
@@ -76,23 +85,26 @@ elseif strcmp(pol_opts.location,'pre_cen')
     end
 elseif strcmp(pol_opts.location,'pre_left')
     % data 2019-03-20 in lab book
-    pol_data_table_pre_cen=readtable('.\data\polz_data_pre_window_cen.csv');
-    %pol_data_val.Properties.VariableNames
+    pol_data_table_pre=readtable('.\data\polz_data_pre_window_left.csv');
+     %pol_data_val.Properties.VariableNames
     %'qwp_angle_deg,hwp_angle_deg,max_power_uw,max_power_angle_deg,min_power_uw,min_power_angle_deg,handedness,'
-
-    pol_data_table_post=readtable('.\data\polz_data_pre_window_left.csv');
+    pol_data_table_pre.min_power_angle_deg=pre_angle_flip*(pol_data_table_pre.min_power_angle_deg+pre_rotation_angle);
+    pol_data_table_pre.handedness=pol_data_table_pre.handedness*pre_hand_flip;
+    mean_power=mean(pol_data_table_pre.max_power_uw+pol_data_table_pre.min_power_uw);
+    fprintf('mean power in pre_left %f\n',mean_power)
+    
+    pol_data_table_post=readtable('.\data\polz_data_post_window.csv');
+    pol_data_table_post.min_power_angle_deg=pol_data_table_post.min_power_angle_deg+post_rotation_angle;
     %to keep things in a consistent reference frame rotate the angles so that they are relative to up
     %todo, do for all the other angles
-    pol_data_table_post.min_power_angle_deg=-(pol_data_table_post.min_power_angle_deg-90);
-    
     % use the qwp data from this
     mask_post_data_to_use=~isnan(pol_data_table_post.qwp_angle_deg);
     pol_data_table_post=pol_data_table_post(mask_post_data_to_use,:);
     
     commom_var_names=intersect(pol_data_table_post.Properties.VariableNames,...
-                                pol_data_table_pre_cen.Properties.VariableNames);
+                                pol_data_table_pre.Properties.VariableNames);
     
-    pol_data_table=[pol_data_table_pre_cen(:,commom_var_names);pol_data_table_post(:,commom_var_names)];
+    pol_data_table=[pol_data_table_pre(:,commom_var_names);pol_data_table_post(:,commom_var_names)];
     
     
     %if we want to use the observation method
@@ -107,23 +119,26 @@ elseif strcmp(pol_opts.location,'pre_left')
     end
 elseif strcmp(pol_opts.location,'pre_right')
     % data 2019-03-20 in lab book
-    pol_data_table_pre_cen=readtable('.\data\polz_data_pre_window_right.csv');
+    pol_data_table_pre=readtable('.\data\polz_data_pre_window_right.csv');
     %pol_data_val.Properties.VariableNames
     %'qwp_angle_deg,hwp_angle_deg,max_power_uw,max_power_angle_deg,min_power_uw,min_power_angle_deg,handedness,'
-
+    pol_data_table_pre.min_power_angle_deg=pre_angle_flip*(pol_data_table_pre.min_power_angle_deg+pre_rotation_angle);
+    pol_data_table_pre.handedness=pol_data_table_pre.handedness*pre_hand_flip;
+    mean_power=mean(pol_data_table_pre.max_power_uw+pol_data_table_pre.min_power_uw);
+    fprintf('mean power in pre_right %f\n',mean_power)
+    
     pol_data_table_post=readtable('.\data\polz_data_post_window.csv');
+    pol_data_table_post.min_power_angle_deg=pol_data_table_post.min_power_angle_deg+post_rotation_angle;
     %to keep things in a consistent reference frame rotate the angles so that they are relative to up
     %todo, do for all the other angles
-    pol_data_table_post.min_power_angle_deg=-(pol_data_table_post.min_power_angle_deg-90);
-    
     % use the qwp data from this
     mask_post_data_to_use=~isnan(pol_data_table_post.qwp_angle_deg);
     pol_data_table_post=pol_data_table_post(mask_post_data_to_use,:);
     
     commom_var_names=intersect(pol_data_table_post.Properties.VariableNames,...
-                                pol_data_table_pre_cen.Properties.VariableNames);
+                                pol_data_table_pre.Properties.VariableNames);
     
-    pol_data_table=[pol_data_table_pre_cen(:,commom_var_names);pol_data_table_post(:,commom_var_names)];
+    pol_data_table=[pol_data_table_pre(:,commom_var_names);pol_data_table_post(:,commom_var_names)];
     
     
     %if we want to use the observation method
@@ -469,9 +484,13 @@ elseif sum(strcmp(pol_opts.predict_method,{'interp_only','interp_pref_data','int
     end
     
     %% fit the 4th stokes parameter for the hwp data
-    hwp_wraped=pol_data_table.hwp_angle_deg(mask_hwp_only);
-    hwp_wraped=mod(hwp_wraped,90);
-
+    hwp_raw=pol_data_table.hwp_angle_deg(mask_hwp_only);
+    if pol_opts.wrap_hwp
+        hwp_wraped=mod(hwp_raw,90);
+    else
+        hwp_wraped=hwp_raw;
+    end
+    
     
     subplot(2,3,1)
     plot(hwp_wraped,pol_v(mask_hwp_only),'x')
@@ -616,8 +635,12 @@ elseif sum(strcmp(pol_opts.predict_method,{'interp_only','interp_pref_data','int
     
     %% query the model at the hwp only data pts that remain
     mask_query_no_qwp=~isnan(pol_opts.hwp) & isnan(pol_opts.qwp) & ~fulfilled_query;
-    query_hwp_wraped=pol_opts.hwp(mask_query_no_qwp);
-    query_hwp_wraped=mod(query_hwp_wraped,90);
+    query_hwp_raw=pol_opts.hwp(mask_query_no_qwp);
+    if pol_opts.wrap_hwp
+        query_hwp_wraped=mod(query_hwp_raw,90);
+    else
+        query_hwp_wraped=query_hwp_raw;
+    end
     
     out_polz_state.v.val(mask_query_no_qwp)=pchip(x_hwp_v,y_hwp_v,query_hwp_wraped);
     out_polz_state.theta.val(mask_query_no_qwp)=pchip(x_hwp_theta,y_hwp_theta,query_hwp_wraped);
@@ -708,9 +731,12 @@ elseif sum(strcmp(pol_opts.predict_method,{'gauss_only','gauss_pref_data','gauss
     end
     
     %% fit the 4th stokes parameter for the hwp data
-    hwp_wraped=pol_data_table.hwp_angle_deg(mask_hwp_only);
-    hwp_wraped=mod(hwp_wraped,90);
-
+    hwp_raw=pol_data_table.hwp_angle_deg(mask_hwp_only);
+    if pol_opts.wrap_hwp
+        hwp_wraped=mod(hwp_raw,90);
+    else
+        hwp_wraped=hwp_raw;
+    end
     
     subplot(2,3,1)
     plot(hwp_wraped,pol_v(mask_hwp_only),'x')
@@ -865,8 +891,12 @@ elseif sum(strcmp(pol_opts.predict_method,{'gauss_only','gauss_pref_data','gauss
     
     %% query the model at the hwp only data pts that remain
     mask_query_no_qwp=~isnan(pol_opts.hwp) & isnan(pol_opts.qwp) & ~fulfilled_query;
-    query_hwp_wraped=pol_opts.hwp(mask_query_no_qwp);
-    query_hwp_wraped=mod(query_hwp_wraped,90);
+    query_hwp_raw=pol_opts.hwp(mask_query_no_qwp);
+    if pol_opts.wrap_hwp
+        query_hwp_wraped=mod(query_hwp_raw,90);
+    else
+        query_hwp_wraped=query_hwp_raw;
+    end
     
     out_polz_state.v.val(mask_query_no_qwp)=gauss_weighted_interp(x_hwp_v,y_hwp_v,query_hwp_wraped,sigma_hwp_v);
     out_polz_state.theta.val(mask_query_no_qwp)=gauss_weighted_interp(x_hwp_theta,y_hwp_theta,query_hwp_wraped,sigma_hwp_theta);
