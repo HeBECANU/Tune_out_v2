@@ -45,13 +45,18 @@ hebec_constants %call the constants function that makes some globals
 load('./data/20190611_imported_data_for_tune_out_polz_dep.mat')
 
 %% Theory
-% from drakes paper 413.09015e-9
+% TO val from https://journals.aps.org/pra/abstract/10.1103/PhysRevA.93.052516, 413.0859(4)
 % half tensor shift from \theta_p=54.74 \lambda_TO-> 413.083876e-9
 % half tensor shift from \theta_p=90 \lambda_TO-> 413.082896e-9
+to_theory=[];
+to_theory.wl.val = 413.0859e-9 + (413.082896e-9 -413.083876e-9);
+to_theory.wl.unc = 0.0004e-9;
+[to_theory.freq.val,to_theory.freq.unc] = f2wl(to_theory.wl.val,to_theory.wl.unc); %best theory guess in Hz
+fprintf('theory val freq %.0f±%.0f \n',to_theory.freq.val*1e-6,to_theory.freq.unc*1e-6)
 
-to_wav_theory = 413.09015e-9 + (413.082896e-9-413.083876e-9);
-to_freq_theory = f2wl(to_wav_theory); %best theory guess in Hz
-fprintf('theory val freq %.6f \n',to_freq_theory*1e-6)
+to_old.wl.val=413.0938e-9;
+to_old.wl.unc=sqrt(0.0009e-9^2+0.0020e-9^2);
+[to_old.freq.val,to_old.freq.unc] = f2wl(to_old.wl.val,to_old.wl.unc); 
 
 %% Generate data vectors
 %to_val = [data.hwp.drift.to_val{1};data.qwp.drift.to_val{1};data.mix.drift.to_val{1}];%all our single scan tune-out values
@@ -62,7 +67,7 @@ wlin=1./(to_unc.^2);
 
 %% polarisation model/data options
 pol_opts.location = 'post';%post, pre_cen, pre_left, pre_right
-pol_opts.predict_method = 'interp_only';%'full_fit_pref_fit','full_fit_pref_data','full_fit_only','only_data'; %obs (obsovation) fit (pertial fit) full_fit (fit with all parameters free)
+pol_opts.predict_method = 'full_fit_pref_fit';%'full_fit_pref_fit','full_fit_pref_data','full_fit_only','only_data'; %obs (obsovation) fit (pertial fit) full_fit (fit with all parameters free)
                                         %'interp_only','interp_pref_data','interp_pref_interp'
                                         %'gauss_only','gauss_pref_data','gauss_pref_interp'
 pol_opts.smoothing=3; %deg
@@ -142,12 +147,10 @@ to_scalar_minus_half_tensor.unc_unc_boot=boot.results.se_se_fun_whole*1e6;
 
 
 
-%
+%% spit out the results
 
 to_wav_val=f2wl(to_scalar_minus_half_tensor.val);
 to_wav_unc=2*to_scalar_minus_half_tensor.unc*const.c/(to_scalar_minus_half_tensor.val^2);
-old_to_wav=413.0938e-9;
-
 fprintf('\n====TO full fit results==========\n')
 fprintf('TO freq             %.1f±(%.0f(fit vals),%.0f(fit predict),%.0f±%.0f(boot)) MHz\n',...
     to_scalar_minus_half_tensor.val*1e-6,...
@@ -155,10 +158,12 @@ fprintf('TO freq             %.1f±(%.0f(fit vals),%.0f(fit predict),%.0f±%.0f(bo
     to_scalar_minus_half_tensor.unc_predict*1e-6,...
     to_scalar_minus_half_tensor.unc_boot*1e-6,...
     to_scalar_minus_half_tensor.unc_unc_boot*1e-6)
-fprintf('diff from TOV1      %.0f±%.0f MHz \n',(to_scalar_minus_half_tensor.val-f2wl(old_to_wav))*1e-6,to_scalar_minus_half_tensor.unc*1e-6)
-fprintf('diff from Theory    %e±%e MHz \n',(to_scalar_minus_half_tensor.val-to_freq_theory)*1e-6,to_scalar_minus_half_tensor.unc*1e-6)
+fprintf('diff from TOV1      %.0f±%.0f MHz \n',(to_scalar_minus_half_tensor.val-to_old.freq.val)*1e-6,sqrt(to_scalar_minus_half_tensor.unc^2+to_old.freq.unc^2)*1e-6)
+fprintf('diff from Theory    %.0f±%.0f MHz \n',...
+    (to_scalar_minus_half_tensor.val-to_theory.freq.val)*1e-6,...
+    sqrt(to_scalar_minus_half_tensor.unc^2+to_theory.freq.unc^2)*1e-6)
 fprintf('TO wavelength       %.6f±%f nm \n',to_wav_val*1e9,to_wav_unc*1e9)
-
+%%
 % Full 2D plot of the fit in 2d stokes space, with each scan shown
 % we will plot in the second (Q) and fourth (v) stokes parameters, 
 % we rotate the measured stokes parameters into the convinent basis found from the above fit

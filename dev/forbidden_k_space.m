@@ -233,3 +233,19 @@ yl=ylim;
 line([1,1]*det_radius*1e3,yl,'color','k')
 hold off
 
+
+%% thermal leakage
+%one consideration is how much thermal will leak out from having the rf knife on
+% one d Maxwell–Boltzmann
+% sqrt(m/(2*pi*k*T))*exp(-m v^2 / (2*k*T))
+% which if we integrate fomr vmax to inf and -vmax to -inf gives
+% see mathematica document thermal_leak_rate
+% Erfc[(m vmax)/(Sqrt[2] Sqrt[k m T])]
+% erfc(sqrt(const.mhe)*knife_vel/(sqrt(2*const.kb*1e-6)))
+
+leak_rate=@(therm_temp,v_knife) erfc(sqrt(const.mhe)*v_knife/(sqrt(2*const.kb*therm_temp)));
+leak_per_atom=leak_rate(1e-6,knife_vel)
+total_leak=leak_per_atom*1e6
+
+
+
