@@ -7,3 +7,9 @@
 [submodule "lib/Core_BEC_Analysis"]
 	path = lib/Core_BEC_Analysis
 	url = https://github.com/brycehenson/Core_BEC_Analysis.git
+[submodule "lib/is_laser_single_mode"]
+	path = lib/is_laser_single_mode
+	url = https://github.com/brycehenson/is_laser_single_mode.git
+[submodule "bin/godlike"]
+	path = bin/godlike
+	url = https://github.com/rodyo/FEX-GODLIKE.git

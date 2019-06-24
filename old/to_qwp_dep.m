@@ -1,8 +1,11 @@
+%BMH:merge:20190425T1515: multiple versions of this code and little commenting made it very diificult to merge carefully
+%just combined what semed sensible
+% TODO: FULL REWRITE
+
+
 %quick plot of to dependence on polarisation angle
 % To predict your new centre freq:
 % fprintf('%f',predict(fit_mdl_lin,ANGLE_GOES_HERE,'Prediction','observation','Alpha',ci_size_disp))
-
-
 
 
 to_vals_lin_quad = [

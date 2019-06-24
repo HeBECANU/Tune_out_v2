@@ -67,7 +67,7 @@ a_min=I_p_psi_chi(:,3)+pi/2;
 
 rotate_angle_common=pi/2; %free parameter
 rotate_angle_diff=-pi*7/8; %free parameter
-impurity_angle=pi*0.01;
+impurity_angle=pi*0.08;
 qwp_fast_angle_offset=0*(pi/180);
 lightin_pcirc=stokes_elip(impurity_angle,rotate_angle_common); %first argument 0 is pure lin pi/2 is pure circ, second is roatation
 lightin_ncirc=stokes_elip(-impurity_angle,rotate_angle_common+rotate_angle_diff); %first argument 0 is pure lin pi/2 is pure circ, second is roatation

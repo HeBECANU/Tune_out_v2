@@ -1,3 +1,7 @@
+%BMH:merge:20190425T1515: multiple versions of this code and little commenting made it very diificult to merge carefully
+%just combined what semed sensible
+% TODO: FULL REWRITE
+%had to replace the plusminus symbol with pm to save in meld
 %quick plot of to dependence on polarisation angle
 %hwp_ang = [3,342,353,14,319,330,342,33,37,34,19,320,336,19,313,301,288,20,5,358.5];
 %
@@ -365,7 +369,7 @@ fit_values = fit_mdl_lin.Coefficients{1:4,1};
 hold on
 title(['amp= ',num2str(fit_values(1)),'MHz , phase= ',num2str(fit_values(2)),', offset= ',num2str(fit_values(3)),'MHz , period= ',num2str(fit_values(4)),'^\circ'])
 xlabel('Input Pol angle (degrees)')
-ylabel(sprintf('Tune out value-%.1f±%.1f (MHz)',lin_fit_max(1),lin_fit_max(2)) )
+ylabel(sprintf('Tune out value-%.1fpm%.1f (MHz)',lin_fit_max(1),lin_fit_max(2)) )
 errorbar(to_vals_lin_trim,vec_corr_to_trim-lin_fit_max(1),to_vals_lin_quad(is_outlier_idx,3),'ko')
 [y_lin,yci_lin]=predict(fit_mdl_lin,xsamp,'Prediction','observation','Alpha',ci_size_disp); %'Prediction','observation'
 %y_lin = b1(1).*(cos(xsamp.*pi/180+b1(2).*2*pi).^2)+b1(3);
@@ -412,7 +416,7 @@ fit_values = fit_mdl_lin.Coefficients{1:4,1};
 hold on
 title(['amp= ',num2str(fit_values(1)),'MHz , phase= ',num2str(fit_values(2)),', offset= ',num2str(fit_values(3)),'MHz , period= ',num2str(fit_values(4)),'^\circ'])
 xlabel('Input Pol angle (degrees)')
-ylabel(sprintf('Tune out value-%.1f±%.1f (MHz)',lin_fit_max(1),lin_fit_max(2)) )
+ylabel(sprintf('Tune out value-%.1fpm%.1f (MHz)',lin_fit_max(1),lin_fit_max(2)) )
 errorbar(to_vals_lin_trim,vec_corr_to_trim-lin_fit_max(1),to_vals_lin_quad(is_outlier_idx,3),'ko')
 [y_lin,yci_lin]=predict(fit_mdl_lin,xsamp,'Prediction','observation','Alpha',ci_size_disp); %'Prediction','observation'
 %y_lin = b1(1).*(cos(xsamp.*pi/180+b1(2).*2*pi).^2)+b1(3);
@@ -469,9 +473,9 @@ bc_angles_wraped_shift = bc_angles_wraped;
 hold on
 title(['amp= ',num2str(fit_values(1)),'MHz , phase= ',num2str(fit_values(2)),', offset= ',num2str(fit_values(3)),'MHz , period=180(fixed)^\circ'])
 xlabel('Input Pol angle (degrees)')
-ylabel(sprintf('Tune out value-%.1f±%.1f (MHz)',lin_fit_max(1),lin_fit_max(2)) )
-fprintf('Tune out value-%.1f±%.1f (MHz) (BLUE)\n',lin_fit_max(1),lin_fit_max(2))
-fprintf('Tune out value-%.1f±%.1f (MHz) (RED)\n',lin_fit_max(1)/2,lin_fit_max(2)/2)
+ylabel(sprintf('Tune out value-%.1fpm%.1f (MHz)',lin_fit_max(1),lin_fit_max(2)) )
+fprintf('Tune out value-%.1fpm%.1f (MHz) (BLUE)\n',lin_fit_max(1),lin_fit_max(2))
+fprintf('Tune out value-%.1fpm%.1f (MHz) (RED)\n',lin_fit_max(1)/2,lin_fit_max(2)/2)
 errorbar(bc_angles_wraped_shift,vec_corr_to_trim-lin_fit_max(1),to_vals_lin_quad(is_outlier_idx,3),'ko')
 [y_lin,yci_lin]=predict(fit_mdl_lin,[xsamp,ones(length(xsamp),1)],'Prediction','observation','Alpha',ci_size_disp); %'Prediction','observation'
 %y_lin = b1(1).*(cos(xsamp.*pi/180+b1(2).*2*pi).^2)+b1(3);
@@ -523,9 +527,9 @@ set(gcf,'color','w')
 % hold on
 % title(['amp= ',num2str(fit_values(1)),'MHz , phase= ',num2str(fit_values(2)),', offset= ',num2str(fit_values(3)),'MHz , period=180(fixed)^\circ'])
 % xlabel('Input Pol angle (degrees)')
-% ylabel(sprintf('Tune out value-%.1f±%.1f (MHz)',lin_fit_max(1),lin_fit_max(2)) )
-% fprintf('Tune out value-%.1f±%.1f (MHz) (BLUE)\n',lin_fit_max(1),lin_fit_max(2))
-% fprintf('Tune out value-%.1f±%.1f (MHz) (RED)\n',lin_fit_max(1)/2,lin_fit_max(2)/2)
+% ylabel(sprintf('Tune out value-%.1fpm%.1f (MHz)',lin_fit_max(1),lin_fit_max(2)) )
+% fprintf('Tune out value-%.1fpm%.1f (MHz) (BLUE)\n',lin_fit_max(1),lin_fit_max(2))
+% fprintf('Tune out value-%.1fpm%.1f (MHz) (RED)\n',lin_fit_max(1)/2,lin_fit_max(2)/2)
 % errorbar(bc_angles_wraped_shift,vec_corr_to_trim-lin_fit_max(1),to_vals_lin_quad(is_outlier_idx,3),'ko')
 % errorbar(bc_angles_wraped,vec_corr_to_trim-lin_fit_max(1),to_vals_lin_quad(is_outlier_idx,3),'bx')
 % [y_lin,yci_lin]=predict(fit_mdl_lin,[xsamp,ones(length(xsamp),1)],'Prediction','observation','Alpha',ci_size_disp); %'Prediction','observation'

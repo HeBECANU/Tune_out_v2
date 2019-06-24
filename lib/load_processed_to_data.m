@@ -1,4 +1,4 @@
-function data = to_data(loop_config)
+function data = load_pocessed_to_data(loop_config)
 selected_dirs = 1:numel(loop_config.dir); %which files to loop over (currently all)
 
 drift_data_compiled.to_val{:,1}=[];
@@ -99,3 +99,33 @@ end
 data.drift = drift_data_compiled;
 data.main = main_data_compiled;
 end
+
+
+
+% processing steps
+
+% 
+% clear drift_data main_data %To make sure there isn't any bleed through between directories
+% 
+% %Scan segmented data
+% drift_data.to_val{:,1}=data.to_fit_seg.fit_trimmed.freq.val;
+% drift_data.to_val{:,2}=data.to_fit_seg.fit_trimmed.freq.unc;
+% drift_data.to_time=data.to_fit_seg.to_time;
+% drift_data.atom_num=data.to_fit_seg.atom_num(:,1);
+% for kk=1:numel(data.to_fit_seg.fit_trimmed.model)
+%     drift_data.grad{kk,1}=data.to_fit_seg.fit_trimmed.model{kk,1}.Coefficients{2,1};
+%     drift_data.grad{kk,2}=data.to_fit_seg.fit_trimmed.model{kk,1}.Coefficients{2,2};
+% end
+% drift_data.model=data.to_fit_seg.fit_trimmed.model;
+% drift_data.avg_coefs = data.to_fit_seg.avg_coefs;
+% drift_data.avg_coefs_cal = data.to_fit_seg.avg_coefs_cal;
+% 
+% %The analysis of the whole run
+% main_data.set_pt = anal_opts.probe_set_pt;
+% main_data.lin_fit{1} = to_freq_val_lin;
+% main_data.lin_fit{2} = to_freq_unc_lin;
+% main_data.quad_fit{1} = to_freq_val_quad;
+% main_data.quad_fit{2} = to_freq_unc_quad;
+% main_data.shots = tot_num_shots;
+% save([anal_opts.global.out_dir,'main_data.mat'],'main_data')
+% save([anal_opts.global.out_dir,'drift_data.mat'],'drift_data')

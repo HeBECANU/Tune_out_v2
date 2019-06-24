@@ -3,10 +3,24 @@ clear all
 to_freq_theory = 725736.480*1e9; %best theory guess in Hz
 to_wav_theory = 299792458./to_freq_theory;
 %% Exp parameters
-aom_freq = 189.*1e6; %aom offset in Hz
+aom_freq =0; %aom offset in Hz, as of 20190528 offset is calculated in main_trap_freq
+
+%%
+% find this .m file's path, this must be in the project root dir
+this_folder = fileparts(which(mfilename));
+% Add that folder plus all subfolders to the path.
+addpath(genpath(this_folder));%add all subfolders to the path to find genpath_exclude
+path_to_genpath=fileparts(which('genpath_exclude'));
+path(pathdef) %clean up the path back to the default state to remove all the .git that were added
+addpath(this_folder)
+addpath(path_to_genpath)
+addpath(genpath_exclude(fullfile(this_folder,'lib'),'\.')) %dont add hidden folders
+addpath(genpath_exclude(fullfile(this_folder,'dev'),'\.'))
+addpath(genpath_exclude(fullfile(this_folder,'bin'),'\.'))
+
 %% polarisation data options
-pol_opts.location = 'pre_right';%post, pre_cen, pre_left, pre_right
-pol_opts.predict = 'fit';%'interp'; %obs (obsovation) fit (pertial fit) full_fit explex(fit with all parameters free)
+pol_opts.location = 'post';%post, pre_cen, pre_left, pre_right
+pol_opts.predict = 'obs';%'interp'; %obs (obsovation) fit (pertial fit) full_fit explex(fit with all parameters free)
 %% Display options
 opts = statset('MaxIter',1e4);
 ci_size=1-erf(1/sqrt(2));%1-erf(zvalue/sqrt(2)) %confidence interval for cutting outliers
@@ -26,9 +40,9 @@ loop_config.dir = {
     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\\20190211_to_hwp_194_nuller_reconfig\'
     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_187_nuller_reconfig\'
     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_181_nuller_reconfig\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_177_nuller_reconfig_part_b\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_177_nuller_reconfig_part_a\'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_171_nuller_reconfig\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_177_nuller_reconfig_part_b\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_177_nuller_reconfig_part_a\'
+%     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_171_nuller_reconfig\'
     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_165_nuller_reconfig\'
     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190210_to_hwp_160_nuller_reconfig\'
     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190209_to_hwp_155_nuller_reconfig\'
@@ -55,12 +69,12 @@ loop_config.dir = {
     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190201_to_hwp_111_nuller_reconfig\'
     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190203_to_hwp_151_nuller_reconfig\'
 };
-data.hwp = to_data(loop_config);
+data.hwp = load_processed_to_data(loop_config);
 %% QWP
 loop_config.dir = {
     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190304_qwp_280_pure'
     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190302_qwp_283_pure_long'
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190301_qwp_283_pure_run'
+    %'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190301_qwp_283_pure_run'
     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190301_qwp_246_2'
     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190227_qwp_270'
     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190227_qwp_286'
@@ -84,7 +98,7 @@ loop_config.dir = {
     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190223_qwp_150'
     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190226_qwp_260'
 };
-data.qwp = to_data(loop_config);
+data.qwp = load_processed_to_data(loop_config);
 %% MIX
 loop_config.dir = {
     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190305_hwp_340_qwp_270'
@@ -93,7 +107,7 @@ loop_config.dir = {
     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190307_hwp_10_qwp_280'
     'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190307_hwp_06_qwp_290'
 };
-data.mix = to_data(loop_config);
+data.mix = load_processed_to_data(loop_config);
 %% Generate data vectors
 to_val = [data.hwp.drift.to_val{1};data.qwp.drift.to_val{1};data.mix.drift.to_val{1}];%all our single scan tune-out values
 to_unc = [data.hwp.drift.to_val{2};data.qwp.drift.to_val{2};data.mix.drift.to_val{2}];%all corresponding uncertainties
@@ -124,7 +138,7 @@ full_mdl = @(b,x) b(1) + b(2).*x(:,2) + b(3).*(1+Q_fun(x(:,1),x(:,3),b(4)));%ful
 vars = [d_p,V,theta];
 to_val_fit = to_val;
 wlin_fit = wlin./sum(wlin);
-beta0 = [7.257355*1e14,6*1e9,3*1e9,0.8];%0.2 or 0.8
+beta0 = [7.257355*1e14,6*1e9,3*1e9,0.3];%0.2 or 0.8
 fit_mdl = fitnlm(vars,to_val_fit,full_mdl,beta0,...
     'Options',opts,'Weights',wlin_fit,'CoefficientNames' ,{'tune_out','vector','tensor','phase'});
 fit_vals = fit_mdl.Coefficients{:,1};
@@ -141,23 +155,23 @@ fit_vals = fit_mdl.Coefficients{:,1};
 fit_uncs = fit_mdl.Coefficients{:,2};
 
 %% Full 2D plot in stokes space
-% sfigure(1234);
-% clf
-% [R, T] = meshgrid(linspace(0,1),linspace(0,2*pi));
-% TO = fit_vals(1)+fit_vals(2).*R.*cos(T)+fit_vals(3).*R.*sin(T);
-% h = surface(R.*cos(T),R.*sin(T),TO./1e6-fit_vals(1)./1e6);
-% colormap(viridis)
-% set(h, 'FaceAlpha', 0.7)
-% shading interp
-% hold on
-% scatter3(V,Q,to_val./1e6-fit_vals(1)./1e6,'MarkerFaceColor',[0 .75 .75])
-% grid on
-% title('Full stokes space representation')
-% xlabel('Fourth Stokes Parameter, V')
-% ylabel('Second Stokes Parameter, Q')
-% zlabel( sprintf('Tune out value-%.1f±%.1f (MHz)',fit_vals(1)./1e6,fit_uncs(1)./1e6) )
-% set(gcf,'color','w')
-% set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
+sfigure(1234);
+clf
+[R, T] = meshgrid(linspace(0,1),linspace(0,2*pi));
+TO = fit_vals(1)+fit_vals(2).*R.*cos(T)+fit_vals(3).*R.*sin(T);
+h = surface(R.*cos(T),R.*sin(T),TO./1e6-fit_vals(1)./1e6);
+colormap(viridis)
+set(h, 'FaceAlpha', 0.7)
+shading interp
+hold on
+scatter3(V,Q,to_val./1e6-fit_vals(1)./1e6,'MarkerFaceColor',[0 .75 .75])
+grid on
+title('Full stokes space representation')
+xlabel('Fourth Stokes Parameter, V')
+ylabel('Second Stokes Parameter, Q')
+zlabel( sprintf('Tune out value-%.1f±%.1f (MHz)',fit_vals(1)./1e6,fit_uncs(1)./1e6) )
+set(gcf,'color','w')
+set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
 
 %% Plots of tune-out dependance on the individual stokes parameters
 modelfun = @(b,x) b(1) + b(2).*x(:,1);
@@ -175,16 +189,18 @@ fit_mdl_v = fitnlm(V,tens_corr_to./1e6,modelfun,beta0,...
 disp_config.plot_title = '';
 disp_config.x_label = 'Fourth Stokes Parameter, V';
 disp_config.fig_number=11235;
+disp_config.fig_name='TO plot V';
 disp_config.plot_offset.val=fit_vals(1)./1e6;
 disp_config.plot_offset.unc=fit_uncs(1)./1e6;
-plot_sexy(disp_config,V,tens_corr_to./1e6,wlin,fit_mdl_v)
+plot_binned_nice(disp_config,V,tens_corr_to./1e6,wlin,fit_mdl_v)
 
 disp_config.plot_title = '';
 disp_config.x_label = 'Second Stokes Parameter, Q';
 disp_config.fig_number=11236;
+disp_config.fig_name='TO plot Q';
 disp_config.plot_offset.val=fit_vals(1)./1e6;
 disp_config.plot_offset.unc=fit_uncs(1)./1e6;
-plot_sexy(disp_config,Q,vec_corr_to./1e6,wlin,fit_mdl_t)
+plot_binned_nice(disp_config,Q,vec_corr_to./1e6,wlin,fit_mdl_t)
 
 %% Residuals
 to_res_run = to_val_run-predict(fit_mdl,[Q_run,V_run]);
@@ -194,12 +210,12 @@ plot(to_res_run./1e6)
 xlabel('index')
 ylabel('residual (Mhz)')
 sfigure(4445005);
-histfit(to_res./1e6,50)
+histfit(to_res./1e6,150)
 xlabel('residual (MHz)')
 ylabel('count')
 %% Write out the results
 
-to_freq_val=fit_vals(1)+aom_freq;
+to_freq_val=fit_vals(1);
 to_freq_unc=fit_uncs(1);
 to_wav_val=299792458/(to_freq_val);
 to_wav_unc=2*to_freq_unc*299792458/(to_freq_val^2);

@@ -24,22 +24,31 @@ tmp_xlim=[-30e-3, 30e-3];     %tight XY lims to eliminate hot spot from destroyi
 tmp_ylim=[-30e-3, 30e-3];
 tlim=[0,4.0];
 anal_opts.tdc_import.txylim=[tlim;tmp_xlim;tmp_ylim];
-anal_opts.tdc_import.mod_wait=2;
+anal_opts.tdc_import.mod_wait=1;
 anal_opts.tdc_import.force_reimport=true;
+
+anal_opts.atom_laser.global.fall_time=0.417;
 
 
 anal_opts.atom_laser.pulsedt=8.000e-3;
 anal_opts.atom_laser.t0=0.41784; %center i ntime of the first pulse
 anal_opts.atom_laser.start_pulse=1; %atom laser pulse to start with
 anal_opts.atom_laser.pulses=100;
+anal_opts.atom_laser.plot.all=false;
 
 anal_opts.atom_laser.appr_osc_freq_guess=[52,40,40];
 anal_opts.atom_laser.pulse_twindow=anal_opts.atom_laser.pulsedt*0.95;
 
 anal_opts.atom_laser.xylim=anal_opts.tdc_import.txylim(2:3,:); %set same lims for pulses as import
 
+const.g0 = 9.81;
 anal_opts.global.fall_time=0.417;
 anal_opts.global.qe=0.09;
+
+anal_opts.global.fall_velocity=const.g0*anal_opts.global.fall_time; %velocity when the atoms hit the detector
+% fall_dist=1/2 a t^2 
+%TODO get from engineering documents
+anal_opts.global.fall_dist=(1/2)*const.g0*anal_opts.global.fall_time^2;
 
 anal_opts.trig_dld=20.3;
 anal_opts.dld_aquire=4;
@@ -52,16 +61,24 @@ anal_opts.osc_fit.xlim=[-20,20]*1e-3;
 anal_opts.osc_fit.tlim=[0.0,1.08];
 anal_opts.osc_fit.dimesion=2; %Sel ect coordinate to bin. 1=X, 2=Y.
 
-anal_opts.history.shots=50;
+anal_opts.history.shots=40;
 
 % END USER VAR-----------------------------------------------------------
 fclose('all')
-%add all subfolders
-folder = fileparts(which(mfilename));
-folder=strsplit(folder,filesep); %go up a directory
-folder=strjoin(folder(1:end-1),filesep);
+
+%% set up the path
+
+% find this .m file's path, this must be in the project root dir
+this_folder = fileparts(fileparts(which(mfilename)));
 % Add that folder plus all subfolders to the path.
-addpath(genpath(folder));
+addpath(genpath(this_folder));%add all subfolders to the path to find genpath_exclude
+path_to_genpath=fileparts(which('genpath_exclude'));
+path(pathdef) %clean up the path back to the default state to remove all the .git that were added
+addpath(this_folder)
+addpath(path_to_genpath)
+addpath(genpath_exclude(fullfile(this_folder,'lib'),'\.')) %dont add hidden folders
+addpath(genpath_exclude(fullfile(this_folder,'dev'),'\.'))
+addpath(genpath_exclude(fullfile(this_folder,'bin'),'\.'))
 
 hebec_constants
 anal_opts.tdc_import.mat_save=false;
@@ -78,6 +95,7 @@ if (exist(anal_out.dir, 'dir') == 0), mkdir(anal_out.dir); end
 anal_opts.global.out_dir=anal_out.dir;
 
 
+anal_opts.atom_laser.global=anal_opts.global;
 
 %%
 trap_freq_history=[];
