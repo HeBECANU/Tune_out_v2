@@ -1,4 +1,5 @@
 function wm_log_processed=wm_log_process(anal_opts,data)
+%this is so quick it barely needs cacheing
 cache_opts=[];
 cache_opts.verbose=0;
 %cache_opts.force_cache_load=wm_log_import_opts.force_load_save;
@@ -18,7 +19,6 @@ wm_log_processed=outputs{1};
 end
 
 function wm_log_processed=wm_log_process_core(anal_opts,data)
-
 %mean_shot_duration=mean(diff(data.labview.time(:)));
 
 wm_log_processed=[];
@@ -44,9 +44,6 @@ wm_log_processed.ok.freq=false(iimax,1); %frequency reading
 wm_log_processed.ok.rvb=false(iimax,1);  %2r-b check
 wm_log_processed.ok.ecd_pd=false(iimax,1);  %ecd pd value
 
-sfigure(11);
-set(gcf,'color','w')
-
 imax=min([size(data.labview.time,2),size(data.mcp_tdc.time_create_write,1)]);
 time_diff=data.mcp_tdc.time_create_write(1:imax,2)'-anal_opts.dld_aquire-anal_opts.trig_dld-...
         data.labview.time(1:imax);
@@ -63,8 +60,8 @@ for ii=1:iimax
     time_diff=data.labview.time(idx_nearest_lv)-est_labview_start;
     
     abs_anal_opts.trig_dld_on_main_comp=data.labview.time(idx_nearest_lv)+anal_opts.trig_dld;
-    time_lower=abs_anal_opts.trig_dld_on_main_comp+anal_opts.atom_laser.t0-anal_opts.global.fall_time-0.5; %the probe turns on
-    time_upper=abs_anal_opts.trig_dld_on_main_comp+anal_opts.atom_laser.t0-anal_opts.global.fall_time+anal_opts.wm_log.time_probe+0.5; %when the probe beam goes off
+    time_lower=abs_anal_opts.trig_dld_on_main_comp+anal_opts.atom_laser.t0-anal_opts.wm_log.global.fall_time-0.5; %the probe turns on
+    time_upper=abs_anal_opts.trig_dld_on_main_comp+anal_opts.atom_laser.t0-anal_opts.wm_log.global.fall_time+anal_opts.wm_log.time_probe+0.5; %when the probe beam goes off
     
     %CHECK PD VALUE
     %check if there were some readings of the ecd output voltage withing time_padding seconds of this period
@@ -86,8 +83,9 @@ for ii=1:iimax
     wm_log_processed.probe.freq.act.mean(ii)=mean(red_freqs);
     wm_log_processed.probe.freq.act.std(ii)=std(red_freqs);
     wm_log_processed.probe.freq.error(ii)=false;
-    %             break
-    if numel(red_freqs)~=0 && std(red_freqs)<anal_opts.wm_log.red_sd_thresh && range(red_freqs)<anal_opts.wm_log.red_range_thresh
+    %BMH todo: if there 
+    if numel(red_freqs)>5 && ... %need more than 5 measurments to say anything about stability
+            std(red_freqs)<anal_opts.wm_log.red_sd_thresh && range(red_freqs)<anal_opts.wm_log.red_range_thresh
        wm_log_processed.ok.freq(ii)=true;
     end
     
@@ -102,11 +100,10 @@ for ii=1:iimax
         wm_log_processed.ok.rvb(ii)=true;
     end
     %do some plots if plot_all or if plot_failed what failed
-    if anal_opts.wm_log.plot_all || (anal_opts.wm_log.plot_failed &&...
-       (~wm_log_processed.ok.freq(ii) || ~wm_log_processed.ok.rvb(ii) ||...
-       ~wm_log_processed.ok.ecd_pd(ii)))
-        
-        sfigure(11);
+    if anal_opts.wm_log.plot.all || (anal_opts.wm_log.plot.failed &&...
+      (~wm_log_processed.ok.freq(ii) || ~wm_log_processed.ok.rvb(ii) ||...
+      ~wm_log_processed.ok.ecd_pd(ii)))
+    	stfig;
         subplot(3,1,1)
         plot(data.wm_log.raw.read_all_adc.posix_time(ecd_pd_mask_idx(1):...
             ecd_pd_mask_idx(2))+anal_opts.atom_laser.t0-...

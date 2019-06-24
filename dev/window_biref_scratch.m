@@ -8,13 +8,7 @@ P1  = [2.7e-6,1.32e-3;
         1.9e-6,1.63e-3;
         2.2e-6,1.56e-3];
 R1 = P1(:,1)./sum(P1,2);
-<<<<<<< HEAD
-plot(T1,R1,'ko')
-hold on
-plot([20,60],[R0,R0],'k')
-=======
 
->>>>>>> 3ef538a7a011b2dc14aa45d1d07b10a64f06c902
 % hold off
 
 %% For offset window
@@ -27,18 +21,6 @@ P2  = [30.9e-6,1.32e-3;
         13.4e-6,1.57e-3;
         20.3e-6,1.5e-3];
 R2 = P2(:,1)./sum(P2,2);
-<<<<<<< HEAD
-plot(T2,R2,'ro')
-plot([20,60],[R0,R0],'r')
-hold off
-
-
-xlabel('Temperature')
-set(gca,'Yscale','log')
-ylabel('Output power ratio')
-legend('Centred window','No window', 'Offset window','No window')
-title('Temperature dependence of window birefringence')
-=======
 
 subplot(1,2,1)
 plot(T1,R1,'ko')
@@ -65,5 +47,4 @@ ylabel('Output power ratio')
 title('Log scale')
 
 suptitle('Temperature dependence of window birefringence')
->>>>>>> 3ef538a7a011b2dc14aa45d1d07b10a64f06c902
 

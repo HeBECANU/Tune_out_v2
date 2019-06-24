@@ -1,4 +1,10 @@
 # Windows default autosave extension
 *.asv
+# Windows thumb
+*.db
 # Data files
 *.mat
+# Data Archives
+*.zip
+*.7z
+scratch_data
