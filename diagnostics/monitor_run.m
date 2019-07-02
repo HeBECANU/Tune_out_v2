@@ -22,16 +22,18 @@ anal_opts.tdc_import.dld_xy_rot=0.61;
 
 tmp_xlim=[-30e-3, 30e-3];     %tight XY lims to eliminate hot spot from destroying pulse widths
 tmp_ylim=[-30e-3, 30e-3];
-tlim=[0,4.0];
+tlim=[1,4.0];
 anal_opts.tdc_import.txylim=[tlim;tmp_xlim;tmp_ylim];
-anal_opts.tdc_import.mod_wait=1;
+anal_opts.tdc_import.mod_wait=0;
 anal_opts.tdc_import.force_reimport=true;
 
 anal_opts.atom_laser.global.fall_time=0.417;
 
 
 anal_opts.atom_laser.pulsedt=8.000e-3;
-anal_opts.atom_laser.t0=0.41784; %center i ntime of the first pulse
+anal_opts.atom_laser.t0=1.034; %center i ntime of the first pulse
+%0.41784;
+
 anal_opts.atom_laser.start_pulse=1; %atom laser pulse to start with
 anal_opts.atom_laser.pulses=100;
 anal_opts.atom_laser.plot.all=false;
@@ -51,17 +53,17 @@ anal_opts.global.fall_velocity=const.g0*anal_opts.global.fall_time; %velocity wh
 anal_opts.global.fall_dist=(1/2)*const.g0*anal_opts.global.fall_time^2;
 
 anal_opts.trig_dld=20.3;
-anal_opts.dld_aquire=4;
+anal_opts.dld_aquire=2;
 anal_opts.trig_ai_in=20;
 
 
 anal_opts.osc_fit.binsx=1000;
-anal_opts.osc_fit.blur=2;
+anal_opts.osc_fit.blur=1;
 anal_opts.osc_fit.xlim=[-20,20]*1e-3;
-anal_opts.osc_fit.tlim=[0.0,1.08];
+anal_opts.osc_fit.tlim=[0.86,1.08];
 anal_opts.osc_fit.dimesion=2; %Sel ect coordinate to bin. 1=X, 2=Y.
 
-anal_opts.history.shots=40;
+anal_opts.history.shots=9;
 
 % END USER VAR-----------------------------------------------------------
 fclose('all')
@@ -142,12 +144,13 @@ while true
             cellfun(@(x) x(end,1),batch_data.mcp_tdc.counts_txy(batch_data.mcp_tdc.all_ok))>anal_opts.dld_aquire*0.8;
         if sum(batch_data.mcp_tdc.all_ok)==0
             fprintf('waiting for file to be writen\n')
+            pause(0.5)
         else
             batch_data.mcp_tdc.al_pulses=bin_al_pulses(anal_opts.atom_laser,batch_data);
             %%
             anal_opts.osc_fit.adaptive_freq=true; %estimate the starting trap freq 
             anal_opts.osc_fit.appr_osc_freq_guess=[52,52,52];
-            anal_opts.osc_fit.freq_fit_tolerance=5;
+            anal_opts.osc_fit.freq_fit_tolerance=4;
             if sum(batch_data.mcp_tdc.all_ok)>2
                 anal_opts.osc_fit.plot_fits=false;
             else
