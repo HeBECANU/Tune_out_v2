@@ -1,4 +1,4 @@
-function out=make_cal_model(anal_opts_afit,data)
+function out=fit_atom_number(anal_opts_afit,data)
 %this function take in the data structure and returns a estimate of the total atom number by fitting a decay function 
 %to the number in the pulsed atom laser 
 

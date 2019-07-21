@@ -91,8 +91,8 @@ clear all
 
 %% for deployment
 % select the directories in a folder
-root_data_dir='G:\good_data';
-%root_data_dir='..\scratch_data';
+%root_data_dir='G:\good_data';
+root_data_dir='..\tune_out_example_data';
 files = dir(root_data_dir);
 files=files(3:end);
 % Get a logical vector that tells which is a directory.
@@ -145,7 +145,7 @@ anal_opts.global.atom_laser.t0=anal_opts.atom_laser.t0;
 %anal_opts.osc_fit.xlim=[-20,20]*1e-3;
 %anal_opts.osc_fit.tlim=[0.86,1.08];
 
-date_str='20190604T210000';
+date_str='20190703T210000';
 reprocess_folder_if_older_than=posixtime(datetime(datenum(date_str,'yyyymmddTHHMMSS'),'TimeZone','local','ConvertFrom','datenum'));%posix date
 active_process_mod_time=60*0;
 
@@ -577,7 +577,7 @@ anal_opts.osc_fit.plot_err_history=true;
 anal_opts.osc_fit.plot_fit_corr=true;
 
 anal_opts.osc_fit.global=anal_opts.global;
-%%
+
 data.osc_fit=fit_trap_freq(anal_opts.osc_fit,data);
 %%
 %data.osc_fit=fit_trap_freq_dev(anal_opts.osc_fit,data);

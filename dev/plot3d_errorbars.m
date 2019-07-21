@@ -1,4 +1,4 @@
-function [h]=plot3d_errorbars(x, y, z, ex, ey, ez, varargin)
+function [h]=plot3d_errorbars(x, y, z, ex, ey, ez,color, varargin)
 %from https://stackoverflow.com/questions/23654296/multi-dimensional-2d-better-3d-scatter-plot-with-different-errorbars-in-matlab
 % by dan https://stackoverflow.com/users/1011724/dan
 
@@ -8,6 +8,7 @@ function [h]=plot3d_errorbars(x, y, z, ex, ey, ez, varargin)
 
 % looks better with large points
 %set(h, 'MarkerSize', 25);
+
 
 
 % now draw the vertical errorbar for each point
@@ -21,6 +22,7 @@ for i=1:length(x)
             xB = [xMin, xMax];
             h=plot3(xB, yV, zV, '-k');
             set(h, 'LineWidth', 2);
+            set(h, 'color', color);
         end
         if ~isempty(ey)
             yMin = y(i) + ey(i);
@@ -28,14 +30,18 @@ for i=1:length(x)
             yB = [yMin, yMax];
             h=plot3(xV, yB, zV, '-k');
             set(h, 'LineWidth', 2);
+             set(h, 'color', color);
         end
         if ~isempty(ez)
             zMin = z(i) + ez(i);
             zMax = z(i) - ez(i);
             zB = [zMin, zMax];
             % draw error bars
-            h=plot3(xV, yV, zB, '-k');
-            set(h, 'LineWidth', 2);
+            if range(zB)~=0
+                h=plot3(xV, yV, zB, '-k');
+                set(h, 'LineWidth', 2);
+                set(h, 'color', color);
+            end
         end
 end
 

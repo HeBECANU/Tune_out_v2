@@ -49,7 +49,7 @@ load('./data/20190611_imported_data_for_tune_out_polz_dep.mat')
 % half tensor shift from \theta_p=54.74 \lambda_TO-> 413.083876e-9
 % half tensor shift from \theta_p=90 \lambda_TO-> 413.082896e-9
 to_theory=[];
-to_theory.wl.val = 413.0859e-9 + (413.082896e-9 -413.083876e-9);
+to_theory.wl.val = 413.0859e-9 %+ (413.082896e-9 -413.083876e-9);
 to_theory.wl.unc = 0.0004e-9;
 [to_theory.freq.val,to_theory.freq.unc] = f2wl(to_theory.wl.val,to_theory.wl.unc); %best theory guess in Hz
 fprintf('theory val freq %.0f±%.0f \n',to_theory.freq.val*1e-6,to_theory.freq.unc*1e-6)
@@ -163,6 +163,14 @@ fprintf('diff from Theory    %.0f±%.0f MHz \n',...
     (to_scalar_minus_half_tensor.val-to_theory.freq.val)*1e-6,...
     sqrt(to_scalar_minus_half_tensor.unc^2+to_theory.freq.unc^2)*1e-6)
 fprintf('TO wavelength       %.6f±%f nm \n',to_wav_val*1e9,to_wav_unc*1e9)
+
+%% plot options
+
+font_name='cmr10';
+font_size_global=20;
+folt_size_label=20;
+
+
 %%
 % Full 2D plot of the fit in 2d stokes space, with each scan shown
 % we will plot in the second (Q) and fourth (v) stokes parameters, 
@@ -252,8 +260,19 @@ xlabel('Fourth Stokes Parameter, V')
 ylabel('Second Stokes Parameter, Q')
 zlabel('Measurments-model (MHz)')
 
-% Full 2D plot of the fit in 2d stokes space, with each run binned into a single point
+%% Full 2D plot of the fit in 2d stokes space, with each run binned into a single point
 % we will plot in the second (Q) and fourth (v) stokes parameters
+
+
+colors_main=[[53,126,220];[33,188,44];[0,0,0]]./255;
+lch=colorspace('RGB->LCH',colors_main(:,:));
+lch(:,1)=lch(:,1)+20;
+colors_detail=colorspace('LCH->RGB',lch);
+%would prefer to use srgb_2_Jab here
+color_shaded=colorspace('RGB->LCH',colors_main(3,:));
+color_shaded(1)=50;
+color_shaded=colorspace('LCH->RGB',color_shaded);
+
 
 stfig('2d TO fit, binned');
 clf
@@ -292,20 +311,23 @@ polz_vq_to_val_unc_scaled(:,3)=(polz_vq_to_val_unc(:,3)-to_scalar_minus_half_ten
 polz_vq_to_val_unc_scaled(:,4)=polz_vq_to_val_unc(:,4)*1e-6; %scale the unc
 polz_vq_to_val_unc_scaled(:,5)=polz_vq_to_val_unc(:,5)*1e-6; %scale the std
 
-plot3d_errorbars(polz_vq_to_val_unc_scaled(:,1), polz_vq_to_val_unc_scaled(:,2), polz_vq_to_val_unc_scaled(:,3), [], [], polz_vq_to_val_unc_scaled(:,4));
+plot3d_errorbars(polz_vq_to_val_unc_scaled(:,1), polz_vq_to_val_unc_scaled(:,2), polz_vq_to_val_unc_scaled(:,3), [], [], polz_vq_to_val_unc_scaled(:,4),colors_main(1,:));
 
-scatter3(polz_vq_to_val_unc_scaled(:,1), polz_vq_to_val_unc_scaled(:,2), polz_vq_to_val_unc_scaled(:,3),'MarkerFaceColor',[0 .75 .75])
-scatter3(0,-1,0*1e-6,'MarkerFaceColor','r')
+scatter3(polz_vq_to_val_unc_scaled(:,1), polz_vq_to_val_unc_scaled(:,2), polz_vq_to_val_unc_scaled(:,3),50,'o',...
+   'MarkerEdgeColor',colors_main(1,:),'MarkerFaceColor',colors_detail(1,:),'LineWidth',2)
+scatter3(0,-1,0,150,'s','MarkerFaceColor','k','MarkerEdgeColor','k')
 grid on
-title('Full stokes space representation')
-xlabel('Fourth Stokes Parameter, V')
-ylabel('Second Stokes Parameter, Q')
-zlabel( sprintf('Tune out value-%.1f±%.1f (MHz)',to_scalar_minus_half_tensor.val*1e-6,to_scalar_minus_half_tensor.unc_boot*1e-6))
+%title('Full stokes space representation')
+xlabel('\bfv\rm')
+ylabel('\bfq\rm')
+%zlabel( sprintf('Tune out value-%.1f±%.1f (MHz)',to_scalar_minus_half_tensor.val*1e-6,to_scalar_minus_half_tensor.unc_boot*1e-6))
+zlabel('\omega_{TO}(\bfq\rm,\bfv\rm) - \omega^{SMHT}_{TO} (MHz)')
 set(gcf,'color','w')
 set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
 zlim([-8,10]*1e3)
 view(-25,45)
 hold off
+axis vis3d
 
 stfig('2d TO residuals, binned');
 polz_vq_to_resid_unc=polz_vq_to_val_unc;
@@ -319,7 +341,7 @@ polz_vq_to_resid_unc_scaled(:,[3,4])=polz_vq_to_resid_unc_scaled(:,[3,4])*1e-6;
 
 scatter3(polz_vq_to_resid_unc_scaled(:,1), polz_vq_to_resid_unc_scaled(:,2), polz_vq_to_resid_unc_scaled(:,3),'MarkerFaceColor',[0 .75 .75])
 hold on
-plot3d_errorbars(polz_vq_to_resid_unc_scaled(:,1), polz_vq_to_resid_unc_scaled(:,2), polz_vq_to_resid_unc_scaled(:,3), [], [], polz_vq_to_resid_unc_scaled(:,4));
+plot3d_errorbars(polz_vq_to_resid_unc_scaled(:,1), polz_vq_to_resid_unc_scaled(:,2), polz_vq_to_resid_unc_scaled(:,3), [], [], polz_vq_to_resid_unc_scaled(:,4),'k');
 surf_mdl=surface(surf_polz_v,surf_polz_q,surf_polz_q.*0);
 set(surf_mdl,'linestyle','none')
 set(surf_mdl,'FaceColor',[255 127 42]./255)
@@ -344,7 +366,7 @@ zlabel('Measurments-model (MHz)')
 
 
 
-% Plots of tune-out dependance on the individual stokes parameters
+%% Plots of tune-out dependance on the individual stokes parameters
 
 % plot with Q, stokes 2nd
 samp_q=col_vec(linspace(-1.1,1.1,1e4));
@@ -403,7 +425,17 @@ ylim([-1,0.8].*1e4)
 xlim([-1.1,1.1])
  
 
-% Plot the V,Q plots with binned data
+%% Plot the V,Q plots with binned data
+
+colors_main=[[53,126,220];[33,188,44];[0,0,0]]./255;
+lch=colorspace('RGB->LCH',colors_main(:,:));
+lch(:,1)=lch(:,1)+20;
+colors_detail=colorspace('LCH->RGB',lch);
+%would prefer to use srgb_2_Jab here
+color_shaded=colorspace('RGB->LCH',colors_main(3,:));
+color_shaded(1)=50;
+color_shaded=colorspace('LCH->RGB',color_shaded);
+
 
 % plot with Q, stokes 2nd
 samp_q=col_vec(linspace(-1.1,1.1,1e4));
@@ -420,24 +452,32 @@ patch([samp_q', fliplr(samp_q')],...
     [1,1,1].*0.7,'EdgeColor','none')
 hold on
 plot(samp_q,(fit_mdl_val-to_scalar_minus_half_tensor.val)*1e-6,'k')
-xlabel('2^{nd} stokes parameter Q')
-ylabel('Tune out -TOSMHT (MHz)')
-title('V=0 extrapolation')
+xlabel('2^{nd} stokes parameter, \bfq\rm')
+ylabel('\omega_{TO}(\bfq\rm,\bfv\rm=0) -\omega^{SMHT}_{TO} (MHz)')
+%title('v=0 extrapolation')
 % now I want to plot every scan with its error bar that has been corrected onto V=0
 
 shift_vq=v_correcting_shift(polz_vq_to_val_unc(:,1),polz_vq_to_val_unc(:,2),fit_mdl_full);
 
 shifted_scaled_to_vals=(polz_vq_to_val_unc(:,3)-to_scalar_minus_half_tensor.val+shift_vq(:,1)*1e6)*1e-6;
+
+
 errorbar(polz_vq_to_val_unc(:,2),shifted_scaled_to_vals,polz_vq_to_val_unc(:,5)*1e-6...
-     ,'o','CapSize',0,'Marker','none','Color','g',...
+     ,'o','CapSize',0,'Marker','none','Color',colors_detail(1,:),...
      'LineWidth',1.5);
-errorbar(polz_vq_to_val_unc(:,2),shifted_scaled_to_vals,polz_vq_to_val_unc(:,4)*1e-6...
-     ,'o','CapSize',0,'MarkerSize',5,'Color','r',...
-     'LineWidth',1.5);
+errorbar(polz_vq_to_val_unc(:,2),shifted_scaled_to_vals,polz_vq_to_val_unc(:,4)*1e-6,...
+    'o','CapSize',0,'MarkerSize',5,'Color',colors_main(1,:),...
+    'MarkerFaceColor',colors_detail(1,:),'LineWidth',2.8);
 %ylim([min(shifted_scaled_to_vals),max(shifted_scaled_to_vals)])
 ylim([-2.5,1.2]*1e3)
 xlim([-1.1,1.1])
 hold off
+set(gca,'FontSize',font_size_global,'FontName',font_name)
+set(gcf,'Units','Pixels')
+set(gcf,'Position',[1068         355         676         453])
+
+
+
 
 stfig('Q dep,binned,residuals');
 subplot(2,1,1)
@@ -459,8 +499,13 @@ subplot(2,1,2)
 residuals_num_ste=shifted_scaled_to_vals./(polz_vq_to_val_unc(:,4)*1e-6);
 plot(samp_q,residuals_num_ste,'ok')
 fprintf('sd of (residuals/ste) in Q dep %.1f \n',std(residuals_num_ste))
-xlabel('2^{nd} stokes parameter,Q')
+xlabel('2^{nd} stokes parameter, Q')
 ylabel('Error From Model (MHz)')
+set(gca,'FontSize',font_size_global,'FontName',font_name)
+
+
+
+
 
 % do the same for V, stokes 4th
 samp_v=col_vec(linspace(-1.1,1.1,1e4));
@@ -476,20 +521,27 @@ patch([samp_v', fliplr(samp_v')],...
     [1,1,1].*0.7,'EdgeColor','none')
 hold on
 plot(samp_v,(fit_mdl_val-to_scalar_minus_half_tensor.val)*1e-6,'k')
-xlabel('4^{th} stokes parameter,V')
-ylabel('Error From Model (MHz)')
-title('Q=-1 extrapolation')
+xlabel('4^{th} stokes parameter,\bfv\rm')
+ylabel('\omega_{TO}(\bfq\rm,=-1,\bfv\rm) -\omega^{SMHT}_{TO} (MHz)')
+%title('Q=-1 extrapolation')
 
 shifted_scaled_to_vals=(polz_vq_to_val_unc(:,3)-to_scalar_minus_half_tensor.val+shift_vq(:,2)*1e6)*1e-6;
 errorbar(polz_vq_to_val_unc(:,1),shifted_scaled_to_vals,polz_vq_to_val_unc(:,5)*1e-6...
-     ,'o','CapSize',0,'Marker','none','Color','g',...
-     'LineWidth',1.0);
-errorbar(polz_vq_to_val_unc(:,1),shifted_scaled_to_vals,polz_vq_to_val_unc(:,4)*1e-6...
-     ,'o','CapSize',0,'MarkerSize',5,'Color','r',...
-     'LineWidth',2);
+     ,'o','CapSize',0,'Marker','none','Color',colors_detail(1,:),...
+     'LineWidth',1.5);
+errorbar(polz_vq_to_val_unc(:,1),shifted_scaled_to_vals,polz_vq_to_val_unc(:,4)*1e-6,...
+    'o','CapSize',0,'MarkerSize',5,'Color',colors_main(1,:),...
+    'MarkerFaceColor',colors_detail(1,:),'LineWidth',2.8);
+
 %ylim([min(shifted_scaled_to_vals),max(shifted_scaled_to_vals)]) 
 ylim([-8,8].*1e3) 
 xlim([-1.1,1.1])
+set(gca,'FontSize',font_size_global,'FontName',font_name)
+set(gcf,'Units','Pixels')
+set(gcf,'Position',[ 1068         355         676         453])
+
+
+
 
 stfig('V dep,binned,residuals');
 subplot(2,1,1)

@@ -157,10 +157,10 @@ for ii=1:iimax
             predictorplot=[tplotvalues,...
                        interp1(predictor(:,1),predictor(:,2),tplotvalues),...
                        interp1(predictor(:,1),predictor(:,3),tplotvalues)];
-            [prediction,ci]=predict(fitobject,predictorplot,'Alpha',1-erf(1/sqrt(2)));
+            [prediction,ci]=predict(fitobject,predictorplot,'Alpha',1-erf(1/sqrt(2)),'Prediction','observation');
             stfig(fit__osc_plot_handle);
             clf;
-            set(gca,'FontSize',font_size_global,'FontName',font_name)
+            
             
             subplot(2,1,1)
             plot(txyz_tmp(:,1),txyz_tmp(:,2)*1e3,'kx-')
@@ -168,38 +168,45 @@ for ii=1:iimax
             plot(txyz_tmp(:,1),txyz_tmp(:,3)*1e3,'rx-')
             plot(txyz_tmp(:,1),txyz_tmp(:,4)*1e3,'bx-')
             hold off
-            ylabel('X Vel (mm/s)')
+            ylabel('V_{x} (mm/s)')
             xlabel('Time (s)')
             set(gca,'Ydir','normal')
             set(gcf,'Color',[1 1 1]);
             legend('x','y','z')
 
             subplot(2,1,2)
+            time_start=min(predictor(:,1));
+            
             shaded_ci_lines=false;
-            hold on
+            
             if shaded_ci_lines
-                patch([predictorplot(:,1)', fliplr(predictorplot(:,1)')], [ci(:,1)', fliplr(ci(:,2)')], color_shaded,'EdgeColor','none')  %[1,1,1]*0.80
+                patch([predictorplot(:,1)', fliplr(predictorplot(:,1)')]-time_start, [ci(:,1)', fliplr(ci(:,2)')]*1e3, color_shaded,'EdgeColor','none')  %[1,1,1]*0.80
+                hold on
             else
-                plot(predictorplot(:,1),ci(:,1)*1e3,'-','LineWidth',1.5,'Color',color_shaded)
-                plot(predictorplot(:,1),ci(:,2)*1e3,'-','LineWidth',1.5,'Color',color_shaded)
+                plot(predictorplot(:,1)-time_start,ci(:,1)*1e3,'-','LineWidth',1.5,'Color',color_shaded)
+                hold on
+                plot(predictorplot(:,1)-time_start,ci(:,2)*1e3,'-','LineWidth',1.5,'Color',color_shaded)
             end  
-            plot(predictorplot(:,1),prediction*1e3,'-','LineWidth',1.0,'Color',colors_main(3,:))
+            plot(predictorplot(:,1)-time_start,prediction*1e3,'-','LineWidth',1.0,'Color',colors_main(3,:))
             ax = gca;
             set(ax, {'XColor', 'YColor'}, {'k', 'k'});
-            errorbar(predictor(:,1),txyz_tmp(:,anal_opts_osc_fit.dimesion+1)*1e3,xyzerr_tmp(:,anal_opts_osc_fit.dimesion)*1e3,'o','CapSize',0,'MarkerSize',5,'Color',colors_main(1,:),'MarkerFaceColor',colors_detail(1,:),'LineWidth',1.5) 
+            errorbar(predictor(:,1)-time_start,txyz_tmp(:,anal_opts_osc_fit.dimesion+1)*1e3,xyzerr_tmp(:,anal_opts_osc_fit.dimesion)*1e3,'o','CapSize',0,'MarkerSize',5,'Color',colors_main(1,:),'MarkerFaceColor',colors_detail(1,:),'LineWidth',1.5) 
             set(gcf,'Color',[1 1 1]);
             xlabel('Time (s)','FontSize',folt_size_label)
-            ylabel('X vel (mm/s)','FontSize',folt_size_label)
+            ylabel('V_{x} (mm/s)','FontSize',folt_size_label)
             title(sprintf('amp=%.2f±%.2f mm/s,omega=%.2f±%.2f Hz,Damp=%.2f±%.2f s',...
                 fitobject.Coefficients.Estimate(1)*1e3,fitobject.Coefficients.SE(1)*1e3,...
                  fitobject.Coefficients.Estimate(2),fitobject.Coefficients.SE(2),...
                  fitobject.Coefficients.Estimate(7),fitobject.Coefficients.SE(7)))
             hold off
             ax = gca;
+            xlim([predictorplot(1,1)-0.01,predictorplot(end,1)+0.01]-time_start)
             set(ax, {'XColor', 'YColor'}, {'k', 'k'});
             set(gca,'linewidth',1.0)
+            set(gca,'FontSize',font_size_global,'FontName',font_name)
             saveas(gca,sprintf('%sfit_dld_shot_num%04u.png',anal_opts_osc_fit.global.out_dir,dld_shot_num))
             
+            %%
             stfig(fit_resid_plot_handle);
             subplot(4,1,1)
             [fit_model_vals,fit_model_ci]=predict(fitobject,predictor,'Alpha',1-erf(1/sqrt(2)));

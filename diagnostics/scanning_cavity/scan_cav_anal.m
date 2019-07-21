@@ -1,6 +1,11 @@
 % clear all
 % close all
 
+%% TODO
+% -[ ] deautomate diff filter folders
+
+
+
 fwtext('CAVITY SCAN ANALYSIS')
 
 config.log_name='log_analog_in_*';
@@ -8,8 +13,8 @@ config.log_name='log_analog_in_*';
 % config.datadir = 'C:\Data\blue_sfp';
 % light_on_dirnames = {'probe_on_one_filt'};
 
-config.datadir = 'C:\Data\20190125_sfp';
-light_on_dirnames = {'sfp_0_filter','sfp_1_filter','sfp_2_filter','sfp_3_filter'};
+config.datadir = 'W:\bryce\sfp_background\20190125_sfp_background_measurments\20190125_sfp_0_filter';
+%light_on_dirnames = {'sfp_0_filter','sfp_1_filter','sfp_2_filter','sfp_3_filter'};
 config.savedir = 'C:\Users\jacob\Documents\Projects\Tune_out_v2\figs\cavity_analysis';
 config.scan_time=14e-3;  %estimate of the sfp scan time,used to set the window and the smoothin
 config.pzt_volt_smothing_time=config.scan_time/100;
@@ -21,9 +26,26 @@ config.plot_out = false;
 config.R = 0.9875;
 config.pv_method = true;
 config.lebesgue_method = true;
-config.num_dirs = 4;
 config.test.num_files = 4;
 config.test.num_scans = 100;
+
+%%
+% find this .m file's path, this must be in the project root dir
+project_root_folder = fileparts(fileparts(fileparts(which(mfilename))));
+% Add that folder plus all subfolders to the path.
+addpath(genpath(project_root_folder));%add all subfolders to the path to find genpath_exclude
+path_to_genpath=fileparts(which('genpath_exclude'));
+path(pathdef) %clean up the path back to the default state to remove all the .git that were added
+addpath(project_root_folder)
+addpath(path_to_genpath)
+addpath(genpath_exclude(fullfile(project_root_folder,'lib'),'\.')) %dont add hidden folders
+addpath(genpath_exclude(fullfile(project_root_folder,'dev'),'\.'))
+addpath(genpath_exclude(fullfile(project_root_folder,'bin'),'\.'))
+addpath(genpath_exclude(fullfile(project_root_folder,'diagnostics'),'\.'))
+hebec_constants %call the constants function that makes some globals
+
+
+%%
 
 
 %% Calibration data
@@ -55,20 +77,15 @@ config_light.lebesgue_thresh = 1e-2*5; %Empirically chosen
 config_light.lebesgue_thresh_demo = .5; %~1% of peak height
 config_light.pv_peak_factor = 5;
 config_light.pv_plot = false;
-light_on_data = cell(numel(light_on_dirnames),1);
-if ~isnan(config.num_dirs)
-    num_dirs = config.num_dirs;
-else
-    num_dirs = numel(light_on_dirnames);
-end
-for ii=1:num_dirs
-    fwtext({'Starting on %s',light_on_dirnames{ii}})
-    config_light.dirname= light_on_dirnames{ii};
-    config_light.dir = fullfile(config.datadir,config_light.dirname);
-    light_on_data{ii} = light_on_analysis(config_light);
-end
-fwtext('All dirs analyzed')
+%light_on_data = cell(numel(light_on_dirnames),1);
 
+
+({'Starting on %s',config.datadir})
+%config_light.dirname= config.datadir;
+config_light.dir = config.datadir;
+light_on_data{ii} = light_on_analysis(config_light);
+
+fwtext('All dirs analyzed')
 %%
 % close all
 fwtext('Presenting results')
