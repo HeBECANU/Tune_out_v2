@@ -1,6 +1,7 @@
 %background light shift scratch
 % calculate the freq diff from tune out at which the frac. error in the dyn. polz. hits 10%
 % convert between derivatives given as per nm into per hz
+% calculate the shift in the tune out given some background light model
 
 hebec_constants
 global const

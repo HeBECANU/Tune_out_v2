@@ -70,7 +70,7 @@ The best way is to install using git, however this can be complicated by the sub
 ``` 
 git clone --recurse-submodules -j8 https://github.com/brycehenson/Tune_out_v2.git 
 ```
-then to update 
+then to update submodules 
 ```
 git submodule update --init --recursive --remote --merge
 ```

@@ -2,7 +2,14 @@
 % close all
 
 %% TODO
-% -[ ] deautomate diff filter folders
+% -[x] deautomate diff filter folders
+% -[ ] understand why Lebesgue integration is being used
+%      - the function does not seem to require it in any way....
+% -[ ] Rewrtite
+%      - my requirements are sufficiently different that a rewrite is better
+%      - can pull code from is_laser_single_mode
+%      - good treatement of clipped pd signal
+%        - estimate transfer function
 
 
 
@@ -79,11 +86,10 @@ config_light.pv_peak_factor = 5;
 config_light.pv_plot = false;
 %light_on_data = cell(numel(light_on_dirnames),1);
 
-
-({'Starting on %s',config.datadir})
+cli_format_text('Starting Processing','c',3)
 %config_light.dirname= config.datadir;
 config_light.dir = config.datadir;
-light_on_data{ii} = light_on_analysis(config_light);
+light_on_data = light_on_analysis(config_light);
 
 fwtext('All dirs analyzed')
 %%

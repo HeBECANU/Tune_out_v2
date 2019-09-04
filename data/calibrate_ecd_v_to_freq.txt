@@ -1,0 +1,28 @@
+20190722T1000+1000
+bryce
+
+-want to calibrate how many volts needed to move the ecd resonance frequency by some ammount
+- will just use the cursors on the scope before and after shifting the wm feedback freq
+
+
+
+delta 4ghz red, 56mv in ecd voltage
+fsr ~ 128 mv
+gives a fsr of about 9.1429GHz
+
+20190722T1022+1000
+set_freq=TOSMHT+4ghz
+newfile3.wfm
+takes soooo long to save even the waveform format
+
+set_freq=TOSMHT
+newfile4.wfm
+
+
+# simple finesse measurment
+cavity voltage =790mv/s
+pd width 310us (FWHM)
+gives a width of 17.4929MHz
+and then a finesse of about 522.45
+
+
