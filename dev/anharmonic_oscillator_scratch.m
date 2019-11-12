@@ -484,7 +484,7 @@ function y = damped_sine_wave(p,t)
 end
 
 function dx = trap_de(pos_vel,mass,damping,trap_derivs)
-    dx(1) = pos_vel(2); %comment out after the first term to turn off damping
+    dx(1) = pos_vel(2); 
     dx(2) = (-deriv_taylor_series(pos_vel(1),trap_derivs,0,1) - damping*pos_vel(2))./mass;
     dx = dx';
 end %function
