@@ -11,9 +11,9 @@
 % - Imports the analog in log file , for each file the import:
 %   - checks that the pd voltage is ok
 %   - check that the laser is single mode using the scanning fabry perot signals
-%   - fits the measured AC mains waveform
+%   - fits the measured AC mains waveform (not used)
 % - Check that the wavemeter readings are ok for each shot
-%   - checks that the wavelengths is stable during the probe intterogation
+%   - checks that the wavelengths is stable during the probe interogation
 %   - checks that the red wavelength is ~half the blue
 %   - checks that the double pd voltage is ok (now redundant beacuse of probe pd)
 % - checks that the number of counts in the file is ok
