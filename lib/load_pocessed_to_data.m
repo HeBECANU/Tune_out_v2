@@ -9,15 +9,15 @@ drift_data_compiled.wp.hwp=[];
 drift_data_compiled.to.val=[];
 drift_data_compiled.to.unc=[];
 drift_data_compiled.to_time=[];
-drift_data_compiled.atom_num.val=[];
-drift_data_compiled.atom_num.std=[];
+drift_data_compiled.atom_num_probe.val=[];
+drift_data_compiled.atom_num_probe.std=[];
 drift_data_compiled.grad.val=[];
 drift_data_compiled.grad.unc=[];
 drift_data_compiled.avg_coef = [];
 drift_data_compiled.avg_coef_cal = [];
 drift_data_compiled.avg_coef_unc = [];
 drift_data_compiled.avg_coef_cal_unc = [];
-
+drift_data_compiled.probe_shots=[];
 
 main_data_compiled.wp.qwp=[];
 main_data_compiled.wp.hwp=[];
@@ -90,7 +90,6 @@ for loop_idx=selected_dirs
             end
         end
         if ~isnan(folder_index)
-
             %parse the folder name into qwp hwp angles
             wp_angles=parse_folder_name_into_wp_angles(current_dir);
 
@@ -108,17 +107,24 @@ for loop_idx=selected_dirs
             drift_data_compiled.to.val=cat(1,drift_data_compiled.to.val,to_fit_seg.fit_trimmed.to_freq.val);
             drift_data_compiled.to.unc=cat(1,drift_data_compiled.to.unc,to_fit_seg.fit_trimmed.to_freq.unc);
             %hacky way to get the same size in the qwp,hwp data
-            drift_data_compiled.wp.qwp=cat(1,drift_data_compiled.wp.qwp,wp_angles.qwp_ang*(1+0*to_fit_seg.fit_trimmed.to_freq.val));
-            drift_data_compiled.wp.hwp=cat(1,drift_data_compiled.wp.hwp,wp_angles.hwp_ang.*(1+0*to_fit_seg.fit_trimmed.to_freq.val));
+            drift_data_compiled.wp.qwp=cat(1,drift_data_compiled.wp.qwp,wp_angles.qwp_ang.*ones(size(to_fit_seg.fit_trimmed.to_freq.val)));
+            drift_data_compiled.wp.hwp=cat(1,drift_data_compiled.wp.hwp,wp_angles.hwp_ang.*ones(size(to_fit_seg.fit_trimmed.to_freq.val)));
 
-            drift_data_compiled.to_time=cat(1,drift_data_compiled.to_time,to_fit_seg.to_time);
-            drift_data_compiled.atom_num.val=cat(1,drift_data_compiled.atom_num.val,to_fit_seg.atom_num(:,1));
-            drift_data_compiled.atom_num.std=cat(1,drift_data_compiled.atom_num.std,to_fit_seg.atom_num(:,2));
+            drift_data_compiled.to_time=cat(1,drift_data_compiled.to_time,to_fit_seg.to_time); %mean of segment start, end time
+            drift_data_compiled.atom_num_probe.val=cat(1,drift_data_compiled.atom_num_probe.val,to_fit_seg.atom_num(:,1));
+            drift_data_compiled.atom_num_probe.std=cat(1,drift_data_compiled.atom_num_probe.std,to_fit_seg.atom_num(:,2));
+            % annoyingly i didnt output how many shots in each segment, but this does the trick
+            drift_data_compiled.probe_shots=cat(1,drift_data_compiled.probe_shots,cellfun(@(x) size(x,1),to_fit_seg.xdat));
+            
+            if ~isequal(size(drift_data_compiled.atom_num_probe.val),size( drift_data_compiled.probe_shots))
+                warning('size not equal')
+            end
+            
             drift_data_compiled.grad.val=cat(1,drift_data_compiled.grad.val,to_fit_seg.fit_trimmed.slope.val);
             drift_data_compiled.grad.unc=cat(1,drift_data_compiled.grad.unc,to_fit_seg.fit_trimmed.slope.unc);
 
-            main_data_compiled.wp.qwp=cat(1,wp_angles.qwp_ang,main_data_compiled.wp.qwp);
-            main_data_compiled.wp.hwp=cat(1,wp_angles.hwp_ang,main_data_compiled.wp.hwp);
+            main_data_compiled.wp.qwp=cat(1,main_data_compiled.wp.qwp,wp_angles.qwp_ang);
+            main_data_compiled.wp.hwp=cat(1,main_data_compiled.wp.hwp,wp_angles.hwp_ang);
 
             main_data_compiled.lin.to.val=cat(1, main_data_compiled.lin.to.val,to_fit_all.fit_trimmed.to_freq(1).val);
             main_data_compiled.lin.to.unc=cat(1, main_data_compiled.lin.to.val,to_fit_all.fit_trimmed.to_freq(1).unc);

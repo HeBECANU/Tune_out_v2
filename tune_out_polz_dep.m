@@ -11,30 +11,41 @@ set_up_project_path
 
 %%
 hebec_constants %call the constants function that makes some globals
-%% import data
-% %% HWP
-% % loop_config.dir = {
-% %     '..\scratch_data\20190227_qwp_270',
-% %     '..\scratch_data\20190227_qwp_286',
-% %     '..\scratch_data\20190227_qwp_310',
-% %     };
-% %root_data_dir='..\scratch_data';
-% root_data_dir='E:\scratch\good_data';
-% files = dir(root_data_dir);
-% files=files(3:end);
-% % Get a logical vector that tells which is a directory.
-% dir_mask = [files.isdir];
-% folders=files(dir_mask);
-% folders=arrayfun(@(x) fullfile(root_data_dir,x.name),folders,'UniformOutput' ,false);
-% folders
-% loop_config.dir=folders;
-% %%
-% 
-% data = load_pocessed_to_data(loop_config);
+% import data
+%% HWP
+% loop_config.dir = {
+%     '..\scratch_data\20190227_qwp_270',
+%     '..\scratch_data\20190227_qwp_286',
+%     '..\scratch_data\20190227_qwp_310',
+%     };
+%root_data_dir='..\scratch_data';
+root_data_dir='E:\scratch\to_main_data';
+files = dir(root_data_dir);
+files=files(3:end);
+% Get a logical vector that tells which is a directory.
+dir_mask = [files.isdir];
+folders=files(dir_mask);
+folders=arrayfun(@(x) fullfile(root_data_dir,x.name),folders,'UniformOutput' ,false);
+folders
+loop_config.dir=folders;
+%%
+
+data = load_pocessed_to_data(loop_config);
+
+%% dist of atom number
+qe=0.09;
+[mean_atomnum,std_atomnum]=pooled_mean_and_std(data.drift.atom_num_probe.val,data.drift.atom_num_probe.std,data.drift.probe_shots);
+mean_atomnum=mean_atomnum/qe;
+std_atomnum=std_atomnum/qe;
+
+smooth_hist(data.drift.atom_num_probe.val/qe,'sigma',1.5e4)
+hold on
+smooth_hist(data.drift.atom_num_probe.val/qe,'sigma',3e3)
+hold off
 
 %%
-%save('./data/20190611_imported_data_for_tune_out_polz_dep.mat')
-load('./data/20190611_imported_data_for_tune_out_polz_dep.mat')
+%save('./data/20191119_imported_data_for_tune_out_polz_dep.mat')
+%load('./data/20190611_imported_data_for_tune_out_polz_dep.mat')
 
 %% Theory
 % TO val from https://journals.aps.org/pra/abstract/10.1103/PhysRevA.93.052516, 413.0859(4)
