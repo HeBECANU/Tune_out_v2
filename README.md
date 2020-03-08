@@ -1,5 +1,5 @@
 # Tune_out_v2_trap_freq
-**Bryce M. Henson, [Jacob A. Ross](https://github.com/GroundhogState), [Kieran F. Thomas](https://github.com/KF-Thomas)**  
+**[Bryce M. Henson](https://github.com/brycehenson), [Jacob A. Ross](https://github.com/GroundhogState), [Kieran F. Thomas](https://github.com/KF-Thomas)**  
 
 
 ## Data
