@@ -31,6 +31,7 @@ for ii=1:iimax
             ./pulse_fit.Coefficients.Estimate(2);
         fit_predict_unc{ii}=@(x) make_unc_fun(x,pulse_fit);
         if anal_opts_afit.plot.each_shot
+            stfig('atom number fit','add_stack',1)
             fprintf('fit number in shot %u\n',ii)
             xplot=linspace(min(pulse_num),max(pulse_num),1e3)';
             [ymodel,ci]=predict(pulse_fit,xplot,'Prediction','observation','Alpha',1-erf(1/sqrt(2)));
@@ -43,10 +44,11 @@ for ii=1:iimax
             xlabel('Pulse Index')
             ylabel('Pulse Counts')
             set(gca, 'YScale', 'log')
-            fprintf('frac predicted %.2e±%.2e\n',...
-                fit_out_frac_ntot(ii,1,1),fit_out_frac_ntot(ii,1,2))
-            fprintf('Total no. fit %.2e±%.2e measured in file %.2e (qe %.1e corrected)\n',...
-                fit_out_frac_ntot(ii,2,1),fit_out_frac_ntot(ii,2,2),data.mcp_tdc.num_counts(ii)/exp_qe,exp_qe)
+            fprintf('frac predicted %s\n',...
+                string_value_with_unc(fit_out_frac_ntot(ii,1,1),fit_out_frac_ntot(ii,1,2),'type','b'))
+            fprintf('Total no. fit %s measured in file %.2e (qe %.1e corrected)\n',...
+                string_value_with_unc(fit_out_frac_ntot(ii,2,1),fit_out_frac_ntot(ii,2,2),'type','b')...
+                ,data.mcp_tdc.num_counts(ii)/exp_qe,exp_qe)
             pause(1e-9)
         end
     end
@@ -59,7 +61,7 @@ out.fit_predict=fit_predict;
 out.fit_predict_unc=fit_predict_unc;
 %%
 if anal_opts_afit.plot.history
-    figure(341)
+    stfig('atom number history','add_stack',1)
     clf
     set(gcf,'color','w')
     subplot(3,1,1)

@@ -211,6 +211,13 @@ diary([anal_out.dir,'anal.txt'])
 %import the data
 [mcp_tdc_data,import_opts]=import_mcp_tdc_data(anal_opts.tdc_import);
 data.mcp_tdc=mcp_tdc_data;
+
+data=hotspot_mask(data);
+data.mcp_tdc.num_counts=data.mcp_tdc.masked.num_counts;
+data.mcp_tdc.counts_txy=data.mcp_tdc.masked.counts_txy;
+data.mcp_tdc=rmfield(data.mcp_tdc,'masked');
+
+
 %% IMPORT LV LOG to data.labview
 %TO DO FUNCTIONALIZE
 %import the wavemeter log
@@ -443,6 +450,9 @@ clear('sub_data')
 % plot(data.wm_log.proc.probe.freq.act.mean*1e6-data.labview.setpoint(1),'rx')
 
 
+%% calculate blue probe freq
+% convert freq to blue in hz apply aom shift to probe beam
+data.blue_probe=calc_probe_blue(data.wm_log.proc,anal_opts.aom_freq);
 
 
 %% COMBINE ALL CHECK LOGICS AND PLOT
@@ -546,12 +556,17 @@ data.mcp_tdc.al_pulses=bin_al_pulses(anal_opts.atom_laser,data);
 %use the inital few atom laser pulses in order to determine the atom number
 %not of that much benifit TBH
 anal_opts.atom_num_fit=[];
-anal_opts.atom_num_fit.pulses=[1,20]; %min,max index of pulses
+anal_opts.atom_num_fit.pulses=[2,20]; %min,max index of pulses
 anal_opts.atom_num_fit.plot.each_shot=false;
 anal_opts.atom_num_fit.plot.history=false;
 anal_opts.atom_num_fit.qe=anal_opts.global.qe;
 
 data.num_fit=fit_atom_number(anal_opts.atom_num_fit,data);
+
+%% Fitting Temp
+% find the temperature from the atom laser pulses
+%anal_opts.temperature_fit=[]
+%data.temperature_fit=fit_temperature(anal_opts.atom_num_fit,data);
 
 
 %% Load saved state
@@ -627,10 +642,6 @@ anal_opts.calc_sig=[];
 
 data.signal=calculate_signal(anal_opts.calc_sig,data);
 
-
-%% calculate blue probe freq
-% convert freq to blue in hz apply aom shift to probe beam
-data.blue_probe=calc_probe_blue(data.wm_log.proc,anal_opts.aom_freq);
 
 %% Fit the tune out uisng all the data points from this scan
 % fit using both a linear and quadratic polynomial

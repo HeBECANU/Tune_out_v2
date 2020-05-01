@@ -295,7 +295,7 @@ if anal_opts_osc_fit.plot_err_history
     
 end
 
-
+%%
 if anal_opts_osc_fit.plot_fit_corr
     mask=osc_fit.ok.all;
     stfig('fit param corr','add_stack',1);
@@ -303,8 +303,9 @@ if anal_opts_osc_fit.plot_fit_corr
     set(gcf,'color','w')
     %see if the fit error depends on the probe freq
     subplot(3,3,1)
-    tmp_probe_freq=data.wm_log.proc.probe.freq.act.mean(mask);
-    tmp_probe_freq=(tmp_probe_freq-nanmean(tmp_probe_freq))*1e-3;
+    tmp_probe_freq=data.blue_probe.act.mean(mask);
+    tmp_probe_freq=(tmp_probe_freq-nanmean(tmp_probe_freq))*1e-9;
+    
     plot(tmp_probe_freq,...
         osc_fit.fit_rmse(osc_fit.ok.all),'xk')
     xlabel('probe beam freq (GHz)')
@@ -342,12 +343,31 @@ if anal_opts_osc_fit.plot_fit_corr
     ylabel('zcpl')
     title('zcpl')
     %see if the amp changes
+    
     subplot(3,3,7)
-    plot(tmp_probe_freq,...
-       1./osc_fit.model_coefs(mask,7,1),'xk')
+    freq_samp=col_vec(linspace(min(tmp_probe_freq),max(tmp_probe_freq),1e3));
+    damp_corr_model=@(b,x) b(1)+b(2).*x; %b(3)*x.^2
+    cof_names={'offset','grad'};
+    damping_fit_obj=fitnlm(tmp_probe_freq,...
+                            1./osc_fit.model_coefs(mask,7,1),...
+                            damp_corr_model,...
+                            [1,1],...
+                            'CoefficientNames',cof_names);
+    [damping_samp,damping_samp_ci]=predict(damping_fit_obj,freq_samp,'Alpha',1-erf(1/sqrt(2)),'Prediction','curve'); %'observation'
+   
+    color_shaded=[1,1,1]*0.8;
+    patch([freq_samp', fliplr(freq_samp')], [damping_samp_ci(:,1)', fliplr(damping_samp_ci(:,2)')], color_shaded,'EdgeColor','none')  %[1,1,1]*0.80
+    hold on
+    plot(freq_samp,damping_samp)
+    errorbar(tmp_probe_freq,...
+           1./osc_fit.model_coefs(mask,7,1),...
+           (1./osc_fit.model_coefs(mask,7,1)).*(osc_fit.model_coefs(mask,7,2)./osc_fit.model_coefs(mask,7,1)),...
+           'xk','CapSize',0)
+    hold off      
     xlabel('probe beam freq (GHz)')
     ylabel('Damping Time (s)')
     title('Damping')
+
     subplot(3,3,8)
     plot(tmp_probe_freq,...
        osc_fit.model_coefs(mask,8,1),'xk')
@@ -367,7 +387,7 @@ if anal_opts_osc_fit.plot_fit_corr
     saveas(gcf,[anal_opts_osc_fit.global.out_dir,plot_name,'.png'])
     saveas(gcf,[anal_opts_osc_fit.global.out_dir,plot_name,'.fig'])
 end
-
+%%
 
 
 end

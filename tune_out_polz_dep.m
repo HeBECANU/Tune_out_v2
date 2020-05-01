@@ -6,7 +6,7 @@ aom_freq =0; %aom offset in Hz, as of 20190528 offset is calculated in main_trap
 
 %%
 addpath('./lib/Core_BEC_Analysis/lib/') %add the path to set_up_project_path
-set_up_project_path
+set_up_project_path('..')
 
 
 %%

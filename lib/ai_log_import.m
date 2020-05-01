@@ -266,7 +266,7 @@ function ai_log_single_out=ai_log_single(args_single)
 %%load the data
 path=strcat(args_single.dir,args_single.fname);
 fid = fopen(path,'r');
-raw_line = fread(fid,Inf,'*char')'; % this is the fastest string read method 3.5s for 20 files
+raw_line = textscan(fid,'%s','Delimiter','\n'); % this is the fastest string read method 3.5s for 20 files
 fclose(fid);
 ai_dat=jsondecode(raw_line);
 samples= size(ai_dat.Data,2);
