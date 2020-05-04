@@ -20,7 +20,8 @@ for ii=1:iimax
             tmax=this_tau*jj;
             mask_idx= fast_sorted_mask(t,tmin,tmax);
             if diff(mask_idx)>2
-                tmp_sdevs(jj)=std(x(mask_idx(1):mask_idx(2)));
+                tmp_sdevs(jj)=std_c4(x(mask_idx(1):mask_idx(2)));
+                %tmp_sdevs(jj)=std(x(mask_idx(1):mask_idx(2)));
             end
         end
         sdev(ii)=nanmean(tmp_sdevs);

@@ -18,7 +18,7 @@ set_up_project_path('../..')
 % calculate allan deviation of locked laser
 % combine interogations
 % combine with wavemeter log data
-
+return
 %%
 data_dir='E:\scratch\to_wm_stab';
 file_name='2p_cs_log_20181231T014329.txt'
@@ -44,7 +44,7 @@ end
 %% fit a single scan with a voigt
 pmt_gain=20e6;
 rescale_curr_mult=1e9;
-ii=14;
+ii=50; %14
 
 pmt_gain=pmt_gain*-1;
 single_scan_dat=scans_data{ii};
@@ -56,8 +56,9 @@ aq_cen_time=mean(rel_samp_time)+start_samp_time;
 set_freq=single_scan_dat.parameters.set_freq;
 
 pmt_curr_mean=single_scan_dat.parameters.pmt_voltage_mean/pmt_gain;
-pmt_curr_std=single_scan_dat.parameters.pmt_voltage_std/pmt_gain;
-pmt_curr_ste=pmt_curr_std/sqrt(num_samples_guess);
+this_curr_std=single_scan_dat.parameters.pmt_voltage_std/pmt_gain;
+this_curr_std=abs(this_curr_std);
+pmt_curr_ste=this_curr_std/sqrt(num_samples_guess);
 mean_freq=mean(set_freq);
 
 predictor=set_freq-mean_freq;
@@ -66,10 +67,14 @@ opts=[];
 opts.predictor=predictor;
 opts.response=response;
 opts.response_err=pmt_curr_ste*rescale_curr_mult;
+opts.response_noise=this_curr_std*rescale_curr_mult;
+opts.num_samples_per_pt=num_samples_guess;
 opts.do_plots=true;
 opts.sigma_outlier=outlier_thresh;
 tmp_out_st=fit_2p_data_with_a_voigt(opts);
-export_fig('E:\Dropbox\UNI\projects\programs\tune_out_v2\Tune_out_git\results\2p_nice_plots\2p_nice_plot.svg')
+tmp_out_st.fit_noise_no_cull
+
+%export_fig('E:\Dropbox\UNI\projects\programs\tune_out_v2\Tune_out_git\results\2p_nice_plots\2p_fit.svg')
 
 %%
 % errorbar(set_freq-mean_freq,pmt_curr_mean*plot_curr_mult,pmt_curr_std*plot_curr_mult,'x')
@@ -102,23 +107,26 @@ for ii=1:iimax
     set_freq=single_scan_dat.parameters.set_freq;
 
     pmt_curr_mean=single_scan_dat.parameters.pmt_voltage_mean/pmt_gain;
-    pmt_curr_std=single_scan_dat.parameters.pmt_voltage_std/pmt_gain;
-    pmt_curr_ste=pmt_curr_std/sqrt(num_samples_guess);
+    this_curr_std=single_scan_dat.parameters.pmt_voltage_std/pmt_gain;
+    this_curr_std=abs(this_curr_std);
+    pmt_curr_ste=this_curr_std/sqrt(num_samples_guess);
     mean_freq=mean(set_freq);
 
     predictor=set_freq-mean_freq;
     response=pmt_curr_mean*rescale_curr_mult;
-
     opts=[];
     opts.predictor=predictor;
     opts.response=response;
+    opts.response_err=pmt_curr_ste*rescale_curr_mult;
+    opts.response_noise=this_curr_std*rescale_curr_mult;
+    opts.num_samples_per_pt=num_samples_guess;
     opts.do_plots=false;
     opts.sigma_outlier=outlier_thresh;
     tmp_out_st=fit_2p_data_with_a_voigt(opts);
     tmp_out_st.offset_freq=mean_freq;
     tmp_out_st.time_aq=aq_cen_time;
     vf_out{ii}=tmp_out_st;
-
+    %tmp_out_st.fit_noise_no_cull
     pause(0.5)
 
 end
@@ -130,6 +138,8 @@ plot_fit_singles=[];
 iimax=numel(vf_out);
 plot_fit_singles.coef.val=nan(iimax,5);
 plot_fit_singles.coef.se=nan(iimax,5);
+plot_fit_singles.ncoef.val=nan(iimax,3);
+plot_fit_singles.ncoef.se=nan(iimax,3);
 plot_fit_singles.time=nan(iimax,1);
 for ii=1:iimax
     this_fit=vf_out{ii};
@@ -138,6 +148,8 @@ for ii=1:iimax
         % add the freq offset
         plot_fit_singles.coef.val(ii,3)=plot_fit_singles.coef.val(ii,3)+this_fit.offset_freq;
         plot_fit_singles.coef.se(ii,:)=this_fit.fit_cull.voigt.Coefficients.SE;
+        plot_fit_singles.ncoef.val(ii,:)=this_fit.fit_noise_cull.Coefficients.Estimate;
+        plot_fit_singles.ncoef.se(ii,:)=this_fit.fit_noise_cull.Coefficients.SE;
         plot_fit_singles.time(ii)=this_fit.time_aq;
     end
 end
@@ -148,36 +160,67 @@ clf
 time_scaling=1/(60*60);
 filt_time=60*5;
 start_time=min(plot_fit_singles.time);
-subplot(3,1,1)
+subplot(4,1,1)
 raw_sigma=plot_fit_singles.coef.val(:,1);
 raw_gamma=plot_fit_singles.coef.val(:,2);
 raw_freq=plot_fit_singles.coef.val(:,3);
-valid_mask=~isnan(raw_sigma) & raw_sigma>0.01 & raw_sigma<0.4 & raw_gamma>0.3;
+raw_noise_freq_est=abs(plot_fit_singles.ncoef.val(:,1));
+valid_mask=~isnan(raw_sigma) & raw_sigma>0.03 & raw_sigma<0.4 & raw_gamma>0.3 & raw_noise_freq_est < 0.6 ...
+            & plot_fit_singles.coef.se(:,3)<0.05 ;
+valid_noise_fit=valid_mask
+valid_noise_fit=valid_mask &  plot_fit_singles.ncoef.se(:,1)<2 & plot_fit_singles.ncoef.se(:,2)>1e-4 & ...
+               plot_fit_singles.ncoef.se(:,2) < 10 ;
 
 raw_sigma=raw_sigma(valid_mask);
 raw_gamma=raw_gamma(valid_mask);
 raw_freq=raw_freq(valid_mask);
 
+%27.16
+
 time_raw=plot_fit_singles.time-start_time;
 time_masked=time_raw(valid_mask);
 smooth_sigma=gaussfilt(time_masked,raw_sigma,filt_time);
 smooth_gamma=gaussfilt(time_masked,raw_gamma,filt_time);
+
+
 plot(time_masked*time_scaling,raw_sigma)
 hold on
 plot(time_masked*time_scaling,smooth_sigma)
 hold off
 ylabel('$\sigma$ (MHz)')
-subplot(3,1,2)
+subplot(4,1,2)
 plot(time_masked*time_scaling,raw_gamma)
 hold on
 plot(time_masked*time_scaling,smooth_gamma)
 hold off
 ylabel('$\gamma$ (MHz)')
-subplot(3,1,3)
+subplot(4,1,3)
 mean_freq=nanmean(raw_freq);
 plot(time_masked*time_scaling,raw_freq-mean_freq)
 ylabel('$\mu$ (MHz)')
 xlabel('time (h)')
+
+subplot(4,1,4)
+raw_noise_freq_est=raw_noise_freq_est(valid_noise_fit);
+time_noise_masked=time_raw(valid_noise_fit);
+smooth_noise_freq_est=gaussfilt(time_noise_masked,raw_noise_freq_est,filt_time)
+mean_freq_noise=nanmean(raw_noise_freq_est);
+wmean(abs(plot_fit_singles.ncoef.val(valid_noise_fit,1)),1./(plot_fit_singles.ncoef.se(valid_noise_fit,1).^2))
+
+plot(time_noise_masked*time_scaling,raw_noise_freq_est)
+hold on
+plot(time_noise_masked*time_scaling,smooth_noise_freq_est)
+hold off
+ylabel('$\sigma_{f}$ (MHz)')
+xlabel('time (h)')
+
+
+stfig('mu history')
+mean_freq=nanmean(raw_freq);
+plot(1e-3*time_masked,1e3*(raw_freq-mean_freq),'k-','LineWidth',1.5)
+ylabel('$\mu-\bar{\mu}$ (kHz)')
+xlabel('Time (ks)')
+
 
 %% lets look at the allan deviation 
 allan_data=[]
@@ -188,8 +231,8 @@ tau=logspace(log10(200),log10(20e3));
 
 
 %% time integerated standard deviation
-%tau=logspace(log10(200),log10(range(time_masked)/2.1),100);
-tau=logspace(log10(600),log10(range(time_masked)/2.1),100);
+%tau=logspace(log10(600),log10(range(time_masked)/2.1),100);
+tau=logspace(log10(600),log10(range(time_masked)),100);
 [int_sdev,int_sdev_unc]=time_integerated_sdev(time_masked,raw_freq-mean_freq,tau);
 
 stfig('int stdev');
@@ -205,27 +248,31 @@ clf
 % beta0=[0.1,0.01];
 
 cof_names={'offset','grad','curve'};
-fit_fun=@(b,x) b(1)+b(2)*log(x)+b(3)*(log(x)).^2;
+fit_fun=@(b,x) b(1)+b(2)*log10(x)+b(3)*(log10(x)).^2;
 beta0=[0.1,0.01,0.01];
 
-predictor=tau;
-response=int_sdev;
+predictor=tau(~isnan(int_sdev));
+response=int_sdev(~isnan(int_sdev));
 
 
 opt = statset('TolFun',1e-10,'TolX',1e-10,...
     'MaxIter',1e4,... %1e4
     'UseParallel',1);
 
-weights=ones(size(predictor));
-% weights=1./int_sdev_unc;
+%weights=ones(size(predictor));
+%weights=1./(int_sdev_unc.^2);
 % weights(isnan(weights))=1e-20; %if nan then set to smallest value you can
 % weights=weights./sum(weights);
 % 
-
+%'Weights',weights,...
 fitobj=fitnlm(predictor,response,fit_fun,beta0,...
     'options',opt,...
-    'Weights',weights,...
-    'CoefficientNames',cof_names);
+    'CoefficientNames',cof_names)
+
+
+y_plot_factor=1e3;
+x_plot_factor=1e-3;
+
 
 %
 xplotvalues=linspace(min(predictor),max(predictor),1e4);
@@ -237,40 +284,57 @@ amp_pred=fitobj.predict(xplotvalues); %'Alpha',1-erf(1/sqrt(2)),'Prediction','ob
 [~,ci_curve]=fitobj.predict(xplotvalues,'Alpha',1-erf(1/sqrt(2)),'Prediction','curve'); %
 
 shaded_ci_lines=true;
-color_shaded=[0.9,1,1];
-
+color_shaded=[0.9,0.9,0.9];
 
 hold on
 if shaded_ci_lines
-    patch([xplotvalues', fliplr(xplotvalues')], [ci(:,1)', fliplr(ci(:,2)')], color_shaded,'EdgeColor','none')  %[1,1,1]*0.80
+    patch([xplotvalues', fliplr(xplotvalues')]*x_plot_factor, [ci(:,1)', fliplr(ci(:,2)')]*y_plot_factor, color_shaded,'EdgeColor','none')  %[1,1,1]*0.80
 else
-    plot(xplotvalues,ci(:,1),'-','LineWidth',1.5)
-    plot(xplotvalues,ci(:,2),'-','LineWidth',1.5)
+    plot(xplotvalues*x_plot_factor,ci(:,1)*y_plot_factor,'-','LineWidth',1.5)
+    plot(xplotvalues*x_plot_factor,ci(:,2)*y_plot_factor,'-','LineWidth',1.5)
 end  
 
+plot_ci_curve=false;
 shaded_curve_ci_lines=false;
-if shaded_curve_ci_lines
-    color_shaded=[0.9,1,1];
-    patch([xplotvalues', fliplr(tplotvalues')], [ci_curve(:,1)', fliplr(ci_curve(:,2)')], color_shaded,'EdgeColor','none')  %[1,1,1]*0.80
-    hold on
-else
-    color_shaded=[0,1,0];
-    plot(xplotvalues,ci_curve(:,1),'-','LineWidth',1.5,'Color',color_shaded)
-    hold on
-    plot(xplotvalues,ci_curve(:,2),'-','LineWidth',1.5,'Color',color_shaded)
-end  
-
-errorbar(tau,int_sdev,int_sdev_unc,'xk','capsize',0)
+if plot_ci_curve
+    if shaded_curve_ci_lines
+        color_shaded=[0.9,1,1];
+        patch([xplotvalues'*x_plot_factor, fliplr(tplotvalues')], [ci_curve(:,1)', fliplr(ci_curve(:,2)')]*y_plot_factor, color_shaded,'EdgeColor','none')  %[1,1,1]*0.80
+        hold on
+    else
+        color_shaded=[0,0.4,0];
+        plot(xplotvalues*x_plot_factor,ci_curve(:,1)*y_plot_factor,'-','LineWidth',1.5,'Color',color_shaded)
+        hold on
+        plot(xplotvalues*x_plot_factor,ci_curve(:,2)*y_plot_factor,'-','LineWidth',1.5,'Color',color_shaded)
+    end  
+end
+errorbar(tau*x_plot_factor,int_sdev*y_plot_factor,int_sdev_unc*y_plot_factor,'ko'...
+        ,'CapSize',0,'MarkerSize',3,...
+        'LineWidth',1.5,...
+        'MarkerEdgeColor',[0.3,0.3,0.8],...
+        'Color',[0.3,0.3,0.8],...
+        'MarkerFaceColor',[0.45,0.45,1])
 %set(gca,'YScale','Log')
 
-plot(xplotvalues,amp_pred,'-','LineWidth',1.0)
+plot(xplotvalues*x_plot_factor,amp_pred*y_plot_factor,'k-','LineWidth',1.8)
 set(gca,'XScale','Log')
 %set(gca,'YScale','Log')
-xlabel('integeration time (s)')
-ylabel('sample standard deviation (MHz)')
+xlabel('Integration Time $\tau$ (ks)')
+ylabel('$\tau$ Sample Standard Deviation (kHz)')
 hold off
+xminmax=min_max_vec(predictor)*x_plot_factor;
+xl=xminmax.*[0.8,1.2];
+xlim(xl)
+yticks(20:20:100)
+xticks([1,3,10])
+box on
+
+[pred_lindwidth_val,pred_linewidth_ci]=fitobj.predict(16*24*60*60,'Alpha',1-erf(1/sqrt(2)),'Prediction','curve');
+fprintf('predicted linewidth contribution at 16 days %s MHz\n ',...
+    string_value_with_unc(pred_lindwidth_val,diff(pred_linewidth_ci),'type','b'))
 
 
+%saveas(gcf,'E:\Dropbox\UNI\projects\programs\tune_out_v2\Tune_out_git\results\2p_nice_plots\tau_sample_std.svg')
 
 %% lets integerate a variable amount and then fit the result
 
@@ -288,16 +352,17 @@ for ii=1:iimax
     output_chars=fprintf('%04u of %04u',ii,iimax);
     cen_times=[];
     set_freqs=[];
-    pmt_mean_currs=[];
+    pmt_currs_mean=[];
+    pmt_curr_errs=[];
     for jj=int_start:(int_start+int_max_schedule(ii))
         single_scan_dat=vf_out{jj};
         this_set_freqs=single_scan_dat.data_cull.predictor+single_scan_dat.offset_freq;
-        this_mean_curr=single_scan_dat.data_cull.response;
+        this_curr_mean=single_scan_dat.data_cull.response;
         % if fit_cull is empty then the fit went haywire
         if ~isempty(single_scan_dat.fit_cull)
             mean_current=single_scan_dat.fit_cull.voigt.Coefficients.Estimate(5);
-            this_mean_curr=this_mean_curr-mean_current;
-            pmt_mean_currs=cat(1,pmt_mean_currs,this_mean_curr);
+            this_curr_mean=this_curr_mean-mean_current;
+            pmt_currs_mean=cat(1,pmt_currs_mean,this_curr_mean);
             set_freqs=cat(1,set_freqs,this_set_freqs);
             cen_times=cat(1,cen_times,single_scan_dat.time_aq);
         end
@@ -313,7 +378,7 @@ for ii=1:iimax
     % %
 
     predictor=set_freqs-mean_freq;
-    response=pmt_mean_currs;
+    response=pmt_currs_mean;
     % fit to all the data without binning
 %     opts=[];
 %     opts.predictor=predictor;
@@ -323,12 +388,10 @@ for ii=1:iimax
 %     combined_fit_out=fit_2p_data_with_a_voigt(opts)
 
     % what if i bin it first then fit
-
-
     binning_opts=[];
     binning_opts.x=predictor;
     binning_opts.y=response;
-    binning_opts.xbin_edges=linspace(min(predictor),max(predictor),100);
+    binning_opts.xbin_edges=linspace(min(predictor),max(predictor),200);
     bined_data=bin_xy_data(binning_opts);
 
     % 200
@@ -346,6 +409,7 @@ for ii=1:iimax
     opts=[];
     opts.predictor=bined_data.x.mean;
     opts.response=bined_data.y.mean;
+    opts.response_err=bined_data.y.se;
     opts.do_plots=true;
     opts.sigma_outlier=4;
     tmp_int_out=fit_2p_data_with_a_voigt(opts);
@@ -378,16 +442,16 @@ stfig('int dependence');
 clf
 time_scaling=1/(60*60);
 subplot(3,1,1)
-errorbar(params.time_range*time_scaling,plot_fit_int.coef.val(:,1),plot_fit_int.coef.se(:,1),'xk','CapSize',0)
+errorbar(plot_fit_int.time_range*time_scaling,plot_fit_int.coef.val(:,1),plot_fit_int.coef.se(:,1),'xk','CapSize',0)
 ylabel('$\sigma$ (MHz)')
 ylim([0.15,0.25])
 subplot(3,1,2)
-errorbar(params.time_range*time_scaling, plot_fit_int.coef.val(:,2),plot_fit_int.coef.se(:,2),'xk','CapSize',0)
+errorbar(plot_fit_int.time_range*time_scaling, plot_fit_int.coef.val(:,2),plot_fit_int.coef.se(:,2),'xk','CapSize',0)
 ylabel('$\gamma$ (MHz)')
 ylim([0.45,0.55])
 subplot(3,1,3)
 mean_freq=nanmean(plot_fit_int.coef.val(:,3));
-errorbar(params.time_range*time_scaling, plot_fit_int.coef.val(:,3)-mean_freq,plot_fit_int.coef.se(:,3),'xk','CapSize',0)
+errorbar(plot_fit_int.time_range*time_scaling, plot_fit_int.coef.val(:,3)-mean_freq,plot_fit_int.coef.se(:,3),'xk','CapSize',0)
 ylabel('$\mu$ (MHz)')
 
 xlabel('integrated time (h)')
@@ -402,7 +466,7 @@ rescale_curr_mult=1e9;
 
 cen_times=[];
 set_freqs=[];
-pmt_mean_currs=[];
+pmt_currs_mean=[];
 for ii=[2,500]
 single_scan_dat=scans_data{ii};
 rel_samp_time=single_scan_dat.parameters.sample_time_posix;
@@ -414,7 +478,7 @@ this_pmt_curr_mean=single_scan_dat.parameters.pmt_voltage_mean/pmt_gain;
 this_pmt_curr_std=single_scan_dat.parameters.pmt_voltage_std/pmt_gain;
 cen_times=cat(1,cen_times,this_aq_cen_time);
 set_freqs=cat(1,set_freqs,this_set_freq);
-pmt_mean_currs=cat(1,pmt_mean_currs,this_pmt_curr_mean);
+pmt_currs_mean=cat(1,pmt_currs_mean,this_pmt_curr_mean);
 end
 
 
@@ -422,13 +486,13 @@ size(set_freqs)
 
 mean_freq=mean(set_freqs);
 
-errorbar(set_freq-mean_freq,pmt_curr_mean*rescale_curr_mult,pmt_curr_std*rescale_curr_mult,'x')
+errorbar(set_freq-mean_freq,pmt_curr_mean*rescale_curr_mult,this_curr_std*rescale_curr_mult,'x')
 xlabel('MHz')
 ylabel('nA')
 %
 
 predictor=set_freqs-mean_freq;
-response=pmt_mean_currs*rescale_curr_mult;
+response=pmt_currs_mean*rescale_curr_mult;
 opts=[];
 opts.predictor=predictor;
 opts.response=response;
