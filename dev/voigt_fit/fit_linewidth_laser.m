@@ -21,30 +21,43 @@ set_up_project_path('../..')
 return
 %%
 data_dir='E:\scratch\to_wm_stab';
-file_name='2p_cs_log_20181231T014329.txt'
-path=fullfile(data_dir,file_name);
-fid = fopen(path,'r');
-raw_lines = textscan(fid,'%s','Delimiter','\n'); % this is the fastest string read method 3.5s for 20 files
-fclose(fid);
-raw_lines=raw_lines{1};
-
+%file_name='2p_cs_log_20181231T014329.txt'
+files=dir(fullfile(data_dir,'2p_cs_log_*.txt'))
+files={files.name};
+scans_data=cell(1,0);
+data_idx=1;
+iimax=numel(files);
+file_lengths=nan(1,iimax);
+for ii=1:numel(files)
+    file_name=files{ii}
+    path=fullfile(data_dir,file_name);
+    fid = fopen(path,'r');
+    raw_lines = textscan(fid,'%s','Delimiter','\n'); % this is the fastest string read method 3.5s for 20 files
+    fclose(fid);
+    raw_lines=raw_lines{1};
+    jjmax=numel(raw_lines)
+    file_lengths(ii)=jjmax;
+    for jj=1:jjmax
+        tmp_st=jsondecode(raw_lines{jj});
+        tmp_st.log_fname=file_name;
+        scans_data{data_idx}=tmp_st;
+        data_idx=data_idx+1;
+    end
+end
+%%
 
 % i think the usual params were %0.3s for settle time 0.7 for aq time
 % 500hz az with 3.7khz low pass filter
 num_samples_guess=0.5*500;
-
-%%
-iimax=numel(raw_lines);
-scans_data=cell(1,iimax);
-for ii=1:iimax
-    scans_data{ii}=jsondecode(raw_lines{ii});
-end
+f_table=[];
+f_table.cs_2p_6SF3_8SF3=364507238.363;
+f_table.cs_2p_6SF4_8SF4=364503080.297;
 
 
 %% fit a single scan with a voigt
 pmt_gain=20e6;
 rescale_curr_mult=1e9;
-ii=50; %14
+ii=890; %14
 
 pmt_gain=pmt_gain*-1;
 single_scan_dat=scans_data{ii};
@@ -72,7 +85,8 @@ opts.num_samples_per_pt=num_samples_guess;
 opts.do_plots=true;
 opts.sigma_outlier=outlier_thresh;
 tmp_out_st=fit_2p_data_with_a_voigt(opts);
-tmp_out_st.fit_noise_no_cull
+%tmp_out_st.fit_noise_no_cull
+tmp_out_st.fit_cull.voigt
 
 %export_fig('E:\Dropbox\UNI\projects\programs\tune_out_v2\Tune_out_git\results\2p_nice_plots\2p_fit.svg')
 
@@ -89,10 +103,11 @@ pmt_gain=pmt_gain*-1;
 outlier_thresh=3.5;
 
 fprintf('\nfitting scans ')
-output_chars=fprintf('%04u of %04u',0,iimax);
+
 
 proc_scans=[];
 iimax=numel(scans_data);
+output_chars=fprintf('%04u of %04u',0,iimax);
 vf_out=[];
 for ii=1:iimax
     fprintf(repmat('\b',[1,output_chars]))
@@ -146,7 +161,13 @@ for ii=1:iimax
     if ~isempty(this_fit.fit_cull)
         plot_fit_singles.coef.val(ii,:)=this_fit.fit_cull.voigt.Coefficients.Estimate;
         % add the freq offset
-        plot_fit_singles.coef.val(ii,3)=plot_fit_singles.coef.val(ii,3)+this_fit.offset_freq;
+        % this is super hacky atm
+        if ii<614
+            delta_from_transition=this_fit.offset_freq-f_table.cs_2p_6SF4_8SF4;
+        else
+            delta_from_transition=this_fit.offset_freq-f_table.cs_2p_6SF3_8SF3;
+        end
+        plot_fit_singles.coef.val(ii,3)=plot_fit_singles.coef.val(ii,3)+1;
         plot_fit_singles.coef.se(ii,:)=this_fit.fit_cull.voigt.Coefficients.SE;
         plot_fit_singles.ncoef.val(ii,:)=this_fit.fit_noise_cull.Coefficients.Estimate;
         plot_fit_singles.ncoef.se(ii,:)=this_fit.fit_noise_cull.Coefficients.SE;
@@ -167,6 +188,7 @@ raw_freq=plot_fit_singles.coef.val(:,3);
 raw_noise_freq_est=abs(plot_fit_singles.ncoef.val(:,1));
 valid_mask=~isnan(raw_sigma) & raw_sigma>0.03 & raw_sigma<0.4 & raw_gamma>0.3 & raw_noise_freq_est < 0.6 ...
             & plot_fit_singles.coef.se(:,3)<0.05 ;
+valid_mask(cumsum([1,file_lengths(1:end-1)]))=0; %not the first of each file
 valid_noise_fit=valid_mask
 valid_noise_fit=valid_mask &  plot_fit_singles.ncoef.se(:,1)<2 & plot_fit_singles.ncoef.se(:,2)>1e-4 & ...
                plot_fit_singles.ncoef.se(:,2) < 10 ;
@@ -226,13 +248,14 @@ xlabel('Time (ks)')
 allan_data=[]
 allan_data.freq=raw_freq-mean_freq;
 allan_data.time=time_masked;
-tau=logspace(log10(200),log10(20e3));
+tau=logspace(log10(200),log10(60e3));
 [adev, s, errorb, tau]=allan_overlap(allan_data,tau,[],1)
 
 
 %% time integerated standard deviation
 %tau=logspace(log10(600),log10(range(time_masked)/2.1),100);
-tau=logspace(log10(600),log10(range(time_masked)),100);
+%tau=logspace(log10(600),log10(range(time_masked)),100);
+tau=logspace(log10(300),log10(50e3),100);
 [int_sdev,int_sdev_unc]=time_integerated_sdev(time_masked,raw_freq-mean_freq,tau);
 
 stfig('int stdev');
@@ -325,7 +348,7 @@ hold off
 xminmax=min_max_vec(predictor)*x_plot_factor;
 xl=xminmax.*[0.8,1.2];
 xlim(xl)
-yticks(20:20:100)
+%   yticks(20:20:100)
 xticks([1,3,10])
 box on
 
@@ -339,17 +362,17 @@ fprintf('predicted linewidth contribution at 16 days %s MHz\n ',...
 %% lets integerate a variable amount and then fit the result
 
 fprintf('\n fitting integeration of scans ')
-output_chars=fprintf('%04u of %04u',0,iimax);
+output_chars=fprintf('%04u of %04u',0,jjmax);
 
 fits_varying_int={};
 %int_max_schedule=10:10:numel(vf_out)-1;
 int_start=2;
 int_max_schedule=1:20:numel(vf_out)-int_start;
 
-iimax=numel(int_max_schedule);
-for ii=1:iimax
+jjmax=numel(int_max_schedule);
+for ii=1:jjmax
     fprintf(repmat('\b',[1,output_chars]))
-    output_chars=fprintf('%04u of %04u',ii,iimax);
+    output_chars=fprintf('%04u of %04u',ii,jjmax);
     cen_times=[];
     set_freqs=[];
     pmt_currs_mean=[];
@@ -422,12 +445,12 @@ end
 %% Plot the integeration dependence
 
 plot_fit_int=[];
-iimax=numel(fits_varying_int);
-plot_fit_int.coef.val=nan(iimax,5);
-plot_fit_int.coef.se=nan(iimax,5);
-plot_fit_int.time_range=nan(iimax,1);
+jjmax=numel(fits_varying_int);
+plot_fit_int.coef.val=nan(jjmax,5);
+plot_fit_int.coef.se=nan(jjmax,5);
+plot_fit_int.time_range=nan(jjmax,1);
 
-for ii=1:iimax
+for ii=1:jjmax
     this_int_fit=fits_varying_int{ii};
     if ~isempty(this_int_fit.fit_no_cull)
         plot_fit_int.coef.val(ii,:)=this_int_fit.fit_no_cull.voigt.Coefficients.Estimate;

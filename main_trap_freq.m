@@ -75,6 +75,15 @@
 
 %close all
 clear all
+
+%% set up the path
+
+addpath('./lib/Core_BEC_Analysis/lib/') %add the path to set_up_project_path, this will change if Core_BEC_Analysis is included as a submodule
+                  % in this case it should be 
+set_up_project_path
+
+hebec_constants %call the constants function that makes some globals
+return
 %%
 % BEGIN USER VAR-------------------------------------------------
 
@@ -152,22 +161,6 @@ active_process_mod_time=60*0;
 % END USER VAR-----------------------------------------------------------
 
 
-
-%% set up the path
-
-% find this .m file's path, this must be in the project root dir
-this_folder = fileparts(which(mfilename));
-% Add that folder plus all subfolders to the path.
-addpath(genpath(this_folder));%add all subfolders to the path to find genpath_exclude
-path_to_genpath=fileparts(which('genpath_exclude'));
-path(pathdef) %clean up the path back to the default state to remove all the .git that were added
-addpath(this_folder)
-addpath(path_to_genpath)
-addpath(genpath_exclude(fullfile(this_folder,'lib'),'\.')) %dont add hidden folders
-addpath(genpath_exclude(fullfile(this_folder,'dev'),'\.'))
-addpath(genpath_exclude(fullfile(this_folder,'bin'),'\.'))
-
-hebec_constants %call the constants function that makes some globals
 
 fprintf('approx remaining folders to be processed %u \n',...
 sum(cellfun(@(x) should_process_folder(x,reprocess_folder_if_older_than,0),folders)))

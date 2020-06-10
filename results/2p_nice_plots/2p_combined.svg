@@ -16,7 +16,10 @@
    height="388"
    viewBox="0 0 488 388"
    sodipodi:docname="2p_combined.svg"
-   inkscape:version="0.92.3 (2405546, 2018-03-11)"><metadata
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"
+   inkscape:export-filename="D:\Dropbox\UNI\projects\programs\tune_out_v2\Tune_out_git\results\2p_nice_plots\2p_combined.png"
+   inkscape:export-xdpi="300"
+   inkscape:export-ydpi="300"><metadata
      id="metadata8"><rdf:RDF><cc:Work
          rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" /><dc:title></dc:title></cc:Work></rdf:RDF></metadata><defs
@@ -150,9 +153,9 @@
      id="namedview4"
      showgrid="false"
      inkscape:zoom="2.4329896"
-     inkscape:cx="280.45903"
-     inkscape:cy="327.66021"
-     inkscape:window-x="1912"
+     inkscape:cx="208.53106"
+     inkscape:cy="212.78097"
+     inkscape:window-x="-8"
      inkscape:window-y="-8"
      inkscape:window-maximized="1"
      inkscape:current-layer="g10"
@@ -171,6 +174,7 @@
      y="9.6331997"
      sodipodi:role="line"
      id="tspan18">PMT Current (nA)</tspan></text>
+
 
 <path
    inkscape:connector-curvature="0"
@@ -1087,6 +1091,7 @@
      y="-243.4852"
      id="tspan478">6</tspan></text>
 
+
 <path
    inkscape:connector-curvature="0"
    id="path482"
@@ -1102,6 +1107,7 @@
      sodipodi:role="line"
      id="tspan486">Fit Residual (nA)</tspan></text>
 
+
 <text
    transform="scale(1,-1)"
    style="font-variant:normal;font-weight:normal;font-size:12px;font-family:Cmr10;-inkscape-font-specification:Cmr10;writing-mode:lr-tb;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
@@ -1112,6 +1118,7 @@
      y="-3.0933599"
      sodipodi:role="line"
      id="tspan490">Frequency (MHz)</tspan></text>
+
 
 <path
    inkscape:connector-curvature="0"
@@ -1992,6 +1999,7 @@
      sodipodi:role="line"
      id="tspan930">-4-2024</tspan></text>
 
+
 <path
    inkscape:connector-curvature="0"
    id="path934"
@@ -2041,6 +2049,7 @@
      y="-90.194901"
      sodipodi:role="line"
      id="tspan956">0.2</tspan></text>
+
 
 <g
    id="ID000000"
@@ -2842,6 +2851,7 @@
      style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.66666698px;font-family:cmr10;-inkscape-font-specification:cmr10"
      id="tspan13-4">Current noise (nA)</tspan></text>
 
+
 </g></g><g
    id="g26-1"
    transform="matrix(1.0485126,0,0,-1.0485126,308.69949,158.1841)"><text
@@ -2853,6 +2863,7 @@
    style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.66666698px;font-family:cmr10;-inkscape-font-specification:cmr10;dominant-baseline:auto;text-anchor:middle;fill:#000000"><tspan
      style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.66666698px;font-family:cmr10;-inkscape-font-specification:cmr10"
      id="tspan22-2">Frequency (MHz)</tspan></text>
+
 
 </g><g
    id="g675-6"
@@ -2866,6 +2877,7 @@
      style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:cmr10;-inkscape-font-specification:cmr10"
      id="tspan671-8">1.1</tspan></text>
 
+
 </g><g
    id="g683-9"
    transform="matrix(0.69934193,0,0,-0.69934193,261.18312,209.98722)"><text
@@ -2878,6 +2890,7 @@
      style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:cmr10;-inkscape-font-specification:cmr10"
      id="tspan679-4">1.2</tspan></text>
 
+
 </g><g
    id="g691-8"
    transform="matrix(1.0485126,0,0,-1.0485126,260.78117,258.61021)"><text
@@ -2889,6 +2902,7 @@
    id="text689-2"><tspan
      style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:cmr10;-inkscape-font-specification:cmr10;stroke-width:0.6669848"
      id="tspan687-6">1.3</tspan></text>
+
 
 </g><polyline
    style="fill:none;stroke:#000000;stroke-width:1.5pt;stroke-linecap:square;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
@@ -2941,6 +2955,7 @@
    id="text697-0"><tspan
      style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:cmr10;-inkscape-font-specification:cmr10"
      id="tspan695-9">1.4</tspan></text>
+
 
 </g><polyline
    id="polyline579-6-7"
@@ -3018,6 +3033,7 @@
      style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:cmr10;-inkscape-font-specification:cmr10"
      id="tspan671-6-99">0</tspan></text>
 
+
 <text
    style="font-size:16px;font-family:Helvetica;dominant-baseline:auto;text-anchor:end;fill:#000000;stroke-width:1"
    x="35.687489"
@@ -3028,6 +3044,7 @@
      style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:cmr10;-inkscape-font-specification:cmr10;stroke-width:1"
      id="tspan671-6-3-8">2</tspan></text>
 
+
 <text
    style="font-size:16px;font-family:Helvetica;dominant-baseline:auto;text-anchor:end;fill:#000000;stroke-width:1"
    x="-48.930077"
@@ -3037,5 +3054,6 @@
    id="text673-3-8-5"><tspan
      style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:cmr10;-inkscape-font-specification:cmr10;stroke-width:1"
      id="tspan671-6-9-1">-2</tspan></text>
+
 
 </g></g></svg>

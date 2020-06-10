@@ -359,10 +359,11 @@ elseif isfield(data,'time')
     % find halfway point
     halftime = fix(dtime(end)/2);
     % truncate tau to appropriate values
-    tau = tau(tau >= max(dfdtime) & tau <= halftime);
-    if isempty(tau)
-        error('allan_overlap: ERROR: no appropriate tau values (> %g s, < %g s)\n',max(dfdtime),halftime);
-    end
+    %tau = tau(tau >= max(dfdtime) & tau <= halftime);
+    %if isempty(tau)
+    %    error('allan_overlap: ERROR: no appropriate tau values (> %g s, < %g s)\n',max(dfdtime),halftime);
+    %end
+    warning('hack enabled to prevent masking tau values')
     
 
     % number of samples

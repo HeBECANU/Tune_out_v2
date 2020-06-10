@@ -340,7 +340,7 @@ noise_fit_wrap=@(b,x) noise_fit_fun (b,x,fitobj);
         'CoefficientNames',cof_names); %'ErrorModel','combined'
     out_st.fit_noise_no_cull=fitobj_noise;  
     if opts.do_plots
-        stfig('noise fit results')
+        stfig('noise fit results');
         clf
         xplotvalues=linspace(min(predictor),max(predictor),1e4);
         xplotvalues=col_vec(xplotvalues);
