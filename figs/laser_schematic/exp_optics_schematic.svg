@@ -14,8 +14,8 @@
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    width="182.85133mm"
-   height="150.67307mm"
-   viewBox="0 0 182.85134 150.67307"
+   height="142.02707mm"
+   viewBox="0 0 182.85134 142.02707"
    version="1.1"
    id="svg8"
    inkscape:version="0.92.3 (2405546, 2018-03-11)"
@@ -14900,7 +14900,7 @@
     <linearGradient
        inkscape:collect="always"
        xlink:href="#linearGradient15357"
-       id="linearGradient372981"
+       id="linearGradient380395"
        gradientUnits="userSpaceOnUse"
        x1="134.6543"
        y1="528.7569"
@@ -14914,9 +14914,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
-     inkscape:zoom="4"
-     inkscape:cx="462.90508"
-     inkscape:cy="184.92414"
+     inkscape:zoom="2"
+     inkscape:cx="273.17972"
+     inkscape:cy="314.13156"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -14930,8 +14930,8 @@
      fit-margin-right="5"
      fit-margin-bottom="5"
      fit-margin-left="5"
-     inkscape:measure-start="0,0"
-     inkscape:measure-end="0,0" />
+     inkscape:measure-start="174.655,246.78"
+     inkscape:measure-end="175.009,270.115" />
   <metadata
      id="metadata5">
     <rdf:RDF>
@@ -14949,6 +14949,11 @@
      inkscape:groupmode="layer"
      id="layer1"
      transform="translate(-4.8271723,-190.05211)">
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.26499999;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker352760)"
+       d="m 112.26902,258.66228 h 7.34324"
+       id="path352750"
+       inkscape:connector-curvature="0" />
     <path
        style="fill:none;stroke:#000000;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:url(#marker347214)"
        d="M 38.612887,212.11773 H 52.503512"
@@ -14969,7 +14974,7 @@
        sodipodi:nodetypes="cc" />
     <path
        style="fill:#0000ff;fill-opacity:1;stroke:none;stroke-width:0.26499999;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m 60.152665,319.37686 0.38354,9.9238 2.46558,-0.0515 0.56534,-9.87234 z"
+       d="m 60.152665,310.73086 0.38354,9.9238 2.46558,-0.0515 0.56534,-9.87234 z"
        id="path65985-0"
        inkscape:connector-curvature="0"
        inkscape:export-xdpi="96"
@@ -14977,7 +14982,7 @@
        sodipodi:nodetypes="ccccc" />
     <path
        style="fill:#0000ff;fill-opacity:1;stroke:none;stroke-width:0.38680947px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="m 74.37415,316.2884 -0.0134,-4.76119 3.25005,-0.15868 0.21429,-0.0792 -0.0178,6.57005 -3.48219,0.0792 z"
+       d="m 74.37415,307.6424 -0.0134,-4.76119 3.25005,-0.15868 0.21429,-0.0792 -0.0178,6.57005 -3.48219,0.0792 z"
        id="path65910-6-6-2-6"
        inkscape:connector-curvature="0"
        inkscape:export-xdpi="96"
@@ -35309,7 +35314,7 @@ QmCC
        xml:space="preserve"
        id="flowRoot50739-5"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:1.25;font-family:cmr10;-inkscape-font-specification:cmr10;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
-       transform="matrix(0.26458333,0,0,0.26458333,18.667196,158.75198)"><flowRegion
+       transform="matrix(0.26458333,0,0,0.26458333,18.667196,158.22281)"><flowRegion
          id="flowRegion50741-1"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:cmr10;-inkscape-font-specification:cmr10;text-align:center;text-anchor:middle"><rect
            id="rect50743-6"
@@ -35666,7 +35671,7 @@ QmCC
       <polygon
          style="fill:url(#XMLID_9_)"
          i:knockout="Off"
-         points="34.612,7.773 5.765,7.773 5.765,10.123 34.612,10.123 36.971,10.123 36.971,7.773 "
+         points="5.765,10.123 34.612,10.123 36.971,10.123 36.971,7.773 34.612,7.773 5.765,7.773 "
          id="polygon4156-8-1" />
       <linearGradient
          id="linearGradient27001"
@@ -35734,7 +35739,7 @@ QmCC
       <polygon
          style="fill:url(#XMLID_10_)"
          i:knockout="Off"
-         points="34.612,10.713 5.765,10.713 5.765,13.063 34.612,13.063 36.971,13.063 36.971,10.713 "
+         points="5.765,13.063 34.612,13.063 36.971,13.063 36.971,10.713 34.612,10.713 5.765,10.713 "
          id="polygon4179-4-9" />
       <linearGradient
          id="linearGradient27014"
@@ -35802,7 +35807,7 @@ QmCC
       <polygon
          style="fill:url(#XMLID_11_)"
          i:knockout="Off"
-         points="34.612,13.653 5.765,13.653 5.765,16.004 34.612,16.004 36.971,16.004 36.971,13.653 "
+         points="5.765,16.004 34.612,16.004 36.971,16.004 36.971,13.653 34.612,13.653 5.765,13.653 "
          id="polygon4202-0-7" />
       <linearGradient
          id="linearGradient27027"
@@ -35870,7 +35875,7 @@ QmCC
       <polygon
          style="fill:url(#XMLID_12_)"
          i:knockout="Off"
-         points="34.612,16.594 5.765,16.594 5.765,18.943 34.612,18.943 36.971,18.943 36.971,16.594 "
+         points="5.765,18.943 34.612,18.943 36.971,18.943 36.971,16.594 34.612,16.594 5.765,16.594 "
          id="polygon4225-4-9" />
       <linearGradient
          id="linearGradient27040"
@@ -35938,7 +35943,7 @@ QmCC
       <polygon
          style="fill:url(#XMLID_13_)"
          i:knockout="Off"
-         points="34.612,19.533 5.765,19.533 5.765,21.883 34.612,21.883 36.971,21.883 36.971,19.533 "
+         points="5.765,21.883 34.612,21.883 36.971,21.883 36.971,19.533 34.612,19.533 5.765,19.533 "
          id="polygon4248-3-0" />
       <linearGradient
          id="linearGradient27053"
@@ -36006,12 +36011,12 @@ QmCC
       <polygon
          style="fill:url(#XMLID_14_)"
          i:knockout="Off"
-         points="34.612,22.473 5.765,22.473 5.765,24.822 34.612,24.822 36.971,24.822 36.971,22.473 "
+         points="5.765,24.822 34.612,24.822 36.971,24.822 36.971,22.473 34.612,22.473 5.765,22.473 "
          id="polygon4271-8-0" />
       <polygon
          style="fill:none;stroke:#000000;stroke-width:0.75"
          i:knockout="Off"
-         points="34.641,7.523 5.827,7.523 5.827,24.594 34.641,24.594 37.004,24.594 37.004,7.523 "
+         points="5.827,24.594 34.641,24.594 37.004,24.594 37.004,7.523 34.641,7.523 5.827,7.523 "
          id="polygon4273-3-7" />
       <rect
          style="stroke:#000000;stroke-width:0.75"
@@ -36256,7 +36261,7 @@ QmCC
        xml:space="preserve"
        id="flowRoot49904-5"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:1.25;font-family:cmr10;-inkscape-font-specification:cmr10;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
-       transform="matrix(0.26458333,0,0,0.26458333,-4.350207,162.50511)"
+       transform="matrix(0.26458333,0,0,0.26458333,-4.350207,161.97594)"
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96"><flowRegion
          id="flowRegion49906-0"
@@ -37090,7 +37095,7 @@ QmCC
                  height="45.000027"
                  width="80.714272"
                  id="rect15351-9-0-8" /></flowRegion><flowPara
-               style="fill:url(#linearGradient372981);fill-opacity:1"
+               style="fill:url(#linearGradient380395);fill-opacity:1"
                id="flowPara15353-2-4-0">LIA</flowPara></flowRoot>        </g>
       </g>
     </g>
@@ -39320,7 +39325,7 @@ QmCC
        transform="matrix(0.35277779,0,0,0.35277779,244.30134,402.3004)" />
     <g
        id="g86292"
-       transform="matrix(1.130013,0,0,1.130013,-138.2525,-69.693047)">
+       transform="matrix(1.130013,0,0,1.130013,-138.2525,-77.101385)">
       <path
          sodipodi:nodetypes="sccsccs"
          id="path78815-8"
@@ -39468,13 +39473,13 @@ QmCC
          style="stroke-width:0.26458332">To Computer</tspan></text>
     <path
        style="fill:none;stroke:#000000;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="m 91.47478,231.1584 c 15.531,0.0306 6.82569,14.83485 7.64191,25.76416"
+       d="m 91.47478,231.1584 c 15.531,0.0306 6.82569,7.36037 7.64191,18.28968"
        id="path111893"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="cc" />
     <path
        style="fill:none;stroke:#000000;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="m 119.204,233.7057 c -22.271992,0 -15.77084,12.52288 -15.77084,23.18048"
+       d="m 119.204,233.7057 c -22.271992,0 -15.83699,7.89267 -15.77084,15.77215"
        id="path111895"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="cc" />
@@ -39482,19 +39487,19 @@ QmCC
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.69776225px;line-height:1.25;font-family:cmr10;-inkscape-font-specification:'cmr10, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        x="100.8382"
-       y="273.28519"
+       y="265.87674"
        id="text7587-0-0"><tspan
          sodipodi:role="line"
          id="tspan7585-2-6"
          x="100.8382"
-         y="273.28519"
+         y="265.87674"
          style="font-size:3.17499995px;stroke-width:0.26458332">Wavemeter</tspan></text>
     <rect
        style="opacity:1;fill:none;fill-opacity:0.09547741;stroke:#aa00d4;stroke-width:0.40000001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="rect15487-9-4"
        width="57.255093"
        height="103.40862"
-       x="-335.52518"
+       x="-326.87918"
        y="12.132236"
        transform="rotate(-90)"
        inkscape:export-xdpi="96"
@@ -39502,7 +39507,7 @@ QmCC
        ry="4.2333331" />
     <path
        style="fill:#0000ff;fill-opacity:1;stroke:none;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="m 90.00767,311.05437 5.66097,-0.15515 2.57316,-3.11278 -1.80122,-7.20486 1.69829,-5.76389 -2.83048,-2.88195 -5.19779,-1.27546 0.0515,4.82643 4.83755,-0.34916 1.44097,5.44399 -1.64682,7.2376 -4.88902,-0.21286 z"
+       d="m 90.00767,302.40837 5.66097,-0.15515 2.57316,-3.11278 -1.80122,-7.20486 1.69829,-5.76389 -2.83048,-2.88195 -5.19779,-1.27546 0.0515,4.82643 4.83755,-0.34916 1.44097,5.44399 -1.64682,7.2376 -4.88902,-0.21286 z"
        id="path65983-7"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="ccccccccccccc"
@@ -39510,7 +39515,7 @@ QmCC
        inkscape:export-ydpi="96" />
     <path
        style="fill:#0000ff;fill-opacity:1;stroke:none;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="m 89.49304,290.59767 0.0515,4.68316 0.0257,0.30878 -9.00608,-0.2076 -0.009,-4.57119 c 0,0 6.05506,-0.13292 8.93804,-0.21315 z"
+       d="m 89.49304,281.95167 0.0515,4.68316 0.0257,0.30878 -9.00608,-0.2076 -0.009,-4.57119 c 0,0 6.05506,-0.13292 8.93804,-0.21315 z"
        id="path65910-8"
        inkscape:connector-curvature="0"
        inkscape:export-xdpi="96"
@@ -39522,7 +39527,7 @@ QmCC
        i:dimmedPercent="50"
        i:layer="yes"
        id="g3693-2-5-3-8"
-       transform="matrix(-0.26458333,0,0,-0.26458333,90.20198,296.11672)"
+       transform="matrix(-0.26458333,0,0,-0.26458333,90.20198,287.47072)"
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96">
       <linearGradient
@@ -39569,7 +39574,7 @@ QmCC
     </g>
     <path
        style="fill:#0000ff;fill-opacity:1;stroke:none;stroke-width:0.38680947px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="m 62.8513,307.56647 25.92785,-0.0134 0.15868,3.25005 0.0792,0.21429 -27.73671,-0.0178 -0.0792,-3.48219 z"
+       d="m 62.8513,298.92047 25.92785,-0.0134 0.15868,3.25005 0.0792,0.21429 -27.73671,-0.0178 -0.0792,-3.48219 z"
        id="path65910-6-6-2"
        inkscape:connector-curvature="0"
        inkscape:export-xdpi="96"
@@ -39577,14 +39582,14 @@ QmCC
     <path
        inkscape:connector-curvature="0"
        style="display:inline;fill:#0000ff;stroke:#0004e8;stroke-width:0.40005001;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;enable-background:new"
-       d="m 61.66299,318.82192 v -9.93595"
+       d="m 61.66299,310.17592 v -9.93595"
        id="path7450-8-0-85-9-5-9-7"
        sodipodi:nodetypes="cc"
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96" />
     <path
        style="fill:#0000ff;fill-opacity:1;stroke:none;stroke-width:0.2229093px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="m 63.66688,310.12286 0.0133,8.61062 -3.25,0.0527 -0.21429,0.0263 0.0178,-9.21135 3.48215,-0.0263 z"
+       d="m 63.66688,301.47686 0.0133,8.61062 -3.25,0.0527 -0.21429,0.0263 0.0178,-9.21135 3.48215,-0.0263 z"
        id="path65910-6-4"
        inkscape:connector-curvature="0"
        inkscape:export-xdpi="96"
@@ -39595,7 +39600,7 @@ QmCC
        i:dimmedPercent="50"
        i:layer="yes"
        id="g3693-2-1"
-       transform="matrix(0,-0.26458333,0.26458333,0,58.57381,319.79992)"
+       transform="matrix(0,-0.26458333,0.26458333,0,58.57381,311.15392)"
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96">
       <linearGradient
@@ -39642,7 +39647,7 @@ QmCC
     </g>
     <g
        id="g15570-5-2-8-3"
-       transform="matrix(-0.77166922,0,0,-0.77166922,123.56436,397.07587)"
+       transform="matrix(-0.77166922,0,0,-0.77166922,123.56436,388.42987)"
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96">
       <path
@@ -39878,7 +39883,7 @@ QmCC
     </g>
     <path
        style="fill:#0000ff;fill-opacity:1;stroke:none;stroke-width:0.26499999;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m 94.42945,327.42744 -29.80346,-1.21944 0.0728,2.47452 29.771493,-0.3266 z"
+       d="m 94.42945,318.78144 -29.80346,-1.21944 0.0728,2.47452 29.771493,-0.3266 z"
        id="path65987-8"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="ccccc"
@@ -39890,7 +39895,7 @@ QmCC
        i:dimmedPercent="50"
        i:layer="yes"
        id="Layer_1-1-2-2-9-1-1"
-       transform="matrix(0.26458333,0,0,0.26458333,58.67399,324.50311)"
+       transform="matrix(0.26458333,0,0,0.26458333,58.67399,315.85711)"
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96">
       <g
@@ -39945,7 +39950,7 @@ QmCC
        i:dimmedPercent="50"
        i:layer="yes"
        id="g4116-3-0-1-6-5"
-       transform="matrix(0.26458333,0,0,0.26458333,70.26572,306.38654)"
+       transform="matrix(0.26458333,0,0,0.26458333,70.26572,297.74054)"
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96">
       <linearGradient
@@ -39999,7 +40004,7 @@ QmCC
        i:dimmedPercent="50"
        i:layer="yes"
        id="Layer_1-1-2-2-9-1-5-6"
-       transform="matrix(0.26458333,0,0,0.26458333,72.97291,306.18622)"
+       transform="matrix(0.26458333,0,0,0.26458333,72.97291,297.54022)"
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96">
       <g
@@ -40054,7 +40059,7 @@ QmCC
        i:dimmedPercent="50"
        i:layer="yes"
        id="g4116-3-0-1-6-1-0-6"
-       transform="matrix(0.26458333,0,0,0.26458333,84.25696,306.36434)"
+       transform="matrix(0.26458333,0,0,0.26458333,84.25696,297.71834)"
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96">
       <linearGradient
@@ -40108,7 +40113,7 @@ QmCC
        i:dimmedPercent="50"
        i:layer="yes"
        id="g4116-3-0-1-6-1-3"
-       transform="matrix(0.26458333,0,0,0.26458333,81.61111,306.26985)"
+       transform="matrix(0.26458333,0,0,0.26458333,81.61111,297.62385)"
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96">
       <linearGradient
@@ -40162,7 +40167,7 @@ QmCC
        i:dimmedPercent="50"
        i:layer="yes"
        id="g3693-2-5-7"
-       transform="matrix(-0.26458333,0,0,-0.26458333,90.0531,312.4463)"
+       transform="matrix(-0.26458333,0,0,-0.26458333,90.0531,303.8003)"
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96">
       <linearGradient
@@ -40211,71 +40216,71 @@ QmCC
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:5.64444447px;line-height:1.25;font-family:sans-serif;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        x="83.558983"
-       y="283.65472"
+       y="275.00873"
        id="text15491-3-2"
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96"><tspan
          sodipodi:role="line"
          x="83.558983"
-         y="283.65472"
+         y="275.00873"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.64444447px;font-family:cmr10;-inkscape-font-specification:cmr10;text-align:center;text-anchor:middle;stroke-width:0.26458332"
          id="tspan59873-7">Focus optics</tspan><tspan
          sodipodi:role="line"
          x="83.558983"
-         y="290.71027"
+         y="282.06427"
          style="font-size:5.64444447px;text-align:center;text-anchor:middle;stroke-width:0.26458332"
          id="tspan62347-5" /></text>
     <flowRoot
        xml:space="preserve"
        id="flowRoot49926-7-3-9"
-       style="font-style:normal;font-weight:normal;font-size:16px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
-       transform="matrix(0.16538324,0,0,0.16538324,48.70416,223.55237)"
+       style="font-style:normal;font-weight:normal;font-size:16px;line-height:1.25;font-family:cmr10;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;-inkscape-font-specification:cmr10;font-stretch:normal;font-variant:normal;"
+       transform="matrix(0.16538324,0,0,0.16538324,48.70416,214.90637)"
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96"><flowRegion
          id="flowRegion49928-6-5-1"
-         style="font-size:16px"><rect
+         style="font-size:16px;-inkscape-font-specification:cmr10;font-family:cmr10;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;"><rect
            id="rect49930-1-0-0"
            width="142.14285"
            height="80"
            x="182.85715"
            y="478.94827"
-           style="font-size:16px" /></flowRegion><flowPara
+           style="font-size:16px;-inkscape-font-specification:cmr10;font-family:cmr10;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;" /></flowRegion><flowPara
          id="flowPara49932-7-3-5">HWP</flowPara></flowRoot>    <flowRoot
        xml:space="preserve"
        id="flowRoot49926-7-8-9"
-       style="font-style:normal;font-weight:normal;font-size:16px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
-       transform="matrix(0.16538324,0,0,0.16538324,37.16851,223.47959)"
+       style="font-style:normal;font-weight:normal;font-size:16px;line-height:1.25;font-family:cmr10;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;-inkscape-font-specification:cmr10;font-stretch:normal;font-variant:normal;"
+       transform="matrix(0.16538324,0,0,0.16538324,37.16851,214.83359)"
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96"><flowRegion
          id="flowRegion49928-6-7-7"
-         style="font-size:16px"><rect
+         style="font-size:16px;-inkscape-font-specification:cmr10;font-family:cmr10;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;"><rect
            id="rect49930-1-7-5"
            width="142.14285"
            height="80"
            x="182.85715"
            y="478.94827"
-           style="font-size:16px" /></flowRegion><flowPara
+           style="font-size:16px;-inkscape-font-specification:cmr10;font-family:cmr10;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;" /></flowRegion><flowPara
          id="flowPara49932-7-4-3">HWP</flowPara></flowRoot>    <flowRoot
        xml:space="preserve"
        id="flowRoot49926-7-9-7"
-       style="font-style:normal;font-weight:normal;font-size:16px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
-       transform="matrix(0.16538324,0,0,0.16538324,52.234,233.66881)"
+       style="font-style:normal;font-weight:normal;font-size:16px;line-height:1.25;font-family:cmr10;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;-inkscape-font-specification:cmr10;font-stretch:normal;font-variant:normal;"
+       transform="matrix(0.16538324,0,0,0.16538324,52.234,225.02281)"
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96"><flowRegion
          id="flowRegion49928-6-0-4"
-         style="font-size:16px"><rect
+         style="font-size:16px;-inkscape-font-specification:cmr10;font-family:cmr10;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;"><rect
            id="rect49930-1-77-8"
            width="142.14285"
            height="80"
            x="182.85715"
            y="478.94827"
-           style="font-size:16px" /></flowRegion><flowPara
+           style="font-size:16px;-inkscape-font-specification:cmr10;font-family:cmr10;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;" /></flowRegion><flowPara
          id="flowPara49932-7-37-5">QWP</flowPara></flowRoot>    <rect
        style="opacity:1;fill:#787878;fill-opacity:1;stroke:#787878;stroke-width:0.57888669;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.98909254"
        id="rect16718-3-4"
        width="27.16408"
        height="7.2680707"
-       x="-307.1944"
+       x="-298.5484"
        y="43.201382"
        transform="rotate(-90)"
        inkscape:export-xdpi="96"
@@ -40285,7 +40290,7 @@ QmCC
        id="rect16752-6-6"
        width="4.7607384"
        height="6.8153729"
-       x="-285.05606"
+       x="-276.41006"
        y="43.464535"
        transform="rotate(-90)"
        inkscape:export-xdpi="96"
@@ -40295,7 +40300,7 @@ QmCC
        id="rect16718-97"
        width="18.23637"
        height="28.298634"
-       x="-302.88657"
+       x="-294.24057"
        y="19.598255"
        transform="rotate(-90)"
        inkscape:export-xdpi="96"
@@ -40304,7 +40309,7 @@ QmCC
        xml:space="preserve"
        id="flowRoot62360-7"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:1.25;font-family:cmr10;-inkscape-font-specification:cmr10;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
-       transform="matrix(0.26458333,0,0,0.26458333,-29.513644,241.17238)"
+       transform="matrix(0.26458333,0,0,0.26458333,-29.513644,232.52638)"
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96"><flowRegion
          id="flowRegion62362-7"
@@ -40321,7 +40326,7 @@ QmCC
        i:dimmedPercent="50"
        i:layer="yes"
        id="g2239-3-9-9"
-       transform="matrix(0.54284614,0,0,0.60778274,47.256044,284.93443)">
+       transform="matrix(0.54284614,0,0,0.60778274,47.256044,276.28843)">
       <linearGradient
          gradientTransform="matrix(0.35,0,0,1,-116.2935,-14.3086)"
          y2="22.892099"
@@ -40360,7 +40365,7 @@ QmCC
     </g>
     <path
        style="fill:#0000ff;fill-opacity:1;stroke:none;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="m 80.17818,290.79376 c 0,0 -39.039119,1.80728 -46.996587,1.80728 -7.973989,0.15314 -13.25496,-0.3731 -13.25496,-0.3731 l -0.0025,1.45219 c 0,0 4.871616,-0.34484 13.264269,-0.34484 8.731006,-0.16967 46.982388,2.07011 46.982388,2.07011 z"
+       d="m 80.17818,282.14776 c 0,0 -39.039119,1.80728 -46.996587,1.80728 -7.973989,0.15314 -13.25496,-0.3731 -13.25496,-0.3731 l -0.0025,1.45219 c 0,0 4.871616,-0.34484 13.264269,-0.34484 8.731006,-0.16967 46.982388,2.07011 46.982388,2.07011 z"
        id="path65908-1"
        inkscape:connector-curvature="0"
        inkscape:export-xdpi="96"
@@ -40437,7 +40442,7 @@ QmCC
     </g>
     <g
        id="g138204-3-4"
-       transform="rotate(45,141.78809,170.17992)">
+       transform="rotate(45,152.22472,165.85693)">
       <g
          id="g137227-9-7">
         <rect
@@ -40460,7 +40465,7 @@ QmCC
     </g>
     <g
        id="g138204-3-5"
-       transform="rotate(-135,136.9945,335.24268)">
+       transform="rotate(-135,135.20387,330.91969)">
       <g
          id="g137227-9-3">
         <rect
@@ -40483,7 +40488,7 @@ QmCC
     </g>
     <g
        id="g138204-3-5-2"
-       transform="matrix(0.70710678,-0.70710678,-0.70710678,-0.70710678,161.65741,652.63933)">
+       transform="matrix(0.70710678,-0.70710678,-0.70710678,-0.70710678,161.65741,643.99333)">
       <g
          id="g137227-9-3-6">
         <rect
@@ -40603,13 +40608,13 @@ QmCC
     </g>
     <polygon
        id="polygon5532"
-       points="27.522,27.46 34.537,34.476 14.494,54.519 7.478,47.504 "
+       points="14.494,54.519 7.478,47.504 27.522,27.46 34.537,34.476 "
        i:knockout="Off"
        style="opacity:0.5;fill:url(#linearGradient173676);stroke:#000000;stroke-width:0.37795275;stroke-miterlimit:4;stroke-dasharray:none"
        transform="matrix(0.16059029,-0.04855549,-0.04855549,0.16059029,163.13198,222.83937)" />
     <polygon
        id="polygon5541"
-       points="14.494,0.531 34.538,20.575 27.522,27.59 7.479,7.547 "
+       points="27.522,27.59 7.479,7.547 14.494,0.531 34.538,20.575 "
        i:knockout="Off"
        style="fill:url(#linearGradient173678);fill-opacity:1;stroke:#000000;stroke-width:0.63324541;stroke-miterlimit:4;stroke-dasharray:none"
        transform="matrix(0.16375036,0.04331869,0.04331869,0.16375036,160.46404,220.08031)" />
@@ -40665,7 +40670,7 @@ QmCC
          style="stroke-width:0.26458332">Shutter</tspan></text>
     <path
        style="fill:none;stroke:#0004e8;stroke-width:0.26499999;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m 147.59429,228.54273 c -11.20346,0.33907 -8.36993,11.08504 -8.67271,16.5604 0.88511,38.48508 -22.77549,19.87125 -25.85832,45.95375 -1.80273,14.28819 -0.81618,37.10464 -15.078543,36.90453"
+       d="m 147.59429,228.54273 c -11.20346,0.33907 -8.63451,7.91004 -8.93729,13.3854 0.88511,38.48508 -22.44476,14.34807 -25.52759,40.43057 -2.86107,17.46319 -0.81618,37.10464 -15.078547,36.90453"
        id="path193193"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="cccc" />
@@ -40682,7 +40687,7 @@ QmCC
        i:dimmedPercent="50"
        i:layer="yes"
        id="g3693-2-5-3-4-9"
-       transform="matrix(0.26458333,0,0,0.26458333,79.87151,289.93006)"
+       transform="matrix(0.26458333,0,0,0.26458333,79.87151,281.28406)"
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96">
       <linearGradient
@@ -40729,7 +40734,7 @@ QmCC
     </g>
     <g
        id="g287654-4"
-       transform="matrix(0.46785451,0,0,0.46785451,-6.4365698,155.87158)">
+       transform="matrix(0.46785451,0,0,0.46785451,-6.4365698,147.22558)">
       <circle
          transform="rotate(45)"
          style="fill:url(#radialGradient5238-6-5-4);fill-opacity:1;stroke:#000000;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none"
@@ -40825,7 +40830,7 @@ QmCC
     </g>
     <g
        id="g287654-4-0"
-       transform="matrix(0.46785451,0,0,0.46785451,-1.4476218,153.52932)">
+       transform="matrix(0.46785451,0,0,0.46785451,-1.4476218,144.88332)">
       <circle
          transform="rotate(45)"
          style="fill:url(#radialGradient5238-6-5-4-1);fill-opacity:1;stroke:#000000;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none"
@@ -40921,7 +40926,7 @@ QmCC
     </g>
     <g
        id="g287654-4-7"
-       transform="matrix(0.46785451,0,0,0.46785451,-1.7750268,157.73881)">
+       transform="matrix(0.46785451,0,0,0.46785451,-1.7750268,149.09281)">
       <circle
          transform="rotate(45)"
          style="fill:url(#radialGradient5238-6-5-4-7);fill-opacity:1;stroke:#000000;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none"
@@ -41017,7 +41022,7 @@ QmCC
     </g>
     <g
        id="g287654-4-01"
-       transform="matrix(0.46785451,0,0,0.46785451,3.5102282,156.19533)">
+       transform="matrix(0.46785451,0,0,0.46785451,3.5102282,147.54933)">
       <circle
          transform="rotate(45)"
          style="fill:url(#radialGradient5238-6-5-4-0);fill-opacity:1;stroke:#000000;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none"
@@ -41117,7 +41122,7 @@ QmCC
        i:dimmedPercent="50"
        i:layer="yes"
        id="g4869-4-0"
-       transform="matrix(0.20091299,0,0,0.20091299,145.5941,298.87467)"
+       transform="matrix(0.20091299,0,0,0.20091299,145.5941,290.22867)"
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96">
       <g
@@ -41221,46 +41226,46 @@ QmCC
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.69776225px;line-height:1.25;font-family:cmr10;-inkscape-font-specification:'cmr10, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        x="136.43988"
-       y="302.44305"
+       y="293.79706"
        id="text314576"><tspan
          sodipodi:role="line"
          id="tspan314574"
          x="136.43988"
-         y="302.44305"
+         y="293.79706"
          style="stroke-width:0.26458332">189.000 MHz</tspan></text>
     <polygon
        id="polygon5534-21"
        points="0.375,37.472 0.375,0.649 32.266,19.062 "
        i:knockout="Off"
        style="fill:url(#radialGradient5570-6);fill-opacity:1;stroke:#000000;stroke-width:0.75"
-       transform="matrix(0.26458333,0,0,0.26458333,155.14508,308.11414)" />
+       transform="matrix(0.26458333,0,0,0.26458333,155.14508,299.46814)" />
     <path
        i:knockout="Off"
-       d="m 156.42196,310.6671 c 0.14922,-0.0251 0.35877,-0.0444 0.65405,-0.0444 0.29845,0 0.51435,0.0574 0.65696,0.17463 0.13679,0.10477 0.22569,0.28257 0.22569,0.49212 0,0.21273 -0.0667,0.39053 -0.19341,0.508 -0.16537,0.1524 -0.41302,0.22543 -0.69877,0.22543 -0.0635,0 -0.12065,-0.003 -0.1651,-0.0127 v 0.76835 h -0.47942 z m 0.47942,0.97182 c 0.041,0.009 0.0923,0.0127 0.16193,0.0127 0.25717,0 0.41592,-0.13018 0.41592,-0.34634 0,-0.19685 -0.13335,-0.31433 -0.37809,-0.31433 -0.0984,0 -0.1651,0.006 -0.20002,0.0159 v 0.63209 z"
+       d="m 156.42196,302.0211 c 0.14922,-0.0251 0.35877,-0.0444 0.65405,-0.0444 0.29845,0 0.51435,0.0574 0.65696,0.17463 0.13679,0.10477 0.22569,0.28257 0.22569,0.49212 0,0.21273 -0.0667,0.39053 -0.19341,0.508 -0.16537,0.1524 -0.41302,0.22543 -0.69877,0.22543 -0.0635,0 -0.12065,-0.003 -0.1651,-0.0127 v 0.76835 h -0.47942 z m 0.47942,0.97182 c 0.041,0.009 0.0923,0.0127 0.16193,0.0127 0.25717,0 0.41592,-0.13018 0.41592,-0.34634 0,-0.19685 -0.13335,-0.31433 -0.37809,-0.31433 -0.0984,0 -0.1651,0.006 -0.20002,0.0159 v 0.63209 z"
        id="path5538-6"
        inkscape:connector-curvature="0"
        style="stroke-width:0.26458332" />
     <path
        i:knockout="Off"
-       d="m 157.16465,313.46164 v 2.13995 h -0.4826 v -2.13995 z"
+       d="m 157.16465,304.81564 v 2.13995 h -0.4826 v -2.13995 z"
        id="path5542-9"
        inkscape:connector-curvature="0"
        style="stroke-width:0.26458332" />
     <path
        style="fill:none;stroke:#000000;stroke-width:0.26499999;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker320470)"
-       d="m 163.36397,313.05634 h 3.83646 v -9.525"
+       d="m 163.36397,304.41034 h 3.83646 v -9.525"
        id="path319488"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="ccc" />
     <path
        style="fill:none;stroke:#000000;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:url(#marker322492)"
-       d="m 151.45771,301.41467 h 12.80386"
+       d="m 151.45771,292.76867 h 12.80386"
        id="path321510"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="cc" />
     <g
        id="g16154-8-3"
-       transform="matrix(0,0.98021425,0.98021425,0,-8.739648,282.06762)"
+       transform="matrix(0,0.98021425,0.98021425,0,-8.739648,273.42162)"
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96">
       <path
@@ -41362,7 +41367,7 @@ QmCC
        inkscape:connector-curvature="0" />
     <path
        style="fill:none;stroke:#000000;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="m 76.229001,321.75387 v 1.68378 h 72.472079 v -9.22262"
+       d="m 76.229001,313.10787 v 1.68378 h 72.472079 v -9.22262"
        id="path330468"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="cccc" />
@@ -41370,32 +41375,32 @@ QmCC
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.69776225px;line-height:1.25;font-family:cmr10;-inkscape-font-specification:'cmr10, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:end;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:end;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        x="140.98732"
-       y="311.95407"
+       y="303.30807"
        id="text335684"><tspan
          sodipodi:role="line"
          x="140.98732"
-         y="311.95407"
+         y="303.30807"
          style="text-align:end;text-anchor:end;stroke-width:0.26458332"
          id="tspan336658">Set Point</tspan><tspan
          sodipodi:role="line"
          x="140.98732"
-         y="315.32626"
+         y="306.68027"
          style="text-align:end;text-anchor:end;stroke-width:0.26458332"
          id="tspan348374">From Computer</tspan></text>
     <path
        style="fill:none;stroke:#000000;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="m 151.67895,312.94149 h 3.60146"
+       d="m 151.67895,304.29549 h 3.60146"
        id="path336794"
        inkscape:connector-curvature="0" />
     <path
        style="fill:none;stroke:#000000;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:url(#marker337778)"
-       d="m 140.87458,312.89471 h 4.77076"
+       d="m 140.87458,304.24871 h 4.77076"
        id="path337768"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="cc" />
     <g
        id="g343937"
-       transform="translate(0,11.112501)">
+       transform="translate(0,2.4665087)">
       <circle
          style="fill:url(#radialGradient4822-2);fill-opacity:1;stroke:#000000;stroke-width:0.15581191"
          i:knockout="Off"
@@ -41414,7 +41419,7 @@ QmCC
     </g>
     <path
        style="fill:none;stroke:#000000;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:url(#marker339824)"
-       d="m 170.3407,301.51383 h 12.20552 V 195.1844 h -35.58646 v 12.17083"
+       d="m 169.28237,292.8133 h 13.26385 v -97.6289 h -35.58646 v 12.17083"
        id="path338842"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="ccccc" />
@@ -41423,27 +41428,27 @@ QmCC
        i:knockout="Off"
        points="0.375,0.65 32.266,19.062 0.375,37.473 "
        id="polygon4687"
-       transform="matrix(0.18851509,0,0,0.18851509,164.18226,297.88147)" />
+       transform="matrix(0.18851509,0,0,0.18851509,164.18226,289.23547)" />
     <rect
        style="opacity:1;vector-effect:none;fill:none;fill-opacity:1;stroke:#ff7f2a;stroke-width:0.4238252;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
        id="rect344911"
        width="59.872204"
        height="50.106674"
        x="120.55382"
-       y="278.37097"
+       y="269.72498"
        rx="0"
        ry="3.8615298" />
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.64444447px;line-height:1.25;font-family:cmr10;-inkscape-font-specification:cmr10;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        x="151.38547"
-       y="287.07965"
+       y="278.43365"
        id="text15491-3-2-0"
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96"><tspan
          sodipodi:role="line"
          x="151.38547"
-         y="287.07965"
+         y="278.43365"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.64444447px;font-family:cmr10;-inkscape-font-specification:cmr10;text-align:center;text-anchor:middle;stroke-width:0.26458332"
          id="tspan62347-5-4">Power Stabilization</tspan></text>
     <text
@@ -41465,49 +41470,44 @@ QmCC
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.69776225px;line-height:1.25;font-family:cmr10;-inkscape-font-specification:'cmr10, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="120.99119"
-       y="262.58557"
+       x="120.79745"
+       y="258.0621"
        id="text105079-4"><tspan
          sodipodi:role="line"
          id="tspan105077-4"
-         x="120.99119"
-         y="262.58557"
+         x="120.79745"
+         y="258.0621"
          style="text-align:start;text-anchor:start;stroke-width:0.26458332">To </tspan><tspan
          sodipodi:role="line"
-         x="120.99119"
-         y="265.95776"
+         x="120.79745"
+         y="261.4343"
          style="text-align:start;text-anchor:start;stroke-width:0.26458332"
          id="tspan352748">Computer</tspan></text>
-    <path
-       style="fill:none;stroke:#000000;stroke-width:0.26499999;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker352760)"
-       d="m 112.80483,263.10156 h 7.34324"
-       id="path352750"
-       inkscape:connector-curvature="0" />
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.69776225px;line-height:1.25;font-family:cmr10;-inkscape-font-specification:'cmr10, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        x="166.58032"
-       y="294.19577"
+       y="285.0206"
        id="text105079-5"><tspan
          sodipodi:role="line"
          id="tspan105077-6"
          x="167.03082"
-         y="294.19577"
+         y="285.0206"
          style="stroke-width:0.26458332">Variable Gain </tspan><tspan
          sodipodi:role="line"
          x="166.58032"
-         y="297.56796"
+         y="288.39279"
          style="stroke-width:0.26458332"
          id="tspan357274">Amplifier</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.69776225px;line-height:1.25;font-family:cmr10;-inkscape-font-specification:'cmr10, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        x="161.70284"
-       y="321.78635"
+       y="313.14035"
        id="text105079-5-7"><tspan
          sodipodi:role="line"
          x="161.70284"
-         y="321.78635"
+         y="313.14035"
          style="stroke-width:0.26458332"
          id="tspan357274-4">PI Controller</tspan></text>
   </g>
