@@ -36,7 +36,7 @@ function ai_log_out=ai_log_import_core(anal_opts,data)
 %       anal_opts.log_name='log_analog_in_';
 %       anal_opts.aquire_time=3;
 %       anal_opts.pd.set_vec - scalar or vector
-%       anal_opts.pd.diff_thresh=0.1;
+%       anal_opts.pd.mean_diff_thresh=0.1;
 %       anal_opts.pd.std_thresh=0.1;
 %       anal_opts.pd.time_start=0.2;
 %       anal_opts.pd.time_stop=2;
@@ -189,7 +189,8 @@ for ii=1:iimax
         if anal_opts.do_ac_mains_fit
             ai_log_out.ac_mains_fit(idx_nearest_shot)=ai_log_single_out.ac_mains_fit;
         end
-        ai_log_out.sfp(idx_nearest_shot)=ai_log_single_out.single_mode_details;
+        % comment this out to save space
+        %ai_log_out.sfp(idx_nearest_shot)=ai_log_single_out.single_mode_details;
         ai_log_out.pd.mean(idx_nearest_shot)=ai_log_single_out.pd.mean;
         ai_log_out.pd.std(idx_nearest_shot)=ai_log_single_out.pd.std;
         ai_log_out.pd.median(idx_nearest_shot)=ai_log_single_out.pd.median;
@@ -213,7 +214,7 @@ for ii=1:iimax
             
         if anal_opts.cw_meth %pass fail criteria for cw mod method
             
-            if abs(ai_log_single_out.pd.mean-set_pt_single/2)>anal_opts.pd.diff_thresh
+            if abs(ai_log_single_out.pd.mean-set_pt_single/2)>anal_opts.pd.mean_diff_thresh
                 fprintf('\nprobe beam pd value wrong!!!!!!!!!\n')
                 fprintf('avg val %.2f set value %.2f \n04u%',ai_log_single_out.pd.mean,set_pt_single/2,0)
             elseif (ai_log_single_out.pd.std-set_pt_single/sqrt(2))>anal_opts.pd.std_thresh
@@ -224,13 +225,21 @@ for ii=1:iimax
             end
 
         else %pass fail criteria for trap freq method (constant probe beam)
-            
-            if abs(ai_log_single_out.pd.mean-set_pt_single)>anal_opts.pd.diff_thresh
+            if isnan(set_pt_single)
+                
+            elseif abs(ai_log_single_out.pd.mean-set_pt_single)>anal_opts.pd.mean_diff_thresh
                 fprintf('\nprobe beam pd value wrong!!!!!!!!!\n')
                 fprintf('avg val %.2f set value %.2f \n04u%',ai_log_single_out.pd.mean,set_pt_single,0)
             elseif ai_log_single_out.pd.std>anal_opts.pd.std_thresh
                 fprintf('\nprobe beam pd noisy!!!!!!!!!\n')
                 fprintf('std %.2f thresh value %.2f \n04u%',ai_log_single_out.pd.std,anal_opts.pd.std_thresh,0)
+                
+            elseif max(abs(ai_log_single_out.pd.mean-ai_log_single_out.pd.min_max))...
+                    >ai_log_single_out.pd.std*abs(norminv(anal_opts.pd.range_thresh_prob/ai_log_single_out.pd.samples ,0,1))
+                fprintf('\nprobe beam pd noisy!!!!!!!!!\n')
+                fprintf('peak diff to mean %.2g thresh value %.2g \n04u%',...
+                   max(abs(ai_log_single_out.pd.mean-ai_log_single_out.pd.min_max)),...
+                  ai_log_single_out.pd.std*abs(norminv(anal_opts.pd.range_thresh_prob/ai_log_single_out.pd.samples ,0,1)),0)
             else
                 ai_log_out.ok.reg_pd(idx_nearest_shot)=true;
             end
@@ -268,12 +277,19 @@ path=strcat(args_single.dir,args_single.fname);
 fid = fopen(path,'r');
 raw_line = textscan(fid,'%s','Delimiter','\n'); % this is the fastest string read method 3.5s for 20 files
 fclose(fid);
+
+% raw line should be a singleton cell that has a singleton cell inside it 
+if numel(raw_line)>1, error('mutliple output (lines) returned by read single ai log file'); end
+raw_line=raw_line{1};
+if numel(raw_line)>1, error('mutliple output (lines) returned by read single ai log file'); end
+raw_line=raw_line{1};
+
 ai_dat=jsondecode(raw_line);
 samples= size(ai_dat.Data,2);
 sr=ai_dat.sample_rate;
 aquire_time=samples/sr;
 
-ai_dat.time=(0:(samples-1))/sr;%not sure if this is off by 1 sample in time
+ai_dat.time=(0:(samples-1))/sr;% infered sample time
 
 probe_sampl_start=max(1,ceil(args_single.pd.time_start*sr));
 probe_sampl_stop=min(samples,ceil(args_single.pd.time_stop*sr));
@@ -284,6 +300,9 @@ probe_pd_during_meas=ai_dat.Data(1,probe_sampl_start:probe_sampl_stop);
 ai_log_single_out.pd.mean=mean(probe_pd_during_meas);
 ai_log_single_out.pd.std=std(probe_pd_during_meas);
 ai_log_single_out.pd.median=median(probe_pd_during_meas);
+ai_log_single_out.pd.min_max=min_max_vec(probe_pd_during_meas);
+ai_log_single_out.pd.samples=samples;
+
 
 
 %% plot the anlog values
@@ -291,7 +310,8 @@ ai_log_single_out.pd.median=median(probe_pd_during_meas);
 %wit the args_single.plot.failed option
 if args_single.plot.all    
     stfig('probe pd','add_stack',1);
-    clf;
+    clf
+    subplot(2,1,1)
     plot(ai_dat.time(probe_sampl_start:probe_sampl_stop),probe_pd_during_meas,'b')
     yl=ylim;
     xl=xlim;
@@ -303,8 +323,17 @@ if args_single.plot.all
     ylim([yl(1),yl(2)])
     ylabel('probe voltage')
     xlabel('time (s)')
-    pause(1e-6)
+    subplot(2,1,2)
+    freq_amp=fft_tx(ai_dat.time(probe_sampl_start:probe_sampl_stop),probe_pd_during_meas,'window','chebyshev','win_param',{200},'padding',2);
+    plot(freq_amp(1,:),abs(freq_amp(2,:)),'k')
+    set(gca,'Yscale','log')
+    %set(gca,'Xscale','log')
+    ylim([1e-5,3])
+    ylabel('')
+    xlabel('freq (Hz)')
+    ylabel('amplitude (volts)')
 
+    drawnow
 end
 
 %% Test if laser is single mode
@@ -335,12 +364,14 @@ sm_in.pd_filt_factor=1e-3; %fraction of a scan to smooth the pd data by for peak
 sm_in.ptz_filt_factor_pks=1e-3;  %fraction of a scan to smooth the pzt data by for peak detection
 sm_in.pzt_filt_factor_deriv=1e-3; %fraction of a scan to smooth the data by for derivative detection
 sm_in.pd_amp_min=1; %minimum range of the pd signal to indicate the laser has sufficient power
-sm_in.skip_wf_check=0;
+sm_in.skip_wf_check=false;
 sm_in.plot=args_single.plot;
 
 [laser_sm,laser_sm_test_det]=is_laser_single_mode(sm_in);
 ai_log_single_out.single_mode_logic=laser_sm;
-ai_log_single_out.single_mode_details=laser_sm_test_det;
+% comment this out to make a smaller output
+% i dont end up using the SFP details for anything its either single mode or not and int makes the cache file 0.8MB each
+% ai_log_single_out.single_mode_details=laser_sm_test_det;
 
 %% Fit the mains waveform
 if args_single.do_ac_mains_fit

@@ -52,12 +52,13 @@ ref_st{st_idx}.tune_out=tune_out;
 
 title='Tune-out wavelength around 413 nm for the helium ';
 st_idx=find(cellfun(@(x) contains(lower(x.title),lower(title)), ref_st));
+%from page 5, non relativistic finite mass
 tune_out_nrci=[];
-tune_out_nrci.val=413.038304399+0.100917093; %413.038304399(3)+0.100917093(7)
-tune_out_nrci.unc.tot=rssq([0.000000003,0.000000007]);
+tune_out_nrci.val=  413.13919;
+tune_out_nrci.unc.tot=0.00002;
 tune_out_nrci.units='nm';
 tune_out_nrci.type='theory';
-tune_out_nrci.note='nrci';
+tune_out_nrci.note='nrfm';
 
 tune_out_total=[];
 tune_out_total.val=413.0859;
@@ -71,14 +72,16 @@ ref_st{st_idx}.tune_out={tune_out_nrci,tune_out_total};
 title='The variational calculation of the 413 nm 4He tune-out wavelength';
 st_idx=find(cellfun(@(x) contains(lower(x.title),lower(title)), ref_st));
 tune_out_nrci=[];
-tune_out_nrci.val=  413.13919;
-tune_out_nrci.unc.tot=0.00002;
+tune_out_nrci.val=413.038304399+0.100917093; %413.038304399(3)+0.100917093(7)
+tune_out_nrci.unc.tot=rssq([0.000000003,0.000000007]);
+
 tune_out_nrci.units='nm';
 tune_out_nrci.type='theory';
-tune_out_nrci.note='nrci';
+tune_out_nrci.note='nrfm';
 
+% value from p54
 tune_out_total=[];
-tune_out_total.val=  413.0799585;
+tune_out_total.val=  413.0858252;
 tune_out_total.unc.tot=0.0000004;
 tune_out_total.units='nm';
 tune_out_total.type='theory';
@@ -98,7 +101,8 @@ ref_st{st_idx}.tune_out=tune_out;
 title='QED and relativistic nuclear recoil corrections ';
 st_idx=find(cellfun(@(x) contains(lower(x.title),lower(title)), ref_st));
 tune_out=[];
-tune_out.val=413.09071; %including retardation correction
+% godamit, the arxiv paper gives a different value
+tune_out.val=  413.09071; %including retardation correction
 tune_out.unc.tot=0.00004;
 tune_out.units='nm';
 tune_out.type='theory';
@@ -235,6 +239,8 @@ frac_year=to_st.frac_year;
 
 
 %%
+%colors_main=[[53,126,220];[33,188,44];[0,0,0]]./255;
+
 colors_main=[[233,87,0];[33,188,44];[0,165,166]];
 colors_main=colors_main./255;
 lch=colorspace('RGB->LCH',colors_main(:,:));
@@ -288,19 +294,32 @@ end
 text_info.frac_year=text_info.frac_year+0.2;
 	
 
-text_info.frac_year(1)=text_info.frac_year(1)+0.3;
-text_info.val(1)=to_st.freq.shit_scaled(end)*1e9+13e9;
+text_info.frac_year(1)=text_info.frac_year(1)+0.4;
+text_info.val(1)=to_st.freq.shit_scaled(end)*1e9+1e9;
+% add an arrow to point up at the first data pt which is off screen
+ha = annotation('arrow');  % store the arrow information in ha
+ha.Parent = gca;           % associate the arrow the the current axes
+ha.X = [0,0]+2014.3;          % the location in data units
+ha.Y = [0,4]+2;   
+ha.LineWidth  = 1;          % make the arrow bolder for the picture
+ha.HeadWidth  = 8;
+ha.HeadLength = 10;
+
+ii=4;
+text_info.frac_year(ii)=text_info.frac_year(ii)+0.1;
+text_info.val(ii)=text_info.val(ii)+1.5*1e9;
+text_info.align(ii)=1;
 
 text_info.frac_year(end-2)=text_info.frac_year(end-2)-0.4;
 text_info.val(end-2)=text_info.val(end-2)-0.5*1e9;
 text_info.align(end-2)=2;
 
 text_info.frac_year(end-1)=text_info.frac_year(end-1)-0.1;
-text_info.val(end-1)=text_info.val(end-1)-3.5*1e9;
+text_info.val(end-1)=text_info.val(end-1)-3*1e9;
 text_info.align(end-1)=1;
 
 text_info.frac_year(end)=text_info.frac_year(end)-0.2;
-text_info.val(end)=text_info.val(end)+3.7*1e9;
+text_info.val(end)=text_info.val(end)+3*1e9;
 text_info.align(end)=1;
 
 
@@ -312,19 +331,12 @@ text(text_info.frac_year(mask),text_info.val(mask)*1e-9,text_info.delta_str(mask
 mask=text_info.align==2;
 text(text_info.frac_year(mask),text_info.val(mask)*1e-9,text_info.delta_str(mask),'HorizontalAlignment','right' )
 
-% add an arrow to point up at the first data pt which is off screen
-ha = annotation('arrow');  % store the arrow information in ha
-ha.Parent = gca;           % associate the arrow the the current axes
-ha.X = [0,0]+2014.2;          % the location in data units
-ha.Y = [0,4]+11;   
-ha.LineWidth  = 1;          % make the arrow bolder for the picture
-ha.HeadWidth  = 8;
-ha.HeadLength = 10;
+
 
     
 numstr=sprintf('%.0f',plot_y_shift*1e-9)
 ylabel(sprintf('$(\\omega_{\\mathrm{TO}}/2\\pi)$ - %s (GHZ)',numstr))
-ylim([-14.5,18]+(to_st.freq.val(end)-plot_y_shift)*1e-9)
+ylim([-18,9]+(to_st.freq.val(end)-plot_y_shift)*1e-9)
 
 %yticks(-10:5:20)
 yticks((floor(min(to_st.freq.shit_scaled(2:end))/10)*10):5:(ceil(max(to_st.freq.shit_scaled(2:end))/10)*10))
@@ -341,7 +353,7 @@ set(axis_main,'LineWidth',1.2)
 set(axis_main,'FontSize',12);
 
 main_ax_pos=axis_main.Position;
-plot_y_space=0.01;
+plot_y_space=0.00;
 axis_subplot=axes('Position',[main_ax_pos(1),0.1,main_ax_pos(3),main_ax_pos(2)-0.1-plot_y_space])
 set(axis_subplot,'Color','none');
 xticks(2013:2020)
@@ -350,19 +362,22 @@ box on
 plot_y_factor=1e-9;
 %plot_y_shift=725735000*1e6;% Hz
 errorbar(frac_year(th_mask),(to_st.freq.val(th_mask)-plot_y_shift)*plot_y_factor,to_st.freq.unc(th_mask)*plot_y_factor,...
-        'o','CapSize',0,'MarkerSize',5,...
-        'Color',colors_main(1,:),'MarkerFaceColor',colors_detail(1,:),'LineWidth',1.8)
+        's','CapSize',0,'MarkerSize',5,...
+        'Color',colors_main(3,:),'MarkerFaceColor',colors_detail(3,:),'LineWidth',1.8)
     hold on
-errorbar(frac_year(~th_mask),(to_st.freq.val(~th_mask)-plot_y_shift)*plot_y_factor,to_st.freq.unc(~th_mask)*plot_y_factor,...
-        '^','CapSize',0,'MarkerSize',5,...
-        'Color',colors_main(2,:),'MarkerFaceColor',colors_detail(2,:),'LineWidth',1.8) 
-    hold off
-ylim([-90,-89.79]+(to_st.freq.val(end)-plot_y_shift)*1e-9) 
+% errorbar(frac_year(~th_mask),(to_st.freq.val(~th_mask)-plot_y_shift)*plot_y_factor,to_st.freq.unc(~th_mask)*plot_y_factor,...
+%         '^','CapSize',0,'MarkerSize',5,...
+%         'Color',colors_main(2,:),'MarkerFaceColor',colors_detail(2,:),'LineWidth',1.8) 
+%     hold off
+ylim([-90.02,-89.88]+(to_st.freq.val(end)-plot_y_shift)*1e-9) 
 set(axis_subplot,'Xlim',axis_main.XLim);
 set(axis_subplot,'XTick',axis_main.XTick);
 set(axis_subplot,'FontSize',axis_main.FontSize);
 set(axis_subplot,'TickLength',[0.02,0.02])
 set(axis_subplot,'LineWidth',1.2)
+
+
+
 ylabels=arrayfun(@(x) sprintf('%.2f',x),axis_subplot.YTick,'UniformOutput',false)
 set(axis_subplot,'YTickLabel',ylabels)
 xlabel('Year')
@@ -374,18 +389,18 @@ pause(0.1)
 
 
 ii=3;
-text_info.frac_year(ii)=text_info.frac_year(ii)-0.5;
-text_info.val(ii)=text_info.val(ii)-0.00*1e9;
+text_info.frac_year(ii)=text_info.frac_year(ii)-0.4;
+text_info.val(ii)=text_info.val(ii)-0.000*1e9;
 text_info.align(ii)=2;
 
 ii=5;
-text_info.frac_year(ii)=text_info.frac_year(ii)-0.4;
-text_info.val(ii)=text_info.val(ii)+0*1e9;
-text_info.align(ii)=2;
+text_info.frac_year(ii)=text_info.frac_year(ii)+0.2;
+text_info.val(ii)=text_info.val(ii)+0.03*1e9;
+text_info.align(ii)=1;
 
 ii=7;
-text_info.frac_year(ii)=text_info.frac_year(ii)+0.2;
-text_info.val(ii)=text_info.val(ii)+0.02*1e9;
+text_info.frac_year(ii)=text_info.frac_year(ii)+0.6;
+text_info.val(ii)=text_info.val(ii)+0.01*1e9;
 text_info.align(ii)=1;
 
 
@@ -398,7 +413,7 @@ mask=text_info.align==2;
 text(text_info.frac_year(mask),text_info.val(mask)*1e-9,text_info.delta_str(mask),'HorizontalAlignment','right' )
 
 %4/3 aspect ratio
-set(gcf,'position',[493 318 600 450])
+
 
 fprintf('for figure caption\n %s\n',...
     sprintf('\\cite{%s},',to_st.bib_keys{:}))
@@ -413,6 +428,8 @@ sigma_th_exp=th_diff.val/th_diff.unc;
 
 fprintf('diff between th and exp %s MHZ sigma %f \n',string_value_with_unc(th_diff.val*1e-6,th_diff.unc*1e-6,'b'),sigma_th_exp)
 
+%%
+set(gcf,'position',[493 318 600 450])
 export_fig(gcf,fullfile(mpath,'to_val_convergence_history.svg'))
 export_fig(gcf,fullfile(mpath,'to_val_convergence_history.eps'))
 export_fig(gcf,fullfile(mpath,'to_val_convergence_history.png'))
@@ -421,107 +438,172 @@ export_fig(gcf,fullfile(mpath,'to_val_convergence_history.png'))
 
 %%
 
-
-
-%%
-% 
-% 
-% path='./figs/theory_polz_data_from_lyt/fig1b_data.csv';
-% data_table=readtable(path)
-% 
-% bohr_radius=5.29177210903e-11;
-% 
-% %%
-% stfig('theory polz');
+% stfig('convergence')
 % clf
 % 
-% wl_axis=axes('Position',[.1 .1 .8 1e-12]);
-% set(wl_axis,'Units','normalized');
-% set(wl_axis,'Color','none');
-% xlabel(wl_axis,'Wavelength (nm)')
-% 
-% % axis for km/h with stem-plot
-% freq_axis=axes('Position',[.1 .25 .8 .65]);
-% set(freq_axis,'Units','normalized');
-% 
-% set(wl_axis,'FontSize',10);
-% 
-% % conversion factor from https://arxiv.org/pdf/1004.3567.pdf
-% conversion_factor=4*pi*const.epsilon0*(bohr_radius^3);
-% 
-% polz_si=data_table.polarizability_a_u__*conversion_factor;
-% freq=f2wl(data_table.nm*1e-9);
-% 
-% % add a high freq point so the plot goes off the page
-% freq= cat(1,1000e12,freq);
-% polz_si=cat(1,0,polz_si);
-% 
-% plot(freq_axis,freq*1e-12,polz_si*1e38,'k','LineWidth', 2)
-% 
-% %xlim([300,1200])
-% xlabel('$\omega$, Frequency ($2\pi$ THz)')
-% ylabel('$\alpha$, Polarizability ($10^{-37} \mathrm{C}\cdot \mathrm{m}^{2} \cdot\mathrm{V}^{-1}$)')
-% ylim([-1,1]*1.2)
-% xlim([170,980])
-% line(xlim(), [0,0], 'LineWidth', 1, 'Color', 'k','LineStyle','--');
-% xticks(200:200:900)
-% %set(gca,'Yscale','log')
-% set(gca,'LineWidth',1.2,'TickLength',[1 1]*0.02);
-% 
-% % % plot the same numbers on x scale
-% % f_lims=xlim;
-% % f_lims=f_lims*1e12;
-% % wl_lims=f2wl(f_lims);
-% % wl_vals_in_f=freq_axis.XTick*1e12;
-% % wl_vals=f2wl(wl_vals_in_f)*1e9;
-% % wl_vals=round(wl_vals);
-% % [wl_vals_in_f,sort_order]=sort(wl_vals_in_f);
-% % set(wl_axis,'xlim',f_lims)
-% % set(wl_axis,'XTick',wl_vals_in_f)
-% % wl_axis.XTickLabel=arrayfun(@num2str,wl_vals(sort_order),'UniformOutput',false)
 % 
 % 
-% % now we plot round numbers on the wl scale
-% f_lims=xlim;
-% f_lims=f_lims*1e12;
-% wl_lims=f2wl(f_lims);
-% %wl_vals=400:200:1500;
-% wl_vals=[350,400,500,700,900,1200];
-% wl_vals_in_f=f2wl(wl_vals*1e-9);
-% [wl_vals_in_f,sort_order]=sort(wl_vals_in_f);
-% set(wl_axis,'xlim',f_lims)
-% set(wl_axis,'XTick',wl_vals_in_f)
-% wl_axis.XTickLabel=arrayfun(@num2str,wl_vals(sort_order),'UniformOutput',false)
+% plot_y_factor=1e-9;
+% %plot_y_shift=725700000*1e6;% Hz 
+% plot_y_shift=725735000*1e6;% Hz
+% to_st.freq.shit_scaled=(to_st.freq.val-plot_y_shift)*plot_y_factor;
+% errorbar(frac_year(th_mask),to_st.freq.shit_scaled(th_mask),to_st.freq.unc(th_mask)*plot_y_factor,...
+%         'o','CapSize',0,'MarkerSize',5,...
+%         'Color',colors_main(1,:),'MarkerFaceColor',colors_detail(1,:),'LineWidth',1.8)
+%     hold on
+% errorbar(frac_year(~th_mask),to_st.freq.shit_scaled(~th_mask),to_st.freq.unc(~th_mask)*plot_y_factor,...
+%         '^','CapSize',0,'MarkerSize',5,...
+%         'Color',colors_main(2,:),'MarkerFaceColor',colors_detail(2,:),'LineWidth',1.8) 
+%     hold off
+%     
+%     
+% text_info=[];    
+% text_info.val=(to_st.freq.val-plot_y_shift);
+% text_info.unc=to_st.freq.unc;
+% text_info.frac_year=frac_year;
+% text_info.align=nan;
+% text_info.align(1:numel(text_info.val))=0;
+% text_info.ref_num=zeros(1,numel(text_info.val));
+% text_info.ref_num=[14,13,20,20,21,21,12,11,nan,nan];
+% text_info.delta_str=cell(1,numel(text_info.val));
 % 
-% set(wl_axis,'LineWidth',1.2,'TickLength',[1 1]*0.02);
+% text_info.ref_text=arrayfun(@(x) sprintf('[%u]',x),text_info.ref_num,'UniformOutput',0);
+% text_info.ref_text{end-1}='(theory)';
+% text_info.ref_text{end}='(exp.)';
+% 
+% for ii=1:numel(text_info.val)
+%     text_info.delta_str{ii}=sprintf('%s GHz\n %s',...
+%         string_value_with_unc(text_info.val(ii)*plot_y_factor,text_info.unc(ii)*plot_y_factor,'b'),...
+%         text_info.ref_text{ii});
+% end
+% text_info.frac_year=text_info.frac_year+0.2;
+% 	
+% 
+% text_info.frac_year(1)=text_info.frac_year(1)+0.3;
+% text_info.val(1)=to_st.freq.shit_scaled(end)*1e9+13e9;
+% 
+% text_info.frac_year(end-2)=text_info.frac_year(end-2)-0.4;
+% text_info.val(end-2)=text_info.val(end-2)-0.5*1e9;
+% text_info.align(end-2)=2;
+% 
+% text_info.frac_year(end-1)=text_info.frac_year(end-1)-0.1;
+% text_info.val(end-1)=text_info.val(end-1)-3.5*1e9;
+% text_info.align(end-1)=1;
+% 
+% text_info.frac_year(end)=text_info.frac_year(end)-0.2;
+% text_info.val(end)=text_info.val(end)+3.7*1e9;
+% text_info.align(end)=1;
 % 
 % 
-% % inset plot
-% f_to=725736810e6;
-% inset_axis=axes('Position',[.39 .7 .25 0.25])
-% set(inset_axis,'FontSize',10);
-% box(inset_axis,'on')
-% set(inset_axis,'LineWidth',1.2,'TickLength',[1 1]*0.04);
-% plot(inset_axis,freq*1e-12-f_to*1e-12,polz_si*1e41,'k','LineWidth', 2)
-% line(xlim(), [0,0], 'LineWidth', 1, 'Color', 'k','LineStyle','--');
-% xlim(inset_axis,[-1,1]*1.3)
-% xlabel(inset_axis,'$\omega-\omega_{\mathrm{TO}}$ ($2\pi$ THz)')
-% ylabel(inset_axis,'$\alpha$ ($10^{-41} \mathrm{C}\cdot \mathrm{m}^{2} \cdot\mathrm{V}^{-1}$)')
-% set(gca,'LineWidth',1.2,'TickLength',[1 1]*0.02);
+% %plot out each seprately
+% mask=text_info.align==0;
+% text(text_info.frac_year(mask),text_info.val(mask)*1e-9,text_info.delta_str(mask),'HorizontalAlignment','left' )
+% mask=text_info.align==1;
+% text(text_info.frac_year(mask),text_info.val(mask)*1e-9,text_info.delta_str(mask),'HorizontalAlignment','center' )
+% mask=text_info.align==2;
+% text(text_info.frac_year(mask),text_info.val(mask)*1e-9,text_info.delta_str(mask),'HorizontalAlignment','right' )
 % 
-% % plot(freq_axis,freq*1e-12,polz_si*1e37,'k','LineWidth', 2)
-% % 
-% % %xlim([300,1200])
-% % xlabel('Frequency (THz)')
-% % ylabel('Polarizability ($10^{-37} \mathrm{C}\cdot \mathrm{m}^{2} \cdot\mathrm{V}^{-1}$)')
-% % ylim([-1,1]*1)
-% % xlim([170,980])
-% % line(xlim(), [0,0], 'LineWidth', 1, 'Color', 'k','LineStyle','--');
-% % xticks(200:200:900)
-% % %set(gca,'Yscale','log')
-% % set(gca,'LineWidth',1.2,'TickLength',[1 1]*0.02);
+% % add an arrow to point up at the first data pt which is off screen
+% ha = annotation('arrow');  % store the arrow information in ha
+% ha.Parent = gca;           % associate the arrow the the current axes
+% ha.X = [0,0]+2014.2;          % the location in data units
+% ha.Y = [0,4]+11;   
+% ha.LineWidth  = 1;          % make the arrow bolder for the picture
+% ha.HeadWidth  = 8;
+% ha.HeadLength = 10;
+% 
+%     
+% numstr=sprintf('%.0f',plot_y_shift*1e-9)
+% ylabel(sprintf('$(\\omega_{\\mathrm{TO}}/2\\pi)$ - %s (GHZ)',numstr))
+% ylim([-14.5,18]+(to_st.freq.val(end)-plot_y_shift)*1e-9)
+% 
+% %yticks(-10:5:20)
+% yticks((floor(min(to_st.freq.shit_scaled(2:end))/10)*10):5:(ceil(max(to_st.freq.shit_scaled(2:end))/10)*10))
+% xlim([2013,2021.5])
 % 
 % 
-
-
-%%
+% axis_main=gca;
+% set(axis_main,'Units','normalized');
+% set(axis_main,'Color','none');
+% set(axis_main,'Position',[0.15,0.3,0.8,0.65])
+% set(axis_main,'XTickLabel','')
+% set(axis_main,'TickLength',[0.02,0.02])
+% set(axis_main,'LineWidth',1.2)
+% set(axis_main,'FontSize',12);
+% 
+% main_ax_pos=axis_main.Position;
+% plot_y_space=0.01;
+% axis_subplot=axes('Position',[main_ax_pos(1),0.1,main_ax_pos(3),main_ax_pos(2)-0.1-plot_y_space])
+% set(axis_subplot,'Color','none');
+% xticks(2013:2020)
+% box on
+% 
+% plot_y_factor=1e-9;
+% %plot_y_shift=725735000*1e6;% Hz
+% errorbar(frac_year(th_mask),(to_st.freq.val(th_mask)-plot_y_shift)*plot_y_factor,to_st.freq.unc(th_mask)*plot_y_factor,...
+%         'o','CapSize',0,'MarkerSize',5,...
+%         'Color',colors_main(1,:),'MarkerFaceColor',colors_detail(1,:),'LineWidth',1.8)
+%     hold on
+% errorbar(frac_year(~th_mask),(to_st.freq.val(~th_mask)-plot_y_shift)*plot_y_factor,to_st.freq.unc(~th_mask)*plot_y_factor,...
+%         '^','CapSize',0,'MarkerSize',5,...
+%         'Color',colors_main(2,:),'MarkerFaceColor',colors_detail(2,:),'LineWidth',1.8) 
+%     hold off
+% ylim([-90,-89.79]+(to_st.freq.val(end)-plot_y_shift)*1e-9) 
+% set(axis_subplot,'Xlim',axis_main.XLim);
+% set(axis_subplot,'XTick',axis_main.XTick);
+% set(axis_subplot,'FontSize',axis_main.FontSize);
+% set(axis_subplot,'TickLength',[0.02,0.02])
+% set(axis_subplot,'LineWidth',1.2)
+% ylabels=arrayfun(@(x) sprintf('%.2f',x),axis_subplot.YTick,'UniformOutput',false)
+% set(axis_subplot,'YTickLabel',ylabels)
+% xlabel('Year')
+% axis_main.YLabel.Units='normalized';
+% % caluclate the y position so that the label is centered
+% axis_main.YLabel.Extent
+% axis_main.YLabel.Position=axis_main.YLabel.Position+[-0.05,-0.17,0];
+% pause(0.1)
+% 
+% 
+% ii=3;
+% text_info.frac_year(ii)=text_info.frac_year(ii)-0.5;
+% text_info.val(ii)=text_info.val(ii)-0.00*1e9;
+% text_info.align(ii)=2;
+% 
+% ii=5;
+% text_info.frac_year(ii)=text_info.frac_year(ii)-0.4;
+% text_info.val(ii)=text_info.val(ii)+0*1e9;
+% text_info.align(ii)=2;
+% 
+% ii=7;
+% text_info.frac_year(ii)=text_info.frac_year(ii)+0.2;
+% text_info.val(ii)=text_info.val(ii)+0.02*1e9;
+% text_info.align(ii)=1;
+% 
+% 
+% %plot out each seprately
+% mask=text_info.align==0;
+% text(text_info.frac_year(mask),text_info.val(mask)*1e-9,text_info.delta_str(mask),'HorizontalAlignment','left' )
+% mask=text_info.align==1;
+% text(text_info.frac_year(mask),text_info.val(mask)*1e-9,text_info.delta_str(mask),'HorizontalAlignment','center' )
+% mask=text_info.align==2;
+% text(text_info.frac_year(mask),text_info.val(mask)*1e-9,text_info.delta_str(mask),'HorizontalAlignment','right' )
+% 
+% %4/3 aspect ratio
+% set(gcf,'position',[493 318 600 450])
+% 
+% fprintf('for figure caption\n %s\n',...
+%     sprintf('\\cite{%s},',to_st.bib_keys{:}))
+% fprintf('titles \n %s }\n',...
+%     sprintf('%s\n',to_st.title{:}))
+% 
+% th_diff=[];
+% th_diff.val=to_st.freq.val(end)-to_st.freq.val(end-1);
+% th_diff.unc=rssq(to_st.freq.unc(end-1:end));
+% 
+% sigma_th_exp=th_diff.val/th_diff.unc;
+% 
+% fprintf('diff between th and exp %s MHZ sigma %f \n',string_value_with_unc(th_diff.val*1e-6,th_diff.unc*1e-6,'b'),sigma_th_exp)
+% 
+% export_fig(gcf,fullfile(mpath,'to_val_convergence_history.svg'))
+% export_fig(gcf,fullfile(mpath,'to_val_convergence_history.eps'))
+% export_fig(gcf,fullfile(mpath,'to_val_convergence_history.png'))

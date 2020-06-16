@@ -1,7 +1,9 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 % Determine the Tune out from a dataset
 % using the measured change in trap frequency from the application of a probe beam.
-% application of the tune out probe beam.
+% For each probe beam polarization there is a folder with many 'shots' (creation of BEC & measurment)
+% the folder name has the waveplate polarization.
+% The processd data is saved in the 
 % The script:
 % - defines the user controled options
 % - Imports all the tdc data files 
@@ -83,7 +85,7 @@ addpath('./lib/Core_BEC_Analysis/lib/') %add the path to set_up_project_path, th
 set_up_project_path
 
 hebec_constants %call the constants function that makes some globals
-return
+
 %%
 % BEGIN USER VAR-------------------------------------------------
 
@@ -101,7 +103,9 @@ return
 %% for deployment
 % select the directories in a folder
 %root_data_dir='G:\good_data';
-root_data_dir='..\tune_out_example_data';
+%root_data_dir='..\tune_out_example_data';
+
+root_data_dir='Z:\DataBackup\Bryce_Data_Backup\TO_working_data\to_main_data';
 files = dir(root_data_dir);
 files=files(3:end);
 % Get a logical vector that tells which is a directory.
@@ -111,8 +115,10 @@ folders=files(dir_mask);
 folders=arrayfun(@(x) fullfile(root_data_dir,x.name),folders,'UniformOutput' ,false);
 %folders=folders(randperm(numel(folders)));%randomize the ordering
 loop_config.dir = folders;
+% use nan for the set point and it will auto find the set point
 loop_config.set_pt=nan(1,numel(loop_config.dir));
 selected_dirs=1:numel(loop_config.dir);
+selected_dirs=1
 
 
 
@@ -126,8 +132,10 @@ anal_opts.tdc_import.dld_xy_rot=0.61;
 anal_opts.tdc_import.save_cache_in_data_dir=true;
 
 %Should probably try optimizing these
-tmp_xlim=[-30e-3, 30e-3];     %tight XY lims to eliminate hot spot from destroying pulse widths
-tmp_ylim=[-30e-3, 30e-3];
+% tmp_xlim=[-30e-3, 30e-3];     %tight XY lims to eliminate hot spot from destroying pulse widths
+% tmp_ylim=[-30e-3, 30e-3];
+tmp_xlim=[-40e-3, 40e-3];     %loos XY lims to be used with hotspot killer
+tmp_ylim=[-40e-3, 40e-3];
 tlim=[0,4];
 anal_opts.tdc_import.txylim=[tlim;tmp_xlim;tmp_ylim];
 anal_opts.max_runtime=inf;%inf%cut off the data run after some number of hours, should bin included as its own logic not applied to the atom number ok
@@ -146,6 +154,7 @@ anal_opts.atom_laser.t0=0.417770; %center i ntime of the first pulse
 
 anal_opts.global.fall_time=0.417;
 anal_opts.global.qe=0.09;
+anal_opts.global.atom_laser=[];
 anal_opts.global.atom_laser.t0=anal_opts.atom_laser.t0;
 
 
@@ -160,18 +169,23 @@ active_process_mod_time=60*0;
 
 % END USER VAR-----------------------------------------------------------
 
-
-
 fprintf('approx remaining folders to be processed %u \n',...
 sum(cellfun(@(x) should_process_folder(x,reprocess_folder_if_older_than,0),folders)))
 
 % loop over the selected directories
 for dir_idx = selected_dirs
 anal_opts.tdc_import.dir = loop_config.dir{dir_idx};
-%check that this folder is not being processed by another matlab instance
-if should_process_folder(anal_opts.tdc_import.dir,reprocess_folder_if_older_than,active_process_mod_time)  
-try
+
+% reprocess this data folder if
+% - the last processing is older than the posix time 'reprocess_folder_if_older_than'
+% - and the last modifcation is older than active_process_mod_time
+if should_process_folder(anal_opts.tdc_import.dir,reprocess_folder_if_older_than,active_process_mod_time)
     
+% use try to catch errors in this folder processing (so that the other data folders can be processed)
+% we are sloppy with the indents to make it easier read the code step through the analysis by running code sections
+% to do this click on a block between headers that start with %% and ctrl + enter
+try
+%%
 fprintf('processing data dir %s \n',anal_opts.tdc_import.dir)
 main_trap_freq_timer=tic;
 anal_opts.probe_set_pt=loop_config.set_pt(dir_idx);
@@ -335,17 +349,18 @@ anal_opts.ai_log.aquire_time=anal_opts.dld_aquire;
 anal_opts.ai_log.trig_ai_in=anal_opts.trig_ai_in;
 % set time matching conditions
 anal_opts.ai_log.aquire_time=4;
-anal_opts.ai_log.pd.diff_thresh=0.05;
+anal_opts.ai_log.pd.mean_diff_thresh=0.05;
 anal_opts.ai_log.pd.std_thresh=0.05;
+anal_opts.ai_log.pd.range_thresh_prob=1e-6; % threshold expressed in probability due to chance that a shot will be rejected due to chance
 anal_opts.ai_log.pd.time_start=0.2;
 anal_opts.ai_log.pd.time_stop=2;
 anal_opts.ai_log.time_match_valid=8; %how close the predicted start of the shot is to the actual
 %sfp options
 anal_opts.ai_log.scan_time=1/20; %fast setting 1/100hz %estimate of the sfp scan time,used to set the window and the smoothing
 anal_opts.ai_log.sfp.num_checks=inf; %how many places to check that the laser is single mode, inf=all scans
-anal_opts.ai_log.sfp.peak_thresh=[-0.005,-0.005];%[0,-0.008]*1e-3; %theshold on the compressed signal to be considered a peak
+anal_opts.ai_log.sfp.peak_thresh=[0.05,-0.0029];%[0,-0.008]*1e-3; %theshold on the [uncompressed,compressed] signal to be considered a peak
 anal_opts.ai_log.sfp.pzt_dist_sm=4.5;%minimum (min peak difference)between peaks for the laser to be considered single mode
-anal_opts.ai_log.sfp.pzt_peak_width=0.15; %peak with in pzt voltage used to check that peaks are acually different and not just noise
+anal_opts.ai_log.sfp.pzt_peak_width=0.2; %peak with in pzt voltage used to check that peaks are acually different and not just on the side of the peak
 anal_opts.ai_log.plot.all=false;
 anal_opts.ai_log.plot.failed=true;
 
@@ -556,10 +571,35 @@ anal_opts.atom_num_fit.qe=anal_opts.global.qe;
 
 data.num_fit=fit_atom_number(anal_opts.atom_num_fit,data);
 
+
 %% Fitting Temp
-% find the temperature from the atom laser pulses
-%anal_opts.temperature_fit=[]
-%data.temperature_fit=fit_temperature(anal_opts.atom_num_fit,data);
+% dirst we must seperate the high flux BEC component from the low flux thermal component
+anal_opts.atom_laser_segmentation=anal_opts.atom_laser;
+
+anal_opts.atom_laser_segmentation.plot.all=false;
+% if norm_seg_thresh is on then this is the threshold for the normalized proability density otherwise 
+% it is the unnormalized flux density
+anal_opts.atom_laser_segmentation.seg_thresh=9e6/726; 
+anal_opts.atom_laser_segmentation.norm_seg_thresh=true;
+anal_opts.atom_laser_segmentation.bin_size=2e-3; % in m/s
+anal_opts.atom_laser_segmentation.blur_size=5e-3; % in m/s
+anal_opts.atom_laser_segmentation.close_thresh=[20e-3,50e-3]; % in m/s
+anal_opts.atom_laser_segmentation.global=anal_opts.global; %coppy global into the options structure
+tic
+data.al_segmentation=segment_al_pulses_BEC_therm(anal_opts.atom_laser_segmentation,data)
+toc
+
+
+%%
+anal_opts.seg_fits=[];
+fit_component_oscillations(data.al_segmentation,anal_opts.seg_fits)
+
+%%
+
+anal_opts.temp_fits=[];
+anal_opts.temp_fits.global=anal_opts.global;
+fit_temp_segmented(data,anal_opts.temp_fits)
+
 
 
 %% Load saved state
