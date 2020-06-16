@@ -460,7 +460,7 @@ clear('sub_data')
 
 %% calculate blue probe freq
 % convert freq to blue in hz apply aom shift to probe beam
-data.blue_probe=calc_probe_blue(data.wm_log.proc,anal_opts.aom_freq);
+data.blue_probe= (data.wm_log.proc,anal_opts.aom_freq);
 
 
 %% COMBINE ALL CHECK LOGICS AND PLOT
