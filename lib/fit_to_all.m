@@ -64,7 +64,7 @@ for ii=1:2 %iterate over linear and quadratic fits
     % for a given fit order we fit twice first to determine outliers and then again without outliers to determine the TO
     
     %% first fit to all data
-    fit_out=fit_poly_with_int(xywdat,ii,1,0);
+    fit_out=fit_poly_with_int(xywdat,ii,0,0);
     to_res.fit_all.model{ii}=fit_out.fit_mdl;
     to_res.fit_all.scale_x{ii}=anal_opts_fit_to.scale_x;
     to_res.fit_all.to_freq(ii).val=fit_out.x_intercept.val/anal_opts_fit_to.scale_x+probe_freq_offset; %give the result back in hz
@@ -227,7 +227,7 @@ end
 %scatter(1:4,cell2mat(to_res.fit_all.to_freq)) %to with all the data
 temp_to_val=cell2mat({to_res.fit_trimmed.to_freq(:).val});
 stfig('order dependence','add_stack',1);
-errorbar(1:2,temp_to_val./1e6-mean(temp_to_val)*1e-6,cell2mat(to_res.fit_trimmed.to_unc_boot)./1e6) %with culled data
+errorbar(1:ii,temp_to_val./1e6-mean(temp_to_val)*1e-6,cell2mat(to_res.fit_trimmed.to_unc_boot)./1e6) %with culled data
 set(gcf,'color','w')
 xlabel('Order of fit')
 ylabel('Tune-out value (MHz)')
@@ -241,6 +241,8 @@ xlim([0 3])
 %% Make a clean plot with single markers per freq
 
 plot_offset=(to_res.fit_trimmed.to_freq(1).val-probe_freq_offset)*1e-9;
+
+
 
 bin_center=uniquetol(xdat_culled,1e-3);
 bin_edges=cat(1,-inf,(bin_center(2:end)+bin_center(1:end-1))/2,inf);
@@ -266,57 +268,72 @@ y_se = (group_y_stat(:,3));
 xneg = group_x_mean - x_lims(1,:);
 xpos = x_lims(2,:) - group_x_mean;
 
-%Finally plot a nice version of the quad fit
+%% Finally plot a nice version of the fit for the paper
 %set up the colors to use
-colors_main=[[233,87,0];[33,188,44];[0,165,166]];
-%colors_main = [[75,151,201];[193,114,66];[87,157,95]];
+%colors_main=[[233,87,0];[33,188,44];[0,165,166]];
+
+colors_main = [[90,173,42];[0,0,0];[1,1,1]*180];
 font_name='cmr10';
-font_size_global=14;
+font_size_global=10;
 %we add another offset so that the plot is about the TO
-group_x_mean=group_x_mean-plot_offset;
+
 
 colors_main=colors_main./255;
 lch=colorspace('RGB->LCH',colors_main(:,:));
 lch(:,1)=lch(:,1)+20;
 colors_detail=colorspace('LCH->RGB',lch);
 %would prefer to use srgb_2_Jab here
-color_shaded=colorspace('RGB->LCH',colors_main(3,:));
-color_shaded(1)=125;
-color_shaded=colorspace('LCH->RGB',color_shaded);
+% color_shaded=colorspace('RGB->LCH',colors_main(3,:));
+% color_shaded(1)=125;
+% color_shaded=colorspace('LCH->RGB',color_shaded);
+
+color_shaded=[231,231,231]/255;
 
 stfig('nice to fig','add_stack',1);
 clf
-[ysamp_culled,yci_culled]=predict(to_res.fit_trimmed.model{1},xsamp_culled,'Prediction','observation','Alpha',ci_size_disp); %'Prediction','observation'
-patch([xsamp_culled', fliplr(xsamp_culled')]-plot_offset, [yci_culled(:,1)', fliplr(yci_culled(:,2)')], color_shaded,'EdgeColor','none');  %
+xsamp=col_vec(linspace(min(group_x_mean)-range(group_x_mean)*0.2,max(group_x_mean)+range(group_x_mean)*0.2,1e3))+plot_offset;
+[ysamp_culled,yci_culled]=predict(to_res.fit_trimmed.model{1},xsamp,'Prediction','observation','Alpha',ci_size_disp); %'Prediction','observation'
+%patch([xsamp', fliplr(xsamp')]-plot_offset, [yci_culled(:,1)', fliplr(yci_culled(:,2)')], color_shaded,'EdgeColor','none');  %
 hold on
-xl=xlim;
-line(xl,[0,0],'color','k','LineWidth',1)
-plot(xsamp_culled-plot_offset,yci_culled','r','color',colors_main(3,:),'LineWidth',1.5);
-plot(xsamp_culled-plot_offset,ysamp_culled,'-','color',colors_main(2,:),'LineWidth',1.5)
-errorbar(group_x_mean,group_y_stat(:,1),y_sd...
+
+plot(xsamp-plot_offset,yci_culled','r','color',colors_main(3,:),'LineWidth',1.5);
+plot(xsamp-plot_offset,ysamp_culled,'-','color',colors_main(2,:),'LineWidth',1.5)
+
+errorbar(group_x_mean-plot_offset,group_y_stat(:,1),y_sd...
      ,'o','CapSize',0,'Marker','none','Color',colors_detail(1,:),...
      'LineWidth',1.5);
-errorbar(group_x_mean,group_y_stat(:,1),[],[],...
-      xneg,xpos,'o','CapSize',0,'Marker','none','Color',colors_detail(1,:),...
-      'LineWidth',1.5);
-errorbar(group_x_mean,group_y_stat(:,1),y_se,...
+errorbar(group_x_mean-plot_offset,group_y_stat(:,1),y_se,...
     'o','CapSize',0,'MarkerSize',5,'Color',colors_main(1,:),...
     'MarkerFaceColor',colors_detail(1,:),'LineWidth',2.5);
+errorbar(group_x_mean-plot_offset,group_y_stat(:,1),[],[],...
+      xneg,xpos,'o','CapSize',0,'Marker','none','Color',colors_detail(1,:),...
+      'LineWidth',1.5);
+  
+set(gca,'Position',[0.1,0.2,0.88,0.78])
+set(gca, {'XColor', 'YColor'}, {'k', 'k'});
 % 
 % errorbar(group_x_mean,ydat_chunks(:,1),ydat_chunks(:,2),'o','CapSize',0,'MarkerSize',5,'Color',colors_main(1,:),...
 %     'MarkerFaceColor',colors_detail(1,:),'LineWidth',1.5);
 hold off
-xlim(xl)
-xlabel(sprintf('Probe Beam (Optical) Frequency - %.3f (GHz)',probe_freq_offset*1e-9-plot_offset)) %TODO the pobe beam should be converted to the blue size much earlier in code 
-ylabel('Response (Hz^2)')
-set(gca,'xlim',[floor(min(group_x_mean)),ceil(max(group_x_mean))])
-set(gca,'ylim',first_plot_lims(2,:))
-set(gcf, 'Units', 'pixels', 'Position', [100, 100, 1600, 900])
+
+%xlabel(sprintf('$\\omega$,Probe Beam (Optical) Frequency - $2 \\pi$ %.3f ($2 \\pi$ GHz)',probe_freq_offset*1e-9-plot_offset)) %TODO the pobe beam should be converted to the blue size much earlier in code 
+xlabel(sprintf('Probe Beam (Optical) Frequency ($\\omega$)  $-$  Tune-Out Frequncy ($\\omega_{\\mathrm{TO}}$) ($2 \\pi$ GHz)',probe_freq_offset*1e-9-plot_offset)) %TODO the pobe beam should be converted to the blue size much earlier in code 
+
+ylabel('Response ($\mathrm{Hz}^2$)')
+%set(gca,'xlim',[floor(min(group_x_mean)),ceil(max(group_x_mean))])
+%set(gca,'ylim',first_plot_lims(2,:))
+set(gca,'xlim',[-4.2,4.5])
+set(gca,'ylim',[-160,160])
 set(gcf,'color','w')
+box on
+set(gca,'linewidth',1.0)
 set(gca,'FontSize',font_size_global,'FontName',font_name)
+ set(gcf,'Position',[100,100,270*3,100*3])
 plot_name='nice_to_fig';
 saveas(gcf,[anal_opts_fit_to.global.out_dir,plot_name,'.png'])
 saveas(gcf,[anal_opts_fit_to.global.out_dir,plot_name,'.fig'])
+export_fig([anal_opts_fit_to.global.out_dir,plot_name,'.eps'])
+%export_fig([anal_opts_fit_to.global.out_dir,plot_name,'.pdf'])
 
 end
 

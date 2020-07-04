@@ -23,7 +23,8 @@ osc_fit.fit_sample_limit=cell(1,iimax);
 fprintf('Fitting oscillations in shots %04i:%04i',iimax,0)
 
  if anal_opts_osc_fit.plot_fits
-            fit__osc_plot_handle=stfig('single osc fit','add_stack',1);
+            fit_osc_plot_handle=stfig('single osc muti dim','add_stack',1);
+            fit_osc_nice_plot_handle=stfig('single osc nice fit','add_stack',1);
             fit_resid_plot_handle=stfig('fir resid','add_stack',1);
  end
 
@@ -128,6 +129,7 @@ for ii=1:iimax
         fitparam=fitobject.Coefficients;
         osc_fit.model_coefs(ii,:,:)=[fitparam.Estimate,fitparam.SE];
         osc_fit.fit_rmse(ii)=fitobject.RMSE;
+        % we will later use this fit to find the undamped frequency of the oscillator
         
         
         %limiting frequnecy prediction from http://adsabs.harvard.edu/full/1999DSSN...13...28M
@@ -140,8 +142,8 @@ for ii=1:iimax
         %%
         if anal_opts_osc_fit.plot_fits
             font_name='cmr10';
-            font_size_global=20;
-            folt_size_label=20;
+            font_size_global=10;
+            font_size_label=10;
             colors_main=[[255,0,0];[33,188,44];[0,0,0]]./255;
             lch=colorspace('RGB->LCH',colors_main(:,:));
             lch(:,1)=lch(:,1)+20;
@@ -158,7 +160,7 @@ for ii=1:iimax
                        interp1(predictor(:,1),predictor(:,2),tplotvalues),...
                        interp1(predictor(:,1),predictor(:,3),tplotvalues)];
             [prediction,ci]=predict(fitobject,predictorplot,'Alpha',1-erf(1/sqrt(2)),'Prediction','observation');
-            stfig(fit__osc_plot_handle);
+            stfig(fit_osc_plot_handle);
             clf;
             
             
@@ -192,8 +194,8 @@ for ii=1:iimax
             set(ax, {'XColor', 'YColor'}, {'k', 'k'});
             errorbar(predictor(:,1)-time_start,txyz_tmp(:,anal_opts_osc_fit.dimesion+1)*1e3,xyzerr_tmp(:,anal_opts_osc_fit.dimesion)*1e3,'o','CapSize',0,'MarkerSize',5,'Color',colors_main(1,:),'MarkerFaceColor',colors_detail(1,:),'LineWidth',1.5) 
             set(gcf,'Color',[1 1 1]);
-            xlabel('Time (s)','FontSize',folt_size_label)
-            ylabel('V_{x} (mm/s)','FontSize',folt_size_label)
+            xlabel('Time (s)','FontSize',font_size_label)
+            ylabel('V_{x} (mm/s)','FontSize',font_size_label)
             title(sprintf('amp=%.2f±%.2f mm/s,omega=%.2f±%.2f Hz,Damp=%.2f±%.2f s',...
                 fitobject.Coefficients.Estimate(1)*1e3,fitobject.Coefficients.SE(1)*1e3,...
                  fitobject.Coefficients.Estimate(2),fitobject.Coefficients.SE(2),...
@@ -206,6 +208,47 @@ for ii=1:iimax
             set(gca,'FontSize',font_size_global,'FontName',font_name)
             saveas(gca,sprintf('%sfit_dld_shot_num%04u.png',anal_opts_osc_fit.global.out_dir,dld_shot_num))
             
+            
+%% do a speprate plot of the fit for the paper     
+            stfig(fit_osc_nice_plot_handle)
+            clf
+            shaded_ci_lines=false;
+            
+            if shaded_ci_lines
+                patch([predictorplot(:,1)', fliplr(predictorplot(:,1)')]-time_start, [ci(:,1)', fliplr(ci(:,2)')]*1e3, color_shaded,'EdgeColor','none')  %[1,1,1]*0.80
+                hold on
+            else
+                plot(predictorplot(:,1)-time_start,ci(:,1)*1e3,'-','LineWidth',1.5,'Color',color_shaded)
+                hold on
+                plot(predictorplot(:,1)-time_start,ci(:,2)*1e3,'-','LineWidth',1.5,'Color',color_shaded)
+            end  
+            plot(predictorplot(:,1)-time_start,prediction*1e3,'-','LineWidth',1.0,'Color',colors_main(3,:))
+            prev_gca_pos=get(gca,'Position');
+            set(gca,'Position',[0.1,0.2,0.88,0.78])
+            ax = gca;
+            set(ax, {'XColor', 'YColor'}, {'k', 'k'});
+            errorbar(predictor(:,1)-time_start,txyz_tmp(:,anal_opts_osc_fit.dimesion+1)*1e3,xyzerr_tmp(:,anal_opts_osc_fit.dimesion)*1e3,'o','CapSize',0,'MarkerSize',5,'Color',colors_main(1,:),'MarkerFaceColor',colors_detail(1,:),'LineWidth',1.5) 
+            set(gcf,'Color',[1 1 1]);
+            xlabel('Time (s)','FontSize',font_size_label)
+            yticks(-10:10:10)
+            ylim([-16,16])
+            ylabel('$V_{x}$ (mm/s)','FontSize',font_size_label)
+            label_text=sprintf('amp=%.2f±%.2f mm/s,omega=%.2f±%.2f Hz,Damp=%.2f±%.2f s',...
+                fitobject.Coefficients.Estimate(1)*1e3,fitobject.Coefficients.SE(1)*1e3,...
+                 fitobject.Coefficients.Estimate(2),fitobject.Coefficients.SE(2),...
+                 fitobject.Coefficients.Estimate(7),fitobject.Coefficients.SE(7));
+            an=annotation('textbox',[.3 .3 .5 .6],'String',label_text,'FitBoxToText','on');
+            an.FontSize = 5;
+            hold off
+            ax = gca;
+            xlim([predictorplot(1,1)-0.01,predictorplot(end,1)+0.01]-time_start)
+            set(ax, {'XColor', 'YColor'}, {'k', 'k'});
+            set(gca,'linewidth',1.0)
+            set(gca,'FontSize',font_size_global,'FontName',font_name)
+            set(gcf,'Position',[100,100,270*3,100*3])
+            saveas(gca,sprintf('%sfit_nice_dld_shot_num%04u.png',anal_opts_osc_fit.global.out_dir,dld_shot_num))
+            export_fig(sprintf('%sfit_nice_dld_shot_num%04u.svg',anal_opts_osc_fit.global.out_dir,dld_shot_num))
+            export_fig(sprintf('%sfit_nice_dld_shot_num%04u.eps',anal_opts_osc_fit.global.out_dir,dld_shot_num))
             %%
             stfig(fit_resid_plot_handle);
             subplot(4,1,1)

@@ -18,11 +18,18 @@ time_cal=data.mcp_tdc.time_create_write(cal_dat_mask,2);
 time_start_cal=time_cal(1); %shift the times to start at zero for better interp perfromance
 time_cal=time_cal-time_start_cal;
 %create a vector of the reconstructed calibration frequencies
-trap_freq_cal=data.osc_fit.trap_freq_recons(cal_dat_mask)';
+trap_freq_cal=data.osc_fit.trap_freq_recons.val(cal_dat_mask);
 
 %interpolate the input data to subsample by a factor of 100
 time_samp_interp=linspace(min(time_cal),max(time_cal),size(time_cal,1)*1e2);
 trap_freq_interp_raw=col_vec(interp1(time_cal,trap_freq_cal,time_samp_interp,'pchip'));
+
+%% find the allan devaition of the calibration data
+% adat=[];
+% adat.freq=trap_freq_cal;
+% adat.time=time_cal;
+% allan_overlap(adat,linspace(60,1e3,1e2))
+
 
 %% do some filtering of the data
 %smooth the interpolated data
@@ -45,7 +52,7 @@ if mean(model_resid)>std(model_resid)
 end
     
 out.unc=nanstd(model_resid);
-mean_cal_shot_unc=mean(col_vec(data.osc_fit.trap_freq_recons_unc(cal_dat_mask)));
+mean_cal_shot_unc=mean(col_vec(data.osc_fit.trap_freq_recons.unc(cal_dat_mask)));
 
 fprintf('%s:residual std %f vs model mean uncert %f \n',...
      mfilename,nanstd(model_resid),mean_cal_shot_unc)
@@ -58,11 +65,11 @@ if anal_opts_cal.plot
     clf
     subplot(3,1,1)
     errorbar(data.mcp_tdc.shot_num(cal_dat_mask),...
-        data.osc_fit.trap_freq_recons(cal_dat_mask),data.osc_fit.trap_freq_recons_unc(cal_dat_mask)...
+        data.osc_fit.trap_freq_recons.val(cal_dat_mask), data.osc_fit.trap_freq_recons.unc(cal_dat_mask)...
         ,'.k-','capsize',0,'MarkerSize',10,'linewidth',1.0)%,'r.',
     hold on
         errorbar(data.mcp_tdc.shot_num(probe_dat_mask),...
-        data.osc_fit.trap_freq_recons(probe_dat_mask),data.osc_fit.trap_freq_recons_unc(probe_dat_mask)...
+        data.osc_fit.trap_freq_recons.val(probe_dat_mask),data.osc_fit.trap_freq_recons.unc(probe_dat_mask)...
         ,'.b-','capsize',0,'MarkerSize',10,'linewidth',1.0)%,'r.',
     hold off
     legend('calibration data','probe data')
@@ -86,7 +93,7 @@ if anal_opts_cal.plot
     
     subplot(3,1,3)
     errorbar(time_cal/hour_in_s,...
-       model_resid,data.osc_fit.trap_freq_recons_unc(cal_dat_mask)...
+       model_resid,data.osc_fit.trap_freq_recons.unc(cal_dat_mask)...
         ,'.k-','capsize',0,'MarkerSize',10,'linewidth',1.0)%,'r.',
     xl=[min(time_cal),max(time_cal)]./hour_in_s;
     line(xl,[1,1]*mean(model_resid),'color','g')

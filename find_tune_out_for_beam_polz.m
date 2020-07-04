@@ -118,7 +118,7 @@ loop_config.dir = folders;
 % use nan for the set point and it will auto find the set point
 loop_config.set_pt=nan(1,numel(loop_config.dir));
 selected_dirs=1:numel(loop_config.dir);
-selected_dirs=1
+% selected_dirs=7, used for fig 2 plots
 
 
 
@@ -163,9 +163,12 @@ anal_opts.global.atom_laser.t0=anal_opts.atom_laser.t0;
 %anal_opts.osc_fit.xlim=[-20,20]*1e-3;
 %anal_opts.osc_fit.tlim=[0.86,1.08];
 
-date_str='20190703T210000';
+%date_str='20190703T210000';
+date_str='20200623T120000';
 reprocess_folder_if_older_than=posixtime(datetime(datenum(date_str,'yyyymmddTHHMMSS'),'TimeZone','local','ConvertFrom','datenum'));%posix date
 active_process_mod_time=60*0;
+
+%reprocess_folder_if_older_than=inf;
 
 % END USER VAR-----------------------------------------------------------
 
@@ -272,6 +275,7 @@ data.labview.calibration=lv_log.probe_calibration;
 %exclude the very low and then set the thresh based on the sd of the remaining
 not_zero_files=data.mcp_tdc.num_counts>1e3; 
 num_thresh=0.5*median(data.mcp_tdc.num_counts(not_zero_files));
+num_thresh=max(num_thresh,2e4);
 data.mcp_tdc.num_ok=data.mcp_tdc.num_counts>num_thresh & ...
     (data.mcp_tdc.time_create_write(:,1)'-data.mcp_tdc.time_create_write(1,1))<(anal_opts.max_runtime*60*60);
 fprintf('shots number ok %u out of %u \n',sum(data.mcp_tdc.num_ok),numel(data.mcp_tdc.num_ok))
@@ -350,7 +354,7 @@ anal_opts.ai_log.trig_ai_in=anal_opts.trig_ai_in;
 % set time matching conditions
 anal_opts.ai_log.aquire_time=4;
 anal_opts.ai_log.pd.mean_diff_thresh=0.05;
-anal_opts.ai_log.pd.std_thresh=0.05;
+anal_opts.ai_log.pd.std_thresh=0.02;
 anal_opts.ai_log.pd.range_thresh_prob=1e-6; % threshold expressed in probability due to chance that a shot will be rejected due to chance
 anal_opts.ai_log.pd.time_start=0.2;
 anal_opts.ai_log.pd.time_stop=2;
@@ -441,8 +445,8 @@ anal_opts.wm_log.time_blue_padding=1; %check this many seconde each side of prob
 anal_opts.wm_log.time_probe=3;
 anal_opts.wm_log.ecd_volt_thresh=0.5;
 
-anal_opts.wm_log.red_sd_thresh=5; %allowable standard deviation in MHz
-anal_opts.wm_log.red_range_thresh=10; %allowable range deviation in MHz
+anal_opts.wm_log.red_sd_thresh=3; %allowable standard deviation in MHz
+anal_opts.wm_log.red_range_thresh=5; %allowable range deviation in MHz
 anal_opts.wm_log.rvb_thresh=20; %allowable value of abs(2*red-blue)
 
 anal_opts.wm_log.global=anal_opts.global;
@@ -460,7 +464,7 @@ clear('sub_data')
 
 %% calculate blue probe freq
 % convert freq to blue in hz apply aom shift to probe beam
-data.blue_probe= (data.wm_log.proc,anal_opts.aom_freq);
+data.blue_probe=calc_probe_blue(data.wm_log.proc,anal_opts.aom_freq);
 
 
 %% COMBINE ALL CHECK LOGICS AND PLOT
@@ -572,33 +576,33 @@ anal_opts.atom_num_fit.qe=anal_opts.global.qe;
 data.num_fit=fit_atom_number(anal_opts.atom_num_fit,data);
 
 
-%% Fitting Temp
-% dirst we must seperate the high flux BEC component from the low flux thermal component
-anal_opts.atom_laser_segmentation=anal_opts.atom_laser;
-
-anal_opts.atom_laser_segmentation.plot.all=false;
-% if norm_seg_thresh is on then this is the threshold for the normalized proability density otherwise 
-% it is the unnormalized flux density
-anal_opts.atom_laser_segmentation.seg_thresh=9e6/726; 
-anal_opts.atom_laser_segmentation.norm_seg_thresh=true;
-anal_opts.atom_laser_segmentation.bin_size=2e-3; % in m/s
-anal_opts.atom_laser_segmentation.blur_size=5e-3; % in m/s
-anal_opts.atom_laser_segmentation.close_thresh=[20e-3,50e-3]; % in m/s
-anal_opts.atom_laser_segmentation.global=anal_opts.global; %coppy global into the options structure
-tic
-data.al_segmentation=segment_al_pulses_BEC_therm(anal_opts.atom_laser_segmentation,data)
-toc
-
-
-%%
-anal_opts.seg_fits=[];
-fit_component_oscillations(data.al_segmentation,anal_opts.seg_fits)
-
-%%
-
-anal_opts.temp_fits=[];
-anal_opts.temp_fits.global=anal_opts.global;
-fit_temp_segmented(data,anal_opts.temp_fits)
+%% Fitting Temp using segmentation
+% % dirst we must seperate the high flux BEC component from the low flux thermal component
+% anal_opts.atom_laser_segmentation=anal_opts.atom_laser;
+% 
+% anal_opts.atom_laser_segmentation.plot.all=false;
+% % if norm_seg_thresh is on then this is the threshold for the normalized proability density otherwise 
+% % it is the unnormalized flux density
+% anal_opts.atom_laser_segmentation.seg_thresh=9e6/726; 
+% anal_opts.atom_laser_segmentation.norm_seg_thresh=true;
+% anal_opts.atom_laser_segmentation.bin_size=2e-3; % in m/s
+% anal_opts.atom_laser_segmentation.blur_size=5e-3; % in m/s
+% anal_opts.atom_laser_segmentation.close_thresh=[20e-3,50e-3]; % in m/s
+% anal_opts.atom_laser_segmentation.global=anal_opts.global; %coppy global into the options structure
+% tic
+% data.al_segmentation=segment_al_pulses_BEC_therm(anal_opts.atom_laser_segmentation,data)
+% toc
+% 
+% 
+% %%
+% anal_opts.seg_fits=[];
+% fit_component_oscillations(data.al_segmentation,anal_opts.seg_fits)
+% 
+% %%
+% 
+% anal_opts.temp_fits=[];
+% anal_opts.temp_fits.global=anal_opts.global;
+% fit_temp_segmented(data,anal_opts.temp_fits)
 
 
 
@@ -627,17 +631,52 @@ anal_opts.osc_fit.plot_fit_corr=true;
 anal_opts.osc_fit.global=anal_opts.global;
 
 data.osc_fit=fit_trap_freq(anal_opts.osc_fit,data);
+
 %%
 %data.osc_fit=fit_trap_freq_dev(anal_opts.osc_fit,data);
 
 %% undo the aliasing
 %this may need to change if the sampling freq changes
 %initialize
-data.osc_fit.trap_freq_recons=nan*data.osc_fit.ok.did_fits;
-data.osc_fit.trap_freq_recons_unc=data.osc_fit.trap_freq_recons;
-mask=data.osc_fit.ok.all; %set the masked values
-data.osc_fit.trap_freq_recons(mask)=3*(1/anal_opts.atom_laser.pulsedt)+data.osc_fit.model_coefs(mask,2,1);
-data.osc_fit.trap_freq_recons_unc(mask)=data.osc_fit.model_coefs(mask,2,2);
+data.osc_fit.trap_freq_recons=[]
+data.osc_fit.trap_freq_recons.val=nan*col_vec(data.osc_fit.ok.did_fits);
+data.osc_fit.trap_freq_recons.unc=nan*col_vec(data.osc_fit.trap_freq_recons.val);
+mask=col_vec(data.osc_fit.ok.all); %set the masked values
+% from prior measurments of the niquist zone, see zain report for math
+data.osc_fit.trap_freq_recons.val(mask)=3*(1/anal_opts.atom_laser.pulsedt)+col_vec(data.osc_fit.model_coefs(mask,2,1));
+data.osc_fit.trap_freq_recons.unc(mask)=col_vec(data.osc_fit.model_coefs(mask,2,2));
+% correct for the frequency shift due to damping
+% we have two measurments ; the dcay rate \lambda=\omega_0*\zeta (damping ratio)
+% and \omega_d (damped oscillation freq) = \sqrt( 1 - \zeta^2) \omega_0
+% we will use \omega_d instead of \omega_0 in calculating zeta
+%initialize
+damping_ratio=col_vec(data.osc_fit.trap_freq_recons.unc*nan);
+data.osc_fit.trap_freq_recons_undamp.val=damping_ratio;
+lambda=[];
+lambda.val=nan*mask;
+lambda.unc=nan*mask;
+lambda.val(mask)=col_vec(data.osc_fit.model_coefs(mask,7,1));
+lambda.unc(mask)=col_vec(data.osc_fit.model_coefs(mask,7,2));
+damping_ratio(mask)=col_vec(lambda.val(mask))./col_vec(data.osc_fit.trap_freq_recons.val(mask));
+
+data.osc_fit.trap_freq_recons_undamp.val=nan*mask;
+data.osc_fit.trap_freq_recons_undamp.unc=nan*mask;
+data.osc_fit.trap_freq_recons_undamp.val(mask)=col_vec(data.osc_fit.trap_freq_recons.val(mask))./sqrt(1-(damping_ratio(mask)).^2);
+% propagate the uncert
+% mathematica code
+% w0=wd / Sqrt[1- (\[Lambda]/wd)^2]
+% Sqrt[(D[w0,wd])^2 \[Sigma]wd^2 + ((D[w0,\[Lambda]])^2) (\[Sigma]\[Lambda]^2) ]
+% use the aproximation D[w0,wd] \approx 1/Sqrt[1- (\[Lambda]/wd)^2]
+% Sqrt[(1/Sqrt[1-(\[Lambda]/wd)^2])\[Sigma]wd^2 + ((D[w0,\[Lambda]])^2) (\[Sigma]\[Lambda]^2) ]
+
+data.osc_fit.trap_freq_recons_undamp.unc(mask)= sqrt(  (1./(1-(damping_ratio(mask)).^2)).* (data.osc_fit.trap_freq_recons.unc(mask)).^2 ...
+                                                    + ( (lambda.val(mask).^2) .* (lambda.unc(mask)).^2 )./ ...
+                                                      (  (data.osc_fit.trap_freq_recons.val(mask)).^2 .* (1 - damping_ratio(mask).^2).^3  ) ...
+                                                    );
+% data.osc_fit.trap_freq_recons_undamp.unc(mask)= sqrt(  (1./(1-(damping_ratio(mask)).^2)).* (data.osc_fit.trap_freq_recons.unc(mask)).^2 ...
+%                                                    );                                                
+                                                                                                
+%freq_delta_undampened=data.osc_fit.trap_freq_recons_undamp.val(mask)-data.osc_fit.trap_freq_recons.val(mask)
 
 %% CHECK IF ATOM NUMBER DEPENDS ON PROBE BEAM
 %figure
@@ -683,7 +722,7 @@ data.signal=calculate_signal(anal_opts.calc_sig,data);
 
 anal_opts.fit_to_all=[];
 anal_opts.fit_to_all.plot_inital=true;
-anal_opts.fit_to_all.bootstrap=true;
+% anal_opts.fit_to_all.bootstrap=false; alwasy does bootstrap now
 %thresholds for CI
 %sd         CI
 %1          0.3174
@@ -757,6 +796,7 @@ fclose(fid);
 toc(main_trap_freq_timer)
 
 fprintf('Done\n')
+
 
 %catch err
 %fprintf('Analysis on folder\n (%s) failed \n',anal_opts.tdc_import.dir) %Indicate if a directory couldn't be analysed properly

@@ -69,7 +69,7 @@ to_unc=data.drift.to.unc;
 wlin=1./(to_unc.^2);
 
 %% polarisation model/data options
-pol_opts.location = 'post';%post, pre_cen, pre_left, pre_right
+pol_opts.location = 'pre_cen';%post, pre_cen, pre_left, pre_right
 pol_opts.predict_method = 'only_data';%'full_fit_pref_fit','full_fit_pref_data','full_fit_only','only_data'; %obs (obsovation) fit (pertial fit) full_fit (fit with all parameters free)
                                         %'interp_only','interp_pref_data','interp_pref_interp'
                                         %'gauss_only','gauss_pref_data','gauss_pref_interp'

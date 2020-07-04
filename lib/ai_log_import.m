@@ -323,6 +323,7 @@ if args_single.plot.all
     ylim([yl(1),yl(2)])
     ylabel('probe voltage')
     xlabel('time (s)')
+    % you can see in this plot if we forgot to turn off the dither for the cal lock
     subplot(2,1,2)
     freq_amp=fft_tx(ai_dat.time(probe_sampl_start:probe_sampl_stop),probe_pd_during_meas,'window','chebyshev','win_param',{200},'padding',2);
     plot(freq_amp(1,:),abs(freq_amp(2,:)),'k')
