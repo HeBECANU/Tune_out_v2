@@ -7,8 +7,11 @@ function out=fit_poly_with_int(in,poly_order,use_robust,use_weights)
 % decent inital guesses
 
 % see fit_poly_with_int
-
-inmat=cell2mat(in);
+if iscell(in)
+    inmat=cell2mat(in);
+else
+    inmat=in;
+end
 xdat=inmat(:,1);
 ydat=inmat(:,2);
 wdat=inmat(:,3);

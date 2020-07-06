@@ -29,7 +29,7 @@
 pos_vel_start = [0 10e-3];
 trap_freq_hz = 430;
 trap_freq=trap_freq_hz*2*pi;
-t_max=1.3;
+t_lims=[0,1.3];
 mass=1;
 damping_time=1;
 % end user var
@@ -159,7 +159,7 @@ fit_mask=fast_sorted_mask(txvdata(:,1),fit_tlims(1),fit_tlims(2));
         
 beta0  =gf_out.params;
 
-fit_opt = statset('MaxIter',1e3c,...,
+fit_opt = statset('MaxIter',1e3,...,
             'TolFun',1e-5,...%1e4
             'TolX',1e-5,...
             'UseParallel',1);
@@ -420,7 +420,9 @@ fprintf('%s\n',sprintf('%.3f,',p))
 trap_freq_hz = p(2);
 trap_freq=trap_freq_hz*2*pi;
 %% phase shift
-% for a harmonic trap this works great, but for an anharomic one phase is not that well defined 
+% starting the oscillation at a given phase
+% for a harmonic trap this works great, but for an anharomic one phase is not that well defined (would have to
+% numericaly int. to find it)
 % ke_start/m=v^2+ w^2 x^2
 %pos_vel_start = [sin(p(3)),trap_freq*cos(p(3))]*p(1); %amplitude is in units of velocity
 
@@ -516,3 +518,12 @@ function P = down_sample(func, P,T)
     P = func(P,T);
 end
 
+
+function out=amp_freq_cpl_sine(b,x)           
+%cof_names={'amp','freq','phase','offset','damp','grad','afc1','afc2'};
+
+amplitude=exp(-x.*max(0,b(5))).*b(1);
+frequency=taylor_series(amplitude,[b(2),b(7),b(8)]);
+out=amplitude.*sin(frequency.*x*pi*2 +b(3))+b(4)+b(6).*x;
+
+end

@@ -1,10 +1,5 @@
-<<<<<<< HEAD
 function data_mcp_tdc = match_timestamps(data,anal_opts)
     if anal_opts.match_times
-=======
-function data_mcp_tdc = match_timestamps(data,anal_opts,match_times)
-    if match_times
->>>>>>> master
         %try and match up the file with if it is a calibaration using the time
         %it is slightly overkill here to search each one, but just being extra
         %cautious/flexible

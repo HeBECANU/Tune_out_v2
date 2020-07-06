@@ -2,6 +2,7 @@
 *.asv
 # Windows thumb
 *.db
+*.ini
 # Data files
 #*.mat
 cache/

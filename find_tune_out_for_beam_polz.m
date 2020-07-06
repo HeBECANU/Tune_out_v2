@@ -86,6 +86,8 @@ set_up_project_path
 
 hebec_constants %call the constants function that makes some globals
 
+return
+
 %%
 % BEGIN USER VAR-------------------------------------------------
 
@@ -657,7 +659,7 @@ lambda.val=nan*mask;
 lambda.unc=nan*mask;
 lambda.val(mask)=col_vec(data.osc_fit.model_coefs(mask,7,1));
 lambda.unc(mask)=col_vec(data.osc_fit.model_coefs(mask,7,2));
-damping_ratio(mask)=col_vec(lambda.val(mask))./col_vec(data.osc_fit.trap_freq_recons.val(mask));
+damping_ratio(mask)=col_vec(lambda.val(mask))./col_vec(data.osc_fit.trap_freq_recons.val(mask)*2*pi);
 
 data.osc_fit.trap_freq_recons_undamp.val=nan*mask;
 data.osc_fit.trap_freq_recons_undamp.unc=nan*mask;

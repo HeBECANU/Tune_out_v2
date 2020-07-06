@@ -70,7 +70,7 @@ for ii=1:iimax
             dom_out=dominant_freq_components(txyz_tmp(:,1),txyz_tmp(:,anal_opts_osc_fit.dimesion+1),dom_opt);
             fit_freq=dom_out.freq(1);
             fit_phase=dom_out.phase(1);
-            fit_amp=dom_out.amp(1)*5;
+            fit_amp=dom_out.amp(1)*1.4;
             %fft_phase=angle(out(2,nearest_idx))+0.535;
         else
             fit_freq=anal_opts_osc_fit.appr_osc_freq_guess(anal_opts_osc_fit.dimesion);
