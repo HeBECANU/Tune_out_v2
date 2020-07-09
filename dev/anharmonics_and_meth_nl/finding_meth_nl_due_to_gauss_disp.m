@@ -1,50 +1,63 @@
-%finding_meth_nl_due_to_anh
+%finding_meth_nl_due_to_gauss_disp
 
+% like finding_meth_nl_due_to_anh but we loop over displacements
+
+displace_vals=linspace(0,10,20)*1e-6;
+jjmax=numel(displace_vals);
+dispalcement_results=cell(jjmax,1);
+parfor_progress_imp(jjmax);
+for jj=1:jjmax
+disp_res=[];
 
 % set upt he options for the numerical integeration
+do_plots_of_osc=false;
 opts_template=[];
+opts_template.gauss_displacement=displace_vals(jj);
+disp_res.displacement=opts_template.gauss_displacement;
 opts_template.trap_freq=424;
 opts_template.mass=const.mhe;
-opts_template.gauss_radius=9e-6*2;
-opts_template.gauss_displacement=2e-6*2;
+opts_template.gauss_radius=10e-6;  %7.5e-6*2;
 opts_template.find_new_min=true;
-opts_template.plot_find_new_min=true;
+opts_template.plot_find_new_min=false;
 %opts.tlims=[0,(1/opts.trap_freq)*100];
 opts_template.tlims=[0,1.1];
 % damping_ratio=1/(trap_freq*damping_time);
 % damping_coef=damping_ratio*2*sqrt(mass*trap_derivs(3));
 opts_template.damping_time=0.5; % 0.6;
 opts_template.inital_state=[0,13e-3];
-beam_power=80e-3;
+beam_power=100e-3;
 
-osc_e_in_j=(1/2)*const.mhe*opts_template.inital_state(2)^2;
-osc_e_in_k=osc_e_in_j/const.kb;
-fprintf('oscillation amplitude %.2f mm/s \n', 1e3* opts_template.inital_state(2))
-fprintf('            energy    %.2f nK \n', 1e9*osc_e_in_k)
-% wine bottle threshold
+% osc_e_in_j=(1/2)*const.mhe*opts_template.inital_state(2)^2;
+% osc_e_in_k=osc_e_in_j/const.kb;
+% fprintf('oscillation amplitude %.2f mm/s \n', 1e3* opts_template.inital_state(2))
+% fprintf('            energy    %.2f nK \n', 1e9*osc_e_in_k)
+
+% calculate the scale of the nonlineairity
+% the aproximation will clearly break when the probe beam trap freq is -ve of the mag trap freq
 % when the net trap frequency is zero
-dpolz_domega=1.79e-53;
-power=beam_power;
-detuning_hz=-20e9;
-probe_trap_freq=sqrt((1/(2*const.epsilon0*const.c*const.mhe))...
-                    *detuning_hz*dpolz_domega...
-                    *( (2*power)/(pi*(opts_template.gauss_radius^2)) ) ...
-                    *( (4)/(opts_template.gauss_radius^2) ) );
-abs(probe_trap_freq)
-probe_trap_freq/opts_template.trap_freq
-power*detuning_hz
+% beyond this the potentiall will become a wine bottle potential
+% dpolz_domega=1.79e-53;
+% power=50e-3;
+% detuning_hz=-12000e9;
+% probe_trap_freq=(1/(2*pi))*sqrt((1/(2*const.epsilon0*const.c*const.mhe))...
+%                     *detuning_hz*dpolz_domega...
+%                     *( (2*power)/(pi*(opts_template.gauss_radius^2)) ) ...
+%                     *( (4)/(opts_template.gauss_radius^2) ) );
+% abs(probe_trap_freq)
+% abs(probe_trap_freq)/opts_template.trap_freq
+% power*detuning_hz
 
 
 %%
-do_plots_of_osc=false;
-%beam_detunings=col_vec(linspace(-4e9,4e9,5));
+
+beam_detunings=col_vec(linspace(-6e9,2e9,10));
 %beam_detunings=col_vec(linspace(-2e9,6e9,100));
-beam_detunings=col_vec(linspace(-50e9,50e9,20)); % detuning from the TO in Hz
+%beam_detunings=col_vec(linspace(-20e9,20e9,10)); % detuning from the TO in Hz
 beam_detunings=cat(1,0,beam_detunings); %add on the zero detuning case as the baseline
 iimax=numel(beam_detunings);
 fit_results=cell(iimax,1);
-parfor_progress_imp(iimax);
-for ii=1:iimax
+
+parfor ii=1:iimax
     %fprintf('simulating motion %04u of %04u \n',ii,iimax)
     this_fit_st=[];
     
@@ -197,15 +210,18 @@ for ii=1:iimax
         pause(0.01)
     end
     
-    parfor_progress_imp;
+    
 end
-parfor_progress_imp(0);
+
 
 
 %%
 
 
-fit_results_arr=cell_array_of_struct_to_struct_of_array(fit_results);
+fit_results_arr=cell_array_of_struct_to_struct_of_array(fit_results,[],[],0);
+
+disp_res.osc_sim_fits=fit_results_arr;
+
 
 if (fit_results_arr.probe.detuning_hz(1)*fit_results_arr.probe.power_w(1))~=0
     error('first value should be zero')
@@ -215,21 +231,20 @@ probe_freq_squared=fit_results_arr.osc_fit.undamp_fit_freq(2:end).^2- ...
 detuning=fit_results_arr.probe.detuning_hz(2:end);
 
 set(0,'defaulttextInterpreter','latex')
-stfig('method linearity');
+
+% fit the dependence a function
 xscale=1e-9;
-plot(detuning*xscale,probe_freq_squared)
-xlabel('$\omega-\omega_{\mathrm{TO}}$ ($2\pi$ GHz)')
-ylabel('$\Omega_{\mathrm{Net}}^2-\Omega_{\mathrm{Trap}}^2$ (Hz$^2$)')
-
-
-% fit the dependence a linear function
-
 predictor=detuning*xscale;
 response=probe_freq_squared;
 
 fit_in=cat(2,predictor,response,response*nan);
-meth_lin_fit=fit_poly_with_int(fit_in,1,0,0);
-fprintf('fit intercept %f MHz \n',meth_lin_fit.x_intercept.val*1e3)
+polz_poly_fit=fit_poly_with_int(fit_in,1,0,0);
+disp_res.polz_lin_fit=polz_poly_fit;
+polz_poly_fit=fit_poly_with_int(fit_in,2,0,0);
+disp_res.polz_poly2_fit=polz_poly_fit;
+
+
+fprintf('fit intercept %f MHz \n',polz_poly_fit.x_intercept.val*1e3)
 %
 
 font_name='cmr10';
@@ -246,9 +261,10 @@ color_shaded=colorspace('LCH->RGB',color_shaded);
 
 detuning_samp_vals=linspace(min(predictor),...
                     max(predictor),1e5)';
-[prediction,ci]=predict(meth_lin_fit.fit_mdl,detuning_samp_vals,'Alpha',1-erf(1/sqrt(2)),'Prediction','observation');
+[prediction,ci]=predict(polz_poly_fit.fit_mdl,detuning_samp_vals,'Alpha',1-erf(1/sqrt(2)),'Prediction','observation');
 
-stfig('polz from osc freq fit')
+
+stfig('probe beam polarizability linearity');
 clf;
 shaded_ci_lines=false;
 if shaded_ci_lines
@@ -261,6 +277,50 @@ else
 end  
 plot(detuning_samp_vals,prediction,'-','LineWidth',1.0,'Color',colors_main(3,:))
 plot(predictor,response,'x')
+hold off
+xlabel('$\omega-\omega_{\mathrm{TO}}$ (GHz)')
+ylabel('$\Omega_{\mathrm{Net}}^2-\Omega_{\mathrm{Trap}}^2$ (Hz$^2$)')
+pause(1e-3)
+
+%%
+dispalcement_results{jj}=disp_res;
+parfor_progress_imp;
+end
+parfor_progress_imp(0);
+dispalcement_results_proc=cell_array_of_struct_to_struct_of_array(dispalcement_results,0,0,0);
+
+dispalcement_results_proc.displacement=cell2mat(dispalcement_results_proc.displacement);
+dispalcement_results_proc.polz_poly2_fit.fit_coef.val=cat(2,dispalcement_results_proc.polz_poly2_fit.fit_coef.val{:});
+dispalcement_results_proc.polz_poly2_fit.fit_coef.unc=cat(2,dispalcement_results_proc.polz_poly2_fit.fit_coef.unc{:});
+
+dispalcement_results_proc.polz_lin_fit.x_intercept.val=cell2mat(dispalcement_results_proc.polz_lin_fit.x_intercept.val);
+dispalcement_results_proc.polz_lin_fit.x_intercept.unc.with_cov=cell2mat(dispalcement_results_proc.polz_lin_fit.x_intercept.unc.with_cov);
+
+dispalcement_results_proc.polz_poly2_fit.x_intercept.val=cell2mat(dispalcement_results_proc.polz_poly2_fit.x_intercept.val);
+dispalcement_results_proc.polz_poly2_fit.x_intercept.unc.with_cov=cell2mat(dispalcement_results_proc.polz_poly2_fit.x_intercept.unc.with_cov);
 
 
-%% fit the dependence with a higher order 
+%%
+stfig('probe freq nl')
+subplot(3,1,1)
+plot(dispalcement_results_proc.displacement*1e6,...
+    dispalcement_results_proc.polz_poly2_fit.fit_coef.val(1,:),'o')
+xlabel('dispalcement ($\mu$m)')
+ylabel('$\partial^2\Omega_{\mathrm{probe}}/\partial\omega^2$') %
+subplot(3,1,2)
+plot(dispalcement_results_proc.displacement*1e6,...
+    dispalcement_results_proc.polz_poly2_fit.fit_coef.val(2,:),'o')
+xlabel('dispalcement ($\mu$m)')
+ylabel('$\partial^2\Omega_{\mathrm{probe}}/\partial\omega^2$') %
+subplot(3,1,3)
+yscale=1e3;
+xscale=1e6;
+plot(dispalcement_results_proc.displacement*xscale,...
+    dispalcement_results_proc.polz_lin_fit.x_intercept.val*yscale,'or');
+hold on
+plot(dispalcement_results_proc.displacement*xscale,...
+    dispalcement_results_proc.polz_poly2_fit.x_intercept.val*yscale,'ok');
+hold off
+xlabel('dispalcement ($\mu$m)')
+ylabel('$\partial\omega-\Omega_{\mathrm{TO}}$ ($2\pi$ MHz)') %
+

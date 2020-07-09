@@ -84,7 +84,7 @@ if isfield(opts,'find_new_min') && opts.find_new_min ...
         error('fminbnd did not return a value')
     end
     
-    if isfield(opts,'plot_find_new_min') && opts.plot_find_new_min
+    if isfield(opts,'plot_find_new_min') && opts.plot_find_new_min && isempty(getCurrentTask())
         %%
         global const
         stfig('finding new trap minimum');
