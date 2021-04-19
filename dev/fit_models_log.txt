@@ -1,0 +1,49 @@
+
+
+
+
+using mains cancelation
+RMSE: median 1.279825e-04 mean 1.285504e-04 std 8.892962e-06
+Freq: mean unc 1.754157e-02 std unc 1.543025e-03
+
+without 
+RMSE: median 1.283406e-04 mean 1.283783e-04 std 8.850648e-06
+Freq: mean unc 1.752233e-02 std unc 1.530044e-03
+
+
+
+trying to remove a peak in the residuall fft
+51.66 hz peak
+
+
+got decent reults using a taylor series of the oscillation frequency
+
+first shot 3 freq terms
+
+fit statisitics 
+RMSE: median 8.564784e-05 mean 8.564784e-05 std 0.000000e+00
+Freq: mean unc 2.828570e-01 std unc 0.000000e+00
+max residual fft peak amp 4.153368e-01 mm0001...Done
+
+
+first shot 2 freq terms
+fit statisitics 
+RMSE: median 8.537105e-05 mean 8.537105e-05 std 0.000000e+00
+Freq: mean unc 6.085101e-02 std unc 0.000000e+00
+max residual fft peak amp 4.044219e-01 mm/s
+
+
+fist shot but freq is specified as the 2nd derivative
+
+fit statisitics 
+RMSE: median 8.605391e-05 mean 8.605391e-05 std 0.000000e+00
+Freq: mean unc 3.197437e-02 std unc 0.000000e+00
+max residual fft peak amp 4.047897e-01 mm/s
+
+
+
+first shot 1 freq term
+fit statisitics 
+RMSE: median 1.140866e-04 mean 1.140866e-04 std 0.000000e+00
+Freq: mean unc 1.446673e-02 std unc 0.000000e+00
+max residual fft peak amp 1.053984e+00 mm/s

@@ -17,12 +17,15 @@ osc_fit.dld_shot_idx=nan(1,iimax);
 osc_fit.model_coefs=nan(iimax,8,2);
 osc_fit.fit_rmse=nan(1,iimax);
 osc_fit.model=cell(1,iimax);
+osc_fit.dld_shot_num=nan(1,iimax);
+osc_fit.fit_sample_limit=cell(1,iimax);
+
 fprintf('Fitting oscillations in shots %04i:%04i',iimax,0)
 
  if anal_opts_osc_fit.plot_fits
-            sfigure(51);
-            clf
-            set(gcf,'color','w')
+            fit_osc_plot_handle=stfig('single osc muti dim','add_stack',1);
+            fit_osc_nice_plot_handle=stfig('single osc nice fit','add_stack',1);
+            fit_resid_plot_handle=stfig('fir resid','add_stack',1);
  end
 
 for ii=1:iimax
@@ -36,67 +39,111 @@ for ii=1:iimax
     if data.mcp_tdc.all_ok(ii)
         osc_fit.dld_shot_num(ii)=dld_shot_num;
         %construct a more convinent temp variable txyz_tmp wich is the position in mm for use in the fit
-        x_tmp=1e3*squeeze(data.mcp_tdc.al_pulses.pos_stat(ii,:,2));
+        
+        
+        x_tmp=col_vec(squeeze(data.mcp_tdc.al_pulses.vel_zxy.mean(ii,:,2)));
         x_tmp=x_tmp-nanmean(x_tmp);
-        y_tmp=1e3*squeeze(data.mcp_tdc.al_pulses.pos_stat(ii,:,3));
+        %y_tmp=col_vec(data.corr_cancel.vel_zxy_corr_cancel(ii,:,2));
+        y_tmp=col_vec(squeeze(data.mcp_tdc.al_pulses.vel_zxy.mean(ii,:,3)));
         y_tmp=y_tmp-nanmean(y_tmp);
-        z_tmp=data.mcp_tdc.al_pulses.time-squeeze(data.mcp_tdc.al_pulses.pos_stat(ii,:,1))';
-        z_tmp=z_tmp'*anal_opts_osc_fit.global.velocity*1e3;
+        z_tmp=col_vec(squeeze(data.mcp_tdc.al_pulses.vel_zxy.mean(ii,:,1)));
         z_tmp=z_tmp-nanmean(z_tmp);
-        txyz_tmp=[data.mcp_tdc.al_pulses.time';x_tmp;y_tmp;z_tmp];
-        sqrtn=sqrt(data.mcp_tdc.al_pulses.num_counts(ii,:)); %find the statistical uncert in a single shot
-        xerr=1e3*squeeze(data.mcp_tdc.al_pulses.pos_stat(ii,:,5))./sqrtn;
-        yerr=1e3*squeeze(data.mcp_tdc.al_pulses.pos_stat(ii,:,6))./sqrtn;
-        zerr=1e3*squeeze(data.mcp_tdc.al_pulses.pos_stat(ii,:,4))*anal_opts_osc_fit.global.velocity./sqrtn;
-        xyzerr_tmp=[xerr;yerr;zerr];
+        t_tmp=col_vec(data.mcp_tdc.al_pulses.time_cen);
+%         ac_tmp=data.ai_log.ac_mains_fit(ii).models.var_terms(t_tmp-1+15e-3,1);
+%         ac_tmp=ac_tmp-mean(ac_tmp);
+%         y_tmp=y_tmp-ac_tmp*0;%3e-4;
+        
+        txyz_tmp=cat(2,t_tmp,x_tmp,y_tmp,z_tmp);
+        sqrtn=sqrt(col_vec(data.mcp_tdc.al_pulses.num_counts(ii,:))); %find the statistical uncert in a single shot
+        xyzerr_tmp=squeeze(data.mcp_tdc.al_pulses.vel_zxy.std(ii,:,[2,3,1]))./sqrtn;
         xyzerr_tmp(:,sqrtn<2)=nan;
 
         %remove any data pts with nan position
-        mask=sum(isnan(txyz_tmp),1)==0;
-        xyzerr_tmp=xyzerr_tmp(:,mask);
-        txyz_tmp=txyz_tmp(:,mask);
+        mask=sum(isnan(txyz_tmp),2)==0;
+        xyzerr_tmp=xyzerr_tmp(mask,:);
+        txyz_tmp=txyz_tmp(mask,:);
 
         %try to find the peak osc freq to start the fit there
         if anal_opts_osc_fit.adaptive_freq
-            out=fft_tx(txyz_tmp(1,:),txyz_tmp(anal_opts_osc_fit.dimesion+1,:),'padding',10,'window','hamming');
-            [~,nearest_idx]=max(abs(out(2,:)));
-            fit_freq=out(1,nearest_idx);
+            dom_opt=[];
+            dom_opt.num_components=3;
+            dom_out=dominant_freq_components(txyz_tmp(:,1),txyz_tmp(:,anal_opts_osc_fit.dimesion+1),dom_opt);
+            fit_freq=dom_out.freq(1);
+            fit_phase=dom_out.phase(1);
+            fit_amp=dom_out.amp(1)*1.4;
             %fft_phase=angle(out(2,nearest_idx))+0.535;
         else
             fit_freq=anal_opts_osc_fit.appr_osc_freq_guess(anal_opts_osc_fit.dimesion);
+            fig_amp=std(txyz_tmp(anal_opts_osc_fit.dimesion+1,:))*8;
+            fit_phase=0;
         end
-        modelfun = @(b,x) exp(-x(:,1).*max(0,b(7))).*b(1).*sin(b(2)*x(:,1)*pi*2+b(3)*pi*2)+b(4)+b(8)*x(:,1)+b(5)*x(:,2)+b(6)*x(:,3);
-        beta0=[std(txyz_tmp(anal_opts_osc_fit.dimesion+1,:))*8, fit_freq, 0, 1,0,0,2,0.01];
-        cof_names={'amp','freq','phase','offset','ycpl','zcpl','damp','grad'};
-        opt = statset('TolFun',1e-10,'TolX',1e-10,'MaxIter',1e4,...
-            'UseParallel',1);
+        fit_offset=mean(txyz_tmp(:,anal_opts_osc_fit.dimesion+1));
+       
+        
+        
         %select the aproapriate values to go in the response variable
         idx=1:4;
         idx(anal_opts_osc_fit.dimesion+1)=[];
-        predictor=txyz_tmp(idx,:)';
-        weights=1./(xyzerr_tmp(anal_opts_osc_fit.dimesion,:).^2);
+        predictor=txyz_tmp(:,idx);
+        err_fit_dim=xyzerr_tmp(:,anal_opts_osc_fit.dimesion);
+        weights=1./(err_fit_dim.^2);
         weights(isnan(weights))=1e-20; %if nan then set to smallest value you can
         weights=weights/sum(weights);
         %predictor=[tvalues,xvalues,zvalues];
-        fitobject=fitnlm(predictor,txyz_tmp(anal_opts_osc_fit.dimesion+1,:)',modelfun,beta0,...
+        response=txyz_tmp(:,anal_opts_osc_fit.dimesion+1);
+        %% do a global fit to get a good place to start the fit routine
+        % before we call fitnlm we will try to get close to the desired fit parameters using a robust global
+        % optimizer
+        modelfun = @(b,x) exp(-x(:,1).*max(0,b(7))).*b(1).*sin(b(2)*x(:,1)*pi*2+b(3)*pi*2)+b(4)+b(5)*x(:,2)+b(8)*x(:,1)+b(6)*x(:,3);
+        % simple model
+        %modelfun_simple = @(b,x) exp(-x(:,1).*max(0,b(6))).*b(1).*sin(b(2)*x(:,1)*pi*2+b(3)*pi*2)+b(4)+b(5)*x(:,1);
+        gf_opt=[];
+        gf_opt.domain=[[1,50]*1e-3;...   %amp
+                       [20,60];...       %freq
+                       [-2,2]*pi;...        %phase
+                       [-50,50]*1e-3;... %offset
+                       [-1,1]*1e-2;...   %xcpl
+                       [-1,1]*1e-2;...   %zcpl
+                       [-1e-2,10];...    %damp
+                       [-10,10]*1e-3;... % gradient
+                       ];        
+        gf_opt.start=[fit_amp, fit_freq, fit_phase, fit_offset,0,0,2,0];
+        gf_opt.rmse_thresh=2e-3;
+        gf_opt.plot=false;
+        gf_out=global_fit(predictor,response,modelfun,gf_opt);
+%       
+        %% set up the complex model with xterms
+
+       
+        cof_names={'amp','freq','phase','offset','xcpl','zcpl','damp','grad'};
+        opt = statset('TolFun',1e-10,'TolX',1e-10,...
+            'MaxIter',1e4,... %1e4
+            'UseParallel',1);
+        beta0=gf_out.params;
+         
+        %%
+        fitobject=fitnlm(predictor,response,modelfun,beta0,...
             'Weights',weights,'options',opt,...
             'CoefficientNames',cof_names);
         osc_fit.model{ii}=fitobject;
         fitparam=fitobject.Coefficients;
         osc_fit.model_coefs(ii,:,:)=[fitparam.Estimate,fitparam.SE];
         osc_fit.fit_rmse(ii)=fitobject.RMSE;
+        % we will later use this fit to find the undamped frequency of the oscillator
+        
+        
         %limiting frequnecy prediction from http://adsabs.harvard.edu/full/1999DSSN...13...28M
-        meanwidth=sqrt(mean(squeeze(data.mcp_tdc.al_pulses.pos_stat(ii,:,5)).^2))*1e3;
+        meanwidth=sqrt(mean(squeeze(data.mcp_tdc.al_pulses.vel_zxy.std(ii,:,anal_opts_osc_fit.dimesion)).^2))*1e3;
         frequnclim=sqrt(6/sum(data.mcp_tdc.al_pulses.num_counts(ii,:)))*...
-            (1/(pi*range(data.mcp_tdc.al_pulses.time)))*...
+            (1/(pi*range(data.mcp_tdc.al_pulses.time_cen)))*...
             (meanwidth/fitparam{2,1});
         %fprintf('sampling limit %2.3g Hz, fint unc %2.3g Hz, ratio %2.3g \n',[frequnclim,fitparam{2,2},fitparam{2,2}/frequnclim])
         osc_fit.fit_sample_limit{ii}=[frequnclim,fitparam{2,2},fitparam{2,2}/frequnclim];
         %%
         if anal_opts_osc_fit.plot_fits
             font_name='cmr10';
-            font_size_global=20;
-            folt_size_label=25;
+            font_size_global=10;
+            font_size_label=10;
             colors_main=[[255,0,0];[33,188,44];[0,0,0]]./255;
             lch=colorspace('RGB->LCH',colors_main(:,:));
             lch(:,1)=lch(:,1)+20;
@@ -107,57 +154,127 @@ for ii=1:iimax
             color_shaded=colorspace('LCH->RGB',color_shaded);
 
 
-            tplotvalues=linspace(min(data.mcp_tdc.al_pulses.time),...
-                max(data.mcp_tdc.al_pulses.time),1e5)';
+            tplotvalues=linspace(min(txyz_tmp(:,1)),...
+                max(txyz_tmp(:,1)),1e5)';
             predictorplot=[tplotvalues,...
                        interp1(predictor(:,1),predictor(:,2),tplotvalues),...
                        interp1(predictor(:,1),predictor(:,3),tplotvalues)];
-            [prediction,ci]=predict(fitobject,predictorplot);
-            sfigure(51);
-            set(gca,'FontSize',font_size_global,'FontName',font_name)
+            [prediction,ci]=predict(fitobject,predictorplot,'Alpha',1-erf(1/sqrt(2)),'Prediction','observation');
+            stfig(fit_osc_plot_handle);
+            clf;
+            
             
             subplot(2,1,1)
-            plot(txyz_tmp(1,:),txyz_tmp(2,:),'kx-')
+            plot(txyz_tmp(:,1),txyz_tmp(:,2)*1e3,'kx-')
             hold on
-            plot(txyz_tmp(1,:),txyz_tmp(3,:),'rx-')
-            plot(txyz_tmp(1,:),txyz_tmp(4,:),'bx-')
+            plot(txyz_tmp(:,1),txyz_tmp(:,3)*1e3,'rx-')
+            plot(txyz_tmp(:,1),txyz_tmp(:,4)*1e3,'bx-')
             hold off
-            ylabel('X Pos (mm)')
+            ylabel('V_{x} (mm/s)')
             xlabel('Time (s)')
             set(gca,'Ydir','normal')
             set(gcf,'Color',[1 1 1]);
             legend('x','y','z')
 
             subplot(2,1,2)
+            time_start=min(predictor(:,1));
+            
             shaded_ci_lines=false;
-            hold on
+            
             if shaded_ci_lines
-                patch([predictorplot(:,1)', fliplr(predictorplot(:,1)')], [ci(:,1)', fliplr(ci(:,2)')], color_shaded,'EdgeColor','none');  %[1,1,1]*0.80
+                patch([predictorplot(:,1)', fliplr(predictorplot(:,1)')]-time_start, [ci(:,1)', fliplr(ci(:,2)')]*1e3, color_shaded,'EdgeColor','none')  %[1,1,1]*0.80
+                hold on
             else
-                plot(predictorplot(:,1),ci(:,1),'-','LineWidth',1.5,'Color',color_shaded)
-                plot(predictorplot(:,1),ci(:,2),'-','LineWidth',1.5,'Color',color_shaded)
+                plot(predictorplot(:,1)-time_start,ci(:,1)*1e3,'-','LineWidth',1.5,'Color',color_shaded)
+                hold on
+                plot(predictorplot(:,1)-time_start,ci(:,2)*1e3,'-','LineWidth',1.5,'Color',color_shaded)
             end  
-            plot(predictorplot(:,1),prediction,'-','LineWidth',1.0,'Color',colors_main(3,:))
+            plot(predictorplot(:,1)-time_start,prediction*1e3,'-','LineWidth',1.0,'Color',colors_main(3,:))
             ax = gca;
             set(ax, {'XColor', 'YColor'}, {'k', 'k'});
-            errorbar(predictor(:,1),txyz_tmp(anal_opts_osc_fit.dimesion+1,:)',xyzerr_tmp(anal_opts_osc_fit.dimesion,:),'o','CapSize',0,'MarkerSize',5,'Color',colors_main(1,:),'MarkerFaceColor',colors_detail(1,:),'LineWidth',1.5) 
+            errorbar(predictor(:,1)-time_start,txyz_tmp(:,anal_opts_osc_fit.dimesion+1)*1e3,xyzerr_tmp(:,anal_opts_osc_fit.dimesion)*1e3,'o','CapSize',0,'MarkerSize',5,'Color',colors_main(1,:),'MarkerFaceColor',colors_detail(1,:),'LineWidth',1.5) 
             set(gcf,'Color',[1 1 1]);
-            xlabel('Time (s)','FontSize',folt_size_label)
-            ylabel('X(mm)','FontSize',folt_size_label)
-            title(sprintf('amp=%.2f±%.2f mm,omega=%.2f±%.2f Hz,Damp=%.2f±%.2f s',...
-                fitobject.Coefficients.Estimate(1),fitobject.Coefficients.SE(1),...
+            xlabel('Time (s)','FontSize',font_size_label)
+            ylabel('V_{x} (mm/s)','FontSize',font_size_label)
+            title(sprintf('amp=%.2f±%.2f mm/s,omega=%.2f±%.2f Hz,Damp=%.2f±%.2f s',...
+                fitobject.Coefficients.Estimate(1)*1e3,fitobject.Coefficients.SE(1)*1e3,...
                  fitobject.Coefficients.Estimate(2),fitobject.Coefficients.SE(2),...
                  fitobject.Coefficients.Estimate(7),fitobject.Coefficients.SE(7)))
             hold off
             ax = gca;
+            xlim([predictorplot(1,1)-0.01,predictorplot(end,1)+0.01]-time_start)
             set(ax, {'XColor', 'YColor'}, {'k', 'k'});
             set(gca,'linewidth',1.0)
+            set(gca,'FontSize',font_size_global,'FontName',font_name)
             saveas(gca,sprintf('%sfit_dld_shot_num%04u.png',anal_opts_osc_fit.global.out_dir,dld_shot_num))
-            drawnow
+            
+            
+%% do a speprate plot of the fit for the paper     
+            stfig(fit_osc_nice_plot_handle)
+            clf
+            shaded_ci_lines=false;
+            
+            if shaded_ci_lines
+                patch([predictorplot(:,1)', fliplr(predictorplot(:,1)')]-time_start, [ci(:,1)', fliplr(ci(:,2)')]*1e3, color_shaded,'EdgeColor','none')  %[1,1,1]*0.80
+                hold on
+            else
+                plot(predictorplot(:,1)-time_start,ci(:,1)*1e3,'-','LineWidth',1.5,'Color',color_shaded)
+                hold on
+                plot(predictorplot(:,1)-time_start,ci(:,2)*1e3,'-','LineWidth',1.5,'Color',color_shaded)
+            end  
+            plot(predictorplot(:,1)-time_start,prediction*1e3,'-','LineWidth',1.0,'Color',colors_main(3,:))
+            prev_gca_pos=get(gca,'Position');
+            set(gca,'Position',[0.1,0.2,0.88,0.78])
+            ax = gca;
+            set(ax, {'XColor', 'YColor'}, {'k', 'k'});
+            errorbar(predictor(:,1)-time_start,txyz_tmp(:,anal_opts_osc_fit.dimesion+1)*1e3,xyzerr_tmp(:,anal_opts_osc_fit.dimesion)*1e3,'o','CapSize',0,'MarkerSize',5,'Color',colors_main(1,:),'MarkerFaceColor',colors_detail(1,:),'LineWidth',1.5) 
+            set(gcf,'Color',[1 1 1]);
+            xlabel('Time (s)','FontSize',font_size_label)
+            yticks(-10:10:10)
+            ylim([-16,16])
+            ylabel('$V_{x}$ (mm/s)','FontSize',font_size_label)
+            label_text=sprintf('amp=%.2f±%.2f mm/s,omega=%.2f±%.2f Hz,Damp=%.2f±%.2f s',...
+                fitobject.Coefficients.Estimate(1)*1e3,fitobject.Coefficients.SE(1)*1e3,...
+                 fitobject.Coefficients.Estimate(2),fitobject.Coefficients.SE(2),...
+                 fitobject.Coefficients.Estimate(7),fitobject.Coefficients.SE(7));
+            an=annotation('textbox',[.3 .3 .5 .6],'String',label_text,'FitBoxToText','on');
+            an.FontSize = 5;
+            hold off
+            ax = gca;
+            xlim([predictorplot(1,1)-0.01,predictorplot(end,1)+0.01]-time_start)
+            set(ax, {'XColor', 'YColor'}, {'k', 'k'});
+            set(gca,'linewidth',1.0)
+            set(gca,'FontSize',font_size_global,'FontName',font_name)
+            set(gcf,'Position',[100,100,270*3,100*3])
+            saveas(gca,sprintf('%sfit_nice_dld_shot_num%04u.png',anal_opts_osc_fit.global.out_dir,dld_shot_num))
+            export_fig(sprintf('%sfit_nice_dld_shot_num%04u.svg',anal_opts_osc_fit.global.out_dir,dld_shot_num))
+            export_fig(sprintf('%sfit_nice_dld_shot_num%04u.eps',anal_opts_osc_fit.global.out_dir,dld_shot_num))
+            %%
+            stfig(fit_resid_plot_handle);
+            subplot(4,1,1)
+            [fit_model_vals,fit_model_ci]=predict(fitobject,predictor,'Alpha',1-erf(1/sqrt(2)));
+            fit_model_ci=range(fit_model_ci,2)./2;
+            fit_resid=response-fit_model_vals;
+            fit_resid_sig=fit_resid./(sqrt(err_fit_dim.^2+fit_model_ci.^2));
+            plot(predictor(:,1),fit_resid,'k')
+            ylabel('residuals')
+            subplot(4,1,2)
+            plot(predictor(:,1),fit_resid_sig,'k')
+            ylabel('residuals sigma')
+            subplot(4,1,3)
+            fft_resid=fft_tx(predictor(:,1),fit_resid,'padding',10);
+            plot(fft_resid(1,:),abs(fft_resid(2,:)),'k')
+            hold on
+            plot(fft_resid(1,:),imag(fft_resid(2,:)),'b')
+            plot(fft_resid(1,:),real(fft_resid(2,:)),'r')
+            hold off
+            ylabel('residual spectral amplitude')
+            
+            pause(0.1)
         end% PLOTS
         %%
     end
-    if mod(ii,10)==0, fprintf('\b\b\b\b%04u',ii), end
+    if mod(ii,1)==0, fprintf('\b\b\b\b%04u',ii), end
 end
 fprintf('...Done\n')
 %if the above did a fit then set the element in the logic vector to true
@@ -170,8 +287,15 @@ osc_fit.ok.did_fits=~cellfun(@(x) isequal(x,[]),osc_fit.model);
 mean_fit_rmse=nanmean(osc_fit.fit_rmse(osc_fit.ok.did_fits));
 median_fit_rmse=nanmedian(osc_fit.fit_rmse(osc_fit.ok.did_fits));
 std_fit_rmse=nanstd(osc_fit.fit_rmse(osc_fit.ok.did_fits));
-fprintf('fit error: median %f mean %f std %f\n',...
+fprintf('fit statisitics \n')
+fprintf('RMSE: median %e mean %e std %e\n',...
    median_fit_rmse,mean_fit_rmse,std_fit_rmse)
+
+
+freq_unc=cellfun(@(x) x.Coefficients.SE(2),osc_fit.model(data.mcp_tdc.all_ok& col_vec(~cellfun(@isempty,osc_fit.model))));
+fprintf('Freq: mean unc %e std unc %e\n',...
+  mean(freq_unc),std(freq_unc))
+
 
 %label anything std_cut_fac*std away from the median as a bad fit
 std_cut_fac=4;
@@ -192,7 +316,7 @@ osc_fit.ok.all=osc_fit.ok.freq & osc_fit.ok.rmse;
 
 
 if anal_opts_osc_fit.plot_err_history
-    figure(52)
+    stfig('fit error history','add_stack',1);
     clf
     set(gcf,'color','w')
     subplot(2,1,1)
@@ -204,7 +328,6 @@ if anal_opts_osc_fit.plot_err_history
     line([1,1]*mean_fit_rmse,yl,'Color','k')
     line([1,1]*median_fit_rmse,yl,'Color','m')
     line([1,1]*(mean_fit_rmse+std_cut_fac*std_fit_rmse),yl,'Color','r')
-    line([1,1]*(mean_fit_rmse-std_cut_fac*std_fit_rmse),yl,'Color','r')
     hold off
 
     subplot(2,1,2)
@@ -215,16 +338,17 @@ if anal_opts_osc_fit.plot_err_history
     
 end
 
-
+%%
 if anal_opts_osc_fit.plot_fit_corr
     mask=osc_fit.ok.all;
-    sfigure(53);
+    stfig('fit param corr','add_stack',1);
     clf
     set(gcf,'color','w')
     %see if the fit error depends on the probe freq
     subplot(3,3,1)
-    tmp_probe_freq=data.wm_log.proc.probe.freq.act.mean(mask);
-    tmp_probe_freq=(tmp_probe_freq-nanmean(tmp_probe_freq))*1e-3;
+    tmp_probe_freq=data.blue_probe.act.mean(mask);
+    tmp_probe_freq=(tmp_probe_freq-nanmean(tmp_probe_freq))*1e-9;
+    
     plot(tmp_probe_freq,...
         osc_fit.fit_rmse(osc_fit.ok.all),'xk')
     xlabel('probe beam freq (GHz)')
@@ -262,12 +386,31 @@ if anal_opts_osc_fit.plot_fit_corr
     ylabel('zcpl')
     title('zcpl')
     %see if the amp changes
+    
     subplot(3,3,7)
-    plot(tmp_probe_freq,...
-       1./osc_fit.model_coefs(mask,7,1),'xk')
+    freq_samp=col_vec(linspace(min(tmp_probe_freq),max(tmp_probe_freq),1e3));
+    damp_corr_model=@(b,x) b(1)+b(2).*x; %b(3)*x.^2
+    cof_names={'offset','grad'};
+    damping_fit_obj=fitnlm(tmp_probe_freq,...
+                            1./osc_fit.model_coefs(mask,7,1),...
+                            damp_corr_model,...
+                            [1,1],...
+                            'CoefficientNames',cof_names);
+    [damping_samp,damping_samp_ci]=predict(damping_fit_obj,freq_samp,'Alpha',1-erf(1/sqrt(2)),'Prediction','curve'); %'observation'
+   
+    color_shaded=[1,1,1]*0.8;
+    patch([freq_samp', fliplr(freq_samp')], [damping_samp_ci(:,1)', fliplr(damping_samp_ci(:,2)')], color_shaded,'EdgeColor','none')  %[1,1,1]*0.80
+    hold on
+    plot(freq_samp,damping_samp)
+    errorbar(tmp_probe_freq,...
+           1./osc_fit.model_coefs(mask,7,1),...
+           (1./osc_fit.model_coefs(mask,7,1)).*(osc_fit.model_coefs(mask,7,2)./osc_fit.model_coefs(mask,7,1)),...
+           'xk','CapSize',0)
+    hold off      
     xlabel('probe beam freq (GHz)')
     ylabel('Damping Time (s)')
     title('Damping')
+
     subplot(3,3,8)
     plot(tmp_probe_freq,...
        osc_fit.model_coefs(mask,8,1),'xk')
@@ -287,7 +430,7 @@ if anal_opts_osc_fit.plot_fit_corr
     saveas(gcf,[anal_opts_osc_fit.global.out_dir,plot_name,'.png'])
     saveas(gcf,[anal_opts_osc_fit.global.out_dir,plot_name,'.fig'])
 end
-
+%%
 
 
 end
