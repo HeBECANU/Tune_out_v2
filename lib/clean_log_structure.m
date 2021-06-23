@@ -1,4 +1,9 @@
 function struct=clean_log_structure(struct,struct_path)
+
+%this is an iteratively defined cleaner that turns an array of structs into a
+% struct of arrays. It also cleans up some string values to logicals
+
+
 if isstruct(struct)
     fnames=fieldnames(struct);
     for fn=fnames'

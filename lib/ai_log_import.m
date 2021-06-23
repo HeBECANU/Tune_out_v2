@@ -78,8 +78,6 @@ function ai_log_out=ai_log_import_core(anal_opts,data)
 %estimate of the sfp scan time,used to set the window and the smoothing
 args_single=[];
 args_single.cmp_multiplier_disp=50; %multiplier to display the compressed data better
-args_single.window_time=anal_opts.scan_time*2.1;
-args_single.pzt_volt_smothing_time=anal_opts.scan_time/100;
 args_single.pzt_attenuation_factor=0.2498; %set by the voltage divider box between pzt driver and daq
 %------------- END USER VAR --------------
 
@@ -95,7 +93,15 @@ end
 anal_opts.pd.set_vec=anal_opts.calibration;
 %nan compatable logical inverse
 anal_opts.pd.set_vec(~isnan(anal_opts.pd.set_vec))=~anal_opts.pd.set_vec(~isnan(anal_opts.pd.set_vec));
-anal_opts.pd.set_vec=anal_opts.pd.set_vec*anal_opts.pd.set_probe;
+
+%lets handle a vector of set point voltages, used for the method linearity measurment
+if numel(anal_opts.pd.set_probe)==1
+    anal_opts.pd.set_vec=anal_opts.pd.set_vec*anal_opts.pd.set_probe;
+elseif numel(anal_opts.pd.set_probe)==numel(anal_opts.pd.set_probe)
+    anal_opts.pd.set_probe=col_vec(anal_opts.pd.set_probe);
+    anal_opts.pd.set_vec=col_vec(anal_opts.pd.set_vec);
+    anal_opts.pd.set_vec=anal_opts.pd.set_vec.*anal_opts.pd.set_probe;
+end
 
 
 %%
@@ -125,13 +131,18 @@ args_single.plot=anal_opts.plot;
 args_single.sfp=anal_opts.sfp;
 args_single.pd.time_start=anal_opts.pd.time_start;
 args_single.pd.time_stop=anal_opts.pd.time_stop;
+
+if ~isfield(anal_opts,'do_ac_mains_fit')
+    anal_opts.do_ac_mains_fit=false;
+end
 args_single.do_ac_mains_fit=anal_opts.do_ac_mains_fit;
 
 cache_opts=[];
+cache_opts.force_recalc=anal_opts.force_reimport;
 cache_opts.verbose=0;
 cache_opts.mock_working_dir=anal_opts.dir;
 cache_opts.path_directions={1,'dir'};
-cache_opts.force_recalc=false;
+cache_opts.force_recalc=false; 
 if isfield(anal_opts,'force_reimport')
     %cache_opts.force_recalc=true;
 end
@@ -228,18 +239,19 @@ for ii=1:iimax
             if isnan(set_pt_single)
                 
             elseif abs(ai_log_single_out.pd.mean-set_pt_single)>anal_opts.pd.mean_diff_thresh
-                fprintf('\nprobe beam pd value wrong!!!!!!!!!\n')
+                fprintf('\nprobe beam pd mean wrong!!!!!!!!!\n')
                 fprintf('avg val %.2f set value %.2f \n04u%',ai_log_single_out.pd.mean,set_pt_single,0)
             elseif ai_log_single_out.pd.std>anal_opts.pd.std_thresh
                 fprintf('\nprobe beam pd noisy!!!!!!!!!\n')
-                fprintf('std %.2f thresh value %.2f \n04u%',ai_log_single_out.pd.std,anal_opts.pd.std_thresh,0)
-                
+                fprintf('std %.2f thresh value %.2f %',ai_log_single_out.pd.std,anal_opts.pd.std_thresh)
+                 fprintf('avg val %.2f set value %.2f \n04u%',ai_log_single_out.pd.mean,set_pt_single,0)
             elseif max(abs(ai_log_single_out.pd.mean-ai_log_single_out.pd.min_max))...
                     >ai_log_single_out.pd.std*abs(norminv(anal_opts.pd.range_thresh_prob/ai_log_single_out.pd.samples ,0,1))
                 fprintf('\nprobe beam pd noisy!!!!!!!!!\n')
-                fprintf('peak diff to mean %.2g thresh value %.2g \n04u%',...
+                fprintf('peak diff to mean %.2g thresh value %.2g \n%',...
                    max(abs(ai_log_single_out.pd.mean-ai_log_single_out.pd.min_max)),...
-                  ai_log_single_out.pd.std*abs(norminv(anal_opts.pd.range_thresh_prob/ai_log_single_out.pd.samples ,0,1)),0)
+                  ai_log_single_out.pd.std*abs(norminv(anal_opts.pd.range_thresh_prob/ai_log_single_out.pd.samples ,0,1)))
+                fprintf('avg val %.2f set value %.2f \n04u%',ai_log_single_out.pd.mean,set_pt_single,0)
             else
                 ai_log_out.ok.reg_pd(idx_nearest_shot)=true;
             end
@@ -305,7 +317,7 @@ ai_log_single_out.pd.samples=samples;
 
 
 
-%% plot the anlog values
+%% plot the analog values
 %as this function does not decide if this pd signal has failed it cant decide if it should plot or not
 %wit the args_single.plot.failed option
 if args_single.plot.all    
@@ -350,6 +362,7 @@ sfp_pzt=sfp_pzt/args_single.pzt_attenuation_factor;
 
 
 % set up input struct for is_laser_single_mode
+sm_in=[];
 sm_in.pd_voltage=[sfp_pd_raw',sfp_pd_cmp'];
 sm_in.times=ai_dat.time';
 sm_in.pzt_voltage=sfp_pzt';
@@ -362,10 +375,10 @@ sm_in.pzt_dist_sm=args_single.sfp.pzt_dist_sm;%minimum pzt voltage between peaks
 sm_in.pzt_peak_width=args_single.sfp.pzt_peak_width; %used to check that peaks are acually different and not just noise
 sm_in.scan_time=20e-3;  %estimate of the sfp scan time,used to set the window and the smoothing
 sm_in.pd_filt_factor=1e-3; %fraction of a scan to smooth the pd data by for peak detection
-sm_in.ptz_filt_factor_pks=1e-3;  %fraction of a scan to smooth the pzt data by for peak detection
-sm_in.pzt_filt_factor_deriv=1e-3; %fraction of a scan to smooth the data by for derivative detection
+sm_in.ptz_filt_factor_pks=5e-3;  %fraction of a scan to smooth the pzt data by for peak detection
+sm_in.pzt_filt_factor_deriv=5e-3; %fraction of a scan to smooth the data by for derivative detection
 sm_in.pd_amp_min=1; %minimum range of the pd signal to indicate the laser has sufficient power
-sm_in.skip_wf_check=false;
+sm_in.skip_wf_check=true; % dont need to check waveform type
 sm_in.plot=args_single.plot;
 
 [laser_sm,laser_sm_test_det]=is_laser_single_mode(sm_in);

@@ -13,7 +13,7 @@
 <g id = "ID000003" >
   <g transform = "translate(32.480,203.910)">
     <g transform = "rotate(-90.000)">
-      <text x = "0.000" y = "-0.2em" font-family = "Helvetica" text-anchor = "middle" dominant-baseline = "auto" font-size = "13.200pt" fill = "#262626"><tspan>(<tspan>&#969;</tspan><tspan style = "baseline-shift:sub;font-size:65%%">\mathrm<tspan>TO</tspan></tspan>/2<tspan>&#960;</tspan>) - 725735 (GHZ)</tspan></text>
+      <text x = "0.000" y = "-0.2em" font-family = "Helvetica" text-anchor = "middle" dominant-baseline = "auto" font-size = "13.200pt" fill = "#262626"><tspan>f<tspan style = "baseline-shift:sub;font-size:65%%">\mathrm<tspan>TO</tspan></tspan> - 725735 (GHZ)</tspan></text>
     </g>
   </g>
 </g>
@@ -53,19 +53,23 @@
       <polygon fill = "#6cf563" fill-opacity = "1.000" stroke-linecap = "square" stroke-linejoin = "miter" stroke = "#21bc2c" stroke-width = "1.800pt" stroke-opacity = "1.000" stroke-dasharray = "none" points = "475.461,114.212 483.127,114.212 479.294,107.573 475.461,114.212 "/>
 </g>
 </g>
-<g id = "ID000008" >
-  <g transform = "translate(163.937,101.889)">
+<g id = "ID000008" clip-path = "url(#ID000002)" >
+<g>
+</g>
+</g>
+<g id = "ID000009" >
+  <g transform = "translate(142.855,101.889)">
     <g transform = "rotate(-0.000)">
       <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "start" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan>100(200) GHz</tspan></text>
     </g>
   </g>
-  <g transform = "translate(163.937,117.889)">
+  <g transform = "translate(142.855,117.889)">
     <g transform = "rotate(-0.000)">
-      <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "start" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan> [14]</tspan></text>
+      <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "start" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan> [16]</tspan></text>
     </g>
   </g>
 </g>
-<g id = "ID000009" >
+<g id = "ID000010" >
   <g transform = "translate(230.698,215.104)">
     <g transform = "rotate(-0.000)">
       <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "start" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan>-10(4) GHz</tspan></text>
@@ -73,11 +77,11 @@
   </g>
   <g transform = "translate(230.698,231.104)">
     <g transform = "rotate(-0.000)">
-      <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "start" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan> [13]</tspan></text>
+      <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "start" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan> [15]</tspan></text>
     </g>
   </g>
 </g>
-<g id = "ID000010" >
+<g id = "ID000011" >
   <g transform = "translate(274.620,1021.289)">
     <g transform = "rotate(-0.000)">
       <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "start" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan>-89.83(4) GHz</tspan></text>
@@ -85,11 +89,11 @@
   </g>
   <g transform = "translate(274.620,1037.289)">
     <g transform = "rotate(-0.000)">
-      <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "start" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan> [20]</tspan></text>
+      <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "start" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan> [17]</tspan></text>
     </g>
   </g>
 </g>
-<g id = "ID000011" >
+<g id = "ID000012" >
   <g transform = "translate(327.325,1021.848)">
     <g transform = "rotate(-0.000)">
       <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "start" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan>-89.884735(13) GHz</tspan></text>
@@ -97,11 +101,11 @@
   </g>
   <g transform = "translate(327.325,1037.848)">
     <g transform = "rotate(-0.000)">
-      <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "start" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan> [21]</tspan></text>
+      <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "start" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan> [18]</tspan></text>
     </g>
   </g>
 </g>
-<g id = "ID000012" >
+<g id = "ID000013" >
   <g transform = "translate(327.325,73.443)">
     <g transform = "rotate(-0.000)">
       <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "start" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan>3.9136(7) GHz</tspan></text>
@@ -109,11 +113,11 @@
   </g>
   <g transform = "translate(327.325,89.443)">
     <g transform = "rotate(-0.000)">
-      <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "start" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan> [21]</tspan></text>
+      <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "start" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan> [18]</tspan></text>
     </g>
   </g>
 </g>
-<g id = "ID000013" >
+<g id = "ID000014" >
   <g transform = "translate(423.953,1021.847)">
     <g transform = "rotate(-0.000)">
       <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "start" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan>-89.88468420(2) GHz</tspan></text>
@@ -121,11 +125,11 @@
   </g>
   <g transform = "translate(423.953,1037.847)">
     <g transform = "rotate(-0.000)">
-      <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "start" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan> [12]</tspan></text>
+      <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "start" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan> [19]</tspan></text>
     </g>
   </g>
 </g>
-<g id = "ID000014" >
+<g id = "ID000015" >
   <g transform = "translate(279.890,59.605)">
     <g transform = "rotate(-0.000)">
       <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "middle" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan>3.8(7) GHz</tspan></text>
@@ -133,11 +137,11 @@
   </g>
   <g transform = "translate(279.890,75.605)">
     <g transform = "rotate(-0.000)">
-      <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "middle" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan> [20]</tspan></text>
+      <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "middle" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan> [17]</tspan></text>
     </g>
   </g>
 </g>
-<g id = "ID000015" >
+<g id = "ID000016" >
   <g transform = "translate(475.780,146.186)">
     <g transform = "rotate(-0.000)">
       <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "middle" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan>-0.28(5) GHz</tspan></text>
@@ -149,7 +153,7 @@
     </g>
   </g>
 </g>
-<g id = "ID000016" >
+<g id = "ID000017" >
   <g transform = "translate(479.294,81.667)">
     <g transform = "rotate(-0.000)">
       <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "middle" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan>0.10(13) GHz</tspan></text>
@@ -161,7 +165,7 @@
     </g>
   </g>
 </g>
-<g id = "ID000017" >
+<g id = "ID000018" >
   <g transform = "translate(407.263,165.270)">
     <g transform = "rotate(-0.000)">
       <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "end" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan>-4.67(7) GHz</tspan></text>
@@ -169,7 +173,7 @@
   </g>
   <g transform = "translate(407.263,181.270)">
     <g transform = "rotate(-0.000)">
-      <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "end" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan> [11]</tspan></text>
+      <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "end" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan> [20]</tspan></text>
     </g>
   </g>
 </g>
@@ -236,23 +240,47 @@
       <polyline fill = "none" stroke-linecap = "square" stroke-linejoin = "miter" stroke = "#262626" stroke-width = "1.200pt" stroke-dasharray = "none" stroke-opacity = "1.000" points = "84.000,294.000 84.000,294.000 "/>
     </g>
   </g>
-  <g id  = "ID000018">
+  <g id  = "ID000019">
+  <clipPath id = "ID000020">
+    <rect x = "385.380" y = "202.580" width = "125.240" height = "56.840"/>
+  </clipPath>
+  <g id = "ID000021">
+    <rect fill = "#ffffff" stroke-linecap = "square" stroke-linejoin = "miter" stroke = "#262626" stroke-width = "1.200pt" stroke-dasharray = "none" stroke-opacity = "1.000" x = "385.380" y = "202.580" width = "125.240" height = "56.840"/>
+  </g>
+<g id = "ID000022" clip-path = "url(#ID000020)" >
+<g id = "ID000023" clip-path = "url(#ID000020)" >
+<g id = "ID000024" clip-path = "url(#ID000020)" >
+</g>
+<g id = "ID000025" clip-path = "url(#ID000020)" >
+<g>
+      <polygon fill = "#5edcdc" fill-opacity = "1.000" stroke-linecap = "square" stroke-linejoin = "miter" stroke = "#00a5a6" stroke-width = "0.500pt" stroke-opacity = "1.000" stroke-dasharray = "none" points = "407.429,228.500 407.429,233.500 412.429,233.500 412.429,228.500 407.429,228.500 "/>
+</g>
+</g>
+</g></g><g id = "ID000026" >
+  <g transform = "translate(433.455,231.000)">
+    <g transform = "rotate(-0.000)">
+      <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "start" dominant-baseline = "auto" font-size = "10.800pt" fill = "#000000"><tspan>NR Theory</tspan></text>
+    </g>
+  </g>
+</g>
+  </g>
+  <g id  = "ID000027">
       <polygon fill = "#ffffff" fill-opacity = "1.000" stroke = "none" points = "84.000,378.000 532.000,378.000 532.000,294.000 84.000,294.000 "/>
       <polygon fill = "#ffffff" fill-opacity = "1.000" stroke = "none" points = "84.000,294.000 532.000,294.000 532.000,294.000 84.000,294.000 "/>
       <polygon fill = "#ffffff" fill-opacity = "1.000" stroke = "none" points = "84.000,378.000 84.000,378.000 84.000,294.000 84.000,294.000 "/>
     <g>
-<g id = "ID000020" >
+<g id = "ID000029" >
 </g>
-<g id = "ID000021" >
+<g id = "ID000030" >
   <g transform = "translate(308.000,404.400)">
     <g transform = "rotate(-0.000)">
       <text x = "0.000" y = "0.9em" font-family = "Helvetica" text-anchor = "middle" dominant-baseline = "auto" font-size = "13.200pt" fill = "#262626"><tspan>Year</tspan></text>
     </g>
   </g>
 </g>
-<g id = "ID000022" >
+<g id = "ID000031" >
 </g>
-<g id = "ID000023" clip-path = "url(#ID000019)" >
+<g id = "ID000032" clip-path = "url(#ID000028)" >
       <polyline fill = "none" stroke-linecap = "square" stroke-linejoin = "round" stroke = "#00a5a6" stroke-width = "1.800pt" stroke-dasharray = "none" stroke-opacity = "1.000" points = "264.078,344.864 264.078,302.710 "/>
       <polyline fill = "none" stroke-linecap = "square" stroke-linejoin = "round" stroke = "#00a5a6" stroke-width = "1.800pt" stroke-dasharray = "none" stroke-opacity = "1.000" points = "316.784,356.983 316.784,356.967 "/>
       <polyline fill = "none" stroke-linecap = "square" stroke-linejoin = "round" stroke = "#00a5a6" stroke-width = "1.800pt" stroke-dasharray = "none" stroke-opacity = "1.000" points = "413.412,356.945 413.412,356.944 "/>
@@ -268,19 +296,19 @@
       <polygon fill = "#5edcdc" fill-opacity = "1.000" stroke-linecap = "square" stroke-linejoin = "miter" stroke = "#00a5a6" stroke-width = "1.800pt" stroke-opacity = "1.000" stroke-dasharray = "none" points = "410.912,354.445 410.912,359.445 415.912,359.445 415.912,354.445 410.912,354.445 "/>
 </g>
 </g>
-<g id = "ID000024" >
-  <g transform = "translate(163.937,-54234.000)">
+<g id = "ID000033" >
+  <g transform = "translate(142.855,-54234.000)">
     <g transform = "rotate(-0.000)">
       <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "start" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan>100(200) GHz</tspan></text>
     </g>
   </g>
-  <g transform = "translate(163.937,-54218.000)">
+  <g transform = "translate(142.855,-54218.000)">
     <g transform = "rotate(-0.000)">
-      <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "start" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan> [14]</tspan></text>
+      <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "start" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan> [16]</tspan></text>
     </g>
   </g>
 </g>
-<g id = "ID000025" >
+<g id = "ID000034" >
   <g transform = "translate(230.698,-47515.761)">
     <g transform = "rotate(-0.000)">
       <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "start" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan>-10(4) GHz</tspan></text>
@@ -288,11 +316,11 @@
   </g>
   <g transform = "translate(230.698,-47499.761)">
     <g transform = "rotate(-0.000)">
-      <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "start" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan> [13]</tspan></text>
+      <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "start" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan> [15]</tspan></text>
     </g>
   </g>
 </g>
-<g id = "ID000026" >
+<g id = "ID000035" >
   <g transform = "translate(327.325,-55922.020)">
     <g transform = "rotate(-0.000)">
       <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "start" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan>3.9136(7) GHz</tspan></text>
@@ -300,11 +328,11 @@
   </g>
   <g transform = "translate(327.325,-55906.020)">
     <g transform = "rotate(-0.000)">
-      <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "start" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan> [21]</tspan></text>
+      <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "start" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan> [18]</tspan></text>
     </g>
   </g>
 </g>
-<g id = "ID000027" >
+<g id = "ID000036" >
   <g transform = "translate(279.890,-56743.172)">
     <g transform = "rotate(-0.000)">
       <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "middle" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan>3.8(7) GHz</tspan></text>
@@ -312,11 +340,11 @@
   </g>
   <g transform = "translate(279.890,-56727.172)">
     <g transform = "rotate(-0.000)">
-      <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "middle" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan> [20]</tspan></text>
+      <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "middle" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan> [17]</tspan></text>
     </g>
   </g>
 </g>
-<g id = "ID000028" >
+<g id = "ID000037" >
   <g transform = "translate(337.867,338.975)">
     <g transform = "rotate(-0.000)">
       <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "middle" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan>-89.884735(13) GHz</tspan></text>
@@ -324,11 +352,11 @@
   </g>
   <g transform = "translate(337.867,354.975)">
     <g transform = "rotate(-0.000)">
-      <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "middle" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan> [21]</tspan></text>
+      <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "middle" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan> [18]</tspan></text>
     </g>
   </g>
 </g>
-<g id = "ID000029" >
+<g id = "ID000038" >
   <g transform = "translate(455.576,350.945)">
     <g transform = "rotate(-0.000)">
       <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "middle" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan>-89.88468420(2) GHz</tspan></text>
@@ -336,11 +364,11 @@
   </g>
   <g transform = "translate(455.576,366.945)">
     <g transform = "rotate(-0.000)">
-      <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "middle" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan> [12]</tspan></text>
+      <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "middle" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan> [19]</tspan></text>
     </g>
   </g>
 </g>
-<g id = "ID000030" >
+<g id = "ID000039" >
   <g transform = "translate(475.780,-51605.400)">
     <g transform = "rotate(-0.000)">
       <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "middle" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan>-0.28(5) GHz</tspan></text>
@@ -352,7 +380,7 @@
     </g>
   </g>
 </g>
-<g id = "ID000031" >
+<g id = "ID000040" >
   <g transform = "translate(479.294,-55434.000)">
     <g transform = "rotate(-0.000)">
       <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "middle" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan>0.10(13) GHz</tspan></text>
@@ -364,7 +392,7 @@
     </g>
   </g>
 </g>
-<g id = "ID000032" >
+<g id = "ID000041" >
   <g transform = "translate(253.537,323.787)">
     <g transform = "rotate(-0.000)">
       <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "end" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan>-89.83(4) GHz</tspan></text>
@@ -372,11 +400,11 @@
   </g>
   <g transform = "translate(253.537,339.787)">
     <g transform = "rotate(-0.000)">
-      <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "end" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan> [20]</tspan></text>
+      <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "end" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan> [17]</tspan></text>
     </g>
   </g>
 </g>
-<g id = "ID000033" >
+<g id = "ID000042" >
   <g transform = "translate(407.263,-50472.900)">
     <g transform = "rotate(-0.000)">
       <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "end" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan>-4.67(7) GHz</tspan></text>
@@ -384,11 +412,11 @@
   </g>
   <g transform = "translate(407.263,-50456.900)">
     <g transform = "rotate(-0.000)">
-      <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "end" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan> [11]</tspan></text>
+      <text x = "0.000" y = "0.3em" font-family = "Helvetica" text-anchor = "end" dominant-baseline = "auto" font-size = "10.000pt" fill = "#000000"><tspan> [20]</tspan></text>
     </g>
   </g>
 </g>
-  <clipPath id = "ID000019">
+  <clipPath id = "ID000028">
     <rect x = "84.000" y = "294.000" width = "448.000" height = "84.000"/>
   </clipPath>
     </g>
@@ -482,7 +510,7 @@
       <polyline fill = "none" stroke-linecap = "square" stroke-linejoin = "miter" stroke = "#262626" stroke-width = "1.200pt" stroke-dasharray = "none" stroke-opacity = "1.000" points = "84.000,378.000 84.000,378.000 "/>
     </g>
   </g>
-  <g id  = "ID000034">
+  <g id  = "ID000043">
 </g>
   </g>
 </svg>

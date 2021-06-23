@@ -4,7 +4,7 @@
 % set upt he options for the numerical integeration
 do_plots_of_osc=false;
 opts_template=[];
-opts_template.trap_freq=424;
+opts_template.trap_freq=422;
 opts_template.mass=const.mhe;
 opts_template.gauss_radius=7.5e-6*2;
 opts_template.gauss_displacement=0e-6;
@@ -15,8 +15,9 @@ opts_template.tlims=[0,1.1];
 % damping_ratio=1/(trap_freq*damping_time);
 % damping_coef=damping_ratio*2*sqrt(mass*trap_derivs(3));
 opts_template.damping_time=0.5; % 0.6;
-opts_template.inital_state=[0,13e-3];
-beam_power=120e-3;
+opts_template.inital_state=[0,13e-3]; %13e-3
+
+beam_power=57e-3;
 
 osc_e_in_j=(1/2)*const.mhe*opts_template.inital_state(2)^2;
 osc_e_in_k=osc_e_in_j/const.kb;
@@ -30,20 +31,18 @@ fprintf('            energy    %.2f nK \n', 1e9*osc_e_in_k)
 dpolz_domega=1.79e-53;
 power=50e-3;
 detuning_hz=-12000e9;
-probe_trap_freq=(1/(2*pi))*sqrt((1/(2*const.epsilon0*const.c*const.mhe))...
-                    *detuning_hz*dpolz_domega...
+probe_trap_freq_grad=( 1/(4*(pi^2)) )*(1/(2*const.epsilon0*const.c*const.mhe))...
+                    *dpolz_domega...
                     *( (2*power)/(pi*(opts_template.gauss_radius^2)) ) ...
-                    *( (4)/(opts_template.gauss_radius^2) ) );
-abs(probe_trap_freq)
-abs(probe_trap_freq)/opts_template.trap_freq
-power*detuning_hz
-
+                    *( (4)/(opts_template.gauss_radius^2) ) ;
+abs(sqrt(probe_trap_freq_grad*detuning_hz))
+abs(sqrt(probe_trap_freq_grad*detuning_hz))/opts_template.trap_freq
 
 %%
 
-beam_detunings=col_vec(linspace(-4e9,4e9,5));
+%beam_detunings=col_vec(linspace(-4e9,4e9,5));
 %beam_detunings=col_vec(linspace(-2e9,6e9,100));
-%beam_detunings=col_vec(linspace(-20e9,20e9,10)); % detuning from the TO in Hz
+beam_detunings=col_vec(linspace(-100e9,100e9,10)); % detuning from the TO in Hz
 beam_detunings=cat(1,0,beam_detunings); %add on the zero detuning case as the baseline
 iimax=numel(beam_detunings);
 fit_results=cell(iimax,1);
@@ -100,7 +99,7 @@ parfor ii=1:iimax
     % simple model
     %modelfun_simple = @(b,x) exp(-x(:,1).*max(0,b(6))).*b(1).*sin(b(2)*x(:,1)*pi*2+b(3)*pi*2)+b(4)+b(5)*x(:,1);
     gf_opt=[];
-    gf_opt.domain=[[1,50]*1e-3;...   %amp
+    gf_opt.domain=[[0.001,50]*1e-3;...   %amp
                    [10,80];...       %freq
                    [-2,2]*pi;...     %phase
                    [-50,50]*1e-3;... %offset
@@ -207,7 +206,7 @@ parfor_progress_imp(0);
 
 
 %
-
+%%
 
 fit_results_arr=cell_array_of_struct_to_struct_of_array(fit_results);
 
@@ -221,13 +220,13 @@ detuning=fit_results_arr.probe.detuning_hz(2:end);
 set(0,'defaulttextInterpreter','latex')
 
 % fit the dependence a function
-
+xscale=1e-9;
 predictor=detuning*xscale;
 response=probe_freq_squared;
 
 fit_in=cat(2,predictor,response,response*nan);
-meth_lin_fit=fit_poly_with_int(fit_in,2,0,0);
-fprintf('fit intercept %f MHz \n',meth_lin_fit.x_intercept.val*1e3)
+meth_fit=fit_poly_with_int(fit_in,2,0,0);
+fprintf('fit intercept %f MHz \n',meth_fit.x_intercept.val*1e3)
 %
 
 font_name='cmr10';
@@ -244,7 +243,11 @@ color_shaded=colorspace('LCH->RGB',color_shaded);
 
 detuning_samp_vals=linspace(min(predictor),...
                     max(predictor),1e5)';
-[prediction,ci]=predict(meth_lin_fit.fit_mdl,detuning_samp_vals,'Alpha',1-erf(1/sqrt(2)),'Prediction','observation');
+[prediction,ci]=predict(meth_fit.fit_mdl,detuning_samp_vals,'Alpha',1-erf(1/sqrt(2)),'Prediction','observation');
+
+
+fprintf('response grad with optical freq %g Hz^2/Hz \n',meth_fit.fit_coef.val(2)*xscale)
+fprintf('predicted from derivative       %g Hz^2/Hz \n',probe_trap_freq_grad)
 
 
 stfig('probe beam polarizability linearity');

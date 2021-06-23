@@ -62,35 +62,59 @@ for ii=1:iimax
         mask=sum(isnan(txyz_tmp),2)==0;
         xyzerr_tmp=xyzerr_tmp(mask,:);
         txyz_tmp=txyz_tmp(mask,:);
-
+        
+        
+        %% motion spectrum
+        % mainly for diagnostics
+%         stfig('axes motion diagnostic')
+%         clf
+%         hold on
+%         for jj=1:3
+%             % for diagnotsics can be good to look at the spectrum of that dimension
+%             fft_out=fft_tx(txyz_tmp(:,1),txyz_tmp(:,jj+1),'padding',50,'window','gauss','win_param',{1});
+%             subplot(2,1,1)
+%             hold on
+%             plot(txyz_tmp(:,1),txyz_tmp(:,jj+1))
+%             hold off
+%             subplot(2,1,2)
+%             hold on
+%             plot(fft_out(1,:),abs(fft_out(2,:)))
+%             hold off
+%             xlabel('freq')
+%             ylabel('amp')
+%         end
+%         hold off
+%         subplot(2,1,2)
+%         legend('z','x','y')
+%         pause(1e-9)
+        %%
         %try to find the peak osc freq to start the fit there
         if anal_opts_osc_fit.adaptive_freq
             dom_opt=[];
             dom_opt.num_components=3;
-            dom_out=dominant_freq_components(txyz_tmp(:,1),txyz_tmp(:,anal_opts_osc_fit.dimesion+1),dom_opt);
+            dom_out=dominant_freq_components(txyz_tmp(:,1),txyz_tmp(:,anal_opts_osc_fit.dimension+1),dom_opt);
             fit_freq=dom_out.freq(1);
             fit_phase=dom_out.phase(1);
             fit_amp=dom_out.amp(1)*1.4;
-            %fft_phase=angle(out(2,nearest_idx))+0.535;
         else
-            fit_freq=anal_opts_osc_fit.appr_osc_freq_guess(anal_opts_osc_fit.dimesion);
-            fig_amp=std(txyz_tmp(anal_opts_osc_fit.dimesion+1,:))*8;
+            fit_freq=anal_opts_osc_fit.appr_osc_freq_guess(anal_opts_osc_fit.dimension);
+            fit_amp=std(txyz_tmp(anal_opts_osc_fit.dimension+1,:))*8;
             fit_phase=0;
         end
-        fit_offset=mean(txyz_tmp(:,anal_opts_osc_fit.dimesion+1));
+        fit_offset=mean(txyz_tmp(:,anal_opts_osc_fit.dimension+1));
        
         
-        
+        %%
         %select the aproapriate values to go in the response variable
         idx=1:4;
-        idx(anal_opts_osc_fit.dimesion+1)=[];
+        idx(anal_opts_osc_fit.dimension+1)=[];
         predictor=txyz_tmp(:,idx);
-        err_fit_dim=xyzerr_tmp(:,anal_opts_osc_fit.dimesion);
+        err_fit_dim=xyzerr_tmp(:,anal_opts_osc_fit.dimension);
         weights=1./(err_fit_dim.^2);
         weights(isnan(weights))=1e-20; %if nan then set to smallest value you can
         weights=weights/sum(weights);
         %predictor=[tvalues,xvalues,zvalues];
-        response=txyz_tmp(:,anal_opts_osc_fit.dimesion+1);
+        response=txyz_tmp(:,anal_opts_osc_fit.dimension+1);
         %% do a global fit to get a good place to start the fit routine
         % before we call fitnlm we will try to get close to the desired fit parameters using a robust global
         % optimizer
@@ -98,7 +122,7 @@ for ii=1:iimax
         % simple model
         %modelfun_simple = @(b,x) exp(-x(:,1).*max(0,b(6))).*b(1).*sin(b(2)*x(:,1)*pi*2+b(3)*pi*2)+b(4)+b(5)*x(:,1);
         gf_opt=[];
-        gf_opt.domain=[[1,50]*1e-3;...   %amp
+        gf_opt.domain=[[0.1,50]*1e-3;...   %amp  [1,50]
                        [20,60];...       %freq
                        [-2,2]*pi;...        %phase
                        [-50,50]*1e-3;... %offset
@@ -130,10 +154,9 @@ for ii=1:iimax
         osc_fit.model_coefs(ii,:,:)=[fitparam.Estimate,fitparam.SE];
         osc_fit.fit_rmse(ii)=fitobject.RMSE;
         % we will later use this fit to find the undamped frequency of the oscillator
-        
-        
+
         %limiting frequnecy prediction from http://adsabs.harvard.edu/full/1999DSSN...13...28M
-        meanwidth=sqrt(mean(squeeze(data.mcp_tdc.al_pulses.vel_zxy.std(ii,:,anal_opts_osc_fit.dimesion)).^2))*1e3;
+        meanwidth=sqrt(mean(squeeze(data.mcp_tdc.al_pulses.vel_zxy.std(ii,:,anal_opts_osc_fit.dimension)).^2))*1e3;
         frequnclim=sqrt(6/sum(data.mcp_tdc.al_pulses.num_counts(ii,:)))*...
             (1/(pi*range(data.mcp_tdc.al_pulses.time_cen)))*...
             (meanwidth/fitparam{2,1});
@@ -192,7 +215,7 @@ for ii=1:iimax
             plot(predictorplot(:,1)-time_start,prediction*1e3,'-','LineWidth',1.0,'Color',colors_main(3,:))
             ax = gca;
             set(ax, {'XColor', 'YColor'}, {'k', 'k'});
-            errorbar(predictor(:,1)-time_start,txyz_tmp(:,anal_opts_osc_fit.dimesion+1)*1e3,xyzerr_tmp(:,anal_opts_osc_fit.dimesion)*1e3,'o','CapSize',0,'MarkerSize',5,'Color',colors_main(1,:),'MarkerFaceColor',colors_detail(1,:),'LineWidth',1.5) 
+            errorbar(predictor(:,1)-time_start,txyz_tmp(:,anal_opts_osc_fit.dimension+1)*1e3,xyzerr_tmp(:,anal_opts_osc_fit.dimension)*1e3,'o','CapSize',0,'MarkerSize',5,'Color',colors_main(1,:),'MarkerFaceColor',colors_detail(1,:),'LineWidth',1.5) 
             set(gcf,'Color',[1 1 1]);
             xlabel('Time (s)','FontSize',font_size_label)
             ylabel('V_{x} (mm/s)','FontSize',font_size_label)
@@ -227,7 +250,7 @@ for ii=1:iimax
             set(gca,'Position',[0.1,0.2,0.88,0.78])
             ax = gca;
             set(ax, {'XColor', 'YColor'}, {'k', 'k'});
-            errorbar(predictor(:,1)-time_start,txyz_tmp(:,anal_opts_osc_fit.dimesion+1)*1e3,xyzerr_tmp(:,anal_opts_osc_fit.dimesion)*1e3,'o','CapSize',0,'MarkerSize',5,'Color',colors_main(1,:),'MarkerFaceColor',colors_detail(1,:),'LineWidth',1.5) 
+            errorbar(predictor(:,1)-time_start,txyz_tmp(:,anal_opts_osc_fit.dimension+1)*1e3,xyzerr_tmp(:,anal_opts_osc_fit.dimension)*1e3,'o','CapSize',0,'MarkerSize',5,'Color',colors_main(1,:),'MarkerFaceColor',colors_detail(1,:),'LineWidth',1.5) 
             set(gcf,'Color',[1 1 1]);
             xlabel('Time (s)','FontSize',font_size_label)
             yticks(-10:10:10)
