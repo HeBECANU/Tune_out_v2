@@ -9,38 +9,39 @@ addpath(fullfile(mpath,'../../lib/Core_BEC_Analysis/lib/')) %add the path to set
                   % in this case it should be 
 %set_up_project_path('../..',{'+','figs'})
 
-set_up_project_path('../..',{'+','figs','lib'})
+% set_up_project_path('../..',{'+','figs','lib'})
 
 hebec_constants %call the constants function that makes some globals
 
 %% convert the bib file to a struct
-bibs_dir=fullfile(mpath,'papers')
-ref_st=bib_to_st(bibs_dir)
+bibs_dir=fullfile(mpath,'papers\refs.bib')
+ref_st=label_bibtex(bibs_dir)
 
 
 %% sort cronoligicaly 
 % add a frac year field
-for ii=1:numel(ref_st)
-    ref_st{ii}.frac_year=ref_st{ii}.year+month_to_num(ref_st{ii}.month)/12;
+
+for ii=1:numel(ref_st.Year)
+    ref_st.frac_year{ii}=str2num(ref_st.Year{ii})+month_to_num(ref_st.Month{ii})/12;
 end
 
-frac_years=cellfun(@(x) x.frac_year,ref_st);
+frac_years=cell2mat(ref_st.frac_year);
 [~,sort_order]=sort(frac_years);
-ref_st=ref_st(sort_order);
+% ref_st=ref_st(sort_order);
 
 %%
-title='Tune-out wavelengths for metastable helium';
-st_idx=find(cellfun(@(x) contains(lower(x.title),lower(title)), ref_st));
+title='Tune out wavelengths for metastable helium';
+st_idx=find(contains(lower(ref_st.Title),lower(title)));
 tune_out=[];
 tune_out.val=413.02;
 tune_out.unc.tot=0.09;
 tune_out.units='nm';
 tune_out.type='theory';
-ref_st{st_idx}.tune_out=tune_out;
+ref_st.tune_out{st_idx}=tune_out;
 
 
 title='Precision Measurement for Metastable Helium Atoms';
-st_idx=find(cellfun(@(x) contains(lower(x.title),lower(title)), ref_st));
+st_idx=find(contains(lower(ref_st.Title),lower(title)));
 tune_out=[];
 tune_out.val=413.0938;
 tune_out.unc.stat=0.0009;
@@ -48,10 +49,10 @@ tune_out.unc.syst=0.002;
 tune_out.unc.tot=rssq([tune_out.unc.stat,tune_out.unc.syst]);
 tune_out.units='nm';
 tune_out.type='exp';
-ref_st{st_idx}.tune_out=tune_out;
+ref_st.tune_out{st_idx}=tune_out;
 
-title='Tune-out wavelength around 413 nm for the helium ';
-st_idx=find(cellfun(@(x) contains(lower(x.title),lower(title)), ref_st));
+title='Tune out wavelength around 413 nm for the helium ';
+st_idx=find(contains(lower(ref_st.Title),lower(title)));
 %from page 5, non relativistic finite mass
 tune_out_nrci=[];
 tune_out_nrci.val=  413.13919;
@@ -67,10 +68,10 @@ tune_out_total.units='nm';
 tune_out_total.type='theory';
 tune_out_total.note='total';
 
-ref_st{st_idx}.tune_out={tune_out_nrci,tune_out_total};
+ref_st.tune_out{st_idx}={tune_out_nrci,tune_out_total};
 
-title='The variational calculation of the 413 nm 4He tune-out wavelength';
-st_idx=find(cellfun(@(x) contains(lower(x.title),lower(title)), ref_st));
+title='The variational calculation of the 413 nm 4He tune out wavelength';
+st_idx=find(contains(lower(ref_st.Title),lower(title)));
 tune_out_nrci=[];
 tune_out_nrci.val=413.038304399+0.100917093; %413.038304399(3)+0.100917093(7)
 tune_out_nrci.unc.tot=rssq([0.000000003,0.000000007]);
@@ -86,27 +87,27 @@ tune_out_total.unc.tot=0.0000004;
 tune_out_total.units='nm';
 tune_out_total.type='theory';
 tune_out_total.note='total';
-ref_st{st_idx}.tune_out={tune_out_nrci,tune_out_total};
+ref_st.tune_out{st_idx}={tune_out_nrci,tune_out_total};
 % 
-title='Helium tune-out wavelength: Gauge';
-st_idx=find(cellfun(@(x) contains(lower(x.title),lower(title)), ref_st));
+title='Helium tune out wavelength  Gauge';
+st_idx=find(contains(lower(ref_st.Title),lower(title)));
 tune_out=[];
 tune_out.val=413.1392214630;
 tune_out.unc.tot=0.00000000001;
 tune_out.units='nm';
 tune_out.type='theory';
-ref_st{st_idx}.tune_out=tune_out;
+ref_st.tune_out{st_idx}=tune_out;
 
 
 title='QED and relativistic nuclear recoil corrections ';
-st_idx=find(cellfun(@(x) contains(lower(x.title),lower(title)), ref_st));
+st_idx=find(contains(lower(ref_st.Title),lower(title)));
 tune_out=[];
 % godamit, the arxiv paper gives a different value
 tune_out.val=  413.09071; %including retardation correction
 tune_out.unc.tot=0.00004;
 tune_out.units='nm';
 tune_out.type='theory';
-ref_st{st_idx}.tune_out=tune_out;
+ref_st.tune_out{st_idx}=tune_out;
 
 
 %%
@@ -173,26 +174,26 @@ fprintf('shift alt method %s nm\n %s MHz \n',...
 
 %%
 % scale our values into the scalar TO
-title='this work (exp.)';
-st_idx=find(cellfun(@(x) contains(lower(x.title),lower(title)), ref_st));
+title='this work  exp';
+st_idx=find(contains(lower(ref_st.Title),lower(title)));
 tune_out=[];
-tune_out.val=725736811-to.tens_shift_alt.f.val*1e-6;
-tune_out.unc.stat=45;
+tune_out.val=725736700-1720;%
+tune_out.unc.stat=260;
 tune_out.unc.syst=rssq([120,to.tens_shift_alt.f.unc*1e-6]);
-tune_out.unc.tot=rssq([tune_out.unc.stat,tune_out.unc.syst]);
+tune_out.unc.tot=260%rssq([tune_out.unc.stat,tune_out.unc.syst]);
 tune_out.units='MHz';
 tune_out.type='exp';
-ref_st{st_idx}.tune_out=tune_out;
+ref_st.tune_out{st_idx}=tune_out;
 
 
-title='this work (theory)';
-st_idx=find(cellfun(@(x) contains(lower(x.title),lower(title)), ref_st));
+title='this work  theory';
+st_idx=find(contains(lower(ref_st.Title),lower(title)));
 tune_out=[];
-tune_out.val=725736430-to.tens_shift_alt.f.val*1e-6;
-tune_out.unc.tot=rssq([50,to.tens_shift_alt.f.unc*1e-6]);
+tune_out.val=725735872-1720+476.2;%
+tune_out.unc.tot=15;
 tune_out.units='MHz';
 tune_out.type='theory';
-ref_st{st_idx}.tune_out=tune_out;
+ref_st.tune_out{st_idx}=tune_out;
 
 
 
@@ -208,11 +209,11 @@ to_st.title={};
 ii=1; % bibtex entry
 jj=1; % tune out sub entry
 kk=1; %out array index
-while ii<= numel(ref_st)
-    this_to_full=ref_st{ii}.tune_out;
-    to_st.frac_year(kk)=ref_st{ii}.frac_year;
-    to_st.bib_keys{kk}=ref_st{ii}.bib_key;
-    to_st.title{kk}=ref_st{ii}.title;
+while ii<= numel(ref_st.Year)
+    this_to_full=ref_st.tune_out{ii};
+    to_st.frac_year(kk)=ref_st.frac_year{ii};
+%     to_st.bib_keys{kk}=ref_st.bib_key{ii};
+    to_st.title{kk}=ref_st.Title{ii};
     if iscell(this_to_full)
         this_to_single=this_to_full{jj};
         jj=jj+1;
@@ -259,18 +260,29 @@ clf
 
 
 plot_y_factor=1e-9;
+msize=10;
+lwidth=3.2;
 %plot_y_shift=725700000*1e6;% Hz 
-plot_y_shift=725735000*1e6;% Hz
+plot_y_shift=725736700*1e6-1720*1e6;% Hz
 to_st.freq.shit_scaled=(to_st.freq.val-plot_y_shift)*plot_y_factor;
 errorbar(frac_year(th_mask),to_st.freq.shit_scaled(th_mask),to_st.freq.unc(th_mask)*plot_y_factor,...
-        'o','CapSize',0,'MarkerSize',5,...
-        'Color',colors_main(1,:),'MarkerFaceColor',colors_detail(1,:),'LineWidth',1.8)
+        'o','CapSize',0,'MarkerSize',msize,...
+        'Color',colors_main(1,:),'MarkerFaceColor',colors_detail(1,:),'LineWidth',lwidth)
     hold on
 errorbar(frac_year(~th_mask),to_st.freq.shit_scaled(~th_mask),to_st.freq.unc(~th_mask)*plot_y_factor,...
-        '^','CapSize',0,'MarkerSize',5,...
-        'Color',colors_main(2,:),'MarkerFaceColor',colors_detail(2,:),'LineWidth',1.8) 
+        '^','CapSize',0,'MarkerSize',msize,...
+        'Color',colors_main(2,:),'MarkerFaceColor',colors_detail(2,:),'LineWidth',lwidth) 
+%     hold off
+
+errorbar([0],[0],...
+        's','CapSize',0,'MarkerSize',msize,...
+        'Color',colors_main(3,:),'MarkerFaceColor',colors_detail(3,:),'LineWidth',lwidth)
     hold off
-    
+% errorbar(frac_year(~th_mask),(to_st.freq.val(~th_mask)-plot_y_shift)*plot_y_factor,to_st.freq.unc(~th_mask)*plot_y_factor,...
+%         '^','CapSize',0,'MarkerSize',5,...
+%         'Color',colors_main(2,:),'MarkerFaceColor',colors_detail(2,:),'LineWidth',1.8) 
+%     hold off
+legend('Full Theory','Experiment','NR Theory','Location','best','fontweight','bold')
     
 text_info=[];    
 text_info.val=(to_st.freq.val-plot_y_shift);
@@ -279,12 +291,12 @@ text_info.frac_year=frac_year;
 text_info.align=nan;
 text_info.align(1:numel(text_info.val))=0;
 text_info.ref_num=zeros(1,numel(text_info.val));
-text_info.ref_num=[14,13,20,20,21,21,12,11,nan,nan];
+text_info.ref_num=[16,19,20,17,17,15,nan,18,18,nan];%[14,13,20,20,21,21,12,11,nan,nan];%
 text_info.delta_str=cell(1,numel(text_info.val));
 
 text_info.ref_text=arrayfun(@(x) sprintf('[%u]',x),text_info.ref_num,'UniformOutput',0);
-text_info.ref_text{end-1}='(theory)';
-text_info.ref_text{end}='(exp.)';
+text_info.ref_text{end-3}='(exp.) *';
+text_info.ref_text{end}='(theory) *';
 
 for ii=1:numel(text_info.val)
     text_info.delta_str{ii}=sprintf('%s GHz\n %s',...
@@ -305,37 +317,52 @@ ha.LineWidth  = 1;          % make the arrow bolder for the picture
 ha.HeadWidth  = 8;
 ha.HeadLength = 10;
 
-ii=4;
+ii=5;
 text_info.frac_year(ii)=text_info.frac_year(ii)+0.1;
-text_info.val(ii)=text_info.val(ii)+1.5*1e9;
+text_info.val(ii)=text_info.val(ii)+1.0*1e9;
 text_info.align(ii)=1;
 
-text_info.frac_year(end-2)=text_info.frac_year(end-2)-0.4;
-text_info.val(end-2)=text_info.val(end-2)-0.5*1e9;
-text_info.align(end-2)=2;
+ii=2;
+text_info.frac_year(ii)=text_info.frac_year(ii)-0.19;
+text_info.val(ii)=text_info.val(ii)+0.0*1e9;
 
-text_info.frac_year(end-1)=text_info.frac_year(end-1)-0.1;
-text_info.val(end-1)=text_info.val(end-1)-3*1e9;
-text_info.align(end-1)=1;
+ii=8;
+text_info.frac_year(ii)=text_info.frac_year(ii)-0.2;
+text_info.val(ii)=text_info.val(ii)+0.023*1e9;
 
-text_info.frac_year(end)=text_info.frac_year(end)-0.2;
-text_info.val(end)=text_info.val(end)+3*1e9;
-text_info.align(end)=1;
+text_info.frac_year(3)=text_info.frac_year(3)-0.4;
+text_info.val(3)=text_info.val(3)-0.5*1e9;
+text_info.align(3)=2;
+% 
+text_info.frac_year(end-3)=text_info.frac_year(end-3)-0.1;
+text_info.val(end-3)=text_info.val(end-3)+1.7*1e9;
+text_info.align(end-3)=1;
+% 
+text_info.frac_year(end)=text_info.frac_year(end)-0.6;
+text_info.val(end)=text_info.val(end)-2*1e9;
+text_info.align(end)=0;
 
+text_info.align(1)=1;
+text_info.val(1)=text_info.val(1)-0.2*1e9;
+text_info.frac_year(1)=text_info.frac_year(1)+0.2;
 
 %plot out each seprately
+font_size=19.2;
 mask=text_info.align==0;
-text(text_info.frac_year(mask),text_info.val(mask)*1e-9,text_info.delta_str(mask),'HorizontalAlignment','left' )
+text(text_info.frac_year(mask),text_info.val(mask)*1e-9,text_info.delta_str(mask),'HorizontalAlignment','left','FontSize',font_size)
 mask=text_info.align==1;
-text(text_info.frac_year(mask),text_info.val(mask)*1e-9,text_info.delta_str(mask),'HorizontalAlignment','center' )
+text(text_info.frac_year(mask),text_info.val(mask)*1e-9,text_info.delta_str(mask),'HorizontalAlignment','center','FontSize',font_size)
 mask=text_info.align==2;
-text(text_info.frac_year(mask),text_info.val(mask)*1e-9,text_info.delta_str(mask),'HorizontalAlignment','right' )
+text(text_info.frac_year(mask),text_info.val(mask)*1e-9,text_info.delta_str(mask),'HorizontalAlignment','right','FontSize',font_size)
 
 
 
     
 numstr=sprintf('%.0f',plot_y_shift*1e-9)
-ylabel(sprintf('$(\\omega_{\\mathrm{TO}}/2\\pi)$ - %s (GHZ)',numstr))
+
+
+
+ylabel('$f_{TO}^{S}-f_{TO}(-1,0)+1720$ (GHZ)','interpreter','latex')
 ylim([-18,9]+(to_st.freq.val(end)-plot_y_shift)*1e-9)
 
 %yticks(-10:5:20)
@@ -350,7 +377,10 @@ set(axis_main,'Position',[0.15,0.3,0.8,0.65])
 set(axis_main,'XTickLabel','')
 set(axis_main,'TickLength',[0.02,0.02])
 set(axis_main,'LineWidth',1.2)
-set(axis_main,'FontSize',12);
+set(axis_main,'FontSize',25);
+
+% set(axis_main,'fontweight','bold')
+grid on
 
 main_ax_pos=axis_main.Position;
 plot_y_space=0.00;
@@ -362,14 +392,15 @@ box on
 plot_y_factor=1e-9;
 %plot_y_shift=725735000*1e6;% Hz
 errorbar(frac_year(th_mask),(to_st.freq.val(th_mask)-plot_y_shift)*plot_y_factor,to_st.freq.unc(th_mask)*plot_y_factor,...
-        's','CapSize',0,'MarkerSize',5,...
-        'Color',colors_main(3,:),'MarkerFaceColor',colors_detail(3,:),'LineWidth',1.8)
+        's','CapSize',0,'MarkerSize',msize,...
+        'Color',colors_main(3,:),'MarkerFaceColor',colors_detail(3,:),'LineWidth',lwidth)
     hold on
 % errorbar(frac_year(~th_mask),(to_st.freq.val(~th_mask)-plot_y_shift)*plot_y_factor,to_st.freq.unc(~th_mask)*plot_y_factor,...
 %         '^','CapSize',0,'MarkerSize',5,...
 %         'Color',colors_main(2,:),'MarkerFaceColor',colors_detail(2,:),'LineWidth',1.8) 
 %     hold off
-ylim([-90.02,-89.88]+(to_st.freq.val(end)-plot_y_shift)*1e-9) 
+% legend('Full Theory','Experiment','NR Theory')
+ylim([-89.9,-89.75]) 
 set(axis_subplot,'Xlim',axis_main.XLim);
 set(axis_subplot,'XTick',axis_main.XTick);
 set(axis_subplot,'FontSize',axis_main.FontSize);
@@ -406,12 +437,12 @@ text_info.align(ii)=1;
 
 %plot out each seprately
 mask=text_info.align==0;
-text(text_info.frac_year(mask),text_info.val(mask)*1e-9,text_info.delta_str(mask),'HorizontalAlignment','left' )
+text(text_info.frac_year(mask),text_info.val(mask)*1e-9,text_info.delta_str(mask),'HorizontalAlignment','left','FontSize',font_size,'fontweight','bold')
 mask=text_info.align==1;
-text(text_info.frac_year(mask),text_info.val(mask)*1e-9,text_info.delta_str(mask),'HorizontalAlignment','center' )
+text(text_info.frac_year(mask),text_info.val(mask)*1e-9,text_info.delta_str(mask),'HorizontalAlignment','center','FontSize',font_size,'fontweight','bold')
 mask=text_info.align==2;
-text(text_info.frac_year(mask),text_info.val(mask)*1e-9,text_info.delta_str(mask),'HorizontalAlignment','right' )
-
+text(text_info.frac_year(mask),text_info.val(mask)*1e-9,text_info.delta_str(mask),'HorizontalAlignment','right','FontSize',font_size)
+grid on
 %4/3 aspect ratio
 
 
@@ -425,19 +456,29 @@ th_diff.val=to_st.freq.val(end)-to_st.freq.val(end-1);
 th_diff.unc=rssq(to_st.freq.unc(end-1:end));
 
 sigma_th_exp=th_diff.val/th_diff.unc;
+% axis_main.XAxis.TickLabelInterpreter = 'latex';
+% axis_main.XAxis.TickLabelFormat      = '\\textbf{%g}';
 
 fprintf('diff between th and exp %s MHZ sigma %f \n',string_value_with_unc(th_diff.val*1e-6,th_diff.unc*1e-6,'b'),sigma_th_exp)
 
 %%
-set(gcf,'position',[493 318 600 450])
-export_fig(gcf,fullfile(mpath,'to_val_convergence_history.svg'))
-export_fig(gcf,fullfile(mpath,'to_val_convergence_history.eps'))
-export_fig(gcf,fullfile(mpath,'to_val_convergence_history.png'))
+% set(gcf,'position',[493 318 600 450])
+% export_fig(gcf,fullfile(mpath,'to_val_convergence_history.svg'))
+% export_fig(gcf,fullfile(mpath,'to_val_convergence_history.eps'))
+% export_fig(gcf,fullfile(mpath,'to_val_convergence_history.png'))
 %
 %
 
 %%
-
+function val=month_to_num(x)
+x=lower(x);
+ [tf,val] = ismember(x,{'january', 'february', 'march', 'april', 'may', 'june', ...
+  'july', 'august', 'september', 'october', 'november', 'december'});
+if ~tf
+    [tf,val] = ismember(x,{'jan', 'feb', 'mar', 'apr', 'may', 'jun', ...
+  'jul', 'aug', 'sep', 'oct', 'nov', 'dec'});
+end
+end
 % stfig('convergence')
 % clf
 % 
