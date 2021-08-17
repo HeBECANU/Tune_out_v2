@@ -7,7 +7,7 @@ aom_freq =0; %aom offset in Hz, as of 20190528 offset is calculated in main_trap
 %%
 addpath('./lib/Core_BEC_Analysis/lib/') %add the path to set_up_project_path
 set_up_project_path('.')
-return
+
 
 %%
 hebec_constants %call the constants function that makes some globals
@@ -19,7 +19,7 @@ hebec_constants %call the constants function that makes some globals
 %     '..\scratch_data\20190227_qwp_310',
 %     };
 %root_data_dir='..\scratch_data';
-root_data_dir='E:\scratch\to_main_data';
+root_data_dir='Z:\DataBackup\Bryce_Data_Backup\TO_working_data\to_main_data';'E:\scratch\to_main_data';
 files = dir(root_data_dir);
 files=files(3:end);
 % Get a logical vector that tells which is a directory.
@@ -42,6 +42,8 @@ smooth_hist(data.drift.atom_num_probe.val/qe,'sigma',1.5e4)
 hold on
 smooth_hist(data.drift.atom_num_probe.val/qe,'sigma',3e3)
 hold off
+xlabel('atom number')
+ylabel('probability')
 
 %%
 %save('./data/20191119_imported_data_for_tune_out_polz_dep.mat')
@@ -68,9 +70,14 @@ to_val_for_polz=data.drift.to.val;
 to_unc=data.drift.to.unc;
 wlin=1./(to_unc.^2);
 
+% to_val_for_polz=data.main.quad.to.val
+% to_unc=data.main.quad.to.unc;
+% wlin=1./(to_unc.^2);
+
+
 %% polarisation model/data options
-pol_opts.location = 'pre_cen';%post, pre_cen, pre_left, pre_right
-pol_opts.predict_method = 'only_data';%'full_fit_pref_fit','full_fit_pref_data','full_fit_only','only_data'; %obs (obsovation) fit (pertial fit) full_fit (fit with all parameters free)
+pol_opts.location = 'post';%post, pre_cen, pre_left, pre_right
+pol_opts.predict_method = 'interp_only';%'full_fit_pref_fit','full_fit_pref_data','full_fit_only','only_data'; %obs (obsovation) fit (pertial fit) full_fit (fit with all parameters free)
                                         %'interp_only','interp_pref_data','interp_pref_interp'
                                         %'gauss_only','gauss_pref_data','gauss_pref_interp'
 pol_opts.smoothing=3; %deg
@@ -78,6 +85,10 @@ pol_opts.wrap_hwp=0;
 
 pol_opts.hwp=data.drift.wp.hwp;
 pol_opts.qwp=data.drift.wp.qwp;
+% 
+% pol_opts.hwp=data.main.wp.hwp;
+% pol_opts.qwp=data.main.wp.qwp;
+
 pol_model=pol_data_query(pol_opts);
 
 polz_theta=pol_model.theta.val;
@@ -126,7 +137,7 @@ boot=bootstrap_se(@two_stage_two_dim_to_fit,full_data_set,...
     'plots',true,...
     'replace',true,...
     'plot_fig_name','TO boot MHz',...
-    'samp_frac_lims',[0.01,1],...%[0.005,0.9]
+    'samp_frac_lims',[0.1,1],...%[0.005,0.9]
     'num_samp_frac',5,... %20
     'num_samp_rep',100,... %1e2
     'plot_fig_name','TO fit bootstrap',...

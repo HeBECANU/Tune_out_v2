@@ -86,8 +86,6 @@ set_up_project_path
 
 hebec_constants %call the constants function that makes some globals
 
-return
-
 %%
 % BEGIN USER VAR-------------------------------------------------
 
@@ -169,7 +167,7 @@ anal_opts.global.atom_laser.t0=anal_opts.atom_laser.t0;
 date_str='20200623T120000';
 reprocess_folder_if_older_than=posixtime(datetime(datenum(date_str,'yyyymmddTHHMMSS'),'TimeZone','local','ConvertFrom','datenum'));%posix date
 active_process_mod_time=60*0;
-
+reprocess_folder_if_older_than=inf;
 %reprocess_folder_if_older_than=inf;
 
 % END USER VAR-----------------------------------------------------------
@@ -220,6 +218,7 @@ if (exist(anal_out.dir, 'dir') == 0), mkdir(anal_out.dir); end
 anal_opts.global.out_dir=anal_out.dir;
 %start up the diary of stdout
 diary([anal_out.dir,'anal.txt'])
+
 %import the data
 [mcp_tdc_data,import_opts]=import_mcp_tdc_data(anal_opts.tdc_import);
 data.mcp_tdc=mcp_tdc_data;
@@ -362,13 +361,14 @@ anal_opts.ai_log.pd.time_start=0.2;
 anal_opts.ai_log.pd.time_stop=2;
 anal_opts.ai_log.time_match_valid=8; %how close the predicted start of the shot is to the actual
 %sfp options
-anal_opts.ai_log.scan_time=1/20; %fast setting 1/100hz %estimate of the sfp scan time,used to set the window and the smoothing
 anal_opts.ai_log.sfp.num_checks=inf; %how many places to check that the laser is single mode, inf=all scans
 anal_opts.ai_log.sfp.peak_thresh=[0.05,-0.0029];%[0,-0.008]*1e-3; %theshold on the [uncompressed,compressed] signal to be considered a peak
 anal_opts.ai_log.sfp.pzt_dist_sm=4.5;%minimum (min peak difference)between peaks for the laser to be considered single mode
 anal_opts.ai_log.sfp.pzt_peak_width=0.2; %peak with in pzt voltage used to check that peaks are acually different and not just on the side of the peak
 anal_opts.ai_log.plot.all=false;
 anal_opts.ai_log.plot.failed=true;
+
+
 
 %do the ac waveform fit
 anal_opts.ai_log.do_ac_mains_fit=false;
@@ -623,10 +623,10 @@ data.num_fit=fit_atom_number(anal_opts.atom_num_fit,data);
 %% FITTING THE TRAP FREQUENCY
 
 anal_opts.osc_fit.adaptive_freq=true; %estimate the starting trap freq 
-anal_opts.osc_fit.dimesion=2; %Select coordinate to bin. 1=X, 2=Y.
+anal_opts.osc_fit.dimension=2; %Select coordinate to bin. z,x,y
 anal_opts.osc_fit.appr_osc_freq_guess=[52,47.9,40];
 anal_opts.osc_fit.freq_fit_tolerance=2; %hz arround the median to cut away
-anal_opts.osc_fit.plot_fits=false;
+anal_opts.osc_fit.plot_fits=true;
 anal_opts.osc_fit.plot_err_history=true;
 anal_opts.osc_fit.plot_fit_corr=true;
 
@@ -640,12 +640,16 @@ data.osc_fit=fit_trap_freq(anal_opts.osc_fit,data);
 %% undo the aliasing
 %this may need to change if the sampling freq changes
 %initialize
-data.osc_fit.trap_freq_recons=[]
+data.osc_fit.trap_freq_recons=[];
 data.osc_fit.trap_freq_recons.val=nan*col_vec(data.osc_fit.ok.did_fits);
 data.osc_fit.trap_freq_recons.unc=nan*col_vec(data.osc_fit.trap_freq_recons.val);
 mask=col_vec(data.osc_fit.ok.all); %set the masked values
 % from prior measurments of the niquist zone, see zain report for math
 data.osc_fit.trap_freq_recons.val(mask)=3*(1/anal_opts.atom_laser.pulsedt)+col_vec(data.osc_fit.model_coefs(mask,2,1));
+
+% for using the osc in the y axis
+%data.osc_fit.trap_freq_recons.val(mask)=col_vec(data.osc_fit.model_coefs(mask,2,1));
+
 data.osc_fit.trap_freq_recons.unc(mask)=col_vec(data.osc_fit.model_coefs(mask,2,2));
 % correct for the frequency shift due to damping
 % we have two measurments ; the dcay rate \lambda=\omega_0*\zeta (damping ratio)

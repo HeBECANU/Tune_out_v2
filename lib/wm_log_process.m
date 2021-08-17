@@ -60,8 +60,8 @@ for ii=1:iimax
     time_diff=data.labview.time(idx_nearest_lv)-est_labview_start;
     
     abs_anal_opts.trig_dld_on_main_comp=data.labview.time(idx_nearest_lv)+anal_opts.trig_dld;
-    time_lower=abs_anal_opts.trig_dld_on_main_comp+anal_opts.atom_laser.t0-anal_opts.wm_log.global.fall_time-0.5; %the probe turns on
-    time_upper=abs_anal_opts.trig_dld_on_main_comp+anal_opts.atom_laser.t0-anal_opts.wm_log.global.fall_time+anal_opts.wm_log.time_probe+0.5; %when the probe beam goes off
+    time_lower=abs_anal_opts.trig_dld_on_main_comp+anal_opts.atom_laser.t0-anal_opts.global.fall_time-0.5; %the probe turns on
+    time_upper=abs_anal_opts.trig_dld_on_main_comp+anal_opts.atom_laser.t0-anal_opts.global.fall_time+anal_opts.wm_log.time_probe+0.5; %when the probe beam goes off
     
     %CHECK PD VALUE
     %check if there were some readings of the ecd output voltage withing time_padding seconds of this period

@@ -106,6 +106,7 @@ for loop_idx=selected_dirs
 
             drift_data_compiled.to.val=cat(1,drift_data_compiled.to.val,to_fit_seg.fit_trimmed.to_freq.val);
             drift_data_compiled.to.unc=cat(1,drift_data_compiled.to.unc,to_fit_seg.fit_trimmed.to_freq.unc);
+            
             %hacky way to get the same size in the qwp,hwp data
             drift_data_compiled.wp.qwp=cat(1,drift_data_compiled.wp.qwp,wp_angles.qwp_ang.*ones(size(to_fit_seg.fit_trimmed.to_freq.val)));
             drift_data_compiled.wp.hwp=cat(1,drift_data_compiled.wp.hwp,wp_angles.hwp_ang.*ones(size(to_fit_seg.fit_trimmed.to_freq.val)));
@@ -132,7 +133,7 @@ for loop_idx=selected_dirs
             main_data_compiled.lin.grad.unc=cat(1,main_data_compiled.lin.grad.unc,to_fit_all.fit_trimmed.slope.unc(1));
 
             main_data_compiled.quad.to.val=cat(1, main_data_compiled.quad.to.val,to_fit_all.fit_trimmed.to_freq(2).val);
-            main_data_compiled.quad.to.unc=cat(1, main_data_compiled.quad.to.val,to_fit_all.fit_trimmed.to_freq(2).unc);
+            main_data_compiled.quad.to.unc=cat(1, main_data_compiled.quad.to.unc,to_fit_all.fit_trimmed.to_freq(2).unc);
             main_data_compiled.quad.grad.val=cat(1,main_data_compiled.quad.grad.val,to_fit_all.fit_trimmed.slope.val(2));
             main_data_compiled.quad.grad.unc=cat(1,main_data_compiled.quad.grad.unc,to_fit_all.fit_trimmed.slope.unc(2));
 

@@ -209,19 +209,21 @@ ii=1; % bibtex entry
 jj=1; % tune out sub entry
 kk=1; %out array index
 while ii<= numel(ref_st)
-    this_to_full=ref_st{ii}.tune_out;
+    this_to=ref_st{ii}.tune_out;
     to_st.frac_year(kk)=ref_st{ii}.frac_year;
     to_st.bib_keys{kk}=ref_st{ii}.bib_key;
+    to_st.ref{kk}=ref_st{ii};
     to_st.title{kk}=ref_st{ii}.title;
-    if iscell(this_to_full)
-        this_to_single=this_to_full{jj};
+
+    if iscell(this_to)
+        this_to_single=this_to{jj};
         jj=jj+1;
-        if jj>numel(this_to_full)
+        if jj>numel(this_to)
             ii=ii+1;
             jj=1;
         end
     else
-        this_to_single=this_to_full;
+        this_to_single=this_to;
         ii=ii+1;
     end
     if strcmp(this_to_single.units,'nm')
@@ -231,7 +233,14 @@ while ii<= numel(ref_st)
         to_st.freq.unc(kk)=this_to_single.unc.tot*1e6;
     end
     to_st.is_th(kk)= (strcmp(this_to_single.type,'theory'));
-
+    
+    to_st.type_str{kk}=this_to_single.type;
+    if isfield(this_to_single,'note')
+        to_st.note{kk}=this_to_single.note;
+    else
+        to_st.note{kk}='';
+    end
+    
     kk=kk+1;
 end
 th_mask=logical(to_st.is_th);
@@ -261,14 +270,21 @@ clf
 plot_y_factor=1e-9;
 %plot_y_shift=725700000*1e6;% Hz 
 plot_y_shift=725735000*1e6;% Hz
-to_st.freq.shit_scaled=(to_st.freq.val-plot_y_shift)*plot_y_factor;
-errorbar(frac_year(th_mask),to_st.freq.shit_scaled(th_mask),to_st.freq.unc(th_mask)*plot_y_factor,...
+to_st.freq.shift_scaled=(to_st.freq.val-plot_y_shift)*plot_y_factor;
+errorbar(frac_year(th_mask),to_st.freq.shift_scaled(th_mask),to_st.freq.unc(th_mask)*plot_y_factor,...
         'o','CapSize',0,'MarkerSize',5,...
         'Color',colors_main(1,:),'MarkerFaceColor',colors_detail(1,:),'LineWidth',1.8)
     hold on
-errorbar(frac_year(~th_mask),to_st.freq.shit_scaled(~th_mask),to_st.freq.unc(~th_mask)*plot_y_factor,...
+errorbar(frac_year(~th_mask),to_st.freq.shift_scaled(~th_mask),to_st.freq.unc(~th_mask)*plot_y_factor,...
         '^','CapSize',0,'MarkerSize',5,...
         'Color',colors_main(2,:),'MarkerFaceColor',colors_detail(2,:),'LineWidth',1.8) 
+
+% placeholder so that the NR shows up on the legend
+errorbar(2017,-100,1,...
+        's','CapSize',0,'MarkerSize',5,...
+        'Color',colors_main(3,:),'MarkerFaceColor',colors_detail(3,:),'LineWidth',1.8)    
+    
+    
     hold off
     
     
@@ -279,7 +295,9 @@ text_info.frac_year=frac_year;
 text_info.align=nan;
 text_info.align(1:numel(text_info.val))=0;
 text_info.ref_num=zeros(1,numel(text_info.val));
-text_info.ref_num=[14,13,20,20,21,21,12,11,nan,nan];
+
+% get these numbers from the latex document by putting the cite comand at the end of the document
+text_info.ref_num=[16,15,17,17,18,18,19,20,nan,nan];
 text_info.delta_str=cell(1,numel(text_info.val));
 
 text_info.ref_text=arrayfun(@(x) sprintf('[%u]',x),text_info.ref_num,'UniformOutput',0);
@@ -293,17 +311,19 @@ for ii=1:numel(text_info.val)
 end
 text_info.frac_year=text_info.frac_year+0.2;
 	
-
-text_info.frac_year(1)=text_info.frac_year(1)+0.4;
-text_info.val(1)=to_st.freq.shit_scaled(end)*1e9+1e9;
+ii=1;
+text_info.frac_year(ii)=text_info.frac_year(ii)+0.0;
+text_info.val(ii)=to_st.freq.shift_scaled(end)*1e9+1e9;
 % add an arrow to point up at the first data pt which is off screen
 ha = annotation('arrow');  % store the arrow information in ha
 ha.Parent = gca;           % associate the arrow the the current axes
 ha.X = [0,0]+2014.3;          % the location in data units
-ha.Y = [0,4]+2;   
+ha.Y = [0,4]+3;   
 ha.LineWidth  = 1;          % make the arrow bolder for the picture
 ha.HeadWidth  = 8;
 ha.HeadLength = 10;
+
+
 
 ii=4;
 text_info.frac_year(ii)=text_info.frac_year(ii)+0.1;
@@ -335,13 +355,16 @@ text(text_info.frac_year(mask),text_info.val(mask)*1e-9,text_info.delta_str(mask
 
     
 numstr=sprintf('%.0f',plot_y_shift*1e-9)
-ylabel(sprintf('$(\\omega_{\\mathrm{TO}}/2\\pi)$ - %s (GHZ)',numstr))
+ylabel(sprintf('$f_{\\mathrm{TO}}$ - %s (GHZ)',numstr))
 ylim([-18,9]+(to_st.freq.val(end)-plot_y_shift)*1e-9)
 
 %yticks(-10:5:20)
-yticks((floor(min(to_st.freq.shit_scaled(2:end))/10)*10):5:(ceil(max(to_st.freq.shit_scaled(2:end))/10)*10))
+yticks((floor(min(to_st.freq.shift_scaled(2:end))/10)*10):5:(ceil(max(to_st.freq.shift_scaled(2:end))/10)*10))
 xlim([2013,2021.5])
 
+lg=legend('NR Theory','Full Theory','Experiment','Position',[0.75 0.4 0.1 0.1])
+%legend_pos=lg.Position
+%set(lg,'Position',legend_pos-[0.00000001,0,0,0])
 
 axis_main=gca;
 set(axis_main,'Units','normalized');
@@ -415,7 +438,8 @@ text(text_info.frac_year(mask),text_info.val(mask)*1e-9,text_info.delta_str(mask
 %4/3 aspect ratio
 
 
-fprintf('for figure caption\n %s\n',...
+
+fprintf('put this at the end of the document to get the red numbers to put back in this code\n %s\n',...
     sprintf('\\cite{%s},',to_st.bib_keys{:}))
 fprintf('titles \n %s }\n',...
     sprintf('%s\n',to_st.title{:}))
@@ -427,6 +451,24 @@ th_diff.unc=rssq(to_st.freq.unc(end-1:end));
 sigma_th_exp=th_diff.val/th_diff.unc;
 
 fprintf('diff between th and exp %s MHZ sigma %f \n',string_value_with_unc(th_diff.val*1e-6,th_diff.unc*1e-6,'b'),sigma_th_exp)
+
+%% make a string output to make referenceing easy
+iimax=numel(to_st.frac_year);
+fprintf('\n')
+for ii=1:iimax
+    this_ref=to_st.ref{ii};
+    type_note_str=to_st.type_str{ii};
+    if ~isempty(to_st.note{ii})
+        type_note_str=cat(2,type_note_str,' ',to_st.note{ii});
+    end
+    fprintf('place: %2u, year: %.1f, freq: %+7.2f GHz, val type: %s, bibkey: "%s", title: "%s", first auth.: %s\n',...
+            ii,to_st.frac_year(ii),to_st.freq.shift_scaled(ii),...
+             type_note_str,...
+            to_st.bib_keys{ii},to_st.title{ii},...
+            sprintf('%s %s', this_ref.author{1}.first, this_ref.author{1}.last))
+end
+fprintf('\n')
+
 
 %%
 set(gcf,'position',[493 318 600 450])
@@ -446,12 +488,12 @@ export_fig(gcf,fullfile(mpath,'to_val_convergence_history.png'))
 % plot_y_factor=1e-9;
 % %plot_y_shift=725700000*1e6;% Hz 
 % plot_y_shift=725735000*1e6;% Hz
-% to_st.freq.shit_scaled=(to_st.freq.val-plot_y_shift)*plot_y_factor;
-% errorbar(frac_year(th_mask),to_st.freq.shit_scaled(th_mask),to_st.freq.unc(th_mask)*plot_y_factor,...
+% to_st.freq.shift_scaled=(to_st.freq.val-plot_y_shift)*plot_y_factor;
+% errorbar(frac_year(th_mask),to_st.freq.shift_scaled(th_mask),to_st.freq.unc(th_mask)*plot_y_factor,...
 %         'o','CapSize',0,'MarkerSize',5,...
 %         'Color',colors_main(1,:),'MarkerFaceColor',colors_detail(1,:),'LineWidth',1.8)
 %     hold on
-% errorbar(frac_year(~th_mask),to_st.freq.shit_scaled(~th_mask),to_st.freq.unc(~th_mask)*plot_y_factor,...
+% errorbar(frac_year(~th_mask),to_st.freq.shift_scaled(~th_mask),to_st.freq.unc(~th_mask)*plot_y_factor,...
 %         '^','CapSize',0,'MarkerSize',5,...
 %         'Color',colors_main(2,:),'MarkerFaceColor',colors_detail(2,:),'LineWidth',1.8) 
 %     hold off
@@ -480,7 +522,7 @@ export_fig(gcf,fullfile(mpath,'to_val_convergence_history.png'))
 % 	
 % 
 % text_info.frac_year(1)=text_info.frac_year(1)+0.3;
-% text_info.val(1)=to_st.freq.shit_scaled(end)*1e9+13e9;
+% text_info.val(1)=to_st.freq.shift_scaled(end)*1e9+13e9;
 % 
 % text_info.frac_year(end-2)=text_info.frac_year(end-2)-0.4;
 % text_info.val(end-2)=text_info.val(end-2)-0.5*1e9;
@@ -518,7 +560,7 @@ export_fig(gcf,fullfile(mpath,'to_val_convergence_history.png'))
 % ylim([-14.5,18]+(to_st.freq.val(end)-plot_y_shift)*1e-9)
 % 
 % %yticks(-10:5:20)
-% yticks((floor(min(to_st.freq.shit_scaled(2:end))/10)*10):5:(ceil(max(to_st.freq.shit_scaled(2:end))/10)*10))
+% yticks((floor(min(to_st.freq.shift_scaled(2:end))/10)*10):5:(ceil(max(to_st.freq.shift_scaled(2:end))/10)*10))
 % xlim([2013,2021.5])
 % 
 % 
