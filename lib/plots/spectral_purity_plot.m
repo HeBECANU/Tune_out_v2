@@ -45,7 +45,7 @@ for idx = 1:4
     to_ses(idx) = vecnorm(to_unc(mask,2))/sum(mask);
 end
 
-x_plt = linspace(-0.2,3.2);
+x_plt = linspace(-0.2,3.2,300);
 mdl_PI = predint(mdl,x_plt,Alpha,'observation','off')/1e6;
 mdl_CI = predint(mdl,x_plt,Alpha,'functional','off')/1e6;
 
