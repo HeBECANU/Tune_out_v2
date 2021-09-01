@@ -107,6 +107,18 @@ hebec_constants %call the constants function that makes some globals
 
 root_data_dir='Z:\DataBackup\Bryce_Data_Backup\TO_working_data\to_main_data';
 files = dir(root_data_dir);
+
+% subdirs = {'20190214T1220_to_hwp_333.5_polmin_168.5_nuller_reconfig_pdset_0.6v';
+%     '20190213T2024_to_hwp_333.5_polmin_168.5_nuller_reconfig_pdset_0.4v';
+%     '20190213T1242_to_hwp_333.5_polmin_168.5_nuller_reconfig_pdset_0.7v';
+%     '20190213T1015_to_hwp_333.5_polmin_168.5_nuller_reconfig_pdset_0.8v';
+%     '20190214T1942_to_hwp_333.5_polmin_168.5_nuller_reconfig_new_fiber_pdset_1.0v';
+%     '20190214T1657_to_hwp_333.5_polmin_168.5_nuller_reconfig_new_fiber_pdset_2.0v';
+%     '20190214T1818_to_hwp_333.5_polmin_168.5_nuller_reconfig_new_fiber_pdset_2.5v'};
+    
+    
+    
+    
 files=files(3:end);
 % Get a logical vector that tells which is a directory.
 dir_mask = [files.isdir];

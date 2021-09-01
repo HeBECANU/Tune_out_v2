@@ -137,9 +137,9 @@ boot=bootstrap_se(@two_stage_two_dim_to_fit,full_data_set,...
     'plots',true,...
     'replace',true,...
     'plot_fig_name','TO boot MHz',...
-    'samp_frac_lims',[0.1,1],...%[0.005,0.9]
-    'num_samp_frac',5,... %20
-    'num_samp_rep',100,... %1e2
+    'samp_frac_lims',[0.10,1],...%[0.005,0.9]
+    'num_samp_frac',10,... %20
+    'num_samp_rep',10,... %1e2
     'plot_fig_name','TO fit bootstrap',...
     'save_multi_out',0,...
     'verbose',3);
@@ -737,11 +737,15 @@ if fit_vals_full(3)<0
 end
 
 
-%
+% find the tune out value two ways the first from the fit model asking what the freq will be at the appropriate
+% polarization parameters
 [tsmht_details.val_predict,tsmht_details.unc_predict]=...
     predict(fit_mdl_full,[-1,0,-fit_vals_full(4)],'Alpha',1-erf(1/sqrt(2)),'Prediction','Curve');
 tsmht_details.val_predict=tsmht_details.val_predict*1e6+fit_offset;
 tsmht_details.unc_predict=1/2*range(tsmht_details.unc_predict)*1e6;
+
+% then the next method uses the fit parameters and calculates the freq using those fit parameters
+% the main reason to do this two ways is to look at the uncert
 
 tsmht_details.val_no_offset_mhz=fit_vals_full(1)+(1/2)*fit_vals_full(3);
 tsmht_details.val=tsmht_details.val_no_offset_mhz*1e6+fit_offset;

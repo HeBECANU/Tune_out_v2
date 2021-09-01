@@ -1,42 +1,90 @@
-function dum = spectral_purity_plot()
+% function dum = spectral_purity_plot()
 %Script that scrapes the analysed data from dirs (currently messy but works)
 %setup directories you wish to loop over
-loop_config.dir = {
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190218_filt_dep_0\',
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190218_filt_dep_1\',
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190218_filt_dep_1_run2\',
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190218_filt_dep_2\',
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190218_filt_dep_3\',
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190219_filt_dep_2_run2\',
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190219_filt_dep_3_run2\',
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190220_filt_dep_1_run3\'
+use_dirs = {
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\unsorted\filt_dep\20190218_filt_dep_0\',
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\unsorted\filt_dep\20190218_filt_dep_1\',
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\unsorted\filt_dep\20190218_filt_dep_1_run2\',
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\unsorted\filt_dep\20190218_filt_dep_2\',
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\unsorted\filt_dep\20190219_filt_dep_2_run2\',
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\unsorted\filt_dep\20190219_filt_dep_3_run2\',
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\unsorted\filt_dep\20190220_filt_dep_1_run3\'
     };
 
-data = to_data(loop_config);
-selected_dirs = 1:numel(loop_config.dir);
-filt_num = zeros(numel(data.drift.to_time),1);
-shot_idx = 1;
 
+selected_dirs = 1:numel(use_dirs);
+shot_idx = 1;
+data = cell(numel(use_dirs),1);
+filt_num = zeros(numel(use_dirs),1);
 for loop_idx=selected_dirs
-    current_dir = loop_config.dir{loop_idx};
-    strt = strfind(current_dir,'dep_');
-    filt_num(shot_idx:(shot_idx+data.main.scan_num(loop_idx)-1),1) = ones(data.main.scan_num(loop_idx),1).*str2double(current_dir(strt+4));
-    shot_idx = shot_idx+data.main.scan_num(loop_idx);
+    loop_config.dir = {use_dirs{loop_idx}};
+    current_dir = loop_config.dir{1};
+    data{loop_idx} = load_pocessed_to_data(loop_config);
+    strt = strfind(loop_config.dir{1},'dep_');
+    filt_num(loop_idx) = str2double(current_dir(strt+4));
 end
+to_vals = cell2mat(cellfun(@(x) x.main.lin.to.val,data,'uni',0));
+to_unc = cell2mat(cellfun(@(x) x.main.lin.to.unc',data,'uni',0));
+
 %%
-sfigure(3000);
-plot_offset = sum(data.drift.to_val{1}.*data.drift.to_val{2})/sum(data.drift.to_val{2});
-errorbar(filt_num,(data.drift.to_val{1}-plot_offset).*1e-6,data.drift.to_val{2}.*1e-6,'kx')
+
+w_fit = 1./to_unc(:,2).^2;
+w_fit = w_fit/sum(w_fit);
+
+mdl = fit(filt_num,to_vals,'poly1');
+fit_offset = mdl.p2;
+vals =[mdl.p1,mdl.p2];
+Alpha = 1-erf(1/sqrt(2));
+CI=confint(mdl,Alpha);
+
+to_means = zeros(4,1);
+to_ses = zeros(4,1);
+for idx = 1:4
+   mask = filt_num == idx - 1;
+    to_means(idx) = mean(to_vals(mask));
+    to_ses(idx) = vecnorm(to_unc(mask,2))/sum(mask);
+end
+
+x_plt = linspace(-0.2,3.2);
+mdl_PI = predint(mdl,x_plt,Alpha,'observation','off')/1e6;
+mdl_CI = predint(mdl,x_plt,Alpha,'functional','off')/1e6;
+
+fprintf('Offset %.f (%.f,%.f) MHz\n',vals(2)/1e6,1e-6*(CI(:,2)'-vals(2)))
+fprintf('Slope %.f (%.f,%.f) MHz\n',vals(1)/1e6,1e-6*(CI(:,1)'-vals(1)))
+% fprintf('Slope &.f (%.f,%.f) MHz/filter'
+
+colors_main= [[233,87,0];[33,188,44];[0,165,166]]./255;
+lch=colorspace('RGB->LCH',colors_main(:,:));
+lch(:,1)=lch(:,1)+20;
+colors_detail=colorspace('LCH->RGB',lch);
+
+stfig('Filt dep');
+clf
+hold on
+
+fill([x_plt,fliplr(x_plt)],[mdl_PI(:,1);fliplr(mdl_PI(:,2))]'-fit_offset/1e6,...
+    0.7*[1,1,1],'FaceAlpha',0.3,'EdgeColor','none')
+
+fill([x_plt,fliplr(x_plt)],[mdl_CI(:,1);fliplr(mdl_CI(:,2))]'-fit_offset/1e6,...
+    0.3*[1,1,1],'FaceAlpha',0.3,'EdgeColor','none')
+    
+
+% errorbar(filt_num,(to_vals-fit_offset)/1e6,to_unc(:,2)/1e6,'kx')
+errorbar(0:3,(to_means-fit_offset)/1e6,to_ses/1e6,'bo',...
+    'Markersize',8,'MarkerFaceColor',colors_detail(1,:),...
+    'MarkerEdgeColor',colors_main(1,:),'Color',colors_main(1,:),...
+    'LineWidth',3)
 set(gcf,'color','w')
-xlabel('Filter Number')
-ylabel(sprintf('Tune-out value - %.3f (MHz)',plot_offset.*1e-6))
+xlabel('Number of filters')
+ylabel(sprintf('Tune-out value - %.f (MHz)',fit_offset/1e6))
 xlim([-0.1, 3.2])
 
+set(gca,'FontSize',18)
 %%
 %make a nice figure
 
-to_freqs_val = data.drift.to_val{1}./1e6; %convert to blue
-to_freqs_err = data.drift.to_val{2}./1e6; %convert to blue
+to_freqs_val = to_vals/1e6; %convert to blue
+to_freqs_err = to_unc(:,2)/1e6; %convert to blue
 
 %fit sin waves to the two sets of data
 mdl_fun = @(b,x) b(1)+b(2).*x(:,1);
@@ -64,7 +112,7 @@ disp_config.bin_tol=0.01;
 %set offset to value found from lin pol dependence
 disp_config.plot_offset.val=predict(fit_mdl_lin,3);
 
-plot_sexy(disp_config,filt_num,to_freqs_val,wlin,fit_mdl_lin)
+errorbar(filt_num,to_freqs_val,to_freqs_err)
 
 
 % errorbar(x_grouped,(y_grouped(:,1)-plot_offset).*1e-6,yneg,ypos,'o','CapSize',0,'MarkerSize',5,'Color',colors_main(1,:),...
@@ -77,5 +125,5 @@ plot_sexy(disp_config,filt_num,to_freqs_val,wlin,fit_mdl_lin)
 % set(gcf,'color','w')
 % set(gca,'FontSize',font_size_global,'FontName',font_name)
 % box on
-end
+% end
 
