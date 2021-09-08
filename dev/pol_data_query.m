@@ -250,7 +250,7 @@ elseif sum(strcmp(pol_opts.predict_method,{'full_fit_pref_fit','full_fit_pref_da
     hold on
     hwp_samp_vec=col_vec(linspace(min(hwp_wraped),max(hwp_wraped),1e3));
     [cont_samp_fit_val,cont_samp_fit_ci]=predict(fit_cont_hwp_only,hwp_samp_vec);
-    theta_samp_fit_val=bound(theta_samp_fit_val,0,1);
+%     theta_samp_fit_val=bound(theta_samp_fit_val,0,1);
     plot(hwp_samp_vec,cont_samp_fit_val,'-k')
     plot(hwp_samp_vec,cont_samp_fit_ci,'-b')
     %plot(hwp_samp_vec,poly_mdl(beta0,hwp_samp_vec),'-r')
@@ -322,7 +322,7 @@ elseif sum(strcmp(pol_opts.predict_method,{'full_fit_pref_fit','full_fit_pref_da
     hwp_samp_vec=col_vec(linspace(min(pol_data_table.qwp_angle_deg(mask_qwp_and_hwp_const)),max(pol_data_table.qwp_angle_deg(mask_qwp_and_hwp_const)),1e3));
     [cont_samp_fit_val,cont_samp_fit_ci]=predict(fit_cont_qwp_const_hwp,hwp_samp_vec);
     % clip the min max value to be 1
-    cont_samp_fit_val=bound(cont_samp_fit_val,0,1);
+%     cont_samp_fit_val=bound(cont_samp_fit_val,0,1);
     plot(hwp_samp_vec,cont_samp_fit_val,'-k')
     plot(hwp_samp_vec,cont_samp_fit_ci,'-b')
     plot(hwp_samp_vec,sin_mdl_fixed_freq4(beta0,hwp_samp_vec),'-r')
@@ -386,7 +386,7 @@ elseif sum(strcmp(pol_opts.predict_method,{'full_fit_pref_fit','full_fit_pref_da
     out_polz_state.theta.val(mask_query_no_qwp)=mod(a,pi);
     out_polz_state.theta.unc(mask_query_no_qwp)=range(b,2)/2;
     [a,b]=predict(fit_cont_hwp_only,query_hwp_wraped,'Alpha',1-erf(1/sqrt(2)));
-    out_polz_state.cont.val(mask_query_no_qwp)=bound(a,0,1);
+    out_polz_state.cont.val(mask_query_no_qwp)=a;%bound(a,0,1);
     out_polz_state.cont.unc(mask_query_no_qwp)=range(b,2)/2;
     
     subplot(2,3,1)
@@ -412,7 +412,7 @@ elseif sum(strcmp(pol_opts.predict_method,{'full_fit_pref_fit','full_fit_pref_da
     out_polz_state.theta.val(mask_query_both_with_hwp_const)=mod(a,pi);
     out_polz_state.theta.unc(mask_query_both_with_hwp_const)=range(b,2)/2;
     [a,b]=predict(fit_cont_qwp_const_hwp,pol_opts.qwp(mask_query_both_with_hwp_const),'Alpha',1-erf(1/sqrt(2)));
-    out_polz_state.cont.val(mask_query_both_with_hwp_const)=bound(a,0,1);
+    out_polz_state.cont.val(mask_query_both_with_hwp_const)=a;%bound(a,0,1);
     out_polz_state.cont.unc(mask_query_both_with_hwp_const)=range(b,2)/2;
     
     subplot(2,3,4)
@@ -535,7 +535,7 @@ elseif sum(strcmp(pol_opts.predict_method,{'interp_only','interp_pref_data','int
     [x_hwp_cont,y_hwp_cont]=consolidator11(hwp_wraped,pol_cont(mask_hwp_only));
     hwp_samp_vec=col_vec(linspace(min(hwp_wraped),max(hwp_wraped),1e3));
     theta_samp_fit_val=pchip(x_hwp_cont,y_hwp_cont,hwp_samp_vec);
-    theta_samp_fit_val=bound(theta_samp_fit_val,0,1);
+%     theta_samp_fit_val=bound(theta_samp_fit_val,0,1);
     plot(hwp_samp_vec,theta_samp_fit_val,'-k')
     hold off
     xlabel('hwp angle')
@@ -584,7 +584,7 @@ elseif sum(strcmp(pol_opts.predict_method,{'interp_only','interp_pref_data','int
     [x_qwp_cont,y_qwp_cont]=consolidator11(pol_data_table.qwp_angle_deg(mask_qwp_and_hwp_const),pol_cont(mask_qwp_and_hwp_const));
     contrast_samp_fit_val=pchip(x_qwp_cont,y_qwp_cont,hwp_angle_samp_fit_hwp_const);
     % clip the min max value to be 1
-    contrast_samp_fit_val=bound(contrast_samp_fit_val,0,1);
+%     contrast_samp_fit_val=bound(contrast_samp_fit_val,0,1);
     plot(hwp_angle_samp_fit_hwp_const,contrast_samp_fit_val,'-k')
     hold off
     xlabel('qwp angle')
@@ -645,7 +645,7 @@ elseif sum(strcmp(pol_opts.predict_method,{'interp_only','interp_pref_data','int
     out_polz_state.v.val(mask_query_no_qwp)=pchip(x_hwp_v,y_hwp_v,query_hwp_wraped);
     out_polz_state.theta.val(mask_query_no_qwp)=pchip(x_hwp_theta,y_hwp_theta,query_hwp_wraped);
     a=pchip(x_hwp_cont,y_hwp_cont,query_hwp_wraped);
-    out_polz_state.cont.val(mask_query_no_qwp)=bound(a,0,1);
+    out_polz_state.cont.val(mask_query_no_qwp)=a;%bound(a,0,1);
     
     
     subplot(2,3,1)
@@ -667,7 +667,7 @@ elseif sum(strcmp(pol_opts.predict_method,{'interp_only','interp_pref_data','int
     out_polz_state.v.val(mask_query_both_with_hwp_const)=pchip(x_qwp_v,y_qwp_v,pol_opts.qwp(mask_query_both_with_hwp_const));
     out_polz_state.theta.val(mask_query_both_with_hwp_const)=pchip(x_qwp_theta,y_qwp_theta,pol_opts.qwp(mask_query_both_with_hwp_const));
     a=pchip(x_qwp_cont,y_qwp_cont,pol_opts.qwp(mask_query_both_with_hwp_const));
-    out_polz_state.cont.val(mask_query_both_with_hwp_const)=bound(a,0,1);
+    out_polz_state.cont.val(mask_query_both_with_hwp_const)=a;%bound(a,0,1);
     
     subplot(2,3,4)
     hold on

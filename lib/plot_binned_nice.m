@@ -31,6 +31,7 @@ font_size_global=disp_config.font_size_global;
 if isempty(weights)
     weights = 1+0*y_dat;
 end
+weights_unnorm = weights;
 weights = weights/sum(weights);
 if ~isfield(disp_config,'plot_offset') || (~isstruct(disp_config.plot_offset) && isequal(disp_config.plot_offset,'avg'))
     plot_offset.val=sum(y_dat.*weights)./sum(weights);%predict(fit_mdl,0);
@@ -45,8 +46,8 @@ end
 
 %% Bin up the data
 %improved method using uniquetol
-bin_center=uniquetol(x_dat,disp_config.bin_tol);
-bin_edges=[-inf;(bin_center(2:end)+bin_center(1:end-1))/2;inf];
+bin_center=col_vec(uniquetol(x_dat,disp_config.bin_tol))';
+bin_edges=[-inf,(bin_center(2:end)+bin_center(1:end-1))/2,inf];
 num_bin=numel(bin_edges)-1;
 x_grouped = ones(1,num_bin);
 y_grouped=nan(numel(num_bin),3);
@@ -57,6 +58,12 @@ for jj=1:num_bin
     y_grouped(jj,1)=sum(y_dat(mask).*weights(mask))./sum(weights(mask));
     y_grouped(jj,2)=sqrt(nanvar(y_dat(mask),weights(mask)));
     y_grouped(jj,3)=sewm(y_dat(mask),weights(mask)/sum(weights(mask)));
+    y_grouped(jj,4)=nanmean(1./sqrt(weights_unnorm(mask)));
+    if sum(mask)<4
+        y_unc(jj) = y_grouped(jj,4);
+    else
+        y_unc(jj) = y_grouped(jj,2);
+    end
     try
         x_lims(:,jj) = [min(x_dat(mask)); max(x_dat(mask))];
     catch
@@ -64,7 +71,7 @@ for jj=1:num_bin
     end
 end
 
-y_sd = (y_grouped(:,2));
+y_sd = y_unc;%(y_grouped(:,2));%(y_grouped(:,3));%(y_grouped(:,4));%(y_grouped(:,2));%
 y_se = (y_grouped(:,3));
 xneg = x_grouped - x_lims(1,:);
 xpos = x_lims(2,:) - x_grouped;
@@ -81,7 +88,7 @@ lch(:,1)=lch(:,1)+20;
 colors_detail=colorspace('LCH->RGB',lch);
 %would prefer to use srgb_2_Jab here
 color_shaded=colorspace('RGB->LCH',colors_main(3,:));
-color_shaded(1)=100;
+color_shaded(1)=110;
 color_shaded=colorspace('LCH->RGB',color_shaded);
 
 
@@ -98,28 +105,28 @@ ci_size_disp = 1-erf(1/sqrt(2));
 [y_samp_val,y_samp_ci]=predict(fit_mdl,x_samp_pad','Alpha',ci_size_disp); %'Prediction','observation'
 %we add another offset so that the plot is about the TO
 
-patch([x_samp_pad, fliplr(x_samp_pad)], ([y_samp_ci(:,1)', fliplr(y_samp_ci(:,2)')]-plot_offset.val), color_shaded,'EdgeColor','none');  %
 hold on
 %plot(x_samp_pad,(y_samp_ci'-plot_offset.val),'r','color',colors_main(3,:),'LineWidth',1.5);
 xl=xlim;
 %line(xl,[0,0],'color','k','LineWidth',1)
 title(plot_title)
-plot(x_samp_pad,(y_samp_val-plot_offset.val),'-','color',colors_main(3,:),'LineWidth',1.5)
+patch([x_samp_pad, fliplr(x_samp_pad)], ([y_samp_ci(:,1)', fliplr(y_samp_ci(:,2)')]-plot_offset.val), color_shaded,'EdgeColor','none');  %
+plot(x_samp_pad,(y_samp_val-plot_offset.val),'-k','LineWidth',1.5)
+plot(x_samp_pad,(y_samp_ci'-plot_offset.val),'-','color',[77 77 77]/255,'LineWidth',1.5);
 
-
-errorbar(x_grouped,(y_grouped(:,1)-plot_offset.val),y_sd...
-     ,'o','CapSize',0,'Marker','none','Color',colors_detail(1,:),...
-     'LineWidth',1.5);
+% errorbar(x_grouped,(y_grouped(:,1)-plot_offset.val),y_se...
+%      ,'o','CapSize',0,'Marker','none','Color',colors_detail(1,:),...
+%      'LineWidth',1.5);
 errorbar(x_grouped,(y_grouped(:,1)-plot_offset.val),[],[],...
-      xneg,xpos,'o','CapSize',0,'Marker','none','Color',colors_detail(1,:),...
+      'o','CapSize',0,'Marker','none','Color',colors_detail(1,:),...
       'LineWidth',1.5);
-errorbar(x_grouped,(y_grouped(:,1)-plot_offset.val),y_se,...
+errorbar(x_grouped,(y_grouped(:,1)-plot_offset.val),y_sd,...
     'o','CapSize',0,'MarkerSize',5,'Color',colors_main(1,:),...
     'MarkerFaceColor',colors_detail(1,:),'LineWidth',2.5);
 if isfield(plot_offset,'unc')
-    ylabel(sprintf('Tune-out value - %.0f\\pm%.0f (MHz)',plot_offset.val,plot_offset.unc))
+    ylabel(['\(f_{TO}\) - ', num2str(plot_offset.val,'%.0f'),' (MHz)'],'interpreter','latex')
 else
-    ylabel(sprintf('Tune-out value - %.3f (MHz)',plot_offset.val))
+    ylabel(['\(f_{TO}\) - ', num2str(plot_offset.val,'%.0f'),' (MHz)'],'interpreter','latex')
 end
 
 if isfield(disp_config,'x_ticks')

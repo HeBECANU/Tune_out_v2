@@ -1,13 +1,11 @@
 clear all
-
-
 %% Exp parameters
 aom_freq =0; %aom offset in Hz, as of 20190528 offset is calculated in main_trap_freq
 
 %%
 addpath('./lib/Core_BEC_Analysis/lib/') %add the path to set_up_project_path
-set_up_project_path('.')
-return
+% set_up_project_path('.')
+% return
 
 %%
 hebec_constants %call the constants function that makes some globals
@@ -18,8 +16,8 @@ hebec_constants %call the constants function that makes some globals
 %     '..\scratch_data\20190227_qwp_286',
 %     '..\scratch_data\20190227_qwp_310',
 %     };
-%root_data_dir='..\scratch_data';
-root_data_dir='E:\scratch\to_main_data';
+root_data_dir='Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\to_main_data';
+% root_data_dir='E:\scratch\to_main_data';
 files = dir(root_data_dir);
 files=files(3:end);
 % Get a logical vector that tells which is a directory.
@@ -38,10 +36,10 @@ qe=0.09;
 mean_atomnum=mean_atomnum/qe;
 std_atomnum=std_atomnum/qe;
 
-smooth_hist(data.drift.atom_num_probe.val/qe,'sigma',1.5e4)
-hold on
-smooth_hist(data.drift.atom_num_probe.val/qe,'sigma',3e3)
-hold off
+% smooth_hist(data.drift.atom_num_probe.val/qe,'sigma',1.5e4)
+% hold on
+% smooth_hist(data.drift.atom_num_probe.val/qe,'sigma',3e3)
+% hold off
 
 %%
 %save('./data/20191119_imported_data_for_tune_out_polz_dep.mat')
@@ -67,10 +65,14 @@ to_old.wl.unc=sqrt(0.0009e-9^2+0.0020e-9^2);
 to_val_for_polz=data.drift.to.val;
 to_unc=data.drift.to.unc;
 wlin=1./(to_unc.^2);
-
+%% fit order
+global fit_order
+fit_order = 1;%'all_first';%'scalar_sec';%';%
 %% polarisation model/data options
-pol_opts.location = 'pre_cen';%post, pre_cen, pre_left, pre_right
-pol_opts.predict_method = 'only_data';%'full_fit_pref_fit','full_fit_pref_data','full_fit_only','only_data'; %obs (obsovation) fit (pertial fit) full_fit (fit with all parameters free)
+%'post','only_data'
+%'pre_cen','interp_only' (maybe 'full_fit_only')
+pol_opts.location = 'pre_cen';%'post';%'pre_cen';%'pre_cen';%post, pre_cen, pre_left, pre_right
+pol_opts.predict_method = 'interp_only';%'interp_only';%'only_data';%''full_fit_pref_fit','full_fit_pref_data','full_fit_only','only_data'; %obs (obsovation) fit (pertial fit) full_fit (fit with all parameters free)
                                         %'interp_only','interp_pref_data','interp_pref_interp'
                                         %'gauss_only','gauss_pref_data','gauss_pref_interp'
 pol_opts.smoothing=3; %deg
@@ -120,7 +122,7 @@ end
 
 % Do the bootstrap
 
-% %detailed bootstrap
+%detailed bootstrap
 boot=bootstrap_se(@two_stage_two_dim_to_fit,full_data_set,...
     'opp_arguments',{to_fit_val_offset,1},...
     'plots',true,...
@@ -158,9 +160,9 @@ fprintf('\n====TO full fit results==========\n')
 fprintf('TO freq             %.1f±(%.0f(fit vals),%.0f(fit predict),%.0f±%.0f(boot)) MHz\n',...
     to_scalar_minus_half_tensor.val*1e-6,...
     to_scalar_minus_half_tensor.unc*1e-6,...
-    to_scalar_minus_half_tensor.unc_predict*1e-6,...
-    to_scalar_minus_half_tensor.unc_boot*1e-6,...
-    to_scalar_minus_half_tensor.unc_unc_boot*1e-6)
+    to_scalar_minus_half_tensor.unc_predict*1e-6)
+%     to_scalar_minus_half_tensor.unc_boot*1e-6,...
+%     to_scalar_minus_half_tensor.unc_unc_boot*1e-6)
 fprintf('diff from TOV1      %.0f±%.0f MHz \n',(to_scalar_minus_half_tensor.val-to_old.freq.val)*1e-6,sqrt(to_scalar_minus_half_tensor.unc^2+to_old.freq.unc^2)*1e-6)
 fprintf('diff from Theory    %.0f±%.0f MHz \n',...
     (to_scalar_minus_half_tensor.val-to_theory.freq.val)*1e-6,...
@@ -327,7 +329,7 @@ set(gca,'FontSize',font_size_global,'FontName',font_name)
 %xlabel('$\mathcal{V}$ ($4^{\mathrm{th}}$ Stokes parameter)','interpreter','latex','FontSize',font_size_label)
 xlabel('$\mathcal{V}$','interpreter','latex','FontSize',font_size_label)
 ylabel('$\mathcal{Q_{A}}$','interpreter','latex','FontSize',font_size_label) % ($2^{\mathrm{nd}}$ Stokes parameter)
-zlabel('$\omega_{TO}(\mathcal{Q_{A}},\mathcal{V}) -\omega^{SMHT}_{TO}$ (GHz)','interpreter','latex','FontSize',font_size_label-2)
+zlabel('$f_{TO}(\mathcal{Q_{A}},\mathcal{V}) -f_{TO}(-1,0)$ (GHz)','interpreter','latex','FontSize',font_size_label-2)
 set(gcf,'Units','Pixels')
 %set(gcf,'Position',[1068,355,676,453])
 set(gca,'linewidth', 1.5)
@@ -345,15 +347,15 @@ drawnow
 axis vis3d
 %%
 %view(-25,45)
-for ii=0:2
-    
-    view(-10-ii*30,35)
-    drawnow
-    pause(0.1)
-    export_fig(sprintf('.\\results\\20191112\\to_vq_dependence_%u.png',ii),'-a4','-r200')
-end
-hold off
-axis vis3d
+% for ii=0:2
+%     
+%     view(-10-ii*30,35)
+%     drawnow
+%     pause(0.1)
+%     export_fig(sprintf('.\\results\\20191112\\to_vq_dependence_%u.png',ii),'-a4','-r200')
+% end
+% hold off
+% axis vis3d
 
 %%
 
@@ -495,9 +497,9 @@ plot(samp_q,(fit_mdl_val-to_scalar_minus_half_tensor.val)*scale_factor_freq,'k')
 shift_vq=v_correcting_shift(polz_vq_to_val_unc(:,1),polz_vq_to_val_unc(:,2),fit_mdl_full);
 shifted_scaled_to_vals=(polz_vq_to_val_unc(:,3)-to_scalar_minus_half_tensor.val+shift_vq(:,1)*1e6)*scale_factor_freq;
 
-errorbar(polz_vq_to_val_unc(:,2),shifted_scaled_to_vals,polz_vq_to_val_unc(:,5)*scale_factor_freq...
-     ,'o','CapSize',0,'Marker','none','Color',colors_detail(1,:),...
-     'LineWidth',1.5);
+% errorbar(polz_vq_to_val_unc(:,2),shifted_scaled_to_vals,polz_vq_to_val_unc(:,5)*scale_factor_freq...
+%      ,'o','CapSize',0,'Marker','none','Color',colors_detail(1,:),...
+%      'LineWidth',1.5);
 errorbar(polz_vq_to_val_unc(:,2),shifted_scaled_to_vals,polz_vq_to_val_unc(:,4)*scale_factor_freq,...
     'o','CapSize',0,'MarkerSize',5,'Color',colors_main(1,:),...
     'MarkerFaceColor',colors_detail(1,:),'LineWidth',2.8);
@@ -508,7 +510,7 @@ hold off
 box on
 set(gca,'FontSize',font_size_global,'FontName',font_name)
 xlabel('$\mathcal{Q_{A}}$ ($2^{\mathrm{nd}}$ Stokes parameter)','interpreter','latex','FontSize',font_size_label)
-ylabel('$\omega_{TO}(\mathcal{Q_{A}},\mathcal{V}=0) -\omega^{SMHT}_{TO}$ (GHz)','interpreter','latex','FontSize',font_size_label)
+ylabel('$f_{TO}(\mathcal{Q_{A}},\mathcal{V}=0) -f_{TO}(-1,0)$ (GHz)','interpreter','latex','FontSize',font_size_label)
 set(gcf,'Units','Pixels')
 %set(gcf,'Position',[1068,355,676,453])
 set(gca,'linewidth', 1.5)
@@ -566,13 +568,13 @@ hold on
 plot(samp_v,(fit_mdl_val-to_scalar_minus_half_tensor.val)*scale_factor_freq,'k')
 %xlabel('$4^{th}$ Stokes parameter,\bfv\rm','interpreter','latex')
 xlabel('$\mathcal{V}$ ($4^{\mathrm{th}}$ Stokes parameter)','interpreter','latex')
-ylabel('$\omega_{TO}(\mathcal{Q_{A}}=0,\mathcal{V}) -\omega^{SMHT}_{TO}$ (GHz)','interpreter','latex')
+ylabel('$f_{TO}(\mathcal{Q_{A}}=-1,\mathcal{V}) -f_{TO}(-1,0)$ (GHz)','interpreter','latex')
 %title('Q=-1 extrapolation')
 
 shifted_scaled_to_vals=(polz_vq_to_val_unc(:,3)-to_scalar_minus_half_tensor.val+shift_vq(:,2)*1e6)*scale_factor_freq;
-errorbar(polz_vq_to_val_unc(:,1),shifted_scaled_to_vals,polz_vq_to_val_unc(:,5)*scale_factor_freq...
-     ,'o','CapSize',0,'Marker','none','Color',colors_detail(1,:),...
-     'LineWidth',1.5);
+% errorbar(polz_vq_to_val_unc(:,1),shifted_scaled_to_vals,polz_vq_to_val_unc(:,5)*scale_factor_freq...
+%      ,'o','CapSize',0,'Marker','none','Color',colors_detail(1,:),...
+%      'LineWidth',1.5);
 errorbar(polz_vq_to_val_unc(:,1),shifted_scaled_to_vals,polz_vq_to_val_unc(:,4)*scale_factor_freq,...
     'o','CapSize',0,'MarkerSize',5,'Color',colors_main(1,:),...
     'MarkerFaceColor',colors_detail(1,:),'LineWidth',2.8);
@@ -633,9 +635,27 @@ function result=full_tune_out_polz_model(b,x)
 %reduced_vector
 %reduce_tensor
 %angle between polz measurment basis and B cross k
-% theta k
-
-result=b(1) + (1/2).*x(:,2).*cos(b(5)).*b(2) - (1/2)*D_fun(b(5),Q_fun(x(:,1),x(:,3),b(4))).*b(3);
+%theta k
+global fit_order
+switch fit_order
+    case 'all_first'
+        result=b(1) + ((1/2).*x(:,2).*b(2) - (1/2)*D_fun(b(5),Q_fun(x(:,1),x(:,3),b(4))).*b(3))./(1+(1/2).*x(:,2).*b(6) - (1/2)*D_fun(b(5),Q_fun(x(:,1),x(:,3),b(4))).*b(7));
+    case 'scalar_sec'
+        result=b(1) - b(2) + sqrt(abs(b(2)^2+(1/2).*x(:,2).*b(3) - (1/2)*D_fun(b(5),Q_fun(x(:,1),x(:,3),b(4))).*b(6)));
+    case 2
+        result=b(1) + ((1/2).*x(:,2).*cos(b(5)).*b(2) - (1/2)*D_fun(b(5),Q_fun(x(:,1),x(:,3),b(4))).*b(3))./(b(6)+(1/2).*x(:,2).*cos(b(5)).*b(7) - (1/2)*D_fun(b(5),Q_fun(x(:,1),x(:,3),b(4))).*b(8));
+    case 3
+        result= 1/(4.*b(9)).*(-2.*b(6)+((1/2).*x(:,2).*cos(b(5))).*b(7)-...
+            b(8).*(1/2).*D_fun(b(5),Q_fun(x(:,1),x(:,3),b(4)))+sqrt(4.*b(6).^2-...
+            4.*((1/2).*x(:,2).*cos(b(5))).*b(6).*b(7)+((1/2).*x(:,2).*cos(b(5))).^2.*b(7).^2+...
+            4.*b(6).*b(8).*(1/2).*D_fun(b(5),Q_fun(x(:,1),x(:,3),b(4)))-...
+            2.*((1/2).*x(:,2).*cos(b(5))).*b(8).*b(7).*(1/2).*D_fun(b(5),Q_fun(x(:,1),x(:,3),b(4)))+...
+            b(8).^2.*(1/2).*D_fun(b(5),Q_fun(x(:,1),x(:,3),b(4))).^2-...
+            8.*b(9).*(1/2).*D_fun(b(5),Q_fun(x(:,1),x(:,3),b(4))).*b(3)+...
+            8.*(1/2).*x(:,2).*cos(b(5)).*b(9).*b(2))+4.*b(9).*b(1));
+    otherwise
+        result=b(1) + (1/2).*x(:,2).*cos(b(5)).*b(2) - (1/2)*D_fun(b(5),Q_fun(x(:,1),x(:,3),b(4))).*b(3);
+end       
 end
 
 
@@ -695,13 +715,64 @@ tune_out_vals_scaled=(to_val_fit-fit_offset)*1e-6;
 
 
 gf_opt=[];
-gf_opt.domain=[[-1,1]*1e5;...   %tune_out_scalar
-               [-1,1]*1e6;...  %reduced_vector*cos_theta_k
-               [0,1]*1e6;...  %reduce_tensor   
-               [-1,1]*pi/2;...  %angle between polz measurment basis and B cross k
-               pi+[-1,1]*pi/4;... % theta k
-               ];        
-gf_opt.start=[0, 1e3, 1e4, (rand(1)-0.5)*pi/4,pi+(rand(1)-0.5)*pi/4];
+global fit_order
+switch fit_order
+    case 'scalar_sec'
+        gf_opt.domain=[[-1,1]*1e5;...   %tune_out_scalar
+            [-1,1]*1e12;...  %reduced_vector*cos_theta_k
+            [-1,1]*1e12;...  %reduce_tensor
+            [-1,1]*pi/2;...  %angle between polz measurment basis and B cross k
+            pi+[-1,1]*pi/4;... % theta k
+            [-1,1]*1e12;...
+            ];
+        gf_opt.start=[0, 1e5, 1e3, (rand(1)-0.5)*pi/4,pi,1e3];%pi+(rand(1)-0.5)*pi/4
+        param_names={'tune_out_scalar','reduced_scalar','reduced_vec','phase','thetak','reduce_tensor'};
+    case 'all_first'
+         gf_opt.domain=[[-1,1]*1e5;...   %tune_out_scalar
+            [-1,1]*1e6;...  %reduced_vector*cos_theta_k
+            [-1,1]*1e6;...  %reduce_tensor
+            [-1,1]*pi/2;...  %angle between polz measurment basis and B cross k
+            pi+[-1,1]*pi/4;... % theta k
+            [-1,1]*1e0;...
+            [-1,1]*1e0
+            ];
+        gf_opt.start=[0, 1e3, 1e4, (rand(1)-0.5)*pi/4,pi,0,0];%pi+(rand(1)-0.5)*pi/4
+        param_names={'tune_out_scalar','reduced_vector','reduce_tensor','phase','thetak','vec_deriv','tens_deriv'};
+    case 2
+        gf_opt.domain=[[-1,1]*1e5;...   %tune_out_scalar
+            [-1,1]*1e6;...  %reduced_vector*cos_theta_k
+            [0,1]*1e6;...  %reduce_tensor
+            [-1,1]*pi/2;...  %angle between polz measurment basis and B cross k
+            pi+[-1,1]*pi/4;... % theta k
+            [-1,1]*1e5;...
+            [-1,1]*1e5;...
+            [-1,1]*1e5
+            ];
+        gf_opt.start=[0, 1e3, 1e4, (rand(1)-0.5)*pi/4,pi,1,0,0];%pi+(rand(1)-0.5)*pi/4
+        param_names={'tune_out_scalar','reduced_vector','reduce_tensor','phase','thetak','scalar_deriv','vec_deriv','tens_deriv'};
+    case 3
+        gf_opt.domain=[[-1,1]*1e5;...   %tune_out_scalar
+            [-1,1]*1e6;...  %reduced_vector*cos_theta_k
+            [0,1]*1e6;...  %reduce_tensor
+            [-1,1]*pi/2;...  %angle between polz measurment basis and B cross k
+            pi+[-1,1]*pi/4;... % theta k
+            [-1,1]*1e5;...
+            [-1,1]*1e5;...
+            [-1,1]*1e5;...
+            [0.000000000001,1]*1e5
+            ];
+        gf_opt.start=[0, 1e3, 1e4, (rand(1)-0.5)*pi/4,pi,1,0,0,0.01];%pi+(rand(1)-0.5)*pi/4
+        param_names={'tune_out_scalar','reduced_vector','reduce_tensor','phase','thetak','scalar_deriv','vec_deriv','tens_deriv','scalar_second_deriv'};
+    otherwise
+        gf_opt.domain=[[-1,1]*1e5;...   %tune_out_scalar
+            [-1,1]*1e6;...  %reduced_vector*cos_theta_k
+            [0,1]*1e6;...  %reduce_tensor
+            [-1,1]*pi/2;...  %angle between polz measurment basis and B cross k
+            pi+[-1,1]*pi/4;... % theta k
+            ];
+        gf_opt.start=[0, 1e3, 1e4, (rand(1)-0.5)*pi/4,pi];%pi+(rand(1)-0.5)*pi/4
+        param_names={'tune_out_scalar','reduced_vector','reduce_tensor','phase','thetak'};
+end
 gf_opt.rmse_thresh=2e3;
 gf_opt.plot=false;
 gf_opt.level=2;
@@ -713,7 +784,7 @@ beta0 = gf_out.params;%0.2 or 0.8
 %beta0=[0, 1e3, 1*1e3, (rand(1)-0.5)*2*pi]
 fit_mdl_full = fitnlm(predictor,tune_out_vals_scaled,@full_tune_out_polz_model,beta0,...
    'Weights',w_fit,...
-    'CoefficientNames' ,{'tune_out_scalar','reduced_vector','reduce_tensor','phase','thetak'},...
+    'CoefficientNames' ,param_names,...
     'Options',opts);
 
 fit_vals_full = fit_mdl_full.Coefficients.Estimate;
@@ -721,9 +792,9 @@ fit_uncs_full = fit_mdl_full.Coefficients.SE;
 %
 
 
-if fit_vals_full(3)<0
-    error('fit reduced tensor term is less than zero')
-end
+% if fit_vals_full(3)<0
+%     error('fit reduced tensor term is less than zero')
+% end
 
 
 %
@@ -732,7 +803,8 @@ end
 tsmht_details.val_predict=tsmht_details.val_predict*1e6+fit_offset;
 tsmht_details.unc_predict=1/2*range(tsmht_details.unc_predict)*1e6;
 
-tsmht_details.val_no_offset_mhz=fit_vals_full(1)+(1/2)*fit_vals_full(3);
+tsmht_details.val_no_offset_mhz=  predict(fit_mdl_full,[-1,0,-fit_vals_full(4)],'Alpha',1-erf(1/sqrt(2)),'Prediction','Curve');%fit_vals_full(1)+(1/2)*fit_vals_full(3)./(fit_vals_full(6)+(1/2)*fit_vals_full(8));
+% fit_vals_full(1)+(1/2)*fit_vals_full(3);
 tsmht_details.val=tsmht_details.val_no_offset_mhz*1e6+fit_offset;
 tsmht_details.unc=sqrt(fit_uncs_full(1)^2 + (fit_uncs_full(3)/2)^2);
 tsmht_details.unc=tsmht_details.unc*1e6;

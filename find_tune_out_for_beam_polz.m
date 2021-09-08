@@ -86,7 +86,7 @@ set_up_project_path
 
 hebec_constants %call the constants function that makes some globals
 
-return
+% return
 
 %%
 % BEGIN USER VAR-------------------------------------------------
@@ -107,7 +107,10 @@ return
 %root_data_dir='G:\good_data';
 %root_data_dir='..\tune_out_example_data';
 
-root_data_dir='Z:\DataBackup\Bryce_Data_Backup\TO_working_data\to_main_data';
+root_data_dir='Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\unsorted\hyp_pol';
+%'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\unsorted\filt_dep';
+
+% root_data_dir='Z:\DataBackup\Bryce_Data_Backup\TO_working_data\to_main_data';
 files = dir(root_data_dir);
 files=files(3:end);
 % Get a logical vector that tells which is a directory.
@@ -174,8 +177,8 @@ active_process_mod_time=60*0;
 
 % END USER VAR-----------------------------------------------------------
 
-fprintf('approx remaining folders to be processed %u \n',...
-sum(cellfun(@(x) should_process_folder(x,reprocess_folder_if_older_than,0),folders)))
+% fprintf('approx remaining folders to be processed %u \n',...
+% sum(cellfun(@(x) should_process_folder(x,reprocess_folder_if_older_than,0),folders)))
 
 % loop over the selected directories
 for dir_idx = selected_dirs
@@ -184,7 +187,7 @@ anal_opts.tdc_import.dir = loop_config.dir{dir_idx};
 % reprocess this data folder if
 % - the last processing is older than the posix time 'reprocess_folder_if_older_than'
 % - and the last modifcation is older than active_process_mod_time
-if should_process_folder(anal_opts.tdc_import.dir,reprocess_folder_if_older_than,active_process_mod_time)
+if true% should_process_folder(anal_opts.tdc_import.dir,reprocess_folder_if_older_than,active_process_mod_time)
     
 % use try to catch errors in this folder processing (so that the other data folders can be processed)
 % we are sloppy with the indents to make it easier read the code step through the analysis by running code sections

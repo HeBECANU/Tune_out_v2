@@ -332,7 +332,7 @@ set(gca,'FontSize',font_size_global,'FontName',font_name)
 plot_name='nice_to_fig';
 saveas(gcf,[anal_opts_fit_to.global.out_dir,plot_name,'.png'])
 saveas(gcf,[anal_opts_fit_to.global.out_dir,plot_name,'.fig'])
-export_fig([anal_opts_fit_to.global.out_dir,plot_name,'.eps'])
+% export_fig([anal_opts_fit_to.global.out_dir,plot_name,'.eps'])
 %export_fig([anal_opts_fit_to.global.out_dir,plot_name,'.pdf'])
 
 end

@@ -1,50 +1,50 @@
 function dum  = hyp_pol_plot()
 %Script that scrapes the analysed data from dirs (currently messy but works)
 %% setup directories
-loop_config.dir = {'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190213_to_hwp_168.5_nuller_reconfig_pdset_0.4v\';
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190213_to_hwp_168.5_nuller_reconfig_pdset_0.7v\';
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190213_to_hwp_168.5_nuller_reconfig_pdset_0.8v\';
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190214_to_hwp_168.5_nuller_reconfig_new_fiber_pdset_1.0v\';
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190214_to_hwp_168.5_nuller_reconfig_new_fiber_pdset_2.0v\';
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190214_to_hwp_168.5_nuller_reconfig_new_fiber_pdset_2.5v\';
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190214_to_hwp_168.5_nuller_reconfig_pdset_0.6v\'
+loop_config.dir = {'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\unsorted\hyp_pol\20190213_to_hwp_168.5_nuller_reconfig_pdset_0.4v\';
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\unsorted\hyp_pol\20190213_to_hwp_168.5_nuller_reconfig_pdset_0.7v\';
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\unsorted\hyp_pol\20190213_to_hwp_168.5_nuller_reconfig_pdset_0.8v\';
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\unsorted\hyp_pol\20190214_to_hwp_168.5_nuller_reconfig_new_fiber_pdset_1.0v\';
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\unsorted\hyp_pol\20190214_to_hwp_168.5_nuller_reconfig_new_fiber_pdset_2.0v\';
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\unsorted\hyp_pol\20190214_to_hwp_168.5_nuller_reconfig_new_fiber_pdset_2.5v\';
+    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\unsorted\hyp_pol\20190214_to_hwp_168.5_nuller_reconfig_pdset_0.6v\'
     };
 
 %% Get data
-data = to_data(loop_config);
+data = load_pocessed_to_data(loop_config);%to_data(loop_config);
 
 % Extract variables to plot
-grads = data.drift.grad{:,1}./2;
-grads_unc = data.drift.grad{:,2}./2;
-to_vals = data.drift.to_val{:,1}.*1e-6;
-to_vals_unc = data.drift.to_val{:,2}.*1e-6;
+grads = abs(data.drift.grad.val.*1e9);
+grads_unc = data.drift.grad.unc.*1e9;
+to_vals = data.drift.to.val.*1e-6;
+to_vals_unc = data.drift.to.unc.*1e-6;
 
-grads_avg = data.main.grad./2;
-to_vals_run = data.main.lin_fit{:,1};
-to_vals_run_unc =  data.main.lin_fit{:,2};
+grads_avg = data.main.lin.grad.val;
+to_vals_run = data.main.lin.to.val;
+to_vals_run_unc =  data.main.lin.to.unc;
 
 %%
 mdl_fun = @(b,x) b(1)+b(2).*x(:,1);
-beta0 = [nanmean(to_vals),1e5];
+beta0 = [nanmean(to_vals),0];
 opts = statset('MaxIter',1e4);
 weights = 1./to_vals_unc.^2;
 fit_mdl = fitnlm(grads',to_vals',mdl_fun,beta0,'Options',opts,'Weight',weights,'CoefficientNames' ,{'offset','grad'});%'ErrorModel','combined'
 
 disp_config=[];
-disp_config.bin_tol = 0.02; 
+disp_config.bin_tol = 0.01; 
 disp_config.colors_main = [[233,87,0];[33,188,44];[0,165,166]];
 disp_config.plot_title = '';
-disp_config.x_label='Gradient of Signal (Hz^2/GHz)';
+disp_config.x_label='Gradient of Signal (Hz$^2$/GHz)';
 disp_config.font_name = 'cmr10';
 disp_config.font_size_global=14;
 disp_config.mdl_fun = @(b,x) b(1)+b(2).*x(:,1);
-disp_config.beta0 = [1e14,1e5];
+disp_config.beta0 = [1e14,0];
 disp_config.opts=statset('nlinfit');
 disp_config.fig_number=821;
 disp_config.plot_offset.val=predict(fit_mdl,0);
 
-plot_sexy(disp_config,grads,to_vals,to_vals_unc,fit_mdl)
-
+plot_binned_nice(disp_config,grads,to_vals,weights,fit_mdl)
+ylim([-4000 4000])
 
 %%
 % Plot 'em all with errors
