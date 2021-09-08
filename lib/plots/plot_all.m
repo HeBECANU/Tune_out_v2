@@ -1,4 +1,4 @@
-folder  = 'C:\Users\BEC Machine\Documents\K\Tune_out_v2_trap_freq\lib\plots';
+folder  = 'C:\Users\jaker\GoogleDrive\HEBEC\Projects\Tune_out_v2\lib\plots';
 list    = dir(fullfile(folder, '*.m'));
 nFile   = length(list);
 success = false(1, nFile);
