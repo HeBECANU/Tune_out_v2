@@ -1,6 +1,6 @@
 function out_polz_state=pol_data_query(pol_opts)
 % a partial rewrite of pol_data_import
-%% the idea of this function is to create a bunch of differenet models of the pol state for hwp/ qwp data angles
+%% multiple models of the pol state based on hwp/ qwp data angles
 % Inputs
 % pol_opts.location = 'pre_right';%post, pre_cen, pre_left, pre_right
 % pol_opts.predict_method = 'fit';%'interp'; %obs (obsovation) fit (pertial fit) full_fit (fit with all parameters free)
