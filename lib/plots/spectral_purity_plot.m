@@ -31,11 +31,12 @@ to_unc = cell2mat(cellfun(@(x) x.main.lin.to.unc',data,'uni',0));
 w_fit = 1./to_unc(:,2).^2;
 w_fit = w_fit/sum(w_fit);
 
-mdl = fit(filt_num,to_vals,'poly1');
+[mdl,gof,fit_out] = fit(filt_num,to_vals,'poly1');
 fit_offset = mdl.p2;
 vals =[mdl.p1,mdl.p2];
 Alpha = 1-erf(1/sqrt(2));
 CI=confint(mdl,Alpha);
+PI=predint(mdl,Alpha);
 
 to_means = zeros(4,1);
 to_ses = zeros(4,1);
@@ -46,12 +47,19 @@ for idx = 1:4
 end
 
 x_plt = linspace(-0.2,3.2,300);
+mdl_y = mdl(x_plt);
 mdl_PI = predint(mdl,x_plt,Alpha,'observation','off')/1e6;
 mdl_CI = predint(mdl,x_plt,Alpha,'functional','off')/1e6;
 
 fprintf('Offset %.f (%.f,%.f) MHz\n',vals(2)/1e6,1e-6*(CI(:,2)'-vals(2)))
 fprintf('Slope %.f (%.f,%.f) MHz\n',vals(1)/1e6,1e-6*(CI(:,1)'-vals(1)))
 % fprintf('Slope &.f (%.f,%.f) MHz/filter'
+
+pred_vals=mdl(filt_num);
+pred_PI = predint(mdl,filt_num,erf(1/sqrt(2)),'observation','off')-pred_vals;
+pred_std = mean(abs(pred_PI),2);
+chi_square = sum((fit_out.residuals./pred_std).^2);
+chi_square_per_dof = sum((fit_out.residuals./pred_std).^2)/gof.dfe
 
 colors_main= [[233,87,0];[33,188,44];[0,165,166]]./255;
 lch=colorspace('RGB->LCH',colors_main(:,:));
@@ -68,7 +76,7 @@ fill([x_plt,fliplr(x_plt)],[mdl_PI(:,1);fliplr(mdl_PI(:,2))]'-fit_offset/1e6,...
 fill([x_plt,fliplr(x_plt)],[mdl_CI(:,1);fliplr(mdl_CI(:,2))]'-fit_offset/1e6,...
     0.3*[1,1,1],'FaceAlpha',0.3,'EdgeColor','none')
     
-
+plot(x_plt,1e-6*(mdl_y-fit_offset),'k','LineWidth',2)
 % errorbar(filt_num,(to_vals-fit_offset)/1e6,to_unc(:,2)/1e6,'kx')
 errorbar(0:3,(to_means-fit_offset)/1e6,to_ses/1e6,'bo',...
     'Markersize',8,'MarkerFaceColor',colors_detail(1,:),...
@@ -78,8 +86,8 @@ set(gcf,'color','w')
 xlabel('Number of filters')
 ylabel(sprintf('Tune-out value - %.f (MHz)',fit_offset/1e6))
 xlim([-0.1, 3.2])
-
-set(gca,'FontSize',18)
+box on
+set(gca,'FontSize',18,'LineWidth',2)
 %%
 %make a nice figure
 
