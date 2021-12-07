@@ -1,4 +1,4 @@
-function out_st=global_fit_new(predictor,response,modelfun,gf_opt)
+function out_st=global_fit(predictor,response,modelfun,gf_opt)
 
 cost_fun=@(x) sqrt(nansum((modelfun(col_vec(x),predictor)-response).^2)/(numel(response)-numel(x)));
 
@@ -36,13 +36,16 @@ if sum(gf_opt.start>ub | gf_opt.start<lb)>0
         elm_idx=elm_idx(gf_opt.start>ub);
         fprintf('indices exceeding upper bound %s\n',sprintf('%u,',elm_idx))
         fprintf('values %s\n',sprintf('%f,',gf_opt.start(elm_idx)))
+        fprintf('ub %s\n',sprintf('%f,',ub(elm_idx)))
     elseif sum(gf_opt.start<lb)>0
         elm_idx=1:numel(gf_opt.start);
         elm_idx=elm_idx(gf_opt.start<lb);
         fprintf('indices exceeding lower  bound %s\n',sprintf('%u,',elm_idx))
         fprintf('values %s\n',sprintf('%f,',gf_opt.start(elm_idx)))
+        fprintf('lb %s\n',sprintf('%f,',lb(elm_idx)))
     end
     error('start is not in bounds')
+    
 end
 
 
@@ -91,7 +94,7 @@ while out_st.rmse>gf_opt.rmse_thresh && method_counter<=gf_opt.level
                 lb,ub,...
                 [],...
                 'AchieveFunVal',gf_opt.rmse_thresh*0.90,... %sometimes GODLIKE returns a value that is slightly higher
-                'MaxFunEvals',1e5,...
+                'MaxFunEvals',1e4,...
                 'MaxIters',100,...
                 'display', 'off');
             params=col_vec(params);
@@ -104,7 +107,7 @@ while out_st.rmse>gf_opt.rmse_thresh && method_counter<=gf_opt.level
                 lb,ub,...
                 [],...
                 'AchieveFunVal',gf_opt.rmse_thresh*0.90,... %sometimes GODLIKE returns a value that is slightly higher
-                'MaxFunEvals',1e6,...
+                'MaxFunEvals',1e5,...
                 'MaxIters',400,...
                 'display', 'off');
             params=col_vec(params);

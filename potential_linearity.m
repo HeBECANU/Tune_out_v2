@@ -78,7 +78,7 @@ tic
 % BEGIN USER VAR-------------------------------------------------
 anal_opts=[];
 %anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181127_3_filt_power_linearity\';
-anal_opts.tdc_import.dir='H:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181127_3_filt_power_linearity\';
+anal_opts.tdc_import.dir='Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\unsorted\20181127_3_filt_power_linearity';
 %anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181127_3_filt_power_linearity_attractive_misaligned\';
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
@@ -106,7 +106,7 @@ anal_opts.global.qe=0.09;
 anal_opts.trig_dld=20.3;
 anal_opts.dld_aquire=4;
 anal_opts.trig_ai_in=20;
-
+anal_opts.aom_freq= 189.*1e6;%Hz %set to zero for comparison with previous data runs
 
 anal_opts.wm_log.plot_all=true;
 anal_opts.wm_log.plot_failed=true;
@@ -140,7 +140,12 @@ this_folder = fileparts(which(mfilename));
 addpath(genpath(this_folder));
 
 hebec_constants %call the constants function that makes some globals
-anal_opts.global.velocity=const.g0*anal_opts.global.fall_time;
+
+anal_opts.global.fall_velocity=const.g0*anal_opts.global.fall_time; %velocity when the atoms hit the detector
+% fall_dist=1/2 a t^2 
+%TODO get from engineering documents
+anal_opts.global.fall_dist=(1/2)*const.g0*anal_opts.global.fall_time^2;
+
 %% IMPORT TDC DATA to data.mcp_tdc
 anal_opts.tdc_import.shot_num=find_data_files(anal_opts.tdc_import);
 %anal_opts.tdc_import.shot_num= anal_opts.tdc_import.shot_num(1:10); %debuging
@@ -188,72 +193,100 @@ data.labview.calibration=lv_log.probe_calibration;
 % plot(data.mcp_tdc.write_time-data.probe.time)
 
 
+%% CHECK ATOM NUMBER
+sfigure(1)
+clf
+%create a list of indicies (of the mcp_tdc) that have an ok number of counts
+%exclude the very low and then set the thresh based on the sd of the remaining
+not_zero_files=data.mcp_tdc.num_counts>1e3; 
+num_thresh=mean(data.mcp_tdc.num_counts(not_zero_files))-4*std(data.mcp_tdc.num_counts(not_zero_files));
+data.mcp_tdc.num_ok=data.mcp_tdc.num_counts>num_thresh & ...
+    (data.mcp_tdc.time_create_write(:,1)'-data.mcp_tdc.time_create_write(1,1))<(anal_opts.max_runtime*60*60);
+fprintf('shots number ok %u out of %u \n',sum(data.mcp_tdc.num_ok),numel(data.mcp_tdc.num_ok))
+
+plot((data.mcp_tdc.time_create_write(:,2)-data.mcp_tdc.time_create_write(1,2))/(60*60),data.mcp_tdc.num_counts)
+xlabel('time (h)')
+ylabel('total counts')
+title('num count run trend')
+%should plot the threshold
+
 
 %% Match Labview data
 %because the mcp-dld detector has no direct communication with the bec computer
 % the data.labview.shot_num does not nessesarily correspond to data.mcp_tdc.shot_num
 
 
-    %try and match up the file with if it is a calibaration using the time
-    %it is slightly overkill here to search each one, but just being extra
-    %cautious/flexible
-    time_thresh=4; %how close for the times to be considered the same shot
-    %lets examine what the time difference does
-    sfigure(45);
-    set(gcf,'color','w')
-    clf
-    imax=min([size(data.labview.time,2),size(data.mcp_tdc.time_create_write,1)]);
-    %imax=5000;
-    time_diff=data.mcp_tdc.time_create_write(1:imax,2)'-anal_opts.dld_aquire-anal_opts.trig_dld-...
-        data.labview.time(1:imax);
-    mean_delay_labview_tdc=mean(time_diff);
-    plot(time_diff)
-    xlabel('shot number')
-    ylabel('time between labview and mcp tdc')
-    %to do include ai_log
-    iimax=size(data.mcp_tdc.time_create_write(:,1),1);
-    data.mcp_tdc.probe.calibration=nan(iimax,1);
-    data.mcp_tdc.labview_shot_num=nan(iimax,1);
-    %loop over all the tdc_files 
-    for ii=1:iimax
-        %predict the labview master trig time
-        %use the write time to handle being unpacked from 7z
-        est_labview_start=data.mcp_tdc.time_create_write(ii,2)...
-            -anal_opts.trig_dld-anal_opts.dld_aquire-mean_delay_labview_tdc;
-        [tval,nearest_idx]=closest_value(data.labview.time...
-            ,est_labview_start);
-        if abs(tval-est_labview_start)<time_thresh
-            data.mcp_tdc.labview_shot_num(ii)=data.labview.shot_num(nearest_idx);
-            data.mcp_tdc.probe.calibration(ii)=data.labview.calibration(nearest_idx);
-        end 
-    end
+%try and match up the file with if it is a calibaration using the time
+%it is slightly overkill here to search each one, but just being extra
+%cautious/flexible
+time_thresh=4; %how close for the times to be considered the same shot
+%lets examine what the time difference does
+sfigure(45);
+set(gcf,'color','w')
+clf
+imax=min([size(data.labview.time,2),size(data.mcp_tdc.time_create_write,1)]);
+%imax=5000;
+time_diff=data.mcp_tdc.time_create_write(1:imax,2)'-anal_opts.dld_aquire-anal_opts.trig_dld-...
+    data.labview.time(1:imax);
+mean_delay_labview_tdc=mean(time_diff);
+plot(time_diff)
+xlabel('shot number')
+ylabel('time between labview and mcp tdc')
+%to do include ai_log
+iimax=size(data.mcp_tdc.time_create_write(:,1),1);
+data.mcp_tdc.probe.calibration=nan(iimax,1);
+data.mcp_tdc.labview_shot_num=nan(iimax,1);
+%loop over all the tdc_files 
+for ii=1:iimax
+    %predict the labview master trig time
+    %use the write time to handle being unpacked from 7z
+    est_labview_start=data.mcp_tdc.time_create_write(ii,2)...
+        -anal_opts.trig_dld-anal_opts.dld_aquire-mean_delay_labview_tdc;
+    [tval,nearest_idx]=closest_value(data.labview.time...
+        ,est_labview_start);
+    if abs(tval-est_labview_start)<time_thresh
+        data.mcp_tdc.labview_shot_num(ii)=data.labview.shot_num(nearest_idx);
+        data.mcp_tdc.probe.calibration(ii)=data.labview.calibration(nearest_idx);
+    end 
+end
+clear('tmp_est_labview_start')
 
 %% IMPORT THE ANALOG INPUT LOG
 %the code will check that the probe beam PD was ok and that the laser was single mode
+anal_opts.ai_log=[];
 anal_opts.ai_log.dir=anal_opts.tdc_import.dir;
 
-anal_opts.ai_log.force_reimport=false;
+anal_opts.ai_log.force_reimport=true;
 anal_opts.ai_log.force_load_save=false;
 anal_opts.ai_log.log_name='log_analog_in_';
 anal_opts.ai_log.aquire_time=4;
-anal_opts.ai_log.pd.set=data.labview.setpoint;
-anal_opts.ai_log.pd.set(isnan(anal_opts.ai_log.pd.set))=0;
-anal_opts.ai_log.pd.diff_thresh=0.1;
+anal_opts.ai_log.pd.set_probe=data.labview.setpoint;
+anal_opts.ai_log.pd.set_probe(isnan(anal_opts.ai_log.pd.set_probe))=0;
+anal_opts.ai_log.calibration=data.labview.calibration;
+
+anal_opts.ai_log.pd.mean_diff_thresh=0.1;
+anal_opts.ai_log.pd.std_thresh=0.1;
+anal_opts.ai_log.pd.range_thresh_prob=1e-17; % threshold expressed in probability due to chance that a shot will be rejected due to chance
 anal_opts.ai_log.pd.std_thresh=0.1;
 anal_opts.ai_log.pd.time_start=0.2;
 anal_opts.ai_log.pd.time_stop=2;
-anal_opts.ai_log.sfp.num_checks=10; %how many places to check that the laser is single mode
-anal_opts.ai_log.sfp.thresh_cmp_peak=20e-3; %theshold on the compressed signal to be considered a peak
-anal_opts.ai_log.sfp.peak_dist_min_pass=4.5;%minimum (min difference)between peaks for the laser to be considered single mode
+
+anal_opts.ai_log.sfp.num_checks=inf; %how many places to check that the laser is single mode, inf=all scans
+anal_opts.ai_log.sfp.peak_thresh=[0.05,-0.0029];%[0,-0.008]*1e-3; %theshold on the [uncompressed,compressed] signal to be considered a peak
+anal_opts.ai_log.sfp.pzt_dist_sm=4.5;%minimum (min peak difference)between peaks for the laser to be considered single mode
+anal_opts.ai_log.sfp.pzt_peak_width=0.4; %peak with in pzt voltage used to check that peaks are acually different and not just on the side of the peak
+
 anal_opts.ai_log.plot.all=false;
-anal_opts.ai_log.plot.failed=false;
+anal_opts.ai_log.plot.failed=true;
 anal_opts.ai_log.time_match_valid=5; %how close the predicted start of the shot is to the actual
 anal_opts.ai_log.scan_time=14e-3;  %estimate of the sfp scan time,used to set the window and the smoothing
+
 
 %because im only passing the ai_log feild to aviod conflicts forcing a reimport i need to coppy these feilds
 anal_opts.ai_log.trig_dld=anal_opts.trig_dld;
 anal_opts.ai_log.dld_aquire=anal_opts.dld_aquire;
 anal_opts.ai_log.trig_ai_in=anal_opts.trig_ai_in;
+
 ai_log_out=ai_log_import(anal_opts.ai_log,data);
 %copy the output across
 data.ai_log=ai_log_out;
@@ -292,6 +325,11 @@ anal_opts.wm_log.red_sd_thresh=10; %allowable standard deviation in MHz
 anal_opts.wm_log.red_range_thresh=50; %allowable range deviation in MHz
 anal_opts.wm_log.rvb_thresh=10; %allowable value of abs(2*red-blue)
 
+anal_opts.wm_log.plot.failed=true;
+anal_opts.wm_log.plot.all=false;
+
+
+
 data.wm_log.proc=wm_log_process(anal_opts,data);
 clear('sub_data')
 
@@ -301,23 +339,10 @@ clear('sub_data')
 data.wm_log.proc.ok.freq=data.wm_log.proc.ok.freq &...
     (data.wm_log.proc.probe.freq.act.mean-nanmedian(data.wm_log.proc.probe.freq.act.mean))<1;
 
+%% calculate blue probe freq
+% convert freq to blue in hz apply aom shift to probe beam
+data.blue_probe=calc_probe_blue(data.wm_log.proc,anal_opts.aom_freq);
 
-%% CHECK ATOM NUMBER
-sfigure(1)
-clf
-%create a list of indicies (of the mcp_tdc) that have an ok number of counts
-%exclude the very low and then set the thresh based on the sd of the remaining
-not_zero_files=data.mcp_tdc.num_counts>1e3; 
-num_thresh=mean(data.mcp_tdc.num_counts(not_zero_files))-4*std(data.mcp_tdc.num_counts(not_zero_files));
-data.mcp_tdc.num_ok=data.mcp_tdc.num_counts>num_thresh & ...
-    (data.mcp_tdc.time_create_write(:,1)'-data.mcp_tdc.time_create_write(1,1))<(anal_opts.max_runtime*60*60);
-fprintf('shots number ok %u out of %u \n',sum(data.mcp_tdc.num_ok),numel(data.mcp_tdc.num_ok))
-
-plot((data.mcp_tdc.time_create_write(:,2)-data.mcp_tdc.time_create_write(1,2))/(60*60),data.mcp_tdc.num_counts)
-xlabel('time (h)')
-ylabel('total counts')
-title('num count run trend')
-%should plot the threshold
 
 %% COMBINE ALL CHECK LOGICS AND PLOT
 %Here we will do a plot of all the checks and then combine them into one
@@ -399,10 +424,14 @@ saveas(gcf,[anal_out.dir,plot_name,'.fig'])
 
 %% BINNING UP THE ATOM LASER PULSES
 %now find the mean position of each pulse of the atom laser in each shot
+anal_opts.atom_laser.plot.all=false;
+anal_opts.atom_laser.global=anal_opts.global;
+
 data.mcp_tdc.al_pulses=bin_al_pulses(anal_opts.atom_laser,data);
 
 %% FITTING THE TRAP FREQUENCY
 anal_opts.osc_fit.adaptive_freq=true; %estimate the starting trap freq 
+anal_opts.osc_fit.dimension=2; %Select coordinate to bin. z,x,y
 anal_opts.osc_fit.appr_osc_freq_guess=[52,47.9,40];
 anal_opts.osc_fit.freq_fit_tolerance=2; %hz arround the median to cut away
 anal_opts.osc_fit.plot_fits=false;
@@ -415,9 +444,52 @@ data.osc_fit=fit_trap_freq(anal_opts.osc_fit,data);
 %% undo the aliasing
 %this may need to change if the sampling freq changes
 
-data.osc_fit.trap_freq_recons=nan*data.osc_fit.ok.did_fits;
-mask=data.osc_fit.ok.all;
-data.osc_fit.trap_freq_recons(mask)=3*(1/anal_opts.atom_laser.pulsedt)+data.osc_fit.model_coefs(mask,2,1);
+%% undo the aliasing
+%this may need to change if the sampling freq changes
+%initialize
+data.osc_fit.trap_freq_recons=[];
+data.osc_fit.trap_freq_recons.val=nan*col_vec(data.osc_fit.ok.did_fits);
+data.osc_fit.trap_freq_recons.unc=nan*col_vec(data.osc_fit.trap_freq_recons.val);
+mask=col_vec(data.osc_fit.ok.all); %set the masked values
+% from prior measurments of the niquist zone, see zain report for math
+data.osc_fit.trap_freq_recons.val(mask)=3*(1/anal_opts.atom_laser.pulsedt)+col_vec(data.osc_fit.model_coefs(mask,2,1));
+
+% for using the osc in the y axis
+%data.osc_fit.trap_freq_recons.val(mask)=col_vec(data.osc_fit.model_coefs(mask,2,1));
+
+data.osc_fit.trap_freq_recons.unc(mask)=col_vec(data.osc_fit.model_coefs(mask,2,2));
+% correct for the frequency shift due to damping
+% we have two measurments ; the dcay rate \lambda=\omega_0*\zeta (damping ratio)
+% and \omega_d (damped oscillation freq) = \sqrt( 1 - \zeta^2) \omega_0
+% we will use \omega_d instead of \omega_0 in calculating zeta
+%initialize
+damping_ratio=col_vec(data.osc_fit.trap_freq_recons.unc*nan);
+data.osc_fit.trap_freq_recons_undamp.val=damping_ratio;
+lambda=[];
+lambda.val=nan*mask;
+lambda.unc=nan*mask;
+lambda.val(mask)=col_vec(data.osc_fit.model_coefs(mask,7,1));
+lambda.unc(mask)=col_vec(data.osc_fit.model_coefs(mask,7,2));
+damping_ratio(mask)=col_vec(lambda.val(mask))./col_vec(data.osc_fit.trap_freq_recons.val(mask)*2*pi);
+
+data.osc_fit.trap_freq_recons_undamp.val=nan*mask;
+data.osc_fit.trap_freq_recons_undamp.unc=nan*mask;
+data.osc_fit.trap_freq_recons_undamp.val(mask)=col_vec(data.osc_fit.trap_freq_recons.val(mask))./sqrt(1-(damping_ratio(mask)).^2);
+% propagate the uncert
+% mathematica code
+% w0=wd / Sqrt[1- (\[Lambda]/wd)^2]
+% Sqrt[(D[w0,wd])^2 \[Sigma]wd^2 + ((D[w0,\[Lambda]])^2) (\[Sigma]\[Lambda]^2) ]
+% use the aproximation D[w0,wd] \approx 1/Sqrt[1- (\[Lambda]/wd)^2]
+% Sqrt[(1/Sqrt[1-(\[Lambda]/wd)^2])\[Sigma]wd^2 + ((D[w0,\[Lambda]])^2) (\[Sigma]\[Lambda]^2) ]
+
+data.osc_fit.trap_freq_recons_undamp.unc(mask)= sqrt(  (1./(1-(damping_ratio(mask)).^2)).* (data.osc_fit.trap_freq_recons.unc(mask)).^2 ...
+                                                    + ( (lambda.val(mask).^2) .* (lambda.unc(mask)).^2 )./ ...
+                                                      (  (data.osc_fit.trap_freq_recons.val(mask)).^2 .* (1 - damping_ratio(mask).^2).^3  ) ...
+                                                    );
+% data.osc_fit.trap_freq_recons_undamp.unc(mask)= sqrt(  (1./(1-(damping_ratio(mask)).^2)).* (data.osc_fit.trap_freq_recons.unc(mask)).^2 ...
+%                                                    );                                                
+                                                                                                
+%freq_delta_undampened=data.osc_fit.trap_freq_recons_undamp.val(mask)-data.osc_fit.trap_freq_recons.val(mask)
 
 
 %% CHECK IF ATOM NUMBER DEPENDS ON PROBE BEAM
@@ -448,8 +520,9 @@ data.cal=make_cal_model(anal_opts.cal_mdl,data);
 %load('Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181127_3_filt_power_linearity\out\20181128T150814\data_anal_full.mat'
 
 %%
-load('.\results\linearity\20181128T165826\data_anal_full.mat')
+%load('.\results\linearity\20181128T165826\data_anal_full.mat')
 %%
+
 volts_daq_offset=0.074; %compensate for the daq voltage offset
 volts_to_mw=5/36.4;
 volt_threshold=0.1; %take data above this voltage setpt
@@ -457,7 +530,7 @@ volt_threshold=0.1; %take data above this voltage setpt
 temp_cal=data.mcp_tdc.probe.calibration'; %because its used a lot make a temp var for calibration logic vector
 temp_cal(isnan(temp_cal))=1;    
 probe_dat_mask=data.osc_fit.ok.all & ~temp_cal &  ~isnan(data.wm_log.proc.probe.freq.act.mean)'...
-    & ~isnan(data.osc_fit.trap_freq_recons) & data.labview.setpoint(data.mcp_tdc.shot_num)>volt_threshold ...
+    & ~isnan(data.osc_fit.trap_freq_recons.val)' & data.labview.setpoint(data.mcp_tdc.shot_num)>volt_threshold ...
     & data.ai_log.pd.std'<0.1;
 
 to_res.num_shots=sum(probe_dat_mask);
@@ -465,23 +538,29 @@ to_res.fit_mask=probe_dat_mask;
 %data.labview.setpoint
 probe_power= (data.ai_log.pd.mean(probe_dat_mask)-volts_daq_offset)/volts_to_mw; 
 probe_freq= data.wm_log.proc.probe.freq.act.mean(probe_dat_mask')*1e6;
-trap_freq=data.osc_fit.trap_freq_recons(probe_dat_mask)';
+trap_freq=[];
+trap_freq.val=data.osc_fit.trap_freq_recons.val(probe_dat_mask)';
+trap_freq.unc=data.osc_fit.trap_freq_recons.unc(probe_dat_mask)';
 cal_trap_freq=data.cal.freq_drift_model(data.mcp_tdc.time_create_write(probe_dat_mask,1));
-delta_trap_freq=trap_freq-cal_trap_freq;
-square_trap_freq= (trap_freq).^2-(cal_trap_freq).^2;
+delta_trap_freq=[];
+delta_trap_freq.val=trap_freq.val-cal_trap_freq;
+delta_trap_freq.unc=trap_freq.unc;
+square_trap_freq=[];
+square_trap_freq.val= (trap_freq.val).^2-(cal_trap_freq').^2;
+square_trap_freq.unc=square_trap_freq.val*2*(trap_freq.unc/trap_freq.val);
 
 
-
-ci_size_disp=0.3174;
+sigma_disp=1;
+ci_size_disp=1-erf(sigma_disp/sqrt(2));
 figure(63)
 set(gcf,'color','w')
-plt_data=plot(probe_power,square_trap_freq,'xk');
+plt_data=errorbar(probe_power,square_trap_freq.val,square_trap_freq.unc,'xk');
 xlabel('probe beam power (mw)')
 ylabel('Signal (\omega_{Net}^2-\omega_{cal}^2)')
 hold on
 %do a fit
 xdat=probe_power;
-ydat=square_trap_freq;
+ydat=square_trap_freq.val;
 
 %quadratic fit
 modelfun = @(b,x)  b(1)+b(2).*x+b(3).*x.^2; %simple linear model %+b(4).*x.^3+b(5).*x.^4
@@ -491,7 +570,7 @@ opts = statset('nlinfit');
 beta0 = [0,1e-2,0]; %intial guesses
 fit_mdl = fitnlm(xdat,ydat,modelfun,beta0,'Options',opts,'ErrorModel','combined')
 xsamp=linspace(min(xdat)-range(xdat)*5e-2,max(xdat)+range(xdat)*5e-2,1e3)'; %sample for the model curve
-[ysamp_quad,yci_quad]=predict(fit_mdl,xsamp,'Prediction','observation','Alpha',ci_size_disp); %note the observation CI
+[ysamp_quad,yci_quad]=predict(fit_mdl,xsamp,'Prediction','curve','Alpha',ci_size_disp); %note the observation CI
 plt_quad_val=plot(xsamp,ysamp_quad,'k-','color',[0.4940, 0.1840, 0.5560]	);
 plt_quad_ci=plot(xsamp,yci_quad,'r','color',[0.9290, 0.6940, 0.1250]	);
 
@@ -502,19 +581,20 @@ opts = statset('nlinfit');
 %opts.Tune = 1;
 beta0 = [0,1e-2,0,0]; %intial guesses
 fit_mdl = fitnlm(xdat,ydat,modelfun,beta0,'Options',opts,'ErrorModel','combined')
-[ysamp_cubic,yci_cubic]=predict(fit_mdl,xsamp,'Prediction','observation','Alpha',ci_size_disp); %note the observation CI
+[ysamp_cubic,yci_cubic]=predict(fit_mdl,xsamp,'Prediction','curve','Alpha',ci_size_disp); %note the observation CI
 plt_cubic_val=plot(xsamp,ysamp_cubic,'-','color',[0, 0.4470, 0.7410]);
 plt_cubic_std=plot(xsamp,yci_cubic,'-','color',[0.8500, 0.3250, 0.0980]);
 
 
-%cublic fit 
+%n=4 fit 
 modelfun = @(b,x) b(1)+b(2).*x+b(3).*x.^2+b(4).*x.^3+b(5).*x.^4; %simple linear model %+b(4).*x.^3+b(5).*x.^4
 opts = statset('nlinfit');
 %opts.RobustWgtFun = 'welsch' ; %a bit of robust fitting
 %opts.Tune = 1;
 beta0 = [0,1e-2,0,0,0]; %intial guesses
-fit_mdl = fitnlm(xdat,ydat,modelfun,beta0,'Options',opts,'ErrorModel','combined')
-[ysamp_cubic,yci_cubic]=predict(fit_mdl,xsamp,'Prediction','observation','Alpha',ci_size_disp); %note the observation CI
+fit_mdl = fitnlm(xdat,ydat,modelfun,beta0,'Options',opts) %'ErrorModel','combined'
+[ysamp_cubic,yci_cubic]=predict(fit_mdl,xsamp,'Prediction','curve','Alpha',ci_size_disp); 
+%'Prediction','observation'
 plt_cubic_val=plot(xsamp,ysamp_cubic,'-','color',[0, 0.4470, 0.7410]);
 plt_cubic_std=plot(xsamp,yci_cubic,'-','color',[0.8500, 0.3250, 0.0980]);
 
@@ -547,12 +627,13 @@ color_shaded=colorspace('LCH->RGB',color_shaded);
 [~,powers]=kmeans(probe_power,50);
 powers=min(powers)+(0:53)*median(diff(sort(powers)));
 
-ydat_chunks=nan(numel(powers),2);
+ydat_chunks=nan(numel(powers),3);
 for ii=1:numel(powers)
     yvalues=ydat(abs(probe_power-powers(ii))<power_tol);
     if numel(yvalues)>0
         ydat_chunks(ii,1)=nanmean(yvalues);
         ydat_chunks(ii,2)=nanstd(yvalues);
+        ydat_chunks(ii,3)=ydat_chunks(ii,2)/sqrt(sum(~isnan(yvalues)));
     end
 end
 
@@ -562,14 +643,14 @@ set(gcf,'color','w')
 patch([xsamp', fliplr(xsamp')], [yci_quad(:,1)', fliplr(yci_quad(:,2)')], color_shaded,'EdgeColor','none');  %[1,1,1]*0.80
 hold on
 plt_quad_ci=plot(xsamp,yci_quad,'r','color',colors_main(3,:),'LineWidth',1.5);
-plt_data=errorbar(powers,ydat_chunks(:,1),ydat_chunks(:,2),'o','CapSize',0,'MarkerSize',5,...
+plt_data=errorbar(powers,ydat_chunks(:,1),ydat_chunks(:,3),'o','CapSize',0,'MarkerSize',5,...
     'Color',colors_main(1,:),'MarkerFaceColor',colors_detail(1,:),'LineWidth',1.5);
 %plt_data=plot(probe_power,square_trap_freq,'xr'); %diagnostic
 plt_quad_val=plot(xsamp,ysamp_quad,'-','color',colors_main(2,:),'LineWidth',1.5);
 
 set(gca,'FontSize',font_size_global,'FontName',font_name)
 xlabel('Probe Power (mW)','FontSize',folt_size_label)
-ylabel('Response (Hz^2)','FontSize',folt_size_label) %\omega_{Net.}^2-\omega_{Cal.}^2 (Hz^2)
+ylabel('Response ($\mathrm{Hz}^2$)','FontSize',folt_size_label) %\omega_{Net.}^2-\omega_{Cal.}^2 (Hz^2)
 %plt_cubic_val=plot(xsamp,ysamp_cubic,'-','color',[0, 0.4470, 0.7410]);
 %plt_cubic_std=plot(xsamp,yci_cubic,'-','color',[0.8500, 0.3250, 0.0980]);
 yticks([0:7]*400)
@@ -597,7 +678,7 @@ diary off
 
 
 %%
-fprintf('saving output...')
+menfprintf('saving output...')
 %no compression bc its very slowwww
 save(fullfile(anal_out.dir,'data_anal_full.mat'),'data','to_res','anal_opts','-nocompression','-v7.3')
 fprintf('Done')

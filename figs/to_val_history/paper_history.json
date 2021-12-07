@@ -1,0 +1,59 @@
+{
+  "title": "Tune-out wavelengths for metastable helium",
+  "author": [
+    {
+      "name": {
+        "first": "bryce",
+        "last": "henson"
+      }
+    },
+    {
+      "name": {
+        "first": "Li-Yan",
+        "last": "Tang"
+      }
+    }
+  ],
+  "url": "https://link.aps.org/doi/10.1103/PhysRevA.88.052515",
+  "doi": "10.1103/PhysRevA.88.052515",
+  "tune-out": {
+    "val": 413.02,
+    "unc": 0.09,
+    "units": "nm"
+	"type":"theory"
+  }
+}
+{
+  "title": "Precision Measurement for Metastable Helium Atoms of the 413 nm Tune-Out Wavelength at Which the Atomic Polarizability Vanishes",
+  "author": [
+    {
+      "name": {
+        "first": "Bryce",
+		"middle":"M.",
+        "last": "Henson"
+      }
+    },
+    {
+      "name": {
+        "first": "R.",
+		"middle":"I.",
+        "last": "Khakimov"
+      }
+    },
+	{
+      "name": {
+        "first": "R.",
+		"middle":"G.",
+        "last": "Dall"
+      }
+    }
+  ],
+  "url": "https://link.aps.org/doi/10.1103/PhysRevLett.115.043004",
+  "doi": "10.1103/PhysRevLett.115.043004",
+  "tune-out": {
+    "val": 413.02,
+    "unc": 0.09,
+    "units": "nm"
+	"type":"theory"
+  }
+}

@@ -7,13 +7,17 @@ function out=fit_poly_with_int(in,poly_order,use_robust,use_weights)
 % decent inital guesses
 
 % see fit_poly_with_int
-
-inmat=cell2mat(in);
+if iscell(in)
+    inmat=cell2mat(in);
+else
+    inmat=in;
+end
 xdat=inmat(:,1);
 ydat=inmat(:,2);
 wdat=inmat(:,3);
 
-modelfun=@(b,x) polyval(fliplr(b),x);
+
+modelfun=@(b,x) polyval(fliplr(b),x); %b(1)*x^n+b(2)x^n-1 ... b(n-1)x+b(n)
 %modelfun = @(b,x) (repmat(x(:,1),1,n+1).^(0:n))*(b(1:(n+1))'); %simple linear model
 %
 opts = statset('nlinfit');
@@ -91,6 +95,8 @@ out.x_intercept.val=x_intercept;
 out.x_intercept.unc.with_cov=unc_x_int_cov;
 out.x_intercept.unc.no_cov=unc_x_int_no_cov;
 out.fit_mdl=fit_mdl;
+out.fit_coef.val=fit_mdl.Coefficients.Estimate;
+out.fit_coef.unc=fit_mdl.Coefficients.SE;
 
 
 end

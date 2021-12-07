@@ -22,7 +22,7 @@ for shot=1:iimax
                     *(anal_opts.start_pulse+pulse-2);
                 trange=t_pulse_cen+anal_opts.pulse_twindow*[-0.5,0.5];
                 pulse_win_txy=[trange;anal_opts.xylim]; 
-                counts_pulse=masktxy(data.mcp_tdc.counts_txy{shot},pulse_win_txy);
+                counts_pulse=masktxy_square(data.mcp_tdc.counts_txy{shot},pulse_win_txy);
                 if anal_opts.plot.all
                     stfig;
                     set(gcf,'Color',[1 1 1]);

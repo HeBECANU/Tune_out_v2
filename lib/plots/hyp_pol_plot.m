@@ -1,17 +1,20 @@
 function dum  = hyp_pol_plot()
 %Script that scrapes the analysed data from dirs (currently messy but works)
 %% setup directories
-loop_config.dir = {'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190213_to_hwp_168.5_nuller_reconfig_pdset_0.4v\';
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190213_to_hwp_168.5_nuller_reconfig_pdset_0.7v\';
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190213_to_hwp_168.5_nuller_reconfig_pdset_0.8v\';
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190214_to_hwp_168.5_nuller_reconfig_new_fiber_pdset_1.0v\';
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190214_to_hwp_168.5_nuller_reconfig_new_fiber_pdset_2.0v\';
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190214_to_hwp_168.5_nuller_reconfig_new_fiber_pdset_2.5v\';
-    'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\20190214_to_hwp_168.5_nuller_reconfig_pdset_0.6v\'
-    };
+data_root = 'Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\to_main_data';
+subdirs = {'20190214T1220_to_hwp_333.5_polmin_168.5_nuller_reconfig_pdset_0.6v';
+    '20190213T2024_to_hwp_333.5_polmin_168.5_nuller_reconfig_pdset_0.4v';
+    '20190213T1242_to_hwp_333.5_polmin_168.5_nuller_reconfig_pdset_0.7v';
+    '20190213T1015_to_hwp_333.5_polmin_168.5_nuller_reconfig_pdset_0.8v';
+    '20190214T1942_to_hwp_333.5_polmin_168.5_nuller_reconfig_new_fiber_pdset_1.0v';
+    '20190214T1657_to_hwp_333.5_polmin_168.5_nuller_reconfig_new_fiber_pdset_2.0v';
+    '20190214T1818_to_hwp_333.5_polmin_168.5_nuller_reconfig_new_fiber_pdset_2.5v'};
+
+loop_config.dir = cellfun(@(x) fullfile(data_root,x),subdirs,'uni',0);
 
 %% Get data
-data = to_data(loop_config);
+% data = to_data(loop_config);
+data = load_pocessed_to_data(loop_config)
 
 % Extract variables to plot
 grads = data.drift.grad{:,1}./2;

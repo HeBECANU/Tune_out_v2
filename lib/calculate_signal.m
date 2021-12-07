@@ -5,11 +5,11 @@ function data_signal=calculate_signal(anal_opts_fit_to,data)
 is_cal=col_vec(data.mcp_tdc.probe.calibration); %because its used a lot make a temp var for calibration logic vector
 is_cal(isnan(is_cal))=1;    
 probe_dat_mask=col_vec(data.osc_fit.ok.all) & ~is_cal &  ~isnan(col_vec(data.wm_log.proc.probe.freq.act.mean))...
-    & ~isnan(col_vec(data.osc_fit.trap_freq_recons));
+    & ~isnan(col_vec(data.osc_fit.trap_freq_recons.val));
 
 %%selecting the data
-trap_freq=col_vec(data.osc_fit.trap_freq_recons(probe_dat_mask));
-trap_freq_unc=col_vec(data.osc_fit.trap_freq_recons_unc(probe_dat_mask));
+trap_freq=col_vec(data.osc_fit.trap_freq_recons.val(probe_dat_mask));
+trap_freq_unc=col_vec(data.osc_fit.trap_freq_recons.unc(probe_dat_mask));
 cal_trap_freq=col_vec(data.cal.freq_drift_model(data.mcp_tdc.time_create_write(probe_dat_mask,2)));
 cal_trap_freq_unc=col_vec(data.cal.unc);
 if ~isequal(size(cal_trap_freq_unc),[1,1])
