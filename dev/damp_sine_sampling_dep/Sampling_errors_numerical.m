@@ -1,4 +1,4 @@
-%try and find the optimal time to sample a gaussian with some decay
+%try and find the optimal time to sample a sine with some decay
 %constant
 
 amp_truth   =2.8;

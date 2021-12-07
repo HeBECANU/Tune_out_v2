@@ -1,4 +1,4 @@
-path='./figs/theory_polz_data_from_lyt/fig1b_data.csv';
+path='./figs/level_diagram_and_polz/fig1b_data.csv';
 data_table=readtable(path);
 
 bohr_radius=5.29177210903e-11;
