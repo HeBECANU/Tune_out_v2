@@ -10,3 +10,5 @@ cache/
 *.zip
 *.7z
 scratch_data
+
+Polz_measurements/*

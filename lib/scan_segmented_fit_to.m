@@ -388,6 +388,26 @@ slopes_err = cellfun(@(x) x.Coefficients.SE(2),to_seg_fits.fit_all.model)*scale_
 to_seg_fits.fit_trimmed.slope.val=slopes;
 to_seg_fits.fit_trimmed.slope.unc=slopes_err;
 
+% % JR: Adding new lines here which will convert the slope (and unc) into
+% % estimated polarizabilities.
+% % We have the slope (omega_probe^2) in terms of some constants:
+% % omega_probe.^2 = 4*A*laser_power*real_part_of_alpha./beam_waist.^4;
+% % where
+% A = (const.mhe*const.c*const.epsilon0)^-1;
+% % first attempt will just be guessing the power and using the relative
+% % stability of the PD
+% PD_rel_unc = data.ai_log.pd.std/data.ai_log.pd.mean;
+% beam_power.val = 150;
+% beam_power.unc = beam_power.val*PD_rel_unc;
+% beam_waist.val = 10e-6;
+% beam_waist.unc = 0.05*beam_waist.val; % generous error margin
+% % hence
+% % real_part_of_alpha = (omega_probe.^2.*beam_waist.^4/(4*A*beam_power)
+% % and thus we have the gradient
+% to_seg_fits.fit_trimmed.d_alpha_d_f.val = (beam_waist.val.^4)/(4*A*beam_power.val).*slopes;
+% to_seg_fits.fit_trimmed.d_alpha_d_f.unc = (4*A)*sqrt( (beam_power.unc/beam_waist^4)^2 + ...
+%                                (4*beam_power.val*beam_waist.unc*beam_waist.val^-5)^2);
+
 
 num_val = to_seg_fits.atom_num(:,1);
 num_unc = to_seg_fits.atom_num(:,2);
