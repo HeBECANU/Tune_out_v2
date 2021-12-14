@@ -12,13 +12,19 @@ if ~isequal(size(pol_opts.hwp),size(pol_opts.qwp))
     error('query hwp and qwp not the same size')
 end
 
+if ~isfield(pol_opts,'add_noise')
+    pol_opts.add_noise=0;
+end
+
+add_noise=pol_opts.add_noise;
+
 out_polz_state=[];
 out_polz_state.v.val=pol_opts.hwp*nan;
-out_polz_state.v.unc=pol_opts.hwp*nan;
+out_polz_state.v.ci=zeros(size(pol_opts.hwp,1),2);
 out_polz_state.theta.val=pol_opts.hwp*nan;
-out_polz_state.theta.unc=pol_opts.hwp*nan;
+out_polz_state.theta.ci=zeros(size(pol_opts.hwp,1),2);
 out_polz_state.cont.val=pol_opts.hwp*nan;
-out_polz_state.cont.unc=pol_opts.hwp*nan;
+out_polz_state.cont.ci=zeros(size(pol_opts.hwp,1),2);
 
 sin_mdl = @(b,x) b(1).*sin(b(2).*x.*pi/180+b(3))+b(4);
 sin_mdl_fixed_freq4 = @(b,x) b(1).*sin(4.*x.*pi/180+b(2))+b(3);
@@ -31,6 +37,10 @@ pre_rotation_angle=-90;
 pre_angle_flip=-1;
 pre_hand_flip=1;
 
+power_unc_fixed=0.5;
+power_unc_prop=0.04;
+angle_unc=0.8.*pi/180; % value in radians
+
 
 if strcmp(pol_opts.location,'post')
     pol_data_table=readtable('.\data\polz_data_post_window.csv');
@@ -40,12 +50,26 @@ if strcmp(pol_opts.location,'post')
     
     %to keep things in a consistent reference frame rotate the angles so that they are relative to up
     pol_data_table.min_power_angle_deg=pol_data_table.min_power_angle_deg+post_rotation_angle;
+    pol_theta_val = pol_data_table.min_power_angle_deg.*pi/180; %using min pow angle
     
-    pol_v =pol_data_table.handedness.*2.*sqrt(pol_data_table.max_power_uw.*pol_data_table.min_power_uw)...
-        ./(pol_data_table.max_power_uw+pol_data_table.min_power_uw);%the V parameter for each run
-    pol_cont = (pol_data_table.max_power_uw-pol_data_table.min_power_uw)...
-        ./(pol_data_table.max_power_uw+pol_data_table.min_power_uw);%contrast
-    pol_theta = pol_data_table.min_power_angle_deg.*pi/180; %using min pow angle
+    if add_noise
+        pol_data_table.min_power_uw=pol_data_table.min_power_uw+randn(size(pol_data_table.min_power_uw)).*(power_unc_fixed+pol_data_table.min_power_uw.*power_unc_prop);
+        pol_data_table.min_power_uw=bound(pol_data_table.min_power_uw,0,inf)
+        pol_data_table.max_power_uw=pol_data_table.max_power_uw+randn(size(pol_data_table.max_power_uw)).*(power_unc_fixed+pol_data_table.max_power_uw.*power_unc_prop);
+        pol_theta_val=pol_theta_val+randn(size(pol_data_table.min_power_uw))*angle_unc;
+    end
+
+    [pol_v_val,pol_v_ci]=calc_v(pol_data_table.handedness,...
+                                    pol_data_table.min_power_uw,pol_data_table.max_power_uw,...
+                                    power_unc_fixed+power_unc_prop*pol_data_table.min_power_uw,power_unc_prop*pol_data_table.min_power_uw);
+
+    [pol_cont_val,pol_cont_ci]=calc_cont(pol_data_table.min_power_uw,pol_data_table.max_power_uw,...
+                                    power_unc_fixed+power_unc_prop*pol_data_table.min_power_uw,power_unc_prop*pol_data_table.min_power_uw);
+
+    pol_theta_ci = repmat([-1,1],[size(pol_theta_val,1),1])*angle_unc;
+
+    
+
     
     
 elseif strcmp(pol_opts.location,'pre_cen')
@@ -72,15 +96,32 @@ elseif strcmp(pol_opts.location,'pre_cen')
     
     pol_data_table=[pol_data_table_pre(:,commom_var_names);pol_data_table_post(:,commom_var_names)];
     
-    
-    %if we want to use the observation method
-    pol_v =pol_data_table.handedness.*2.*sqrt(pol_data_table.max_power_uw.*pol_data_table.min_power_uw)...
-        ./(pol_data_table.max_power_uw+pol_data_table.min_power_uw);%the V parameter for each run
-    pol_cont = (pol_data_table.max_power_uw-pol_data_table.min_power_uw)...
-        ./(pol_data_table.max_power_uw+pol_data_table.min_power_uw);%contrast
-    pol_theta = pol_data_table.min_power_angle_deg.*pi/180; %using min pow angle
+    pol_data_table.min_power_angle_deg=pol_data_table.min_power_angle_deg+post_rotation_angle;
+    pol_theta_val = pol_data_table.min_power_angle_deg.*pi/180; %using min pow angle
+    if add_noise
+        pol_data_table.min_power_uw=pol_data_table.min_power_uw+randn(size(pol_data_table.min_power_uw)).*(power_unc_fixed+pol_data_table.min_power_uw.*power_unc_prop);
+        pol_data_table.min_power_uw=bound(pol_data_table.min_power_uw,0,inf)
+        pol_data_table.max_power_uw=pol_data_table.max_power_uw+randn(size(pol_data_table.max_power_uw)).*(power_unc_fixed+pol_data_table.max_power_uw.*power_unc_prop);
+        pol_theta_val=pol_theta_val+randn(size(pol_data_table.min_power_uw))*angle_unc;
+    end
 
-    if min(pol_cont)<0
+    [pol_v_val,pol_v_ci]=calc_v(pol_data_table.handedness,...
+                                    pol_data_table.min_power_uw,pol_data_table.max_power_uw,...
+                                    power_unc_fixed+power_unc_prop*pol_data_table.min_power_uw,power_unc_prop*pol_data_table.min_power_uw);
+
+    [pol_cont_val,pol_cont_ci]=calc_cont(pol_data_table.min_power_uw,pol_data_table.max_power_uw,...
+                                    power_unc_fixed+power_unc_prop*pol_data_table.min_power_uw,power_unc_prop*pol_data_table.min_power_uw);
+
+    pol_theta_ci = repmat([-1,1],[size(pol_theta_val,1),1])*angle_unc;
+% 
+%     %if we want to use the observation method
+%     pol_v_val =pol_data_table.handedness.*2.*sqrt(pol_data_table.max_power_uw.*pol_data_table.min_power_uw)...
+%         ./(pol_data_table.max_power_uw+pol_data_table.min_power_uw);%the V parameter for each run
+%     pol_cont_val = (pol_data_table.max_power_uw-pol_data_table.min_power_uw)...
+%         ./(pol_data_table.max_power_uw+pol_data_table.min_power_uw);%contrast
+%     pol_theta_val = pol_data_table.min_power_angle_deg.*pi/180; %using min pow angle
+
+    if min(pol_cont_val)<0
         warning('pol data has produced a contrast value less than zero')
     end
 elseif strcmp(pol_opts.location,'pre_left')
@@ -108,13 +149,13 @@ elseif strcmp(pol_opts.location,'pre_left')
     
     
     %if we want to use the observation method
-    pol_v =pol_data_table.handedness.*2.*sqrt(pol_data_table.max_power_uw.*pol_data_table.min_power_uw)...
+    pol_v_val =pol_data_table.handedness.*2.*sqrt(pol_data_table.max_power_uw.*pol_data_table.min_power_uw)...
         ./(pol_data_table.max_power_uw+pol_data_table.min_power_uw);%the V parameter for each run
-    pol_cont = (pol_data_table.max_power_uw-pol_data_table.min_power_uw)...
+    pol_cont_val = (pol_data_table.max_power_uw-pol_data_table.min_power_uw)...
         ./(pol_data_table.max_power_uw+pol_data_table.min_power_uw);%contrast
-    pol_theta = pol_data_table.min_power_angle_deg.*pi/180; %using min pow angle
+    pol_theta_val = pol_data_table.min_power_angle_deg.*pi/180; %using min pow angle
 
-    if min(pol_cont)<0
+    if min(pol_cont_val)<0
         warning('pol data has produced a contrast value less than zero')
     end
 elseif strcmp(pol_opts.location,'pre_right')
@@ -142,13 +183,13 @@ elseif strcmp(pol_opts.location,'pre_right')
     
     
     %if we want to use the observation method
-    pol_v =pol_data_table.handedness.*2.*sqrt(pol_data_table.max_power_uw.*pol_data_table.min_power_uw)...
+    pol_v_val =pol_data_table.handedness.*2.*sqrt(pol_data_table.max_power_uw.*pol_data_table.min_power_uw)...
         ./(pol_data_table.max_power_uw+pol_data_table.min_power_uw);%the V parameter for each run
-    pol_cont = (pol_data_table.max_power_uw-pol_data_table.min_power_uw)...
+    pol_cont_val = (pol_data_table.max_power_uw-pol_data_table.min_power_uw)...
         ./(pol_data_table.max_power_uw+pol_data_table.min_power_uw);%contrast
-    pol_theta = pol_data_table.min_power_angle_deg.*pi/180; %using min pow angle
+    pol_theta_val = pol_data_table.min_power_angle_deg.*pi/180; %using min pow angle
 
-    if min(pol_cont)<0
+    if min(pol_cont_val)<0
         warning('pol data has produced a contrast value less than zero')
     end
 end
@@ -171,9 +212,12 @@ if strcmp(pol_opts.predict_method,'only_data')
                 data_match_idx=data_match_idx(1);
             end
             %warning('using direct data for unmodeled points, may be missing modulo')
-            out_polz_state.cont.val(ii)=bound(pol_cont(data_match_idx),0,1);
-            out_polz_state.theta.val(ii)=pol_theta(data_match_idx);%mod(,pi);
-            out_polz_state.v.val(ii)=pol_v(data_match_idx);
+            out_polz_state.cont.val(ii)=bound(pol_cont_val(data_match_idx),0,1);
+            out_polz_state.cont.ci(ii,:)=pol_cont_ci(data_match_idx,:);
+            out_polz_state.theta.val(ii)=pol_theta_val(data_match_idx);%mod(,pi);
+            out_polz_state.theta.ci(ii,:)=pol_theta_ci(data_match_idx,:);
+            out_polz_state.v.val(ii)=pol_v_val(data_match_idx);
+            out_polz_state.v.ci(ii,:)=pol_v_ci(data_match_idx,:);
         end
     end
 
@@ -193,9 +237,9 @@ elseif sum(strcmp(pol_opts.predict_method,{'full_fit_pref_fit','full_fit_pref_da
     
     %% fit the 4th stokes parameter for the hwp data
     beta0 = [-0.18297,1.5186,-0.033813];
-    fit_V_hwp_only = fitnlm(pol_data_table.hwp_angle_deg(mask_hwp_only),pol_v(mask_hwp_only),sin_mdl_fixed_freq4,beta0);
+    fit_V_hwp_only = fitnlm(pol_data_table.hwp_angle_deg(mask_hwp_only),pol_v_val(mask_hwp_only),sin_mdl_fixed_freq4,beta0);
     subplot(2,3,1)
-    plot(pol_data_table.hwp_angle_deg(mask_hwp_only),pol_v(mask_hwp_only),'x')
+    plot(pol_data_table.hwp_angle_deg(mask_hwp_only),pol_v_val(mask_hwp_only),'x')
     hold on
     hwp_samp_vec=col_vec(linspace(min(pol_data_table.hwp_angle_deg(mask_hwp_only)),max(pol_data_table.hwp_angle_deg(mask_hwp_only)),1e3));
     [v_samp_fit_val,V_samp_fit_ci]=predict(fit_V_hwp_only,hwp_samp_vec);
@@ -214,7 +258,7 @@ elseif sum(strcmp(pol_opts.predict_method,{'full_fit_pref_fit','full_fit_pref_da
     %% fit the theta, 2nd,3rd stokes parameter angle for the hwp data
     hwp_wraped=pol_data_table.hwp_angle_deg(mask_hwp_only);
     hwp_wraped=mod(hwp_wraped,90);
-    theta_wraped=pol_theta(mask_hwp_only);
+    theta_wraped=pol_theta_val(mask_hwp_only);
     theta_wraped=mod(theta_wraped,pi);
     [~,sort_idx]=sort(hwp_wraped);
     theta_wraped(sort_idx)=unwrap(theta_wraped(sort_idx)*2)/2;
@@ -243,10 +287,10 @@ elseif sum(strcmp(pol_opts.predict_method,{'full_fit_pref_fit','full_fit_pref_da
             'MaxIter',1e4,... %1e4
             'UseParallel',1);
     %coef_names={'amp','phase','offset'};
-    fit_cont_hwp_only = fitnlm(hwp_wraped,pol_cont(mask_hwp_only),poly_mdl,beta0,...
+    fit_cont_hwp_only = fitnlm(hwp_wraped,pol_cont_val(mask_hwp_only),poly_mdl,beta0,...
         'options',opt);         %'CoefficientNames',coef_names,...
     subplot(2,3,3)
-    plot(hwp_wraped,pol_cont(mask_hwp_only),'x')
+    plot(hwp_wraped,pol_cont_val(mask_hwp_only),'x')
     hold on
     hwp_samp_vec=col_vec(linspace(min(hwp_wraped),max(hwp_wraped),1e3));
     [cont_samp_fit_val,cont_samp_fit_ci]=predict(fit_cont_hwp_only,hwp_samp_vec);
@@ -264,9 +308,9 @@ elseif sum(strcmp(pol_opts.predict_method,{'full_fit_pref_fit','full_fit_pref_da
     % fit only the dominant hwp angle here
     %idx_qwp_and_hwp_333
     beta0 = [-1.0002,-0.41317,-0.023839];
-    fit_V_qwp_and_hwp_const = fitnlm(pol_data_table.qwp_angle_deg(mask_qwp_and_hwp_const),pol_v(mask_qwp_and_hwp_const),sin_mdl_fixed_freq2,beta0);
+    fit_V_qwp_and_hwp_const = fitnlm(pol_data_table.qwp_angle_deg(mask_qwp_and_hwp_const),pol_v_val(mask_qwp_and_hwp_const),sin_mdl_fixed_freq2,beta0);
     subplot(2,3,4)
-    plot(pol_data_table.qwp_angle_deg(mask_qwp_and_hwp_const),pol_v(mask_qwp_and_hwp_const),'x')
+    plot(pol_data_table.qwp_angle_deg(mask_qwp_and_hwp_const),pol_v_val(mask_qwp_and_hwp_const),'x')
     hold on
     qwp_angle_samp_fit_hwp_const=col_vec(linspace(min(pol_data_table.qwp_angle_deg(mask_qwp_and_hwp_const)),max(pol_data_table.qwp_angle_deg(mask_qwp_and_hwp_const)),1e3));
     [v_samp_fit_val,V_samp_fit_ci]=predict(fit_V_qwp_and_hwp_const,qwp_angle_samp_fit_hwp_const);
@@ -280,7 +324,7 @@ elseif sum(strcmp(pol_opts.predict_method,{'full_fit_pref_fit','full_fit_pref_da
     
     %% fit the theta 2nd,3rd stokes angle parameter for the qwp data (with hwp=333)
     qwp_wraped=mod(pol_data_table.qwp_angle_deg(mask_qwp_and_hwp_const),90);
-    theta_wraped=mod(pol_theta(mask_qwp_and_hwp_const),pi);
+    theta_wraped=mod(pol_theta_val(mask_qwp_and_hwp_const),pi);
     [~,sort_idx]=sort(qwp_wraped);
     theta_wraped(sort_idx)=unwrap(theta_wraped(sort_idx)*2)/2;
     
@@ -313,11 +357,11 @@ elseif sum(strcmp(pol_opts.predict_method,{'full_fit_pref_fit','full_fit_pref_da
             'MaxIter',1e4,... %1e4
             'UseParallel',1);
     coef_names={'amp','phase','offset'};
-    fit_cont_qwp_const_hwp = fitnlm(pol_data_table.qwp_angle_deg(mask_qwp_and_hwp_const),pol_cont(mask_qwp_and_hwp_const),sin_mdl_fixed_freq4,beta0,...
+    fit_cont_qwp_const_hwp = fitnlm(pol_data_table.qwp_angle_deg(mask_qwp_and_hwp_const),pol_cont_val(mask_qwp_and_hwp_const),sin_mdl_fixed_freq4,beta0,...
         'CoefficientNames',coef_names,...
         'options',opt);
     subplot(2,3,6)
-    plot(pol_data_table.qwp_angle_deg(mask_qwp_and_hwp_const),pol_cont(mask_qwp_and_hwp_const),'x')
+    plot(pol_data_table.qwp_angle_deg(mask_qwp_and_hwp_const),pol_cont_val(mask_qwp_and_hwp_const),'x')
     hold on
     hwp_samp_vec=col_vec(linspace(min(pol_data_table.qwp_angle_deg(mask_qwp_and_hwp_const)),max(pol_data_table.qwp_angle_deg(mask_qwp_and_hwp_const)),1e3));
     [cont_samp_fit_val,cont_samp_fit_ci]=predict(fit_cont_qwp_const_hwp,hwp_samp_vec);
@@ -353,9 +397,9 @@ elseif sum(strcmp(pol_opts.predict_method,{'full_fit_pref_fit','full_fit_pref_da
                     data_match_idx=data_match_idx(1);
                 end
                 
-                out_polz_state.cont.val(ii)=bound(pol_cont(data_match_idx),0,1); %bound the contrast to be 1
-                out_polz_state.theta.val(ii)=pol_theta(data_match_idx);  %%mod(,pi/2);
-                out_polz_state.v.val(ii)=pol_v(data_match_idx);
+                out_polz_state.cont.val(ii)=bound(pol_cont_val(data_match_idx),0,1); %bound the contrast to be 1
+                out_polz_state.theta.val(ii)=pol_theta_val(data_match_idx);  %%mod(,pi/2);
+                out_polz_state.v.val(ii)=pol_v_val(data_match_idx);
                 out_polz_state.v.unc(ii)=nan;
                 out_polz_state.theta.unc(ii)=nan;
                 out_polz_state.cont.unc(ii)=nan;
@@ -450,9 +494,9 @@ elseif sum(strcmp(pol_opts.predict_method,{'full_fit_pref_fit','full_fit_pref_da
                     data_match_idx=data_match_idx(1);
                 end
                 
-                out_polz_state.cont.val(query_idx)=bound(pol_cont(data_match_idx),0,1);
-                out_polz_state.theta.val(query_idx)=mod(pol_theta(data_match_idx),pi);
-                out_polz_state.v.val(query_idx)=pol_v(data_match_idx);
+                out_polz_state.cont.val(query_idx)=bound(pol_cont_val(data_match_idx),0,1);
+                out_polz_state.theta.val(query_idx)=mod(pol_theta_val(data_match_idx),pi);
+                out_polz_state.v.val(query_idx)=pol_v_val(data_match_idx);
 
                 out_polz_state.v.unc(query_idx)=nan;
                 out_polz_state.theta.unc(query_idx)=nan;
@@ -471,7 +515,6 @@ elseif sum(strcmp(pol_opts.predict_method,{'full_fit_pref_fit','full_fit_pref_da
     
 elseif sum(strcmp(pol_opts.predict_method,{'interp_only','interp_pref_data','interp_pref_interp'}))>0
      % make a model for the case of having qwp+hwp, and just qwp
-    
     mask_qwp_and_hwp=~isnan(pol_data_table.qwp_angle_deg) & ~isnan(pol_data_table.hwp_angle_deg);
     hwp_const_val= mode(pol_data_table.hwp_angle_deg(~isnan(pol_data_table.qwp_angle_deg)));
     mask_qwp_and_hwp_const=~isnan(pol_data_table.qwp_angle_deg) & pol_data_table.hwp_angle_deg==hwp_const_val;
@@ -493,10 +536,10 @@ elseif sum(strcmp(pol_opts.predict_method,{'interp_only','interp_pref_data','int
     
     
     subplot(2,3,1)
-    plot(hwp_wraped,pol_v(mask_hwp_only),'x')
+    plot(hwp_wraped,pol_v_val(mask_hwp_only),'x')
     hold on
     %annoyingly we need to consolidate points in x,y
-    [x_hwp_v,y_hwp_v]=consolidator11(hwp_wraped,pol_v(mask_hwp_only));
+    [x_hwp_v,y_hwp_v]=consolidator11(hwp_wraped,pol_v_val(mask_hwp_only));
     hwp_samp_vec=col_vec(linspace(min(hwp_wraped),max(hwp_wraped),1e3));
     v_samp_fit_val=pchip(x_hwp_v,y_hwp_v,hwp_samp_vec);
     plot(hwp_samp_vec,v_samp_fit_val,'-k')
@@ -510,7 +553,7 @@ elseif sum(strcmp(pol_opts.predict_method,{'interp_only','interp_pref_data','int
     %fit_d_p_qwp = fitnlm(qwp_ang,d_p(38:63),sin_mdl_abs,beta0);
     
     %% fit the theta, 2nd,3rd stokes parameter angle for the hwp data
-    theta_wraped_hwp=pol_theta(mask_hwp_only);
+    theta_wraped_hwp=pol_theta_val(mask_hwp_only);
     theta_wraped_hwp=mod(theta_wraped_hwp,pi);
     [~,sort_idx]=sort(hwp_wraped);
     theta_wraped_hwp(sort_idx)=unwrap(theta_wraped_hwp(sort_idx)*2)/2;
@@ -530,9 +573,9 @@ elseif sum(strcmp(pol_opts.predict_method,{'interp_only','interp_pref_data','int
     %% fit the theta 2nd,3rd stokes parameter contrast for the hwp data
 
     subplot(2,3,3)
-    plot(hwp_wraped,pol_cont(mask_hwp_only),'x')
+    plot(hwp_wraped,pol_cont_val(mask_hwp_only),'x')
     hold on
-    [x_hwp_cont,y_hwp_cont]=consolidator11(hwp_wraped,pol_cont(mask_hwp_only));
+    [x_hwp_cont,y_hwp_cont]=consolidator11(hwp_wraped,pol_cont_val(mask_hwp_only));
     hwp_samp_vec=col_vec(linspace(min(hwp_wraped),max(hwp_wraped),1e3));
     theta_samp_fit_val=pchip(x_hwp_cont,y_hwp_cont,hwp_samp_vec);
     theta_samp_fit_val=bound(theta_samp_fit_val,0,1);
@@ -548,9 +591,9 @@ elseif sum(strcmp(pol_opts.predict_method,{'interp_only','interp_pref_data','int
     %idx_qwp_and_hwp_333
 
     subplot(2,3,4)
-    plot(pol_data_table.qwp_angle_deg(mask_qwp_and_hwp_const),pol_v(mask_qwp_and_hwp_const),'x')
+    plot(pol_data_table.qwp_angle_deg(mask_qwp_and_hwp_const),pol_v_val(mask_qwp_and_hwp_const),'x')
     hold on
-    [x_qwp_v,y_qwp_v]=consolidator11(pol_data_table.qwp_angle_deg(mask_qwp_and_hwp_const),pol_v(mask_qwp_and_hwp_const));
+    [x_qwp_v,y_qwp_v]=consolidator11(pol_data_table.qwp_angle_deg(mask_qwp_and_hwp_const),pol_v_val(mask_qwp_and_hwp_const));
     qwp_angle_samp_fit_hwp_const=col_vec(linspace(min(pol_data_table.qwp_angle_deg(mask_qwp_and_hwp_const)),max(pol_data_table.qwp_angle_deg(mask_qwp_and_hwp_const)),1e3));
     v_samp_fit_val=pchip(x_qwp_v,y_qwp_v,qwp_angle_samp_fit_hwp_const);
     plot(qwp_angle_samp_fit_hwp_const,v_samp_fit_val,'-k')
@@ -561,7 +604,7 @@ elseif sum(strcmp(pol_opts.predict_method,{'interp_only','interp_pref_data','int
     
     %% fit the theta 2nd,3rd stokes angle parameter for the qwp data (with hwp=333)
     qwp_wraped=mod(pol_data_table.qwp_angle_deg(mask_qwp_and_hwp_const),90);
-    theta_wraped=mod(pol_theta(mask_qwp_and_hwp_const),pi);
+    theta_wraped=mod(pol_theta_val(mask_qwp_and_hwp_const),pi);
     [~,sort_idx]=sort(qwp_wraped);
     theta_wraped(sort_idx)=unwrap(theta_wraped(sort_idx)*2)/2;
     subplot(2,3,5)
@@ -579,9 +622,9 @@ elseif sum(strcmp(pol_opts.predict_method,{'interp_only','interp_pref_data','int
     %% fit the contrast 2nd,3rd stokes parameter contrast for the qwp data (with hwp=333)
     
     subplot(2,3,6)
-    plot(pol_data_table.qwp_angle_deg(mask_qwp_and_hwp_const),pol_cont(mask_qwp_and_hwp_const),'x')
+    plot(pol_data_table.qwp_angle_deg(mask_qwp_and_hwp_const),pol_cont_val(mask_qwp_and_hwp_const),'x')
     hold on
-    [x_qwp_cont,y_qwp_cont]=consolidator11(pol_data_table.qwp_angle_deg(mask_qwp_and_hwp_const),pol_cont(mask_qwp_and_hwp_const));
+    [x_qwp_cont,y_qwp_cont]=consolidator11(pol_data_table.qwp_angle_deg(mask_qwp_and_hwp_const),pol_cont_val(mask_qwp_and_hwp_const));
     contrast_samp_fit_val=pchip(x_qwp_cont,y_qwp_cont,hwp_angle_samp_fit_hwp_const);
     % clip the min max value to be 1
     contrast_samp_fit_val=bound(contrast_samp_fit_val,0,1);
@@ -612,19 +655,17 @@ elseif sum(strcmp(pol_opts.predict_method,{'interp_only','interp_pref_data','int
                     data_match_idx=data_match_idx(1);
                 end
                 
-                out_polz_state.cont.val(ii)=bound(pol_cont(data_match_idx),0,1); %bound the contrast to be 1
-                out_polz_state.theta.val(ii)=mod(pol_theta(data_match_idx),2);
-                out_polz_state.v.val(ii)=pol_v(data_match_idx);
-                out_polz_state.v.unc(ii)=nan;
-                out_polz_state.theta.unc(ii)=nan;
-                out_polz_state.cont.unc(ii)=nan;
+                out_polz_state.cont.val(ii)=bound(pol_cont_val(data_match_idx),0,1); %bound the contrast to be 1
+                out_polz_state.theta.val(ii)=mod(pol_theta_val(data_match_idx),2);
+                out_polz_state.v.val(ii)=pol_v_val(data_match_idx);
+                out_polz_state.v.ci(ii,:)=[0,0];
+                out_polz_state.theta.ci(ii,:)=[0,0];
+                out_polz_state.cont.ci(ii,:)=[0,0];
                 fulfilled_query(ii)=true;
             end
         end
         
     end 
-    
-    
     %% now calulate at the remaining query points
     only_qwp=isnan(pol_opts.hwp) & ~isnan( pol_opts.qwp) & ~fulfilled_query;
     if sum( only_qwp)>0
@@ -704,13 +745,13 @@ elseif sum(strcmp(pol_opts.predict_method,{'interp_only','interp_pref_data','int
                     data_match_idx=data_match_idx(1);
                 end
                 
-                out_polz_state.cont.val(query_idx)=bound(pol_cont(data_match_idx),0,1);
-                out_polz_state.theta.val(query_idx)=mod(pol_theta(data_match_idx),pi);
-                out_polz_state.v.val(query_idx)=pol_v(data_match_idx);
+                out_polz_state.cont.val(query_idx)=bound(pol_cont_val(data_match_idx),0,1);
+                out_polz_state.theta.val(query_idx)=mod(pol_theta_val(data_match_idx),pi);
+                out_polz_state.v.val(query_idx)=pol_v_val(data_match_idx);
 
-                out_polz_state.v.unc(query_idx)=nan;
-                out_polz_state.theta.unc(query_idx)=nan;
-                out_polz_state.cont.unc(query_idx)=nan;
+                out_polz_state.v.ci(ii,:)=[0,0];
+                out_polz_state.theta.ci(ii,:)=[0,0];
+                out_polz_state.cont.ci(ii,:)=[0,0];
             end
         end
     end
@@ -739,12 +780,12 @@ elseif sum(strcmp(pol_opts.predict_method,{'gauss_only','gauss_pref_data','gauss
     end
     
     subplot(2,3,1)
-    plot(hwp_wraped,pol_v(mask_hwp_only),'x')
+    plot(hwp_wraped,pol_v_val(mask_hwp_only),'x')
     hold on
 
     
     x_hwp_v=hwp_wraped;
-    y_hwp_v=pol_v(mask_hwp_only);
+    y_hwp_v=pol_v_val(mask_hwp_only);
     hwp_samp_vec=col_vec(linspace(min(hwp_wraped),max(hwp_wraped),1e3));
     sigma_hwp_v=pol_opts.smoothing;
     v_samp_fit_val=gauss_weighted_interp(x_hwp_v,y_hwp_v,hwp_samp_vec,sigma_hwp_v);
@@ -756,7 +797,7 @@ elseif sum(strcmp(pol_opts.predict_method,{'gauss_only','gauss_pref_data','gauss
     title('hwp only')
         
     %% fit the theta, 2nd,3rd stokes parameter angle for the hwp data
-    theta_wraped_hwp=pol_theta(mask_hwp_only);
+    theta_wraped_hwp=pol_theta_val(mask_hwp_only);
     theta_wraped_hwp=mod(theta_wraped_hwp,pi);
     [~,sort_idx]=sort(hwp_wraped);
     theta_wraped_hwp(sort_idx)=unwrap(theta_wraped_hwp(sort_idx)*2)/2;
@@ -778,10 +819,10 @@ elseif sum(strcmp(pol_opts.predict_method,{'gauss_only','gauss_pref_data','gauss
     %% fit the theta 2nd,3rd stokes parameter contrast for the hwp data
 
     subplot(2,3,3)
-    plot(hwp_wraped,pol_cont(mask_hwp_only),'x')
+    plot(hwp_wraped,pol_cont_val(mask_hwp_only),'x')
     hold on
     x_hwp_cont=hwp_wraped;
-    y_hwp_cont=pol_cont(mask_hwp_only);
+    y_hwp_cont=pol_cont_val(mask_hwp_only);
     hwp_samp_vec=col_vec(linspace(min(hwp_wraped),max(hwp_wraped),1e3));
     sigma_hwp_cont=pol_opts.smoothing;
     theta_samp_fit_val=gauss_weighted_interp(x_hwp_cont,y_hwp_cont,hwp_samp_vec,sigma_hwp_cont);
@@ -798,10 +839,10 @@ elseif sum(strcmp(pol_opts.predict_method,{'gauss_only','gauss_pref_data','gauss
     %idx_qwp_and_hwp_333
 
     subplot(2,3,4)
-    plot(pol_data_table.qwp_angle_deg(mask_qwp_and_hwp_const),pol_v(mask_qwp_and_hwp_const),'x')
+    plot(pol_data_table.qwp_angle_deg(mask_qwp_and_hwp_const),pol_v_val(mask_qwp_and_hwp_const),'x')
     hold on
     x_qwp_v=pol_data_table.qwp_angle_deg(mask_qwp_and_hwp_const);
-    y_qwp_v=pol_v(mask_qwp_and_hwp_const);
+    y_qwp_v=pol_v_val(mask_qwp_and_hwp_const);
     qwp_angle_samp_fit_hwp_const=col_vec(linspace(min(pol_data_table.qwp_angle_deg(mask_qwp_and_hwp_const)),max(pol_data_table.qwp_angle_deg(mask_qwp_and_hwp_const)),1e3));
     sigma_qwp_v=pol_opts.smoothing;
     v_samp_fit_val=gauss_weighted_interp(x_qwp_v,y_qwp_v,qwp_angle_samp_fit_hwp_const,sigma_qwp_v);
@@ -813,7 +854,7 @@ elseif sum(strcmp(pol_opts.predict_method,{'gauss_only','gauss_pref_data','gauss
     
     %% fit the theta 2nd,3rd stokes angle parameter for the qwp data (with hwp=333)
     qwp_wraped=mod(pol_data_table.qwp_angle_deg(mask_qwp_and_hwp_const),90);
-    theta_wraped=mod(pol_theta(mask_qwp_and_hwp_const),pi);
+    theta_wraped=mod(pol_theta_val(mask_qwp_and_hwp_const),pi);
     [~,sort_idx]=sort(qwp_wraped);
     theta_wraped(sort_idx)=unwrap(theta_wraped(sort_idx)*2)/2;
     subplot(2,3,5)
@@ -833,10 +874,10 @@ elseif sum(strcmp(pol_opts.predict_method,{'gauss_only','gauss_pref_data','gauss
     %% fit the contrast 2nd,3rd stokes parameter contrast for the qwp data (with hwp=333)
     
     subplot(2,3,6)
-    plot(pol_data_table.qwp_angle_deg(mask_qwp_and_hwp_const),pol_cont(mask_qwp_and_hwp_const),'x')
+    plot(pol_data_table.qwp_angle_deg(mask_qwp_and_hwp_const),pol_cont_val(mask_qwp_and_hwp_const),'x')
     hold on
     x_qwp_cont=pol_data_table.qwp_angle_deg(mask_qwp_and_hwp_const);
-    y_qwp_cont=pol_cont(mask_qwp_and_hwp_const);
+    y_qwp_cont=pol_cont_val(mask_qwp_and_hwp_const);
     sigma_qwp_cont=pol_opts.smoothing;
     contrast_samp_fit_val=gauss_weighted_interp(x_qwp_cont,y_qwp_cont,hwp_angle_samp_fit_hwp_const,sigma_qwp_cont);
     % clip the min max value to be 1
@@ -868,9 +909,9 @@ elseif sum(strcmp(pol_opts.predict_method,{'gauss_only','gauss_pref_data','gauss
                     data_match_idx=data_match_idx(1);
                 end
                 
-                out_polz_state.cont.val(ii)=bound(pol_cont(data_match_idx),0,1); %bound the contrast to be 1
-                out_polz_state.theta.val(ii)=mod(pol_theta(data_match_idx),2);
-                out_polz_state.v.val(ii)=pol_v(data_match_idx);
+                out_polz_state.cont.val(ii)=bound(pol_cont_val(data_match_idx),0,1); %bound the contrast to be 1
+                out_polz_state.theta.val(ii)=mod(pol_theta_val(data_match_idx),2);
+                out_polz_state.v.val(ii)=pol_v_val(data_match_idx);
                 out_polz_state.v.unc(ii)=nan;
                 out_polz_state.theta.unc(ii)=nan;
                 out_polz_state.cont.unc(ii)=nan;
@@ -960,9 +1001,9 @@ elseif sum(strcmp(pol_opts.predict_method,{'gauss_only','gauss_pref_data','gauss
                     data_match_idx=data_match_idx(1);
                 end
                 
-                out_polz_state.cont.val(query_idx)=bound(pol_cont(data_match_idx),0,1);
-                out_polz_state.theta.val(query_idx)=mod(pol_theta(data_match_idx),pi);
-                out_polz_state.v.val(query_idx)=pol_v(data_match_idx);
+                out_polz_state.cont.val(query_idx)=bound(pol_cont_val(data_match_idx),0,1);
+                out_polz_state.theta.val(query_idx)=mod(pol_theta_val(data_match_idx),pi);
+                out_polz_state.v.val(query_idx)=pol_v_val(data_match_idx);
 
                 out_polz_state.v.unc(query_idx)=nan;
                 out_polz_state.theta.unc(query_idx)=nan;
@@ -976,6 +1017,41 @@ end
 
 
 end
+
+function    [pol_v_val,pol_v_ci]=calc_v(handedness,min_power,max_power,min_unc,max_unc)
+     pol_v_val=handedness.*2.*sqrt(max_power.*min_power)...
+        ./(max_power+min_power);%the V parameter for each run
+    if nargout>1
+    % to get the confidence range just compute the tolerance
+    ans_range=[calc_v(handedness,min_power+min_unc,max_power+max_unc),...
+                  calc_v(handedness,bound(min_power-min_unc,0,inf),max_power+max_unc),...
+                  calc_v(handedness,min_power+min_unc,max_power-max_unc),...
+                  calc_v(handedness,bound(min_power-min_unc,0,inf),max_power-max_unc),...
+                ];
+    
+    pol_v_ci=[min(ans_range,[],2),max(ans_range,[],2)];
+    pol_v_ci=pol_v_ci-repmat(pol_v_val,[1,2]);
+    end
+end
+
+function [pol_cont_val,pol_cont_ci]=calc_cont(min_power,max_power,min_unc,max_unc)
+    pol_cont_val = (max_power-min_power)...
+        ./(max_power+min_power);%contrast
+    if nargout>1
+    % to get the confidence range just compute the tolerance
+    ans_range=[calc_cont(min_power+min_unc,max_power+max_unc),...
+                  calc_cont(min_power-min_unc,max_power+max_unc),...
+                  calc_cont(min_power+min_unc,max_power-max_unc),...
+                  calc_cont(min_power-min_unc,max_power-max_unc),...
+                ];
+    imag_ans_mask=arrayfun(@(x) abs(imag(x))~=0,ans_range);
+    ans_range(imag_ans_mask)=nan;
+    pol_cont_ci=[nanmin(ans_range,[],2),nanmax(ans_range,[],2)];
+    pol_cont_ci=pol_cont_ci-repmat(pol_cont_val,[1,2]);
+    end
+end
+
+
 % 
 % 
 %     pol_data_val = [
