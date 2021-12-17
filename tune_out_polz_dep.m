@@ -71,8 +71,8 @@ fit_order = 1;%'all_first';%'scalar_sec';%';%
 %% polarisation model/data options
 %'post','only_data'
 %'pre_cen','interp_only' (maybe 'full_fit_only')
-pol_opts.location = 'pre_cen';%'post';%'pre_cen';%'pre_cen';%post, pre_cen, pre_left, pre_right
-pol_opts.predict_method = 'interp_only';%'interp_only';%'only_data';%''full_fit_pref_fit','full_fit_pref_data','full_fit_only','only_data'; %obs (obsovation) fit (pertial fit) full_fit (fit with all parameters free)
+pol_opts.location = 'post';%'pre_cen';%'post';%'pre_cen';%'pre_cen';%post, pre_cen, pre_left, pre_right
+pol_opts.predict_method = 'only_data';%'interp_only';%'interp_only';%''full_fit_pref_fit','full_fit_pref_data','full_fit_only','only_data'; %obs (obsovation) fit (pertial fit) full_fit (fit with all parameters free)
                                         %'interp_only','interp_pref_data','interp_pref_interp'
                                         %'gauss_only','gauss_pref_data','gauss_pref_interp'
 pol_opts.smoothing=3; %deg

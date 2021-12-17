@@ -78,7 +78,9 @@ tic
 % BEGIN USER VAR-------------------------------------------------
 anal_opts=[];
 %anal_opts.tdc_import.dir='\\amplpc29\Users\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181127_3_filt_power_linearity\';
-anal_opts.tdc_import.dir='H:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181127_3_filt_power_linearity\';
+% anal_opts.tdc_import.dir='H:\EXPERIMENT-DATA\2018_Tune_Out_V2\20181127_3_filt_power_linearity\';
+anal_opts.tdc_import.dir='Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\unsorted\20181127_3_filt_power_linearity';
+
 %anal_opts.tdc_import.dir='Y:\TDC_user\ProgramFiles\my_read_tdc_gui_v1.0.1\dld_output\20181127_3_filt_power_linearity_attractive_misaligned\';
 anal_opts.tdc_import.file_name='d';
 anal_opts.tdc_import.force_load_save=false;   %takes precidence over force_reimport
