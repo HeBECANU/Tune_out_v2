@@ -35,6 +35,14 @@ loop_config.dir=folders;
 
 %data = load_pocessed_to_data(loop_config);
 
+
+%%
+%save('./data/20211207_imported_data_for_tune_out_polz_dep.mat','data')
+load('./data/20211207_imported_data_for_tune_out_polz_dep.mat','data')
+
+%load('./data/20190611_imported_data_for_tune_out_polz_dep.mat')
+%load('./data/20211221_imported_data_for_tune_out_polz_dep.mat','data')
+
 %% dist of atom number
 % qe=0.09;
 % [mean_atomnum,std_atomnum]=pooled_mean_and_std(data.drift.atom_num_probe.val,data.drift.atom_num_probe.std,data.drift.probe_shots);
@@ -49,8 +57,7 @@ loop_config.dir=folders;
 % ylabel('probability')
 
 %%
-%save('./data/20211207_imported_data_for_tune_out_polz_dep.mat')
-%load('./data/20190611_imported_data_for_tune_out_polz_dep.mat')
+
 
 %% Theory
 % TO val from https://journals.aps.org/pra/abstract/10.1103/PhysRevA.93.052516, 413.0859(4)
@@ -79,8 +86,8 @@ wlin=1./(to_unc.^2);
 
 
 %% polarisation model/data options
-pol_opts.location = 'pre_cen';%post, pre_cen, pre_left, pre_right
-pol_opts.predict_method = 'full_fit_pref_data';%'full_fit_pref_data','full_fit_pref_data','full_fit_only','only_data'; %obs (obsovation) fit (pertial fit) full_fit (fit with all parameters free)
+pol_opts.location = 'post';%post, pre_cen, pre_left, pre_right
+pol_opts.predict_method = 'only_data';%'full_fit_pref_data','full_fit_pref_data','full_fit_only','only_data'; %obs (obsovation) fit (pertial fit) full_fit (fit with all parameters free)
                                         %'interp_only','interp_pref_data','interp_pref_interp'
                                         %'gauss_only','gauss_pref_data','gauss_pref_interp'
 pol_opts.smoothing=3; %deg
@@ -94,6 +101,7 @@ pol_opts.qwp=data.drift.wp.qwp;
 
 pol_opts.add_noise=0; % used as a numerical way of propagating uncert
 pol_model=pol_data_query(pol_opts);
+pol_model_basic=pol_data_query_basic(pol_opts);
 
 polz_theta_val=pol_model.theta.val;
 polz_theta_ci=pol_model.theta.ci;
@@ -581,10 +589,8 @@ errorbar(binned_to_vq.q.val,shifted_scaled_to_vals, ...
     'o','CapSize',0,'MarkerSize',5,'Color',colors_main(1,:),...
     'MarkerFaceColor',colors_detail(1,:),'LineWidth',2.8);
 
-predict_predictor_input=cat(2,-1,0,-fit_param_vals_full(4));
-tosmh=predict(fit_mdl_full,predict_predictor_input,'Alpha',1-erf(1/sqrt(2)),'Prediction','Curve');
 
-plot(-1,predict_predictor_input,'xr')
+plot(-1,0,'xr')
 %ylim([min(shifted_scaled_to_vals),max(shifted_scaled_to_vals)])
 ylim([-2.5,1.2]*1)
 xlim([-1.1,1.1])
