@@ -37,9 +37,9 @@ pre_rotation_angle=-90;
 pre_angle_flip=-1;
 pre_hand_flip=1;
 
-power_unc_fixed=0.5;
-power_unc_prop=0.04;
-angle_unc=0.8.*pi/180; % value in radians
+power_unc_fixed=0.95;
+power_unc_prop=0.05;
+angle_unc=1.3.*pi/180; % value in radians
 
 
 if strcmp(pol_opts.location,'post')
@@ -54,7 +54,7 @@ if strcmp(pol_opts.location,'post')
     
     if add_noise
         pol_data_table.min_power_uw=pol_data_table.min_power_uw+randn(size(pol_data_table.min_power_uw)).*(power_unc_fixed+pol_data_table.min_power_uw.*power_unc_prop);
-        pol_data_table.min_power_uw=bound(pol_data_table.min_power_uw,0,inf)
+        pol_data_table.min_power_uw=bound(pol_data_table.min_power_uw,0,inf);
         pol_data_table.max_power_uw=pol_data_table.max_power_uw+randn(size(pol_data_table.max_power_uw)).*(power_unc_fixed+pol_data_table.max_power_uw.*power_unc_prop);
         pol_theta_val=pol_theta_val+randn(size(pol_data_table.min_power_uw))*angle_unc;
     end
@@ -397,13 +397,12 @@ elseif sum(strcmp(pol_opts.predict_method,{'full_fit_pref_fit','full_fit_pref_da
                     data_match_idx=data_match_idx(1);
                 end
                 
-                out_polz_state.cont.val(ii)=bound(pol_cont_val(data_match_idx),0,1); %bound the contrast to be 1
-                out_polz_state.theta.val(ii)=pol_theta_val(data_match_idx);  %%mod(,pi/2);
-                out_polz_state.v.val(ii)=pol_v_val(data_match_idx);
-                out_polz_state.v.unc(ii)=nan;
-                out_polz_state.theta.unc(ii)=nan;
-                out_polz_state.cont.unc(ii)=nan;
-                fulfilled_query(ii)=true;
+            out_polz_state.cont.val(ii)=bound(pol_cont_val(data_match_idx),0,1);
+            out_polz_state.cont.ci(ii,:)=pol_cont_ci(data_match_idx,:);
+            out_polz_state.theta.val(ii)=pol_theta_val(data_match_idx);%mod(,pi);
+            out_polz_state.theta.ci(ii,:)=pol_theta_ci(data_match_idx,:);
+            out_polz_state.v.val(ii)=pol_v_val(data_match_idx);
+            out_polz_state.v.ci(ii,:)=pol_v_ci(data_match_idx,:);
             end
         end
         
@@ -424,14 +423,15 @@ elseif sum(strcmp(pol_opts.predict_method,{'full_fit_pref_fit','full_fit_pref_da
     
     [a,b]=predict(fit_V_hwp_only,pol_opts.hwp(mask_query_no_qwp),'Alpha',1-erf(1/sqrt(2)));
     out_polz_state.v.val(mask_query_no_qwp)=a;
-    out_polz_state.v.unc(mask_query_no_qwp)=range(b,2)/2;
-    [a,b]=predict(fit_theta_hwp_only,query_hwp_wraped,'Alpha',1-erf(1/sqrt(2)));
+    out_polz_state.v.ci(mask_query_no_qwp,:)=b-a;
 
+    [a,b]=predict(fit_theta_hwp_only,query_hwp_wraped,'Alpha',1-erf(1/sqrt(2)));
     out_polz_state.theta.val(mask_query_no_qwp)=mod(a,pi);
-    out_polz_state.theta.unc(mask_query_no_qwp)=range(b,2)/2;
+    out_polz_state.theta.ci(mask_query_no_qwp,:)=b-a;
+
     [a,b]=predict(fit_cont_hwp_only,query_hwp_wraped,'Alpha',1-erf(1/sqrt(2)));
     out_polz_state.cont.val(mask_query_no_qwp)=bound(a,0,1);
-    out_polz_state.cont.unc(mask_query_no_qwp)=range(b,2)/2;
+    out_polz_state.cont.b(mask_query_no_qwp,:)=b-1;
     
     subplot(2,3,1)
     hold on
