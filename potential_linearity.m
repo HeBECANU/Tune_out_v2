@@ -289,6 +289,8 @@ anal_opts.ai_log.scan_time=14e-3;  %estimate of the sfp scan time,used to set th
 anal_opts.ai_log.trig_dld=anal_opts.trig_dld;
 anal_opts.ai_log.dld_aquire=anal_opts.dld_aquire;
 anal_opts.ai_log.trig_ai_in=anal_opts.trig_ai_in;
+anal_opts.ai_log.do_ac_mains_fit=false;
+anal_opts.ai_log.pd.diff_thresh=3;
 
 ai_log_out=ai_log_import(anal_opts.ai_log,data);
 %copy the output across
@@ -330,6 +332,8 @@ anal_opts.wm_log.rvb_thresh=10; %allowable value of abs(2*red-blue)
 
 anal_opts.wm_log.plot.failed=true;
 anal_opts.wm_log.plot.all=false;
+
+anal_opts.wm_log.global.fall_time = 0.417;
 
 
 
@@ -576,6 +580,26 @@ xsamp=linspace(min(xdat)-range(xdat)*5e-2,max(xdat)+range(xdat)*5e-2,1e3)'; %sam
 [ysamp_quad,yci_quad]=predict(fit_mdl,xsamp,'Prediction','curve','Alpha',ci_size_disp); %note the observation CI
 plt_quad_val=plot(xsamp,ysamp_quad,'k-','color',[0.4940, 0.1840, 0.5560]	);
 plt_quad_ci=plot(xsamp,yci_quad,'r','color',[0.9290, 0.6940, 0.1250]	);
+pred_vals = predict(fit_mdl,xdat,'Prediction','curve','Alpha',ci_size_disp)';
+[~,pred_PI] = predict(fit_mdl,xdat,'Prediction','curve','Alpha',erf(1/sqrt(2)));
+pred_PI = pred_PI-pred_vals';
+pred_std = mean(abs(pred_PI),2)';
+fit_res = ydat-pred_vals;
+chi_square = sum((fit_res./pred_std).^2);
+chi_square_per_dof = sum((fit_res./pred_std).^2)/506;
+
+[lfit_fin,lfit_gof,lfit_out] = fit(xdat,ydat','poly2');
+% %
+pred_vals=lfit_fin(xdat);
+pred_PI = predint(lfit_fin,xdat,erf(1/sqrt(2)),'observation','off')-pred_vals;
+pred_std = mean(abs(pred_PI),2);
+chi_square = sum((lfit_out.residuals./pred_std).^2);
+chi_square_per_dof = sum((lfit_out.residuals./pred_std).^2)/lfit_gof.dfe;
+
+
+
+% fit_res = ydat-pred_vals;
+% chi_2 = sum(fit_res.^2./predict(fit_mdl,xdat,'Prediction','curve','Alpha',ci_size_disp)');
 
 %cublic fit 
 modelfun = @(b,x) b(1)+b(2).*x+b(3).*x.^2+b(4).*x.^3; %simple linear model %+b(4).*x.^3+b(5).*x.^4
