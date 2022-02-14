@@ -1,24 +1,33 @@
 # Tune_out_v2_trap_freq
 **[Bryce M. Henson](https://github.com/brycehenson), [Jacob A. Ross](https://github.com/GroundhogState), [Kieran F. Thomas](https://github.com/KF-Thomas)**  
 
+main paper pre-print here (https://arxiv.org/abs/2107.00149)
+paper on the trap frequency measurement here (https://arxiv.org/abs/2201.10021) 
 
 ## Data
-Data integertiy is ensured with multipar files that can be downloaded alongside the data. [MultiPar](https://github.com/Yutaka-Sawada/MultiPar)
-*Small datset*
-[Sample data hosted on AARNET cloudstor (1.2GB 7z file)](https://cloudstor.aarnet.edu.au/plus/s/4Cm14OSxi9CqYIM/download) (CRC64: 89A73A8B34E5985A,SHA256: 86E87462030C2E4AA1B0BFAF958783097727A77C66DB1706ED0C07EA2FA69AD8)  
-[par2 file 1](https://cloudstor.aarnet.edu.au/plus/s/YVqpZYsmNfOVbJR/download) 
-[par2 file 2](https://cloudstor.aarnet.edu.au/plus/s/RoC7UmtOnxzbAIE/download) 
+Data integertiy is ensured with multipar files that can be downloaded alongside the data. [MultiPar](https://github.com/Yutaka-Sawada/MultiPar)  
+**Small datset**   
+[Sample data hosted on AARNET cloudstor (1.2GB 7z file)](https://cloudstor.aarnet.edu.au/plus/s/4Cm14OSxi9CqYIM/download) (CRC64: 89A73A8B34E5985A,SHA256: 86E87462030C2E4AA1B0BFAF958783097727A77C66DB1706ED0C07EA2FA69AD8)    
+[par2 file 1](https://cloudstor.aarnet.edu.au/plus/s/YVqpZYsmNfOVbJR/download)    
+[par2 file 2](https://cloudstor.aarnet.edu.au/plus/s/RoC7UmtOnxzbAIE/download)   
 The sample data contains 3 measurements of the tune out at different polarizations and is suitable for seeing how the first stage processing works (fitting trap oscillation frequency as a function of probe beam optical frequency to determien the tune out for a given polarization). 
-*Full datset* 
-This is the full dataset used in the paper. Please be mindfull that this is 160 GB and that (our and your) bandwidth is expensive.
-[Full dataset hosted on AARNET cloudstor (130 GB 7z file)](https://cloudstor.aarnet.edu.au/plus/s/UgqUQjSQ2SjfWmn/download) (CRC-32: 286f2c5b,SHA256: 5ec6a61419da33f84e0a78ea250b1209b9390084bc932a7d268002a44996ce15)
-[par file 1 (59 kB .par2)](https://cloudstor.aarnet.edu.au/plus/s/FA99BkT5SxQhJMR/download) 
-[par file 2 (13 GB .par2)](https://cloudstor.aarnet.edu.au/plus/s/iyfPJfx0EXjhTPa/download) 
 
+
+**Full datset**   
+This is the full dataset used in the paper. Please be mindfull that this is 160 GB and that (our and your) bandwidth is expensive.   
+[Full dataset hosted on AARNET cloudstor (130 GB 7z file)](https://cloudstor.aarnet.edu.au/plus/s/UgqUQjSQ2SjfWmn/download) (CRC-32: 286f2c5b,SHA256: 5ec6a61419da33f84e0a78ea250b1209b9390084bc932a7d268002a44996ce15)    
+[par file 1 (59 kB .par2)](https://cloudstor.aarnet.edu.au/plus/s/FA99BkT5SxQhJMR/download)    
+[par file 2 (13 GB .par2)](https://cloudstor.aarnet.edu.au/plus/s/iyfPJfx0EXjhTPa/download)     
+
+
+You are welcome to verify the data processing. Contributors are welcome to examine and fork the project.
 
 
 ## TO DO
-You are welcome to verify the data processing. Contributors are welcome to examine and fork the project.
+- [ ] change names of mat files to be easier to understand
+- [ ] change name of repo to match paper
+- [ ] improve the documentation of this readme
+- [ ] expalin the cache system
 
 
 
