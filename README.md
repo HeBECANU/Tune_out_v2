@@ -7,10 +7,11 @@ pre-print on the trap frequency measurement (https://arxiv.org/abs/2201.10021)
 ## Data
 Data integertiy is ensured with multipar files that can be downloaded alongside the data. [MultiPar](https://github.com/Yutaka-Sawada/MultiPar)  
 **Small datset**   
+The sample data contains 3 measurements of the tune out at different polarizations and is suitable for seeing how the first stage processing works (fitting trap oscillation frequency as a function of probe beam optical frequency to determien the tune out for a given polarization).  
 [Sample data hosted on AARNET cloudstor (1.2GB 7z file)](https://cloudstor.aarnet.edu.au/plus/s/4Cm14OSxi9CqYIM/download) (CRC64: 89A73A8B34E5985A,SHA256: 86E87462030C2E4AA1B0BFAF958783097727A77C66DB1706ED0C07EA2FA69AD8)    
 [par2 file 1](https://cloudstor.aarnet.edu.au/plus/s/YVqpZYsmNfOVbJR/download)    
 [par2 file 2](https://cloudstor.aarnet.edu.au/plus/s/RoC7UmtOnxzbAIE/download)   
-The sample data contains 3 measurements of the tune out at different polarizations and is suitable for seeing how the first stage processing works (fitting trap oscillation frequency as a function of probe beam optical frequency to determien the tune out for a given polarization). 
+
 
 
 **Full datset**   
