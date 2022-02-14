@@ -3,19 +3,24 @@
 
 
 ## Data
-[Sample data can be found hosted on cloudstor as a 1.2GB 7z file](https://cloudstor.aarnet.edu.au/plus/s/4Cm14OSxi9CqYIM/download) (CRC64: 89A73A8B34E5985A,SHA256: 86E87462030C2E4AA1B0BFAF958783097727A77C66DB1706ED0C07EA2FA69AD8) [par2 file 1](https://cloudstor.aarnet.edu.au/plus/s/YVqpZYsmNfOVbJR/download)
-[par2 file 2](https://cloudstor.aarnet.edu.au/plus/s/RoC7UmtOnxzbAIE/download)
-The sample data contains 3 measurements of the tune out at different polarizations and is suitable for seeing how the first stage processing works (fitting trap oscillation frequency as a function of probe beam optical frequency to determien the tune out for a given polarization). In future the full dataset will be made available to allow full replication.
+Data integertiy is ensured with multipar files that can be downloaded alongside the data. [MultiPar](https://github.com/Yutaka-Sawada/MultiPar)
+*Small datset*
+[Sample data hosted on AARNET cloudstor (1.2GB 7z file)](https://cloudstor.aarnet.edu.au/plus/s/4Cm14OSxi9CqYIM/download) (CRC64: 89A73A8B34E5985A,SHA256: 86E87462030C2E4AA1B0BFAF958783097727A77C66DB1706ED0C07EA2FA69AD8)  
+[par2 file 1](https://cloudstor.aarnet.edu.au/plus/s/YVqpZYsmNfOVbJR/download) 
+[par2 file 2](https://cloudstor.aarnet.edu.au/plus/s/RoC7UmtOnxzbAIE/download) 
+The sample data contains 3 measurements of the tune out at different polarizations and is suitable for seeing how the first stage processing works (fitting trap oscillation frequency as a function of probe beam optical frequency to determien the tune out for a given polarization). 
+*Full datset* 
+This is the full dataset used in the paper. Please be mindfull that this is 160 GB and that (our and your) bandwidth is expensive.
+[Full dataset hosted on AARNET cloudstor (130 GB 7z file)](https://cloudstor.aarnet.edu.au/plus/s/UgqUQjSQ2SjfWmn/download) (CRC-32: 286f2c5b,SHA256: 5ec6a61419da33f84e0a78ea250b1209b9390084bc932a7d268002a44996ce15)
+[par file 1 (59 kB .par2)](https://cloudstor.aarnet.edu.au/plus/s/FA99BkT5SxQhJMR/download) 
+[par file 2 (13 GB .par2)](https://cloudstor.aarnet.edu.au/plus/s/iyfPJfx0EXjhTPa/download) 
+
 
 
 ## TO DO
-Contributors are not welcome at this time as this is an internal project in the HE* BEC group. In the future the full dataset will be made available and you will be welcome to verify the data processing.
-- [x] make 2d plots of the polarization fit
-- [x] wrap the TOSMHT code into a function and bootstrap it
-- [x] create an option of pol_data_query that just uses the measured polarization
-- [ ] add other polarization mesurments to pol_data_query 
-  - [ ] hybrid polz data for prewindow
-- [ ] use anaytic solution of anharmonic damped oscllator to 
+You are welcome to verify the data processing. Contributors are welcome to examine and fork the project.
+
+
 
 ## About
 Determine the Tune out from a dataset using the measured change in trap frequency when the probe beam is applied.  
