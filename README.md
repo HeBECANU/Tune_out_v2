@@ -1,8 +1,8 @@
 # Tune_out_v2_trap_freq
 **[Bryce M. Henson](https://github.com/brycehenson), [Jacob A. Ross](https://github.com/GroundhogState), [Kieran F. Thomas](https://github.com/KF-Thomas)**  
 
-main paper pre-print here (https://arxiv.org/abs/2107.00149)   
-paper on the trap frequency measurement here (https://arxiv.org/abs/2201.10021)    
+main paper pre-print (https://arxiv.org/abs/2107.00149)   
+pre-print on the trap frequency measurement (https://arxiv.org/abs/2201.10021)    
 
 ## Data
 Data integertiy is ensured with multipar files that can be downloaded alongside the data. [MultiPar](https://github.com/Yutaka-Sawada/MultiPar)  
