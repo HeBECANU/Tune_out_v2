@@ -24,6 +24,7 @@ You are welcome to verify the data processing. Contributors are welcome to exami
 
 
 ## TO DO
+- [ ] create a backup of the code state for easier install
 - [ ] change names of mat files to be easier to understand
 - [ ] change name of repo to match paper
 - [ ] improve the documentation of this readme
