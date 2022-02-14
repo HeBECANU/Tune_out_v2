@@ -37,9 +37,9 @@ pre_rotation_angle=-90;
 pre_angle_flip=-1;
 pre_hand_flip=1;
 
-power_unc_fixed=0.95;
-power_unc_prop=0.05;
-angle_unc=1.3.*pi/180; % value in radians
+power_unc_fixed=0.5;
+power_unc_prop=0.03;
+angle_unc=0.65*pi/180; % value in radians
 
 
 if strcmp(pol_opts.location,'post')

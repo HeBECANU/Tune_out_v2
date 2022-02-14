@@ -87,6 +87,7 @@ set_up_project_path
 hebec_constants %call the constants function that makes some globals
 
 
+
 %%
 % BEGIN USER VAR-------------------------------------------------
 
@@ -588,7 +589,7 @@ anal_opts.atom_num_fit.plot.each_shot=false;
 anal_opts.atom_num_fit.plot.history=false;
 anal_opts.atom_num_fit.qe=anal_opts.global.qe;
 
-data.num_fit=fit_atom_number(anal_opts.atom_num_fit,data);
+data.num_fit=fit_pal_atom_number(anal_opts.atom_num_fit,data);
 
 
 %% Fitting Temp using segmentation

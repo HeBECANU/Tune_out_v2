@@ -12,9 +12,8 @@ set_up_project_path('.')
 %%
 hebec_constants %call the constants function that makes some globals
 
-
-% import data
-%% HWP
+%% import data
+%HWP
 % loop_config.dir = {
 %     '..\scratch_data\20190227_qwp_270',
 %     '..\scratch_data\20190227_qwp_286',
@@ -22,15 +21,16 @@ hebec_constants %call the constants function that makes some globals
 %     };
 %root_data_dir='..\scratch_data';
 %root_data_dir='Z:\DataBackup\Bryce_Data_Backup\TO_working_data\to_main_data';
-root_data_dir='Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\to_main_data'
-files = dir(root_data_dir);
-files=files(3:end);
-% Get a logical vector that tells which is a directory.
-dir_mask = [files.isdir];
-folders=files(dir_mask);
-folders=arrayfun(@(x) fullfile(root_data_dir,x.name),folders,'UniformOutput' ,false);
-folders
-loop_config.dir=folders;
+
+
+% root_data_dir='Z:\EXPERIMENT-DATA\2018_Tune_Out_V2\to_main_data'
+% files = dir(root_data_dir);
+% files=files(3:end);
+% % Get a logical vector that tells which is a directory.
+% dir_mask = [files.isdir];
+% folders=files(dir_mask);
+% folders=arrayfun(@(x) fullfile(root_data_dir,x.name),folders,'UniformOutput' ,false);
+% loop_config.dir=folders;
 %%
 
 %data = load_pocessed_to_data(loop_config);
@@ -186,7 +186,7 @@ fprintf('TO wavelength       %.6f±%f nm \n',to_wav_val*1e9,to_wav_unc*1e9)
 % this checks the propagation of polarization measurmeent by adding the esitmated error to the
 % polarizer measuremetns
 
-do_polz_prop_numericaly=false
+do_polz_prop_numericaly=true
 
 if do_polz_prop_numericaly
     num_repeats=100;
@@ -197,16 +197,19 @@ if do_polz_prop_numericaly
         noised_pol_models{ii}=pol_data_query(pol_opts);
     end
     
-    
+    % check that this gives -1 ,1
+    % prctile(randn(10000,1),[1/2*(1+erf(-1/sqrt(2))),1/2*(1+erf(1/sqrt(2)))]*100)
+
+
     noised_v=cellfun(@(x) x.v.val,noised_pol_models,'UniformOutput',0);
     noised_v=cat(2,noised_v{:});
-    noised_v_cis=prctile(noised_v',[1-erf(1/sqrt(2)),erf(1/sqrt(2))]*100);
+    noised_v_cis=prctile(noised_v',[1/2*(1+erf(-1/sqrt(2))),1/2*(1+erf(1/sqrt(2)))]*100);
     noised_v_cis=noised_v_cis';
     noised_v_cis=noised_v_cis-repmat(mean(noised_v,2),[1,2])
     
     noised_cont=cellfun(@(x) x.cont.val,noised_pol_models,'UniformOutput',0);
     noised_cont=cat(2,noised_cont{:});
-    noised_cont_cis=prctile(noised_cont',[1-erf(1/sqrt(2)),erf(1/sqrt(2))]*100);
+    noised_cont_cis=prctile(noised_cont',[1/2*(1+erf(-1/sqrt(2))),1/2*(1+erf(1/sqrt(2)))]*100);
     noised_cont_cis=noised_cont_cis';
     noised_cont_cis=noised_cont_cis-repmat(mean(noised_cont,2),[1,2]);
     
@@ -549,7 +552,7 @@ ylabel('Tune out -TOSMHT (MHz)')
 title('V=0 extrapolation')
 % now I want to plot every scan with its error bar that has been corrected onto V=0
 
-shift_vq=v_correcting_shift(pol_model.v.val,pol_model.q_at.val,fit_mdl_full);
+shift_vq=v_correcting_shift(pol_model.v.val,pol_model.q_at.val,fit_mdl_full,0,0);
 
 shifted_scaled_to_vals=(to_val_for_polz-to_scalar_minus_half_tensor.val+shift_vq(:,1)*1e6)*1e-6;
 
@@ -631,7 +634,7 @@ plot(samp_q,(fit_mdl_val-to_scalar_minus_half_tensor.val)*scale_factor_freq,'k')
 %
 % now I want to plot every scan with its error bar that has been corrected onto V=0
 % caluate the frequnecy shift for each binv,q
-shift_vq=v_correcting_shift(binned_to_vq.v.val,binned_to_vq.q.val,fit_mdl_full);
+shift_vq=v_correcting_shift(binned_to_vq.v.val,binned_to_vq.q.val,fit_mdl_full,0,0);
 shifted_scaled_to_vals=(binned_to_vq.to.val-to_scalar_minus_half_tensor.val+shift_vq(:,1)*1e6)*scale_factor_freq;
 
 
@@ -642,25 +645,32 @@ deriv_to_with_v=deriv_to_with_v*1e6;
 combined_to_unc_qdep=(binned_to_vq.v.ci*deriv_to_with_v.*[-1,1]).^2+([-binned_to_vq.to.ste,binned_to_vq.to.ste]).^2;
 combined_to_unc_qdep=[-sqrt(combined_to_unc_qdep(:,1)),sqrt(combined_to_unc_qdep(:,2))];
 %
+deriv_to_with_q=derivest(@(x) predict(fit_mdl_full,[x,0,-fit_param_vals_full(4)]),1,'Vectorized','no');
+deriv_to_with_q=deriv_to_with_q*1e6;
+%
+combined_to_ci_vqdep=(binned_to_vq.v.ci*deriv_to_with_v.*[-1,1]).^2+(fliplr(binned_to_vq.q.ci.*[-1,1])*deriv_to_with_q).^2+([-binned_to_vq.to.ste,binned_to_vq.to.ste]).^2;
+combined_to_ci_vqdep=[-sqrt(combined_to_ci_vqdep(:,1)),sqrt(combined_to_ci_vqdep(:,2))];
+
+
 
 % % version thin bars for polz
-% errorbar(binned_to_vq.q.val,shifted_scaled_to_vals, ...
-%     combined_to_unc(:,1)*scale_factor_freq,combined_to_unc(:,1)*scale_factor_freq,...
-%     binned_to_vq.q.ci(:,1),binned_to_vq.q.ci(:,1),...
-%      'o','CapSize',0,'Marker','none','Color',colors_detail(1,:),...
-%      'LineWidth',1.5);
-% 
-% errorbar(binned_to_vq.q.val,shifted_scaled_to_vals, ...
-%         binned_to_vq.to.ste*scale_factor_freq,binned_to_vq.to.ste*scale_factor_freq,...
-%     'o','CapSize',0,'MarkerSize',5,'Color',colors_main(1,:),...
-%     'MarkerFaceColor',colors_detail(1,:),'LineWidth',2.8);
-
-
 errorbar(binned_to_vq.q.val,shifted_scaled_to_vals, ...
     combined_to_unc_qdep(:,1)*scale_factor_freq,combined_to_unc_qdep(:,1)*scale_factor_freq,...
     binned_to_vq.q.ci(:,1),binned_to_vq.q.ci(:,1),...
-     'o','CapSize',0,'Marker','none','Color',colors_main(1,:),...
-     'LineWidth',2);
+     'o','CapSize',0,'Marker','none','Color',colors_detail(1,:),...
+     'LineWidth',1.5);
+
+errorbar(binned_to_vq.q.val,shifted_scaled_to_vals, ...
+        binned_to_vq.to.ste*scale_factor_freq,binned_to_vq.to.ste*scale_factor_freq,...
+    'o','CapSize',0,'MarkerSize',5,'Color',colors_main(1,:),...
+    'MarkerFaceColor',colors_detail(1,:),'LineWidth',2.8);
+
+
+% errorbar(binned_to_vq.q.val,shifted_scaled_to_vals, ...
+%     combined_to_unc_qdep(:,1)*scale_factor_freq,combined_to_unc_qdep(:,2)*scale_factor_freq,...
+%     binned_to_vq.q.ci(:,1),binned_to_vq.q.ci(:,2),...
+%      'o','CapSize',0,'Marker','none','Color',colors_main(1,:),...
+%      'LineWidth',2);
 
 plot(binned_to_vq.q.val,shifted_scaled_to_vals,...
      'o','MarkerSize',5,'Color',colors_main(1,:),...
@@ -674,6 +684,7 @@ errorbar(-1,0, ...
      'o','CapSize',0,'Marker','none','Color','r',...
      'LineWidth',2);
 plot(-1,0,'Marker','x','Color','r','LineWidth',2,'MarkerSize', 12)
+
 
 %ylim([min(shifted_scaled_to_vals),max(shifted_scaled_to_vals)])
 ylim([-2.5,1.2]*1)
@@ -689,6 +700,137 @@ set(gca,'linewidth', 1.5)
 set(gca,'TickLength',[0.02,0])
 xticks([-1,-0.5,0,0.5,1])
 yticks(-2:1:1)
+
+fig_name='to_q_dependence';
+%fig_name='pal_mean_v_acc_dyn_static';
+fig_dir='./figs/to_v_q_dep/20220212';
+fig2svg(fullfile(fig_dir,strcat(fig_name,'.svg')))
+saveas(gcf,fullfile(fig_dir,strcat(fig_name,'.pdf')))
+%export_fig(fullfile(fig_dir,strcat(fig_name,'.pdf')))
+exportgraphics(gcf,fullfile(fig_dir,strcat(fig_name,'.eps')),'ContentType','vector')
+%export_fig(fullfile(fig_dir,strcat(fig_name,'.eps')))
+
+%% Q dep plot for b thesis
+
+font_size_global=18;
+font_size_label=19;
+colors_main=[[53,126,220];[33,188,44];[0,0,0]]./255;
+lch=colorspace('RGB->LCH',colors_main(:,:));
+lch(:,1)=lch(:,1)+20;
+colors_detail=colorspace('LCH->RGB',lch);
+%would prefer to use srgb_2_Jab here
+color_shaded=colorspace('RGB->LCH',colors_main(3,:));
+color_shaded(1)=50;
+color_shaded=colorspace('LCH->RGB',color_shaded);
+
+
+% plot with Q, Stokes 2nd
+scale_factor_freq=1e-9;
+samp_q=col_vec(linspace(-1.1,1.1,1e4));
+predict_predictor_input=cat(2,samp_q,samp_q*0,repmat(-fit_param_vals_full(4),numel(samp_q),1));
+[fit_mdl_val,fit_mdl_ci_curve]=predict(fit_mdl_full,predict_predictor_input,'Alpha',1-erf(1/sqrt(2)),'Prediction','Curve');
+%'Prediction','Curve','Prediction','observation'
+fit_mdl_val=fit_mdl_val*1e6+to_fit_val_offset;
+fit_mdl_ci_curve=fit_mdl_ci_curve*1e6+to_fit_val_offset;
+
+[~,fit_mdl_ci_obs]=predict(fit_mdl_full,predict_predictor_input,'Alpha',1-erf(1/sqrt(2)),'Prediction','observation');
+fit_mdl_ci_obs=fit_mdl_ci_obs*1e6+to_fit_val_offset;
+stfig('Q dep,binned');
+clf
+phci=patch([samp_q', fliplr(samp_q')],...
+    ([fit_mdl_ci_curve(:,1)', fliplr(fit_mdl_ci_curve(:,2)')]-to_scalar_minus_half_tensor.val).*scale_factor_freq,...
+    [1,1,1].*0.7,'EdgeColor','none');
+
+% patch([samp_q', fliplr(samp_q')],...
+%     ([fit_mdl_ci_obs(:,1)', fliplr(fit_mdl_ci_obs(:,2)')]-to_scalar_minus_half_tensor.val).*scale_factor_freq,...
+%     [1,1,1].*0.5,'EdgeColor','none')
+
+hold on
+phmdl=plot(samp_q,(fit_mdl_val-to_scalar_minus_half_tensor.val)*scale_factor_freq,'k');
+
+%
+% now I want to plot every scan with its error bar that has been corrected onto V=0
+% caluate the frequnecy shift for each binv,q
+shift_vq=v_correcting_shift(binned_to_vq.v.val,binned_to_vq.q.val,fit_mdl_full,0,0);
+shifted_scaled_to_vals=(binned_to_vq.to.val-to_scalar_minus_half_tensor.val+shift_vq(:,1)*1e6)*scale_factor_freq;
+
+
+deriv_to_with_v=derivest(@(x) predict(fit_mdl_full,[0,x,-fit_param_vals_full(4)]),1,'Vectorized','no');
+deriv_to_with_v=deriv_to_with_v*1e6;
+
+% compine the measurment error with the propagated error in the v state
+combined_to_unc_qdep=(binned_to_vq.v.ci*deriv_to_with_v.*[-1,1]).^2+([-binned_to_vq.to.ste,binned_to_vq.to.ste]).^2;
+combined_to_unc_qdep=[-sqrt(combined_to_unc_qdep(:,1)),sqrt(combined_to_unc_qdep(:,2))];
+%
+deriv_to_with_q=derivest(@(x) predict(fit_mdl_full,[x,0,-fit_param_vals_full(4)]),1,'Vectorized','no');
+deriv_to_with_q=deriv_to_with_q*1e6;
+%
+combined_to_ci_vqdep=(binned_to_vq.v.ci*deriv_to_with_v.*[-1,1]).^2+(fliplr(binned_to_vq.q.ci.*[-1,1])*deriv_to_with_q).^2+([-binned_to_vq.to.ste,binned_to_vq.to.ste]).^2;
+combined_to_ci_vqdep=[-sqrt(combined_to_ci_vqdep(:,1)),sqrt(combined_to_ci_vqdep(:,2))];
+
+
+
+% % version thin bars for polz
+phce=errorbar(binned_to_vq.q.val,shifted_scaled_to_vals, ...
+    combined_to_unc_qdep(:,1)*scale_factor_freq,combined_to_unc_qdep(:,1)*scale_factor_freq,...
+    binned_to_vq.q.ci(:,1),binned_to_vq.q.ci(:,1),...
+     'o','CapSize',0,'Marker','none','Color',colors_detail(1,:),...
+     'LineWidth',1.5);
+
+phse=errorbar(binned_to_vq.q.val,shifted_scaled_to_vals, ...
+        binned_to_vq.to.ste*scale_factor_freq,binned_to_vq.to.ste*scale_factor_freq,...
+    'o','CapSize',0,'MarkerSize',5,'Color',colors_main(1,:),...
+    'MarkerFaceColor',colors_detail(1,:),'LineWidth',2.8);
+
+
+% errorbar(binned_to_vq.q.val,shifted_scaled_to_vals, ...
+%     combined_to_unc_qdep(:,1)*scale_factor_freq,combined_to_unc_qdep(:,2)*scale_factor_freq,...
+%     binned_to_vq.q.ci(:,1),binned_to_vq.q.ci(:,2),...
+%      'o','CapSize',0,'Marker','none','Color',colors_main(1,:),...
+%      'LineWidth',2);
+
+phdat=plot(binned_to_vq.q.val,shifted_scaled_to_vals,...
+     'o','MarkerSize',5,'Color',colors_main(1,:),...
+     'MarkerFaceColor',colors_detail(1,:),'LineWidth',2.8);
+
+
+errorbar(-1,0, ...
+    to_scalar_minus_half_tensor.unc_predict*scale_factor_freq,...
+    to_scalar_minus_half_tensor.unc_predict*scale_factor_freq,...
+    0,0,...
+     'o','CapSize',0,'Marker','none','Color','r',...
+     'LineWidth',2);
+phto=plot(-1,0,'Marker','x','Color','r','LineWidth',2,'MarkerSize', 12,'LineStyle','none');
+
+ln= legend([phdat,phse,phce,phmdl,phci,phto],'data','SE','Stat','Mdl.','Mdl. CI','$f_{TO}(-1,0)$')
+ln.FontSize=12;
+legend('location','NorthEast')
+    
+
+%ylim([min(shifted_scaled_to_vals),max(shifted_scaled_to_vals)])
+ylim([-2.5,1.2]*1)
+xlim([-1.1,1.1])
+hold off
+box on
+set(gca,'FontSize',font_size_global,'FontName',font_name)
+xlabel('$\mathcal{Q_{A}}$ ($2^{\mathrm{nd}}$ Stokes parameter)','interpreter','latex','FontSize',font_size_label)
+ylabel('$f_{TO}(\mathcal{Q_{A}},\mathcal{V}=0) -f_{TO}(-1,0)$ (GHz)','interpreter','latex','FontSize',font_size_label)
+set(gcf,'Units','Pixels')
+set(gcf,'Position',[1068,355,676,453])
+set(gca,'linewidth', 1.5)
+set(gca,'TickLength',[0.02,0])
+xticks([-1,-0.5,0,0.5,1])
+yticks(-2:1:1)
+
+
+fig_name='to_q_dependence_detailed';
+%fig_name='pal_mean_v_acc_dyn_static';
+fig_dir='./figs/to_v_q_dep/20220212';
+fig2svg(fullfile(fig_dir,strcat(fig_name,'.svg')))
+saveas(gcf,fullfile(fig_dir,strcat(fig_name,'.pdf')))
+%export_fig(fullfile(fig_dir,strcat(fig_name,'.pdf')))
+exportgraphics(gcf,fullfile(fig_dir,strcat(fig_name,'.eps')),'ContentType','vector')
+%export_fig(fullfile(fig_dir,strcat(fig_name,'.eps')))
 
 %%
 
@@ -713,14 +855,16 @@ subplot(3,1,2)
 % now find this in terms of standard deviations
 % need to select the right CI depending if pos or neg
 resid_neg_mask=shifted_scaled_to_vals<=0;
+
+fprintf('using only the freq uncert combined with propagateq q uncert\n')
 % get the ci corresponding to the sign of the resid
 signed_ci=combined_to_unc_qdep(:,1)*nan;
 signed_ci(resid_neg_mask)=combined_to_unc_qdep(resid_neg_mask,1);
 signed_ci(~resid_neg_mask)=combined_to_unc_qdep(~resid_neg_mask,2);
 residuals_num_ste=shifted_scaled_to_vals./(signed_ci*1e-6);
-fprintf('mean  of residuals/ste in Q dep %f \n',mean(residuals_num_ste))
+fprintf('mean  of residuals/ste in Q dep %.3f \n',mean(residuals_num_ste))
 plot(samp_q,residuals_num_ste,'ok')
-fprintf('sd of (residuals/ste) in Q dep %.1f \n',std(residuals_num_ste))
+fprintf('sd of (residuals/ste) in Q dep %.3f \n',std(residuals_num_ste))
 xlabel('$\mathcal{Q_{A}}$, ($2^{\mathrm{nd}}$ Stokes parameter )') %font_size_label
 err_less_than_1_ci_frac=sum(residuals_num_ste<1)/numel(residuals_num_ste);
 fprintf('fraction of points less than 1 ci from fit %f \n',err_less_than_1_ci_frac)
@@ -732,13 +876,34 @@ prctile(residuals_num_ste,[1-erf(1/sqrt(2)),erf(1/sqrt(2))]*100)
 
 
 
+fprintf('using the freq uncert combined with propagateq v and q uncert\n')
+signed_ci=combined_to_ci_vqdep(:,1)*nan;
+signed_ci(resid_neg_mask)=combined_to_ci_vqdep(resid_neg_mask,1);
+signed_ci(~resid_neg_mask)=combined_to_ci_vqdep(~resid_neg_mask,2);
+residuals_num_ste=shifted_scaled_to_vals./(signed_ci*1e-6);
+fprintf('mean  of residuals/ste in Q dep %.3f \n',mean(residuals_num_ste))
+plot(samp_q,residuals_num_ste,'ok')
+fprintf('sd of (residuals/ste) in Q dep %.3f \n',std(residuals_num_ste))
+xlabel('$\mathcal{Q_{A}}$, ($2^{\mathrm{nd}}$ Stokes parameter )') %font_size_label
+err_less_than_1_ci_frac=sum(residuals_num_ste<1)/numel(residuals_num_ste);
+fprintf('fraction of points less than 1 ci from fit %f \n',err_less_than_1_ci_frac)
+ylabel('Error From Model (MHz)')
+set(gca,'FontSize',font_size_global,'FontName',font_name)
+subplot(3,1,3)
+ecdf(residuals_num_ste)
+prctile(residuals_num_ste,[1-erf(1/sqrt(2)),erf(1/sqrt(2))]*100)
+
 %%
 
 % do the same for V, Stokes 4th
-% extrapolate to Q=0
+% extrapolate to Q=0 or -1
+q_extrap_val=0;
+
+shift_vq=v_correcting_shift(binned_to_vq.v.val,binned_to_vq.q.val,fit_mdl_full,0,q_extrap_val);
+shifted_scaled_to_vals=(binned_to_vq.to.val-to_scalar_minus_half_tensor.val+shift_vq(:,2)*1e6)*scale_factor_freq;
+
 
 % shift the measutment onto Q=0
-shifted_scaled_to_vals=(binned_to_vq.to.val-to_scalar_minus_half_tensor.val+shift_vq(:,2)*1e6)*scale_factor_freq;
 deriv_to_with_q=derivest(@(x) predict(fit_mdl_full,[x,0,-fit_param_vals_full(4)]),1,'Vectorized','no');
 deriv_to_with_q=deriv_to_with_q*1e6;
 
@@ -753,7 +918,7 @@ combined_to_unc_vdep=[-sqrt(combined_to_unc_vdep(:,1)),sqrt(combined_to_unc_vdep
 % find the model values along Q=0
 samp_v=col_vec(linspace(-1.1,1.1,1e4));
 scale_factor_freq=1e-9;
-predict_predictor_input=cat(2,samp_v*0,samp_v,repmat(-fit_param_vals_full(4),numel(samp_v),1));
+predict_predictor_input=cat(2,samp_v*0+q_extrap_val,samp_v,repmat(-fit_param_vals_full(4),numel(samp_v),1));
 [fit_mdl_val,fit_mdl_ci_curve]=predict(fit_mdl_full,predict_predictor_input,'Alpha',1-erf(1/sqrt(2)),'Prediction','Curve');
 
 %'Prediction','Curve','Prediction','observation'
@@ -768,13 +933,14 @@ hold on
 plot(samp_v,(fit_mdl_val-to_scalar_minus_half_tensor.val)*scale_factor_freq,'k')
 %xlabel('$4^{th}$ Stokes parameter,\bfv\rm','interpreter','latex')
 xlabel('$\mathcal{V}$ ($4^{\mathrm{th}}$ Stokes parameter)','interpreter','latex')
-ylabel('$f_{TO}(\mathcal{Q_{A}},\mathcal{V}=0) -f_{TO}(-1,0)$ (GHz)','interpreter','latex','FontSize',font_size_label)
-%title('Q=-1 extrapolation')
+%ylabel('$f_{TO}(\mathcal{Q_{A}}=0,\mathcal{V}) -f_{TO}(-1,0)$ (GHz)','interpreter','latex','FontSize',font_size_label)
+ystring=sprintf('$f_{TO}(\\mathcal{Q_{A}}=%g,\\mathcal{V}) -f_{TO}(-1,0)$ (GHz)',q_extrap_val);
+ylabel(ystring,'interpreter','latex','FontSize',font_size_label)
 
 
 errorbar(binned_to_vq.v.val,shifted_scaled_to_vals, ...
-    combined_to_unc_vdep(:,1)*scale_factor_freq,combined_to_unc_vdep(:,1)*scale_factor_freq,...
-    binned_to_vq.v.ci(:,1),binned_to_vq.v.ci(:,1),...
+    combined_to_unc_vdep(:,1)*scale_factor_freq,combined_to_unc_vdep(:,2)*scale_factor_freq,...
+    binned_to_vq.v.ci(:,1),binned_to_vq.v.ci(:,2),...
      'o','CapSize',0,'Marker','none','Color',colors_main(1,:),...
      'LineWidth',2);
 
@@ -796,6 +962,77 @@ set(gca,'linewidth', 1.5)
 set(gca,'TickLength',[0.02,0])
 set(gcf,'Units','Pixels')
 set(gcf,'Position',[1068,355,676,453])
+
+fig_name='to_v_dependence';
+%fig_name='pal_mean_v_acc_dyn_static';
+fig_dir='./figs/to_v_q_dep/20220212';
+fig2svg(fullfile(fig_dir,strcat(fig_name,'.svg')))
+saveas(gcf,fullfile(fig_dir,strcat(fig_name,'.pdf')))
+%export_fig(fullfile(fig_dir,strcat(fig_name,'.pdf')))
+exportgraphics(gcf,fullfile(fig_dir,strcat(fig_name,'.eps')),'ContentType','vector')
+%export_fig(fullfile(fig_dir,strcat(fig_name,'.eps')))
+%% Thesis V dep
+
+stfig('V dep,binned');
+clf
+patch([samp_v', fliplr(samp_v')],...
+    ([fit_mdl_ci_curve(:,1)', fliplr(fit_mdl_ci_curve(:,2)')]-to_scalar_minus_half_tensor.val).*scale_factor_freq,...
+    [1,1,1].*0.7,'EdgeColor','none')
+hold on
+plot(samp_v,(fit_mdl_val-to_scalar_minus_half_tensor.val)*scale_factor_freq,'k')
+%xlabel('$4^{th}$ Stokes parameter,\bfv\rm','interpreter','latex')
+xlabel('$\mathcal{V}$ ($4^{\mathrm{th}}$ Stokes parameter)','interpreter','latex')
+%ylabel('$f_{TO}(\mathcal{Q_{A}}=0,\mathcal{V}) -f_{TO}(-1,0)$ (GHz)','interpreter','latex','FontSize',font_size_label)
+ystring=sprintf('$f_{TO}(\\mathcal{Q_{A}}=%g,\\mathcal{V}) -f_{TO}(-1,0)$ (GHz)',q_extrap_val);
+ylabel(ystring,'interpreter','latex','FontSize',font_size_label)
+
+% 
+% errorbar(binned_to_vq.v.val,shifted_scaled_to_vals, ...
+%     combined_to_unc_vdep(:,1)*scale_factor_freq,combined_to_unc_vdep(:,2)*scale_factor_freq,...
+%     binned_to_vq.v.ci(:,1),binned_to_vq.v.ci(:,2),...
+%      'o','CapSize',0,'Marker','none','Color',colors_main(1,:),...
+%      'LineWidth',2);
+
+
+errorbar(binned_to_vq.v.val,shifted_scaled_to_vals, ...
+    combined_to_unc_qdep(:,1)*scale_factor_freq,combined_to_unc_qdep(:,1)*scale_factor_freq,...
+    binned_to_vq.q.ci(:,1),binned_to_vq.q.ci(:,1),...
+     'o','CapSize',0,'Marker','none','Color',colors_detail(1,:),...
+     'LineWidth',1.5);
+
+errorbar(binned_to_vq.v.val,shifted_scaled_to_vals, ...
+        binned_to_vq.to.ste*scale_factor_freq,binned_to_vq.to.ste*scale_factor_freq,...
+    'o','CapSize',0,'MarkerSize',5,'Color',colors_main(1,:),...
+    'MarkerFaceColor',colors_detail(1,:),'LineWidth',2.8);
+
+
+plot(binned_to_vq.v.val,shifted_scaled_to_vals,...
+     'o','MarkerSize',5,'Color',colors_main(1,:),...
+     'MarkerFaceColor',colors_detail(1,:),'LineWidth',2.8);
+
+
+hold off
+%ylim([min(shifted_scaled_to_vals),max(shifted_scaled_to_vals)]) 
+ylim([-8.5,8.5].*1) 
+xlim([-1.1,1.1])
+xticks([-1,-0.5,0,0.5,1])
+yticks(-8:4:8)
+box on
+
+set(gca,'FontSize',font_size_global,'FontName',font_name)
+set(gca,'linewidth', 1.5)
+set(gca,'TickLength',[0.02,0])
+set(gcf,'Units','Pixels')
+set(gcf,'Position',[1068,355,676,453])
+
+fig_name='to_v_dependence_detailed';
+%fig_name='pal_mean_v_acc_dyn_static';
+fig_dir='./figs/to_v_q_dep/20220212';
+fig2svg(fullfile(fig_dir,strcat(fig_name,'.svg')))
+saveas(gcf,fullfile(fig_dir,strcat(fig_name,'.pdf')))
+%export_fig(fullfile(fig_dir,strcat(fig_name,'.pdf')))
+exportgraphics(gcf,fullfile(fig_dir,strcat(fig_name,'.eps')),'ContentType','vector')
+%export_fig(fullfile(fig_dir,strcat(fig_name,'.eps')))
 
 
 %%
@@ -827,23 +1064,29 @@ fprintf('sd of (residuals/ste) in V dep %.1f \n',std(residuals_num_ste))
 
 
 
-function shift_vq=v_correcting_shift(v_in,q_in,mdl)
+function shift_vq=v_correcting_shift(v_in,q_in,mdl,v_extrap,q_extrap)
     q_in=col_vec(q_in);
     v_in=col_vec(v_in);
     if numel(v_in)~=numel(q_in)
         error('v,q must be same size')
     end
+    if isempty(v_extrap)
+        v_extrap=0;
+    end
+    if isempty(q_extrap)
+        q_extrap=0;
+    end
     
     predict_predictor_input=cat(2,q_in,v_in,repmat(-mdl.Coefficients.Estimate(4),numel(v_in),1));
     fit_mdl_val=predict(mdl,predict_predictor_input);
     
-    predict_predictor_input=cat(2,q_in,v_in*0,repmat(-mdl.Coefficients.Estimate(4),numel(v_in),1));
-    fit_mdl_v_zero=predict(mdl,predict_predictor_input);
+    predict_predictor_input=cat(2,q_in,v_in*0+v_extrap,repmat(-mdl.Coefficients.Estimate(4),numel(v_in),1));
+    fit_mdl_v_extrap=predict(mdl,predict_predictor_input);
     
-    predict_predictor_input=cat(2,q_in*0,v_in,repmat(-mdl.Coefficients.Estimate(4),numel(v_in),1));
-    fit_mdl_q_zero=predict(mdl,predict_predictor_input);
+    predict_predictor_input=cat(2,q_in*0+q_extrap,v_in,repmat(-mdl.Coefficients.Estimate(4),numel(v_in),1));
+    fit_mdl_q_extrap=predict(mdl,predict_predictor_input);
     
-    shift_vq=[fit_mdl_v_zero-fit_mdl_val,fit_mdl_q_zero-fit_mdl_val];
+    shift_vq=[fit_mdl_v_extrap-fit_mdl_val,fit_mdl_q_extrap-fit_mdl_val];
 
 end
 
