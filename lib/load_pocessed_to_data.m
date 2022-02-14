@@ -128,9 +128,15 @@ for loop_idx=selected_dirs
             main_data_compiled.wp.hwp=cat(1,main_data_compiled.wp.hwp,wp_angles.hwp_ang);
 
             main_data_compiled.lin.to.val=cat(1, main_data_compiled.lin.to.val,to_fit_all.fit_trimmed.to_freq(1).val);
-            main_data_compiled.lin.to.unc=cat(1, main_data_compiled.lin.to.val,to_fit_all.fit_trimmed.to_freq(1).unc);
+            %main_data_compiled.lin.to.val
+            main_data_compiled.lin.to.unc=cat(1, main_data_compiled.lin.to.unc,to_fit_all.fit_trimmed.to_freq(1).unc);
+            %main_data_compiled.lin.to.unc
             main_data_compiled.lin.grad.val=cat(1,main_data_compiled.lin.grad.val,to_fit_all.fit_trimmed.slope.val(1));
             main_data_compiled.lin.grad.unc=cat(1,main_data_compiled.lin.grad.unc,to_fit_all.fit_trimmed.slope.unc(1));
+
+            if ~isequal(size(main_data_compiled.lin.to.val),size(main_data_compiled.lin.to.unc))
+                error('size not equal')
+            end
 
             main_data_compiled.quad.to.val=cat(1, main_data_compiled.quad.to.val,to_fit_all.fit_trimmed.to_freq(2).val);
             main_data_compiled.quad.to.unc=cat(1, main_data_compiled.quad.to.unc,to_fit_all.fit_trimmed.to_freq(2).unc);
