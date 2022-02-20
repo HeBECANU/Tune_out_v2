@@ -7,7 +7,7 @@ pre-print on the trap frequency measurement (https://arxiv.org/abs/2201.10021)
 ## Frozen Code Repos
 [![DOI](https://zenodo.org/badge/151374531.svg)](https://zenodo.org/badge/latestdoi/151374531)  
 [Harvard Dataverse](https://dataverse.harvard.edu/citation?persistentId=doi:10.7910/DVN/KQEIOW)  
-[Frozen Code inc. Submodules 20220222 AARNET (143 MB 7z file)](https://cloudstor.aarnet.edu.au/plus/s/HJ4UOxCCcYCNmqM) (CRC64:1CE39EBF8DA3A28B, SHA256:F8B85F4DA6483626FAA2E5E5C52431C97D04ED1F0F0812DF015BC63E8528306C)
+[Frozen Code inc. Submodules 2022-02-22 AARNET (143 MB 7z file)](https://cloudstor.aarnet.edu.au/plus/s/HJ4UOxCCcYCNmqM) (CRC64:1CE39EBF8DA3A28B, SHA256:F8B85F4DA6483626FAA2E5E5C52431C97D04ED1F0F0812DF015BC63E8528306C)
 
 ## Data
 Data integertiy is ensured with multipar files that can be downloaded alongside the data. [MultiPar](https://github.com/Yutaka-Sawada/MultiPar)  
