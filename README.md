@@ -4,9 +4,9 @@
 main paper pre-print (https://arxiv.org/abs/2107.00149)   
 pre-print on the trap frequency measurement (https://arxiv.org/abs/2201.10021)   
 
-## Frozen Code Repo
+## Frozen Code Repos
 [![DOI](https://zenodo.org/badge/151374531.svg)](https://zenodo.org/badge/latestdoi/151374531)
-[![DOI](https://zenodo.org/badge/151374531.svg)](https://dataverse.harvard.edu/citation?persistentId=doi:10.7910/DVN/KQEIOW)
+[Harvard Dataverse](https://dataverse.harvard.edu/citation?persistentId=doi:10.7910/DVN/KQEIOW)
 
 
 ## Data
