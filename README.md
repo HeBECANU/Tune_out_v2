@@ -1,12 +1,13 @@
 # Tune_out_v2_trap_freq 
-
-[![DOI](https://zenodo.org/badge/151374531.svg)](https://zenodo.org/badge/latestdoi/151374531)
-
-
 **[Bryce M. Henson](https://github.com/brycehenson), [Jacob A. Ross](https://github.com/GroundhogState), [Kieran F. Thomas](https://github.com/KF-Thomas)**  
 
 main paper pre-print (https://arxiv.org/abs/2107.00149)   
-pre-print on the trap frequency measurement (https://arxiv.org/abs/2201.10021)    
+pre-print on the trap frequency measurement (https://arxiv.org/abs/2201.10021)   
+
+## Frozen Code Repo
+[![DOI](https://zenodo.org/badge/151374531.svg)](https://zenodo.org/badge/latestdoi/151374531)
+[![DOI](https://zenodo.org/badge/151374531.svg)](https://dataverse.harvard.edu/citation?persistentId=doi:10.7910/DVN/KQEIOW)
+
 
 ## Data
 Data integertiy is ensured with multipar files that can be downloaded alongside the data. [MultiPar](https://github.com/Yutaka-Sawada/MultiPar)  
