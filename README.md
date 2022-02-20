@@ -1,4 +1,8 @@
-# Tune_out_v2_trap_freq
+# Tune_out_v2_trap_freq 
+
+[![DOI](https://zenodo.org/badge/151374531.svg)](https://zenodo.org/badge/latestdoi/151374531)
+
+
 **[Bryce M. Henson](https://github.com/brycehenson), [Jacob A. Ross](https://github.com/GroundhogState), [Kieran F. Thomas](https://github.com/KF-Thomas)**  
 
 main paper pre-print (https://arxiv.org/abs/2107.00149)   
