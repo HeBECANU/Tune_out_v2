@@ -15,7 +15,7 @@ linewidth=1.5;
 font_size=12;
 
 colors_main=[[98,136,63];[95,109,187];[180,72,117]]./255;
-hsv=colorspace('RGB->HSV',colors_main(:,:));
+hsv=colorspacea'RGB->HSV',colors_main(:,:));
 hsv(:,2)=hsv(:,2);
 colors_shaded=colorspace('HSV->RGB',hsv);
 

@@ -12,6 +12,8 @@ set_up_project_path('.')
 %%
 hebec_constants %call the constants function that makes some globals
 
+pause
+
 %% import data
 %HWP
 % loop_config.dir = {
