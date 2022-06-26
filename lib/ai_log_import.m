@@ -6,7 +6,8 @@ cache_opts.force_cache_load=anal_opts.force_load_save;
 anal_opts=rmfield(anal_opts,'force_load_save');
 cache_opts.force_recalc=anal_opts.force_reimport;
 if ~cache_opts.force_recalc
-    anal_opts=rmfield(anal_opts,'force_reimport');
+    %anal_opts=rmfield(anal_opts,'force_reimport');
+    anal_opts.force_reimport=0;
 end
 
 %limit the scope but retain the structure

@@ -176,9 +176,9 @@ fprintf('shift alt method %s nm\n %s MHz \n',...
 title='this work (exp.)';
 st_idx=find(cellfun(@(x) contains(lower(x.title),lower(title)), ref_st));
 tune_out=[];
-tune_out.val=725736811-to.tens_shift_alt.f.val*1e-6;
+tune_out.val=725736700-to.tens_shift_alt.f.val*1e-6;
 tune_out.unc.stat=45;
-tune_out.unc.syst=rssq([120,to.tens_shift_alt.f.unc*1e-6]);
+tune_out.unc.syst=260;
 tune_out.unc.tot=rssq([tune_out.unc.stat,tune_out.unc.syst]);
 tune_out.units='MHz';
 tune_out.type='exp';
@@ -188,7 +188,7 @@ ref_st{st_idx}.tune_out=tune_out;
 title='this work (theory)';
 st_idx=find(cellfun(@(x) contains(lower(x.title),lower(title)), ref_st));
 tune_out=[];
-tune_out.val=725736430-to.tens_shift_alt.f.val*1e-6;
+tune_out.val=725736252-to.tens_shift_alt.f.val*1e-6;
 tune_out.unc.tot=rssq([50,to.tens_shift_alt.f.unc*1e-6]);
 tune_out.units='MHz';
 tune_out.type='theory';
@@ -295,14 +295,19 @@ text_info.frac_year=frac_year;
 text_info.align=nan;
 text_info.align(1:numel(text_info.val))=0;
 text_info.ref_num=zeros(1,numel(text_info.val));
-
-% get these numbers from the latex document by putting the cite comand at the end of the document
-text_info.ref_num=[16,15,17,17,18,18,19,20,nan,nan];
 text_info.delta_str=cell(1,numel(text_info.val));
 
-text_info.ref_text=arrayfun(@(x) sprintf('[%u]',x),text_info.ref_num,'UniformOutput',0);
-text_info.ref_text{end-1}='(theory)';
-text_info.ref_text{end}='(exp.)';
+
+
+% get these numbers from the latex document by putting the cite comand at the end of the document
+%text_info.ref_num=[16,15,17,17,18,18,19,20,nan,nan];
+%text_info.ref_num=[16,15,17,17,18,18,19,20,nan,nan];
+%text_info.ref_text=arrayfun(@(x) sprintf('[%u]',x),text_info.ref_num,'UniformOutput',0);
+text_info.ref_text={'[r1]','[r2]','[r3]','[r3]','[r4]','[r4]','[r5]','[r6]','nan','nan'};
+
+
+text_info.ref_text{end}='(theory)';
+text_info.ref_text{end-1}='(exp.)';
 
 for ii=1:numel(text_info.val)
     text_info.delta_str{ii}=sprintf('%s GHz\n %s',...
@@ -360,7 +365,7 @@ ylim([-18,9]+(to_st.freq.val(end)-plot_y_shift)*1e-9)
 
 %yticks(-10:5:20)
 yticks((floor(min(to_st.freq.shift_scaled(2:end))/10)*10):5:(ceil(max(to_st.freq.shift_scaled(2:end))/10)*10))
-xlim([2013,2021.5])
+xlim([2013,2022.2])
 
 lg=legend('NR Theory','Full Theory','Experiment','Position',[0.75 0.4 0.1 0.1])
 %legend_pos=lg.Position
@@ -392,7 +397,7 @@ errorbar(frac_year(th_mask),(to_st.freq.val(th_mask)-plot_y_shift)*plot_y_factor
 %         '^','CapSize',0,'MarkerSize',5,...
 %         'Color',colors_main(2,:),'MarkerFaceColor',colors_detail(2,:),'LineWidth',1.8) 
 %     hold off
-ylim([-90.02,-89.88]+(to_st.freq.val(end)-plot_y_shift)*1e-9) 
+ylim([-89.5,-89.3]+(to_st.freq.val(end)-plot_y_shift)*1e-9) 
 set(axis_subplot,'Xlim',axis_main.XLim);
 set(axis_subplot,'XTick',axis_main.XTick);
 set(axis_subplot,'FontSize',axis_main.FontSize);
@@ -474,6 +479,7 @@ fprintf('\n')
 set(gcf,'position',[493 318 600 450])
 export_fig(gcf,fullfile(mpath,'to_val_convergence_history.svg'))
 export_fig(gcf,fullfile(mpath,'to_val_convergence_history.eps'))
+export_fig(fullfile(mpath,'to_val_convergence_history.pdf'))
 export_fig(gcf,fullfile(mpath,'to_val_convergence_history.png'))
 %
 %

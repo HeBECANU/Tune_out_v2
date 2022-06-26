@@ -86,6 +86,8 @@ set_up_project_path
 
 hebec_constants %call the constants function that makes some globals
 
+
+
 %%
 % BEGIN USER VAR-------------------------------------------------
 
@@ -587,7 +589,7 @@ anal_opts.atom_num_fit.plot.each_shot=false;
 anal_opts.atom_num_fit.plot.history=false;
 anal_opts.atom_num_fit.qe=anal_opts.global.qe;
 
-data.num_fit=fit_atom_number(anal_opts.atom_num_fit,data);
+data.num_fit=fit_pal_atom_number(anal_opts.atom_num_fit,data);
 
 
 %% Fitting Temp using segmentation
@@ -638,7 +640,7 @@ anal_opts.osc_fit.adaptive_freq=true; %estimate the starting trap freq
 anal_opts.osc_fit.dimension=2; %Select coordinate to bin. z,x,y
 anal_opts.osc_fit.appr_osc_freq_guess=[52,47.9,40];
 anal_opts.osc_fit.freq_fit_tolerance=2; %hz arround the median to cut away
-anal_opts.osc_fit.plot_fits=true;
+anal_opts.osc_fit.plot_fits=false;
 anal_opts.osc_fit.plot_err_history=true;
 anal_opts.osc_fit.plot_fit_corr=true;
 

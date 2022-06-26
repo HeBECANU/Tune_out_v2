@@ -28,14 +28,14 @@ to_polz_si_deriv(2)
 
 
 %%
-beam_waist=14e-6;
-beam_power=0.120;
+beam_waist=20e-6;
+beam_power=0.1;%0.120;
 peak_intensity= 2*beam_power/(pi*(beam_waist^2));
-detuning_hz=30e6;
+detuning_hz=1e9;
 dipole_pot=- (1/(2*const.epsilon0*const.c))*to_polz_si_deriv(1)*peak_intensity*detuning_hz;
 
 dipole_pot/const.kb
-
+dipole_pot
 
 %% calculate the shift from the hyperpolarizability
 atom_u=[];
@@ -62,13 +62,26 @@ freq_shif_w_power*peak_intensity
 probe_freq_sq_grad=80e-9;
 % find the derivative of the probe beam trap frequency as a function of optical freqency, leave off the factor of probe
 % intensity
-power_dep=( 1/(4*(pi^2)) )*(1/(2*const.epsilon0*const.c*const.mhe))...
-                    *to_polz_si_deriv(1)...
-                    *( (4)/(beam_waist^2) ) 
+%power_dep=( 1/(4*(pi^2)) )*(1/(2*const.epsilon0*const.c*const.mhe))...
+%                    *to_polz_si_deriv(1)...
+%                    *( (4)/(beam_waist^2) ) 
+
+%to_polz_si_deriv(1)*
+sens_param_A=4*beam_power/(const.mhe*const.epsilon0*const.c*pi*beam_waist^4);
                 
 %power_dep=(1/(4*(pi^2))) * (1/(2*const.mhe*const.c*const.epsilon0))  *to_polz_si_deriv(1)   *  ( 4/(beam_waist^2) );
-fprintf('probe trap freq squared at 4 GHz detuning =%g',power_dep*4e9*peak_intensity)
-probe_freq_sq_grad/( power_dep)
+fprintf('probe trap freq squared at 4 GHz detuning =%g',sens_param_A*4e9*to_polz_si_deriv(1)/(4*pi^2))
+probe_freq_sq_grad/( sens_param_A)
+
+(sens_param_A*to_polz_si_deriv(1)*1e9)
+
+%*2*pi
+single_shot_sens=(0.020*2*pi)*2*(420*2*pi)*(1/(sens_param_A*to_polz_si_deriv(1)));
+fprintf('signle shot sensitivity %.3f GHz \n',1e-9*single_shot_sens)
+
+
+flat_pot_detuning=1e-12*((420*2*pi)^2)/(sens_param_A*to_polz_si_deriv(1))
+fprintf('flat potential limit %.3f THz \n',flat_pot_detuning)
 
 
 
