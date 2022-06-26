@@ -5,10 +5,12 @@ set_up_project_path('..')
 hebec_constants
 close('all')
 
-%%
+%% Experimental param
 trap_afreq=426*2*pi;
 beam_waist=20e-6;
 gauss_sigma=beam_waist/2;
+osc_amp_v_operation=12e-3;
+osc_amp_x_operation=osc_amp_v_operation/trap_afreq;
 
 %gauss_amp=-3e-30;
 
@@ -55,7 +57,9 @@ num_freq=1/num_period ;
 
 %%
 gauss_amp=-1e-32;
-gauss_sigma=10e-6/2;
+%beam_waist=20e-6;
+%gauss_sigma=beam_waist/2;
+
 
 
 anh_dep=[];
@@ -79,7 +83,7 @@ end
 
 colors_main=[[[214,72,154];
 [102,181,69];
-[151,90,214];
+[70,90,214];
 [208,153,44];
 [212,73,58]]]./255;
 hsv=colorspace('RGB->HSV',colors_main(:,:));
@@ -171,8 +175,7 @@ fprintf('Probe freq with osc amp of %f um was a factor of %.3f than zero amp lim
 
 
 %%
-osc_amp_v_operation=12e-3;
-osc_amp_x_operation=osc_amp_v_operation/trap_afreq;
+
 
 stfig('oscc sens')
 clf
@@ -233,8 +236,9 @@ fprintf('Operating with an osc amp of %.1f mm/s, %.1f um was a factor of %.3f th
 %%
 
 
-trap_afreq=412*2*pi;
-gauss_sigma=10e-6/2;
+%trap_afreq=426*2*pi;
+%beam_waist=20e-6;
+%gauss_sigma=beam_waist/2;
 gauss_amp=-1e-30;
 
 gauss_afreq=gauss_trap_freq(gauss_sigma,gauss_amp,m);
@@ -358,7 +362,7 @@ ylabel('signal $\Omega^2-\Omega^2$ (Hz$^2$)')
 box on
 
 
-%%
+%% scale of potenital and signal
 
 beam_waist=11e-6;
 beam_sigma=beam_waist/2;
@@ -369,27 +373,357 @@ beam_detune_tmp=4e9;
 dipole_pot=- (1/(2*const.epsilon0*const.c))*to_polz_si_deriv_1*peak_intensity*beam_detune_tmp;
 dipole_pot/const.kb
 gauss_trap_freq(beam_sigma,dipole_pot,m)^2*(1/(2*pi))
-power_dep*peak_intensity*beam_detune_tmp*(1/(2*pi))
+peak_intensity*beam_detune_tmp*(1/(2*pi))
 signal_sq_per_detune=gauss_trap_freq(beam_sigma,dipole_pot,m)^2/beam_detune_tmp
 
 36e-6*2*(1/signal_sq_per_detune)
 
 %%
-x_max=10e-3/trap_afreq;
+% x_max=10e-3/trap_afreq;
+% %gauss_amp=1e-20;
+% excitaiton_energy=pot_fun(x_max,trap_afreq,gauss_amp,gauss_sigma);
+% period_intagrand=@(x) 1./sqrt(excitaiton_energy-pot_fun(x,trap_afreq,gauss_amp,gauss_sigma) );
+% num_period=sqrt(2*m)*integral(period_intagrand,-x_max,x_max);
+% num_freq=1/num_period ;
+% 
+
+%% Find the trap frequency of a combined mag trap and probe beam
+% when the probe beam is not centered on the mag trap
+% first find the shift in the trap center
+
+
+% trap_afreq=426*2*pi;
+% beam_waist=20e-6;
+% gauss_sigma=beam_waist/2;
+% osc_amp_v_operation=12e-3;
+% osc_amp_x_operation=osc_amp_v_operation/trap_afreq;
+
+beam_offsets=col_vec(linspace(0,3,1e2))*gauss_sigma;
+beam_power=0.1;%0.120;
+detuning=1e10;
+probe_amp=probe_pot_depth(beam_power,beam_waist,detuning) ;
+iimax=numel(beam_offsets);
+min_positions=beam_offsets*nan;
+
+for ii=1:iimax
+    beam_offset=beam_offsets(ii);
+    % find the new minimum
+    u_comb_fun=@(x) mag_probe_combined_pot(x,trap_afreq,gauss_sigma,beam_offset,probe_amp,const.mhe);
+    du_comb_fun=@(x) mag_probe_combined_dpot(x,trap_afreq,gauss_sigma,beam_offset,probe_amp,const.mhe);
+    
+    %opt = optimset('TolX',1e-12); %,'PlotFcns',@optimplotfval
+    dumin=fzero(du_comb_fun,beam_offset*sign(probe_amp)*-1);
+    min_positions(ii)=dumin;
+    %osc_energy= 1/2*m*osc_amp_v_operation^2;
+    %pot_max_osc_amp=pot_at_min+osc_energy;
+end
+
+yfac=1e6;
+stfig('min shift');
+clf
+plot(beam_offsets/gauss_sigma,min_positions*yfac)
+xlabel('beam pos/ beam sigma')
+ylabel('min pot shift ($\mu$m)')
+
+% with a power of 100 mw and a beam waist of 20 um then the wost case beam
+% potision is 1 sigma away from trap cen
+
+
+%% find the trap freq in the limit of no excitation amp and using the
+% anharmonic formula
+
+
+
+beam_offset=1*gauss_sigma;
+beam_power=0.1;%0.120;
+detunings=col_vec(linspace(-1,1,1e2))*1e10;
+plot_diagnostics=false;
+
+harm_freqs=detunings*nan;
+anharm_freqs=detunings*nan;
+min_positions=detunings*nan;
+
+iimax=numel(detunings);
+for ii=1:iimax
+    detuning=detunings(ii);
+    probe_amp=probe_pot_depth(beam_power,beam_waist,detuning) ;
+    u_comb_fun=@(x) mag_probe_combined_pot(x,trap_afreq,gauss_sigma,beam_offset,probe_amp,const.mhe);
+    du_comb_fun=@(x) mag_probe_combined_dpot(x,trap_afreq,gauss_sigma,beam_offset,probe_amp,const.mhe);
+    
+    %opt = optimset('TolX',1e-12); %,'PlotFcns',@optimplotfval
+    dumin=fzero(du_comb_fun,beam_offset*sign(probe_amp)*-1);
+    min_positions(ii)=dumin;
+    
+    % now find the trap freq in the zero amp amprox
+
+%     [curv_num_est,curv_num_err]=derivest(u_comb_fun,dumin,'DerivativeOrder',2);
+%     harm_freq_num=(1/(2*pi))*sqrt((1/m)*curv_num_est) ;
+    curv_anal=mag_probe_combined_d2pot(dumin,trap_afreq,gauss_sigma,beam_offset,probe_amp,const.mhe);
+    harm_freq_anal=(1/(2*pi))*sqrt((1/m)*curv_anal) ;
+    harm_freqs(ii)=harm_freq_anal;
+
+    % now find the trap freq usign the anhamonic treatement
+    pot_at_min=u_comb_fun(dumin);
+    osc_energy= 1/2*m*osc_amp_v_operation^2;
+    pot_max_osc_amp=pot_at_min+osc_energy;
+
+
+    excitaiton_energy=osc_energy;
+    period_intagrand=@(x) 1./sqrt(excitaiton_energy-(u_comb_fun(x)-pot_at_min) );
+    %opt = optimset('FunValCheck','off');
+    osc_xmax=fzero(@(x) u_comb_fun(x)-(pot_at_min+osc_energy),dumin+osc_amp_x_operation);
+    osx_xmin=fzero(@(x) u_comb_fun(x)-(pot_at_min+osc_energy),dumin-osc_amp_x_operation);
+    %opt = optimset('TolX',eps); %,'PlotFcns',@optimplotfval % 'Display','iter'
+    %range_fac=3;
+    %osc_xmax=fminbnd(@(x) u_comb_fun(x)-(pot_at_min+osc_energy),0,dumin+range_fac*osc_amp_x_operation,opt);
+    %osx_xmin=fminbnd(@(x) u_comb_fun(x)-(pot_at_min+osc_energy),dumin-range_fac*osc_amp_x_operation,0,opt);
+    
+    num_period=sqrt(2*m)*integral(period_intagrand,osx_xmin,osc_xmax,'RelTol',1e9);
+    anh_freq=1/num_period ;
+    anharm_freqs(ii)=anh_freq;
+
+    if plot_diagnostics
+        xfac=1e6;
+        yfac=1e30;
+        % do a plot as a diagnostic
+        stfig('combined pot');
+        clf
+        xsamp=col_vec(linspace(-gauss_sigma,gauss_sigma,1e2))*1.5;
+        usamp=u_comb_fun(xsamp);
+        dusamp=du_comb_fun(xsamp);
+        subplot(2,1,1)
+        plot(xsamp*xfac,usamp*yfac)
+        subplot(2,1,2)
+        plot(xsamp*xfac,dusamp*yfac)
+        yline(0)
+    
+        hold on
+        plot(dumin*xfac,du_comb_fun(dumin)*yfac,'ro')
+        subplot(2,1,1)
+        hold on
+        plot(dumin*xfac,u_comb_fun(dumin)*yfac,'ro')
+        plot(osc_xmax*xfac,u_comb_fun(osc_xmax)*yfac,'bo')
+        plot(osx_xmin*xfac,u_comb_fun(osx_xmin)*yfac,'bo')
+        
+        yline(pot_max_osc_amp*yfac)
+        pause
+    end
+
+end
+
+
+
+%
+infered_probe_sq_harm=(trap_afreq/(2*pi)).^2-harm_freqs.^2;
+infered_probe_sq_anharm=(trap_afreq/(2*pi)).^2-anharm_freqs.^2;
+
+%yfac=10^(-round(log10(max(abs(detunings)))));
+yfac=1e-9;
+
+% fit the dependence
+cof_names={'p0','p1','p2','p3'};
+fit_fun=@(b,x) b(1)+b(2).*x+b(3).*x.^2+b(4).*x.^3;
+beta0=[0.0,0.4,2,1];
+
+
+predictor=detunings*yfac;
+response=infered_probe_sq_harm;
+opt = statset('TolFun',1e-10,'TolX',1e-10,...
+    'MaxIter',1e4,... %1e4
+    'UseParallel',1);
+
+fitobj_harm=fitnlm(predictor,response,fit_fun,beta0,...
+    'options',opt,...
+    'CoefficientNames',cof_names);
+
+x_samp_fit=col_vec(linspace(min(predictor),max(predictor),1e4));
+[fit_samp_harm,ci]=predict(fitobj_harm,x_samp_fit,'Alpha',1-erf(1/sqrt(2)),'Prediction','curve'); %'Alpha',1-erf(1/sqrt(2)),'Prediction','observation'
+
+
+
+predictor=detunings*yfac;
+response=infered_probe_sq_anharm;
+fitobj_anharm=fitnlm(predictor,response,fit_fun,beta0,...
+    'options',opt,...
+    'CoefficientNames',cof_names);
+
+[fit_samp_anharm,ci]=predict(fitobj_anharm,x_samp_fit,'Alpha',1-erf(1/sqrt(2)),'Prediction','curve'); %'Alpha',1-erf(1/sqrt(2)),'Prediction','observation'
+
+% lets think about the shift in the tune out freq
+cof_names={'p0','p1'};
+fit_fun=@(b,x) b(1)+b(2).*x;
+beta0=[0.0,0.4];
+
+predictor=detunings*yfac;
+response=infered_probe_sq_anharm;
+opt = statset('TolFun',1e-10,'TolX',1e-10,...
+    'MaxIter',1e4,... %1e4
+    'UseParallel',1);
+
+fitobj_anharm_lin=fitnlm(predictor,response,fit_fun,beta0,...
+    'options',opt,...
+    'CoefficientNames',cof_names);
+[fit_samp_anharm_lin,ci]=predict(fitobj_anharm_lin,x_samp_fit,'Alpha',1-erf(1/sqrt(2)),'Prediction','curve'); %'Alpha',1-erf(1/sqrt(2)),'Prediction','observation'
+
+% find the shift in the x intercept from the coef
+%0=b(1)+b(2).*x;
+%-b(1)/b(2)=+.*x;
+to_shift=-fitobj_anharm_lin.Coefficients{'p0','Estimate'}/fitobj_anharm_lin.Coefficients{'p1','Estimate'};
+% checek num
+%to_shift2=fzero(@(x) predict(fitobj_anharm_lin,x),0);
+fprintf('shift in tune out from linear fit %.1f MHz\n',to_shift*1e3)
+
+fprintf('\nharmonic dep fit: \n')
+
+fitobj_harm
+
+fprintf('\nanharmonic dep fit: \n')
+fitobj_anharm
+%
+hsv=colorspace('RGB->HSV',colors_main(:,:));
+hsv(:,2)=hsv(:,2)-0.2;
+hsv(:,3)=hsv(:,3)+0.4;
+colors_shaded=colorspace('HSV->RGB',hsv);
+
+
+stfig('trap freq change')
+clf
+set(gca, 'FontName', font_name)
+set(gca, 'FontSize', font_size)
+ph1=plot(detunings*yfac,infered_probe_sq_harm,'-','LineWidth',linewidth,'Color',colors_shaded(5,:));
+hold on
+ph2=plot(x_samp_fit,fit_samp_harm,'--','LineWidth',linewidth,'Color',colors_main(5,:)) ;
+% linear approx
+%lin_signal=@(x) x*fitobj_harm.Coefficients{'p1','Estimate'};
+%plot(x_samp_fit,lin_signal(x_samp_fit))
+ph3=plot(x_samp_fit,fit_samp_anharm,'-','LineWidth',linewidth,'Color',colors_shaded(3,:));
+ph4=plot(detunings*yfac,infered_probe_sq_anharm,':','LineWidth',linewidth,'Color',colors_main(3,:));
+%lin_signal=@(x) x*fitobj_anharm.Coefficients{'p1','Estimate'};
+%plot(x_samp_fit,lin_signal(x_samp_fit))
+%plot(x_samp_fit,fit_samp_anharm_lin)
+xline(0,'Color',[1,1,1]*0.5)
+yline(0,'Color',[1,1,1]*0.5)
+hold off
+legend([ph2,ph1,ph4,ph3],'Harmonic Approx','Harmonic Fit','Anharmonic Sim','Anharmonic Fit')
+xlabel('Detuning From Tune-Out, $\Delta f_{TO}$ (GHz)')
+%ylabel('$\Omega^{2}_{probe}$ (Hz${}^2$)')
+ylabel('Signal, $\Omega^{2}_{Net}-\Omega^{2}_{Mag}$ (Hz${}^2$)')
+%osc_amp_x_operation
+
+legend('Location','best')
+legend( 'FontSize',font_size*1)
+xlim([min(detunings),max(detunings)]*yfac)
+set(gca, 'FontName', font_name)
+set(gca, 'FontSize', font_size)
+set(gca, {'XColor', 'YColor'}, {'k', 'k'});
+set(gca,'linewidth', 1.0)
+set(gca,'TickLength',[0.02,0])
+
+set(gcf,'Units','Pixels')
+%set(gcf,'Position',[1068,355,676,453])
+fig_width_px=600;
+fig_aspect_ratio=0.67; %0.67;
+set(gcf,'Position',[100,355,fig_width_px,fig_width_px*fig_aspect_ratio])       
+hold off
+
+
+%%
+fig_name=sprintf('probe_beam_signal_probe_offset_%.2f_um',beam_offset*1e6);
+%fig_name='pal_mean_v_acc_dyn_static';
+fig_dir='./figs/thesis_figs';
+export_fig(fullfile(fig_dir,strcat(fig_name,'.svg')))
+export_fig(fullfile(fig_dir,strcat(fig_name,'.pdf')))
+
+%%
+% these opt functions didnt work
+%opt = optimset('Display','iter','TolX',1e-9) %,'PlotFcns',@optimplotfval
+%min_pos=fminbnd(u_comb_fun,-abs(beam_offset),abs(beam_offset),opt)
+%opt = optimoptions('fminunc','StepTolerance',1e-9,'ObjectiveLimit',probe_amp/1e9,'OptimalityTolerance',1e-40) %,'PlotFcns',@optimplotfval
+%min_pos=fminunc(u_comb_fun,beam_offset*sign(probe_amp)*-1,opt)
+
+%%
+
+beam_offset=5e-6;
+beam_power=0.1;%0.120;
+detuning=-5e12;
+probe_amp=probe_pot_depth(beam_power,beam_waist,detuning) 
+
+% find the new minimum
+u_comb_fun=@(x) mag_probe_combined_pot(x,trap_afreq,gauss_sigma,beam_offset,probe_amp,const.mhe)
+du_comb_fun=@(x) mag_probe_combined_dpot(x,trap_afreq,gauss_sigma,beam_offset,probe_amp,const.mhe)
+
+opt = optimset('Display','iter','TolX',1e-9) %,'PlotFcns',@optimplotfval
+dumin=fzero(du_comb_fun,beam_offset*sign(probe_amp)*-1,opt)
+osc_energy= 1/2*m*osc_amp_v_operation^2;
+pot_max_osc_amp=pot_at_min+osc_energy;
+
+
+
+xfac=1e6;
+yfac=1e30;
+% do a plot as a diagnostic
+stfig('combined pot');
+clf
+xsamp=col_vec(linspace(-gauss_sigma,gauss_sigma,1e2))*1.5;
+usamp=u_comb_fun(xsamp);
+dusamp=du_comb_fun(xsamp);
+subplot(2,1,1)
+plot(xsamp*xfac,usamp*yfac)
+subplot(2,1,2)
+plot(xsamp*xfac,dusamp*yfac)
+yline(0)
+
+
+hold on
+plot(dumin*xfac,du_comb_fun(dumin)*yfac,'ro')
+subplot(2,1,1)
+hold on
+plot(dumin*xfac,u_comb_fun(dumin)*yfac,'ro')
+pot_at_min=u_comb_fun(dumin);
+
+yline(pot_max_osc_amp*yfac)
+
+
+
+%%
+
+gauss_afreq=gauss_trap_freq(beam_sigma,dipole_pot,m);
+ho_comb_afreq=sqrt(gauss_afreq^2+trap_afreq^2);
+anh_lin.ho_approx_afreq(ii,jj)=ho_comb_afreq;
 %gauss_amp=1e-20;
-excitaiton_energy=pot_fun(x_max,trap_afreq,gauss_amp,gauss_sigma);
-period_intagrand=@(x) 1./sqrt(excitaiton_energy-pot_fun(x,trap_afreq,gauss_amp,gauss_sigma) );
-num_period=sqrt(2*m)*integral(period_intagrand,-x_max,x_max);
+excitaiton_energy=pot_fun(x_max_tmp,trap_afreq,dipole_pot,beam_sigma);
+period_intagrand=@(x) 1./sqrt(excitaiton_energy-pot_fun(x,trap_afreq,dipole_pot,beam_sigma) );
+num_period=sqrt(2*m)*integral(period_intagrand,-x_max_tmp,x_max_tmp);
 num_freq=1/num_period ;
-
-
-
+anh_lin.num_afreq(ii,jj)=num_freq*2*pi;
 
 
 
 
 
 %%
+
+function u=mag_probe_combined_pot(x,trap_afreq,probe_sigma,probe_mu,probe_amp,mass)
+    u=(1/2) *mass *trap_afreq^2 * x.^2 + gaussian_function_1d(x,probe_sigma,probe_mu,probe_amp);
+end
+
+function du=mag_probe_combined_dpot(x,trap_afreq,probe_sigma,probe_mu,probe_amp,mass)
+    du= mass *trap_afreq^2 * x + gaussian_function_1d(x,probe_sigma,probe_mu,probe_amp,'derivative',1);
+end
+
+function d2u=mag_probe_combined_d2pot(x,trap_afreq,probe_sigma,probe_mu,probe_amp,mass)
+    d2u= mass *trap_afreq^2 + gaussian_function_1d(x,probe_sigma,probe_mu,probe_amp,'derivative',2);
+end
+
+function [dipole_pot,peak_intensity]=probe_pot_depth(beam_power,beam_waist,detuning_hz) 
+    global const
+    peak_intensity= 2*beam_power/(pi*(beam_waist^2));
+    to_polz_si_deriv=1.8017e-53;
+    dipole_pot=- (1/(2*const.epsilon0*const.c))*to_polz_si_deriv(1)*peak_intensity*detuning_hz;
+end
+
+
+
 
 function afreq=gauss_trap_freq(sigma,amp,mass)
     curvature=-amp* (1./( sigma.^2) );

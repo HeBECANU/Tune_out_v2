@@ -17,11 +17,11 @@ to_lit_rev(n).to_freq_unc=sqrt(40e6^2+200e6^2);
 
 he_trans=metastable_helium_transition_data;
 % this is roughly right
-to_lit_rev(n).transition_1=f2wl(1083e-9);
+%to_lit_rev(n).transition_1=f2wl(1083e-9);
 % weight by the oscillator strength
-to_lit_rev(n).transition_1=wmean(arrayfun(@(n) a{n}.frequency_hz.val,1:3),arrayfun(@(n) a{n}.osc_strength.val,1:3));
-to_lit_rev(n).transition_2=f2wl(389e-9);
-to_lit_rev(n).transition_2=wmean(arrayfun(@(n) a{n}.frequency_hz.val,4:6),arrayfun(@(n) a{n}.osc_strength.val,4:6));
+to_lit_rev(n).transition_1=wmean(arrayfun(@(n) he_trans{n}.frequency_hz.val,1:3),arrayfun(@(n) he_trans{n}.osc_strength.val,1:3));
+%to_lit_rev(n).transition_2=f2wl(389e-9);
+to_lit_rev(n).transition_2=wmean(arrayfun(@(n) he_trans{n}.frequency_hz.val,4:6),arrayfun(@(n) he_trans{n}.osc_strength.val,4:6));
 
 
 to_lit_rev(n).name='this work';
