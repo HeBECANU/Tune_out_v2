@@ -28,11 +28,13 @@ freq=f2wl(data_table.nm*1e-9);
 freq= cat(1,1000e12,freq);
 polz_au=cat(1,0,polz_au);
 
-plot(freq_axis,freq*1e-12,polz_au*1e38,'k','LineWidth', 2)
+yscale=1e-38;
+plot(freq_axis,freq*1e-12,polz_au/yscale,'k','LineWidth', 2)
 
 %xlim([300,1200])
 xlabel('$\omega$, Frequency ($2\pi$ THz)')
-ylabel('$\alpha$, Polarizability ($10^{-38} \mathrm{C}\cdot \mathrm{m}^{2} \cdot\mathrm{V}^{-1}$)')
+ylabel(sprintf('$\\alpha^{(s,v,T)}$, Polarizability ($10^{%.0f} \\mathrm{C}\\cdot \\mathrm{m}^{2} \\cdot\\mathrm{V}^{-1}$)',log10(yscale)))
+%ylabel('$\alpha$, Polarizability ($10^{-38} \mathrm{C}\cdot \mathrm{m}^{2} \cdot\mathrm{V}^{-1}$)')
 ylim([-1,1]*1.2)
 xlim([170,980])
 line(xlim(), [0,0], 'LineWidth', 1, 'Color', 'k','LineStyle','--');
